@@ -1795,23 +1795,16 @@ private static String getNonArrayClassPackageName(Class<?> clz) {
 public 
 /*[ENDIF] Sidecar19-SE */
 String getPackageName() {
+	Class<?> nonArrayType = this;
 /*[IF Sidecar19-SE]*/
-	if (isPrimitive()) {
+	while (nonArrayType.isArray()) {
+		nonArrayType = nonArrayType.getComponentType();
+	}
+	if (nonArrayType.isPrimitive()) {
 		return "java.lang"; //$NON-NLS-1$
 	}
-	if (isArray()) {
-		Class<?> componentType = getComponentType();
-		while (componentType.isArray()) {
-			componentType = componentType.getComponentType();
-		}
-		if (componentType.isPrimitive()) {
-			return "java.lang"; //$NON-NLS-1$
-		} else {
-			return getNonArrayClassPackageName(componentType);
-		}
-	}
 /*[ENDIF] Sidecar19-SE */
-	return getNonArrayClassPackageName(this);
+	return getNonArrayClassPackageName(nonArrayType);
 }
 
 /**
@@ -2172,17 +2165,13 @@ public Package getPackage() {
 	String packageName = getPackageName();
 	if (null == packageName) {
 		return null;
-	} else {
-/*[IF Sidecar19-SE]*/
-		if (this.classLoader == ClassLoader.bootstrapClassLoader) {
-			return jdk.internal.loader.BootLoader.getDefinedPackage(packageName);
-		} else {
-			return getClassLoaderImpl().getDefinedPackage(packageName);
-		}
-/*[ELSE]
-		return getClassLoaderImpl().getPackage(packageName);
-/*[ENDIF]*/
 	}
+/*[IF Sidecar19-SE]*/
+	if (this.classLoader == ClassLoader.bootstrapClassLoader) {
+		return jdk.internal.loader.BootLoader.getDefinedPackage(packageName);
+	}
+/*[ENDIF]*/
+	return getClassLoaderImpl().getPackage(packageName);
 }
 
 static Class<?> getPrimitiveClass(String name) {
