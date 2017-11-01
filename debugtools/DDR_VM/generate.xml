@@ -74,7 +74,6 @@
 	<import file="${DDR_VM}/compile_ddr.xml" />
 
 	<target name="generate">
-
 		<fail unless="BUILD_ROOT" message="Missing BUILD_ROOT, e.g. /bluebird/builds/bld_12345" />
 		<fail unless="SPEC_ID" message="Missing SPEC_ID, e.g. linux_x86" />
 		<fail unless="BLOB_FILE" message="Missing BLOB_FILE, e.g. /tmp/.../jre/lib/i386/default/j9ddr.dat" />
@@ -199,24 +198,6 @@
 					<arg line="-f ${TMP_DIR}/RAS_Binaries/build.xml -Dwith-boot-jdk=${with-boot-jdk}"/>
 				</exec>
 			</else>
-		</if>
-
-		<!-- CMVC 198819: Zombie fields in DDR kept alive by out of date build specs -->
-		<if>
-			<or>
-				<equals arg1="${build.type}" arg2="developer" />
-				<equals arg1="${build.type}" arg2="customized" />
-				<equals arg1="${build.type}" arg2="acceptance" />
-				<equals arg1="${build.type}" arg2="codecoverage" />
-				<equals arg1="${build.type}" arg2="service" />
-			</or>
-			<then>
-				<echo> copy spec superset to: ${WORKSPACE}/../build/supersets </echo>
-				<echo> from: ${WORKSPACE}/debugtools/DDR_Artifacts/specs/${VM_VERSION} </echo>
-				<copy todir="${WORKSPACE}/../build/supersets" verbose="true">
-					<fileset dir="${WORKSPACE}/debugtools/DDR_Artifacts/specs/${VM_VERSION}" />
-				</copy>
-			</then>
 		</if>
 
 		<stopwatch name="timer" action="elapsed" />
@@ -538,23 +519,11 @@
 	</target>
 
 	<target name="sync_superset">
-
 		<fail unless="artifacts.dir" message="Missing artifacts.dir" />
 		<fail unless="J9_ROOT" message="Missing J9_ROOT" />
 
-		<echo>Syncing superset.ibuild.dat including spec superset in ${superset.dir}</echo>
-
-		<for param="file">
-			<path>
-				<fileset dir="${BLOBS_DIR}/../supersets" includes="*" />
-			</path>
-			<sequential>
-				<propertyregex property="specsuperset" override="true" input="@{file}" regexp="\/bluebird\/builds\/bld_[0-9]*\/build\/supersets/([^\.]*)" select="\1" casesensitive="false" />
-				<copy file="@{file}" todir="${J9_ROOT}/workspace/debugtools/DDR_Artifacts/specs/${VM_VERSION}" verbose="true" overwrite="true" failonerror="true" />
-			</sequential>
-		</for>
-
-		<copy file="${superset.dir}/superset.base.dat"  tofile="${J9_ROOT}/workspace/debugtools/DDR_Artifacts/supersets/${VM_VERSION}/superset.ibuild.dat" verbose="true" overwrite="true" failonerror="true" />
+		<echo>Updating superset.ibuild.dat in ${superset.dir}</echo>
+		<copy file="${superset.dir}/superset.base.dat" tofile="${J9_ROOT}/workspace/debugtools/DDR_Artifacts/supersets/${VM_VERSION}/superset.ibuild.dat" verbose="true" overwrite="true" failonerror="true" />
 	</target>
 
 	<target name="stage_ddr_jar">
@@ -565,43 +534,6 @@
 			<then>
 				<copy file="${output.dir}/libs/j9ddr.jar" todir="/bluebird/tools/ddr/" />
 			</then>
-		</if>
-	</target>
-
-	<target name="promote_ddr">
-		<shellscript shell="bash" dir="${J9_ROOT}/workspace/debugtools/DDR_Artifacts" outputproperty="scm.status.output">
-			${RTC_COMMAND} status --verbose
-		</shellscript>
-
-		<echo message="scm status: ${scm.status.output}" />
-
-		<propertyregex property="should.checkin" override="true" input="${scm.status.output}" regexp=".*DDR_Artifacts/supersets/[0-9_]{2,5}/(superset.ibuild.dat).*" select="\1" casesensitive="false" />
-
-		<echo message="should.checking: ${should.checkin}" />
-
-		<if>
-			<equals arg1="${should.checkin}" arg2="superset.ibuild.dat" />
-			<then>
-				<shellscript shell="bash" dir="${J9_ROOT}/workspace/debugtools/DDR_Artifacts/specs/${VM_VERSION}" outputproperty="create.changeset.output" failonerror="true">
-					${RTC_COMMAND} -u y create changeset --component jvm.ddr 'Spec superset and superset.ibuild.dat for build ${BUILD_ID}'
-				</shellscript>
-
-				<!-- parse output to find alias for changeset: Created change set (2999:_IAtjcakZEeKW0MLoxfkxGQ). -->
-				<propertyregex property="changeset.alias" override="true" input="${create.changeset.output}" regexp="Created change set \(\d*:(.*)\)\..*" select="\1" casesensitive="false" />
-
-				<shellscript shell="bash" dir="${J9_ROOT}/workspace/debugtools/DDR_Artifacts/" failonerror="true">
-					${RTC_COMMAND} checkin --verbose specs
-					${RTC_COMMAND} checkin --verbose supersets
-					${RTC_COMMAND} changeset complete ${changeset.alias}
-				</shellscript>
-
-				<propertyfile file="${J9_ROOT}/ddr_changeset_uuid.property">
-					<entry key="ddr.changeset.uuid" value="${changeset.alias}" />
-				</propertyfile>
-			</then>
-			<else>
-				<echo>There is nothing to sync (superset.ibuild.dat unchanged).</echo>
-			</else>
 		</if>
 	</target>
 
