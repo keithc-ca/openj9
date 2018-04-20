@@ -67,7 +67,7 @@ public final class StructureReader {
 	public static final Class<?>[] STRUCTURE_CONSTRUCTOR_SIGNATURE = new Class<?>[] { Long.TYPE };
 	public static final byte BIT_FIELD_FORMAT_LITTLE_ENDIAN = 1;
 	public static final byte BIT_FIELD_FORMAT_BIG_ENDIAN = 2;
-	public static final int BIT_FIELD_CELL_SIZE = 32;
+	public static final int BIT_FIELD_CELL_SIZE = 64;
 
 	private static final Pattern MULTI_LINE_COMMENT_PATTERN = Pattern.compile(Pattern.quote("/*") + ".*?" + Pattern.quote("*/") , Pattern.DOTALL);
 	private static final Pattern SINGLE_LINE_COMMENT_PATTERN = Pattern.compile(Pattern.quote("//") + ".*$", Pattern.MULTILINE);
