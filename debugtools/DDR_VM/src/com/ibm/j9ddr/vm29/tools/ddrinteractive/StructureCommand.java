@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010, 2014 IBM Corp. and others
+ * Copyright (c) 2010, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -26,7 +26,6 @@ import static com.ibm.j9ddr.StructureTypeManager.*;
 import java.io.PrintStream;
 import java.util.List;
 
-
 import com.ibm.j9ddr.tools.ddrinteractive.BaseStructureCommand;
 import com.ibm.j9ddr.tools.ddrinteractive.Context;
 import com.ibm.j9ddr.tools.ddrinteractive.FormatWalkResult;
@@ -42,6 +41,7 @@ import com.ibm.j9ddr.vm29.pointer.U32Pointer;
 import com.ibm.j9ddr.vm29.pointer.U64Pointer;
 import com.ibm.j9ddr.vm29.pointer.UDATAPointer;
 import com.ibm.j9ddr.vm29.tools.ddrinteractive.structureformat.base.ArrayFormatter;
+import com.ibm.j9ddr.vm29.tools.ddrinteractive.structureformat.base.BitfieldFormatter;
 import com.ibm.j9ddr.vm29.tools.ddrinteractive.structureformat.base.BoolFormatter;
 import com.ibm.j9ddr.vm29.tools.ddrinteractive.structureformat.base.DoubleFormatter;
 import com.ibm.j9ddr.vm29.tools.ddrinteractive.structureformat.base.EnumFormatter;
@@ -98,15 +98,16 @@ public class StructureCommand extends BaseStructureCommand
 		registerFieldFormatter(new PointerFormatter());
 		registerFieldFormatter(new StructureFormatter());
 		registerFieldFormatter(new ArrayFormatter());
+		registerFieldFormatter(new BitfieldFormatter());
 		registerFieldFormatter(new BoolFormatter());
 		registerFieldFormatter(new FloatFormatter());
 		registerFieldFormatter(new DoubleFormatter());
 		registerFieldFormatter(new EnumFormatter());
 		registerFieldFormatter(new VoidFormatter());
-		
+
 		registerFieldFormatter(new J9SRPFormatter(TYPE_J9SRP, "J9SRP(", false));
 		registerFieldFormatter(new J9SRPFormatter(TYPE_J9WSRP, "J9WSRP(", true));
-		
+
 		registerFieldFormatter(new ScalarFormatter(TYPE_I16, I16Pointer.class));
 		registerFieldFormatter(new ScalarFormatter(TYPE_I32, I32Pointer.class));
 		registerFieldFormatter(new ScalarFormatter(TYPE_I64, I64Pointer.class));
@@ -117,8 +118,13 @@ public class StructureCommand extends BaseStructureCommand
 		registerFieldFormatter(new U64ScalarFormatter(TYPE_U64, U64Pointer.class));
 		registerFieldFormatter(new ScalarFormatter(TYPE_UDATA, UDATAPointer.class));
 	}
-	
-	private class RuntimeResolvingStructureFormatter extends BaseStructureCommand.DefaultStructureFormatter {
+
+	private final class RuntimeResolvingStructureFormatter extends BaseStructureCommand.DefaultStructureFormatter {
+
+		RuntimeResolvingStructureFormatter() {
+			super();
+		}
+
 		@Override
 		public FormatWalkResult format(String type, long address, PrintStream out, Context context, List<IFieldFormatter> fieldFormatters, String[] extraArgs)  {
 			type = RuntimeTypeResolutionHelper.findRuntimeType(type, PointerPointer.cast(address), context);
