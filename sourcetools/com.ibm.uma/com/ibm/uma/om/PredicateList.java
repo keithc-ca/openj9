@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2017 IBM Corp. and others
+ * Copyright (c) 2001, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -26,27 +26,27 @@ import java.util.Vector;
 import com.ibm.uma.UMA;
 import com.ibm.uma.UMAException;
 
-
 public class PredicateList {
+
 	Vector<Predicate> predicates = new Vector<Predicate>();
 	String containingFile;
 	boolean cachedResult;
 	boolean resultHasBeenCached = false;
-	
+
 	public PredicateList(String containingFile) {
 		this.containingFile = containingFile;
 	}
-	
+
 	public String getContainingFile() {
 		return containingFile;
 	}
-	
+
 	public boolean evaluate() throws UMAException {
-		if ( resultHasBeenCached ) { 
+		if (resultHasBeenCached) {
 			return cachedResult;
 		}
 		// if the there are no predicates return true;
-		if ( predicates.size() < 1 ) {
+		if (predicates.size() < 1) {
 			cachedResult = true;
 			resultHasBeenCached = true;
 			return cachedResult;
@@ -60,10 +60,10 @@ public class PredicateList {
 		//   - return true if all predicates were exclude-if
 		//   - return false otherwise
 		boolean includeIfPresent = false;
-		for ( int i=predicates.size()-1; i>=0; i-- ) {
+		for (int i = predicates.size() - 1; i >= 0; i--) {
 			Predicate predicate = predicates.elementAt(i);
-			if ( evalutePredicate( predicate.getPredicate() ) ) {
-				switch ( predicate.getType() ) {
+			if (evalutePredicate(predicate.getPredicate())) {
+				switch (predicate.getType()) {
 				case Predicate.EXCLUDE_IF: {
 					cachedResult = false;
 					resultHasBeenCached = true;
@@ -73,15 +73,17 @@ public class PredicateList {
 					cachedResult = true;
 					resultHasBeenCached = true;
 					return cachedResult;
-				}	
 				}
-			} else if ( predicate.getType() == Predicate.INCLUDE_IF ) {
+				default:
+					throw new IllegalStateException();
+				}
+			} else if (predicate.getType() == Predicate.INCLUDE_IF) {
 				includeIfPresent = true;
 			}
 		}
-		
+
 		// an include-if was present, but no condition was satisfied
-		if ( includeIfPresent ) {
+		if (includeIfPresent) {
 			cachedResult = false;
 			resultHasBeenCached = true;
 			return cachedResult;
@@ -105,46 +107,39 @@ public class PredicateList {
 		boolean orOp = false;
 		boolean xorOp = false;
 		boolean notOp = false;
-		for ( String pred : preds ) {
-			if ( pred.equalsIgnoreCase("and") ) {
-				if ( orOp || xorOp || notOp || !predicateFound ) {
-					throw new UMAException("Error: badly formed predicate [" + predicate + "] in " + containingFile );
-				} 
+		for (String pred : preds) {
+			if (pred.equalsIgnoreCase("and")) {
+				if (orOp || xorOp || notOp || !predicateFound) {
+					throw new UMAException("Error: badly formed predicate [" + predicate + "] in " + containingFile);
+				}
 				andOp = true;
 				continue;
-			} else if ( pred.equalsIgnoreCase("or") ) {
-				if ( andOp || xorOp || notOp || !predicateFound ) {
-					throw new UMAException("Error: badly formed predicate [" + predicate + "] in " + containingFile );
+			} else if (pred.equalsIgnoreCase("or")) {
+				if (andOp || xorOp || notOp || !predicateFound) {
+					throw new UMAException("Error: badly formed predicate [" + predicate + "] in " + containingFile);
 				}
 				orOp = true;
 				continue;
-			} else if ( pred.equalsIgnoreCase("xor") ) {
-				if ( andOp || orOp || notOp || !predicateFound ) {
-					throw new UMAException("Error: badly formed predicate [" + predicate + "] in " + containingFile );
+			} else if (pred.equalsIgnoreCase("xor")) {
+				if (andOp || orOp || notOp || !predicateFound) {
+					throw new UMAException("Error: badly formed predicate [" + predicate + "] in " + containingFile);
 				}
 				xorOp = true;
 				continue;
-			}else if ( pred.equalsIgnoreCase("not") ) {
+			} else if (pred.equalsIgnoreCase("not")) {
 				notOp = true;
 				continue;
 			} else {
 				predicateFound = true;
 			}
-			if ( andOp ) {
-				result = result && 
-				( notOp ? !evaluateSinglePredicate(pred) :
-					evaluateSinglePredicate(pred));
-			} else if ( orOp ) {
-				result = result || 
-				( notOp ? !evaluateSinglePredicate(pred) :
-					evaluateSinglePredicate(pred) );
-			} else if ( xorOp ) {
-				result = result ^ 
-				( notOp ? !evaluateSinglePredicate(pred) :
-					evaluateSinglePredicate(pred) );
+			if (andOp) {
+				result = result && (notOp ^ evaluateSinglePredicate(pred));
+			} else if (orOp) {
+				result = result || (notOp ^ evaluateSinglePredicate(pred));
+			} else if (xorOp) {
+				result = result ^ (notOp ^ evaluateSinglePredicate(pred));
 			} else {
-				result = notOp ? !evaluateSinglePredicate(pred) :
-					evaluateSinglePredicate(pred);
+				result = notOp ^ evaluateSinglePredicate(pred);
 			}
 			notOp = false;
 			orOp = false;
@@ -157,4 +152,5 @@ public class PredicateList {
 	public void add(Predicate predicate) {
 		predicates.add(predicate);
 	}
+
 }
