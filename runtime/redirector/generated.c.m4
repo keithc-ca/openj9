@@ -21,6 +21,7 @@ changequote(`[',`]')dnl
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 /* generated.c */
+
 #ifdef WIN32
 #include <windows.h>
 #include <tchar.h>
@@ -30,7 +31,6 @@ changequote(`[',`]')dnl
 #if defined(AIXPPC) || defined(J9ZOS390) || defined(LINUX) || defined(OSX)
 #include <dlfcn.h>
 #endif /* AIXPPC || J9ZOS390 || LINUX || OSX */
-
 
 #include "j9.h"
 #include "jni.h"
@@ -46,7 +46,7 @@ changequote(`[',`]')dnl
 #define dlsym   dllqueryfn
 #define dlopen(a,b)     dllload(a)
 #define dlclose dllfree
-#endif
+#endif /* J9ZOS390 */
 
 include(helpers.m4)
 
@@ -57,16 +57,16 @@ $2
 ])
 dnl        (name,cc, decorate, ret, args..)
 
-/* Manual typedefs for functions that can't be generated easily */
+/* Manual typedefs for functions that can't be generated easily. */
 typedef int (*jio_fprintf_Type)(FILE * stream, const char * format, ...);
 typedef int (*jio_snprintf_Type)(char * str, int n, const char * format, ...);
 typedef void (JNICALL *JVM_OnExit_Type)(void (*func)(void));
  
-/* Generated typedefs for all forwarded functions */
+/* Generated typedefs for all forwarded functions. */
 define([_X],
 [typedef $4 ($2 *$1_Type)(join([, ],mshift(4,$@)));])dnl
 include([forwarders.m4])
-typedef void*  (JNICALL *JVM_LoadSystemLibrary_Type)(const char *libName);
+typedef void * (JNICALL *JVM_LoadSystemLibrary_Type)(const char *libName);
 
 /* Manually declared functions for non-generated forwarders */
 static JVM_OnExit_Type global_JVM_OnExit;
@@ -75,7 +75,6 @@ static JVM_OnExit_Type global_JVM_OnExit;
 define([_X],[static $1_Type global_$1;])
 include([forwarders.m4])
 
-
 static volatile JVM_LoadSystemLibrary_Type global_JVM_LoadSystemLibrary;
 
 #if defined(AIXPPC)
@@ -83,7 +82,7 @@ static int table_initialized = 0;
 
 /* defined in redirector.c */
 int openLibraries(const char *libraryDir);
-#endif
+#endif /* AIXPPC */
 
 int
 jio_fprintf(FILE * stream, const char * format, ...)
@@ -110,13 +109,12 @@ jio_snprintf(char * str, int n, const char * format, ...)
 void JNICALL
 JVM_OnExit(void (*func)(void))
 {
-	if(global_JVM_OnExit != NULL) {
-		global_JVM_OnExit( func );
+	if (global_JVM_OnExit != NULL) {
+		global_JVM_OnExit(func);
 	} else {
 		exit(999); 
 	}
 }
-
 
 dnl        (1-name,2-cc, 3-decorate, 4-ret, 5-args..)
 define([_X],
@@ -124,19 +122,19 @@ define([_X],
 $4 $2
 $1(join([, ],mshift(4,$@)))
 {
-	if(global_$1 != NULL) {
+	if (global_$1 != NULL) {
 		invokePrefix($4)[]global_$1(arg_names_list(mshift(4,$@)));
 #if defined(AIXPPC)
 	} else if (!table_initialized) {
 		/* attempt to open the 'master redirector' and try again */
 		int openedLibraries = openLibraries("");
-		if(JNI_ERR == openedLibraries) {
+		if (JNI_ERR == openedLibraries) {
 			fprintf(stdout, "Internal Error: Failed to initialize redirector - exiting\n");
 			exit(998);
 		}
 		/* re-try to run this function */
 		invokePrefix($4)[]$1(arg_names_list(mshift(4,$@)));
-#endif
+#endif /* AIXPPC */
 	} else {
 		printf("Fatal Error: Missing forwarder for $1[]()");
 		exit(969); 
@@ -152,16 +150,14 @@ static void *functionLookup(void *dllAddr, const char *functionName) {
 	/* remove the decorations (leading _ and trailing @<number>) if present. */
 #define J9_SYM_MAX 256
 	char localFunctionName[[J9_SYM_MAX]];
-	char *addrOfAtSymbol, *startOfFunctionName;
+	char *startOfFunctionName = (char *)((functionName[[0]] == '_') ? (functionName + 1) : functionName);
+	char *addrOfAtSymbol = strchr(startOfFunctionName, '@');
 
-	if(strlen(functionName) >= J9_SYM_MAX) {
+	if (strlen(functionName) >= J9_SYM_MAX) {
 		printf("Symbol too long - %s - exiting\n", functionName);
 	}
 
-	startOfFunctionName = (char *) ((functionName[[0]] == '_') ? (functionName + 1) : functionName);
-
-	addrOfAtSymbol = strchr(functionName, '@');
-	if(addrOfAtSymbol) {
+	if (NULL != addrOfAtSymbol) {
 		memcpy(localFunctionName, startOfFunctionName, addrOfAtSymbol - startOfFunctionName);
 		localFunctionName[[addrOfAtSymbol - startOfFunctionName]] = '\0';
 	} else {
@@ -173,23 +169,23 @@ static void *functionLookup(void *dllAddr, const char *functionName) {
 	return GetProcAddress(dllAddr, localFunctionName);
 #else
 	return (void *)dlsym(dllAddr, localFunctionName);
-#endif
+#endif /* WIN32 */
 
-#endif
+#endif /* WIN32 && !J9VM_ENV_DATA64 */
 }
 dnl        (1-name,2-cc, 3-decorate, 4-ret, 5-args..)
 define([_X],[	global_$1 = ($1_Type) functionLookup(vmdll, "decorate_function_name($@)" );])dnl
 
 void lookupJVMFunctions(void *vmdll) {
-	global_JVM_OnExit = (JVM_OnExit_Type) functionLookup(vmdll, "_JVM_OnExit@4" );
+	global_JVM_OnExit = (JVM_OnExit_Type) functionLookup(vmdll, "_JVM_OnExit@4");
 include([forwarders.m4])
-	global_JVM_LoadSystemLibrary = (JVM_LoadSystemLibrary_Type) functionLookup(vmdll, "_JVM_LoadSystemLibrary@4" );
+	global_JVM_LoadSystemLibrary = (JVM_LoadSystemLibrary_Type) functionLookup(vmdll, "_JVM_LoadSystemLibrary@4");
 #if defined(AIXPPC)
 	table_initialized = 1;
 #endif
 }
 
-void*  JNICALL
+void * JNICALL
 JVM_LoadSystemLibrary(const char *libName)
 {
 	int count = 0;
@@ -201,19 +197,19 @@ JVM_LoadSystemLibrary(const char *libName)
 #endif		
 		count++;
 	}
-	if(global_JVM_LoadSystemLibrary != NULL) {
-		return global_JVM_LoadSystemLibrary( libName );
+	if (global_JVM_LoadSystemLibrary != NULL) {
+		return global_JVM_LoadSystemLibrary(libName);
 #if defined(AIXPPC)
 	} else if (!table_initialized) {
 		/* attempt to open the 'master redirector' and try again */
 		int openedLibraries = openLibraries("");
-		if(JNI_ERR == openedLibraries) {
+		if (JNI_ERR == openedLibraries) {
 			fprintf(stdout, "Internal Error: Failed to initialize redirector - exiting\n");
 			exit(998);
 		}
 		/* re-try to run this function */
-		return JVM_LoadSystemLibrary( libName );
-#endif
+		return JVM_LoadSystemLibrary(libName);
+#endif /* AIXPPC */
 	} else {
 		printf("Fatal Error: Missing forwarder for JVM_LoadSystemLibrary()");
 		exit(969); 
@@ -236,7 +232,6 @@ JVM_LoadSystemLibrary(const char *libName)
  * As following comments, this method simply returns incoming agent_props to make the agent happy.
  * If there is a need in the future to modify this method and other VM function support are required, this method need to be moved back to JVM dll.
  * In such case, other means have to be developed to ensure this method still accessible in situations identified by PR 104487 mentioned above. 
- *   	 
  */
 
 /*
