@@ -1,25 +1,24 @@
 <!--
-  Copyright (c) 2007, 2018 IBM Corp. and others
- 
-  This program and the accompanying materials are made available under
-  the terms of the Eclipse Public License 2.0 which accompanies this
-  distribution and is available at https://www.eclipse.org/legal/epl-2.0/
-  or the Apache License, Version 2.0 which accompanies this distribution and
-  is available at https://www.apache.org/licenses/LICENSE-2.0.
- 
-  This Source Code may also be made available under the following
-  Secondary Licenses when the conditions for such availability set
-  forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
-  General Public License, version 2 with the GNU Classpath
-  Exception [1] and GNU General Public License, version 2 with the
-  OpenJDK Assembly Exception [2].
- 
-  [1] https://www.gnu.org/software/classpath/license.html
-  [2] http://openjdk.java.net/legal/assembly-exception.html
+Copyright (c) 2007, 2018 IBM Corp. and others
 
-  SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+This program and the accompanying materials are made available under
+the terms of the Eclipse Public License 2.0 which accompanies this
+distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+or the Apache License, Version 2.0 which accompanies this distribution and
+is available at https://www.apache.org/licenses/LICENSE-2.0.
+
+This Source Code may also be made available under the following
+Secondary Licenses when the conditions for such availability set
+forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+General Public License, version 2 with the GNU Classpath
+Exception [1] and GNU General Public License, version 2 with the
+OpenJDK Assembly Exception [2].
+
+[1] https://www.gnu.org/software/classpath/license.html
+[2] http://openjdk.java.net/legal/assembly-exception.html
+
+SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 -->
-
 <exportlists>
 	<exports group="j9vmnatives">
 		<!-- _JVM_GetCallerClass is exported within module.xml files -->
@@ -131,8 +130,6 @@
 		<export name="jio_snprintf" />
 		<export name="jio_vfprintf" />
 		<export name="jio_vsnprintf" />
-		<export name="post_block" />
-		<export name="pre_block" />
 
 		<!-- Additions for Java 7 -->
 		<export name="_JVM_GetStackAccessControlContext@8"/>
@@ -226,14 +223,14 @@
 		<export name="_JVM_PrintStackTrace@12"/>
 		<export name="_JVM_SetField@16"/>
 		<export name="_JVM_SetPrimitiveField@24"/>
-		<export name="_JVM_SetNativeThreadName@12"/>		
-		
+		<export name="_JVM_SetNativeThreadName@12"/>
+
 		<!-- Additions used on linux-x86 -->
 		<export name="_JVM_SetSockOpt@20"/>
 		<export name="_JVM_SocketShutdown@8"/>
 		<export name="_JVM_GetSockName@12"/>
 		<export name="_JVM_GetHostName@8"/>
-		
+
 		<!-- Additions to support the JDWP agent -->
 		<export name="JVM_InitAgentProperties"/>
 
@@ -268,7 +265,7 @@
 		<export name="_JVM_GetMethodIxSignatureUTF@12"/>
 		<export name="_JVM_GetMethodIxExceptionsCount@12"/>
 		<export name="_JVM_ReleaseUTF@4"/>
-		
+
 		<!-- Additions for Java 8 -->
 		<export name="_JVM_GetClassTypeAnnotations@8"/>
 		<export name="_JVM_GetFieldTypeAnnotations@8"/>
@@ -287,19 +284,19 @@
 		<export name="JVM_AddModuleExportsToAllUnnamed"/>
 		<export name="JVM_SetBootLoaderUnnamedModule"/>
 		<export name="JVM_GetModuleByPackageName"/>
-		
+
 		<!-- Additions for Java 9 RAW -->
 		<export name="JVM_GetSimpleBinaryName"/>
-		<export name="JVM_SetMethodInfo"/>		
-		<export name="JVM_ConstantPoolGetNameAndTypeRefIndexAt"/>		
-		<export name="JVM_MoreStackWalk"/>		
-		<export name="JVM_ConstantPoolGetClassRefIndexAt"/>		
-		<export name="JVM_GetVmArguments"/>		
-		<export name="JVM_FillStackFrames"/>		
-		<export name="JVM_FindClassFromCaller"/>		
-		<export name="JVM_ConstantPoolGetNameAndTypeRefInfoAt"/>		
-		<export name="JVM_ConstantPoolGetTagAt"/>		
-		<export name="JVM_CallStackWalk"/>		
+		<export name="JVM_SetMethodInfo"/>
+		<export name="JVM_ConstantPoolGetNameAndTypeRefIndexAt"/>
+		<export name="JVM_MoreStackWalk"/>
+		<export name="JVM_ConstantPoolGetClassRefIndexAt"/>
+		<export name="JVM_GetVmArguments"/>
+		<export name="JVM_FillStackFrames"/>
+		<export name="JVM_FindClassFromCaller"/>
+		<export name="JVM_ConstantPoolGetNameAndTypeRefInfoAt"/>
+		<export name="JVM_ConstantPoolGetTagAt"/>
+		<export name="JVM_CallStackWalk"/>
 		<export name="JVM_ToStackTraceElement"/>
 		<export name="JVM_GetStackTraceElements"/>
 		<export name="JVM_InitStackTraceElementArray"/>
@@ -307,10 +304,9 @@
 		<export name="JVM_GetAndClearReferencePendingList"/>
 		<export name="JVM_HasReferencePendingList"/>
 		<export name="JVM_WaitForReferencePendingList"/>
-						
+
 		<!-- Additions for Java 9 (General) -->
 		<export name="_JVM_GetNanoTimeAdjustment@16"/>
-	</exports>	
+	</exports>
 
 </exportlists>
-

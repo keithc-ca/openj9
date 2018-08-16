@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2016 IBM Corp. and others
+ * Copyright (c) 2002, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -20,7 +20,6 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-
 #ifndef jvm_h
 #define jvm_h
 
@@ -37,7 +36,6 @@ extern "C" {
 #define J9ZOS390
 #endif
 #endif
-
 
 #ifdef WIN32
 
@@ -166,7 +164,6 @@ struct sockaddr;                                                                
 jint 
 GetStringPlatform(JNIEnv* env, jstring instr, char* outstr, jint outlen, const char* encoding);
 
-
 /**
 * @brief
 * @param env
@@ -196,7 +193,6 @@ int isFileInDir(char *dir, char *file);
 int
 jio_fprintf(FILE * stream, const char * format, ...);
 
-
 /**
 * @brief
 * @param str
@@ -208,9 +204,6 @@ jio_fprintf(FILE * stream, const char * format, ...);
 int
 jio_snprintf(char * str, int n, const char * format, ...);
 
-struct sockaddr;
-
-
 /**
 * @brief
 * @param (*func)(void)
@@ -218,7 +211,6 @@ struct sockaddr;
 */
 void JNICALL
 JVM_OnExit(void (*func)(void));
-
 
 /**
 * @brief
@@ -230,7 +222,6 @@ JVM_OnExit(void (*func)(void));
 jint JNICALL
 JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args);
 
-
 /**
 * @brief
 * @param **vmBuf
@@ -241,7 +232,6 @@ JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args);
 jint JNICALL
 JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs);
 
-
 /**
 * @brief
 * @param *vm_args
@@ -249,7 +239,6 @@ JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs);
 */
 jint JNICALL
 JNI_GetDefaultJavaVMInitArgs(void *vm_args);
-
 
 /* JVM functions are prototyped in the redirector/forwarders.ftl file
  * which allows us to keep prototypes and forwarders in sync. */
@@ -259,6 +248,4 @@ JNI_GetDefaultJavaVMInitArgs(void *vm_args);
 }
 #endif
 
-#endif     /* jvm_h */
-  
-
+#endif /* jvm_h */

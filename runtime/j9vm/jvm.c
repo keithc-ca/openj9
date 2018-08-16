@@ -294,7 +294,6 @@ static void truncatePath(char *inputPath);
 static jint formatErrorMessage(int errorCode, char *inBuffer, jint inBufferLength);
 #endif
 
-
 /**
  * Preload the VM, Thread, and Port libraries using platform-specific
  * shared library functions, and modifying the process environment as
@@ -496,7 +495,7 @@ static void freeGlobals(void)
 {
 	free(newPath);
 	newPath = NULL;
-	
+
 	free(j9binBuffer);
 	j9binBuffer = NULL;
 
@@ -508,7 +507,7 @@ static void freeGlobals(void)
 
 	free(j9libvmBuffer);
 	j9libvmBuffer = NULL;
-	
+
 	free(j9Buffer);
 	j9Buffer = NULL;
 }
@@ -586,8 +585,8 @@ jint JNICALL DestroyJavaVM(JavaVM * javaVM)
 
 		BFUjavaVM = NULL;
 	} else {
-		/* We are not shutting down the  port library but we still 
-		 * need to make sure memcheck gets a chance to print its 
+		/* We are not shutting down the  port library but we still
+		 * need to make sure memcheck gets a chance to print its
 		 * report.
 		 */
 		memoryCheck_print_report(&j9portLibrary);
@@ -627,7 +626,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserv
 }
 
 
-static BOOLEAN 
+static BOOLEAN
 preloadLibraries(void)
 {
 	char* tempchar = 0;
@@ -646,7 +645,7 @@ preloadLibraries(void)
 		return TRUE;
 	}
 	beenRun = TRUE;
-	
+
 	unicodeDLLNameLength = GetModuleFileNameW(jvm_dllHandle, unicodeDLLName, (J9_MAX_PATH + 1));
 	/* Don't use truncated path */
 	if (unicodeDLLNameLength > (DWORD)J9_MAX_PATH) {
@@ -711,7 +710,7 @@ preloadLibraries(void)
 	DBG_MSG(("j9libBuffer   = <%s>\n", jvmBufferData(j9libBuffer)));
 	DBG_MSG(("j9libvmBuffer = <%s>\n", jvmBufferData(j9libvmBuffer)));
 	DBG_MSG(("j9Buffer      = <%s>\n", jvmBufferData(j9Buffer)));
-	
+
 #if !CALL_BUNDLED_FUNCTIONS_DIRECTLY
 	vmDLL = (HINSTANCE) preloadLibrary(vmDllName, TRUE);
 	preloadLibrary(J9_HOOKABLE_DLL_NAME, TRUE);
@@ -768,7 +767,7 @@ preloadLibraries(void)
 	preloadLibrary(J9_ZIP_DLL_NAME, TRUE);
 
 #ifdef J9_CLEAR_VM_INTERFACE_DLL_NAME
-	/* CMVC 142575: Harmony JDWP sits apart for the JVM natives including the vmi.  
+	/* CMVC 142575: Harmony JDWP sits apart for the JVM natives including the vmi.
 	 * We must preload the library so that it can be found when JDWP tries to load it. */
 	preloadLibrary(J9_CLEAR_VM_INTERFACE_DLL_NAME, TRUE);
 #endif
@@ -1005,7 +1004,7 @@ removeSuffix(char *string, const char *suffix)
 #endif /* J9VM_JAVA9_BUILD < 150 */
 
 #if defined(J9UNIX) || defined(J9ZOS390) || defined(OSX)
-static BOOLEAN 
+static BOOLEAN
 preloadLibraries(void)
 {
 	void *vmDLL, *threadDLL, *portDLL;
@@ -1198,7 +1197,7 @@ preloadLibraries(void)
 	}
 
 #ifdef J9_CLEAR_VM_INTERFACE_DLL_NAME
-	/* CMVC 142575: Harmony JDWP sits apart for the JVM natives including the vmi.  
+	/* CMVC 142575: Harmony JDWP sits apart for the JVM natives including the vmi.
 	 * We must preload the library so that it can be found when JDWP tries to load it. */
 	preloadLibrary(J9_CLEAR_VM_INTERFACE_DLL_NAME, TRUE);
 #endif /* J9_CLEAR_VM_INTERFACE_DLL_NAME */
@@ -1211,7 +1210,6 @@ preloadLibraries(void)
 	return TRUE;
 }
 #endif  /* defined(J9UNIX) || defined(J9ZOS390) */
-
 
 
 
@@ -1349,11 +1347,11 @@ VersionSetting VERSION_SETTINGS[] = {
 #define NUM_VERSION_SETTINGS (sizeof(VERSION_SETTINGS) / sizeof(VersionSetting))
 
 
-static UDATA 
+static UDATA
 decodeSetting(const char* key, const char* value, VersionSetting* settings, IDATA numSettings)
 {
 	IDATA index = 0;
-	
+
 	for (index = 0; index < numSettings; index++) {
 		VersionSetting *setting = &settings[index];
 		if (!strcmp(value, setting->key)) {
@@ -1387,13 +1385,13 @@ decodeSetting(const char* key, const char* value, VersionSetting* settings, IDAT
 		}
 	}
 
-#if defined(DEBUG)	
+#if defined(DEBUG)
 	printf("Valid choices are: ");
 	for (index=0; index < numSettings; index++) {
 		VersionSetting* setting = &settings[index];
 		printf("%s", setting->key);
 		if (index != numSettings-1)
-				printf(", ");		
+				printf(", ");
 	}
 	printf(".\n");
 #endif
@@ -1428,7 +1426,7 @@ getVersionFromClasslibPropertiesFile(void)
 		const char *shape = NULL;
 		const char *version = NULL;
 		UDATA decoded = 0;
-		
+
 		shape = props_file_get(propsFile, "shape");
 		if (NULL == shape) {
 #ifdef DEBUG
@@ -1444,13 +1442,13 @@ getVersionFromClasslibPropertiesFile(void)
 #endif
 			goto bail;
 		}
-	
+
 		decoded = decodeSetting("shape", shape, SHAPE_SETTINGS, NUM_SHAPE_SETTINGS);
 		if (0 == decoded) {
 			goto bail;
 		}
 		finalVersion |= decoded;
-	
+
 		decoded = decodeSetting("version", version, VERSION_SETTINGS, NUM_VERSION_SETTINGS);
 		if (0 == decoded) {
 			goto bail;
@@ -1464,7 +1462,7 @@ bail:
 		printf("Could not open %s\n", propsFile);
 #endif
 	}
-	
+
 	return finalVersion;
 }
 
@@ -1511,7 +1509,7 @@ getVersionFromReleaseFile(void)
 				finalVersion = J2SE_19 | J2SE_SHAPE_B165;
 #define	 JAVA_VERSION_10 "\"10" /* its usual format is "10[.x.x]" */
 			} else if (!strncmp(version, JAVA_VERSION_10, sizeof(JAVA_VERSION_10) - 1)) {
-#undef   JAVA_VERSION_10			
+#undef   JAVA_VERSION_10
 				finalVersion = J2SE_V10 | J2SE_SHAPE_V10;
 #define	 JAVA_VERSION_11 "\"11" /* its usual format is "11[.x.x]" */
 			} else if (!strncmp(version, JAVA_VERSION_11, sizeof(JAVA_VERSION_11) - 1)) {
@@ -1544,7 +1542,7 @@ getVersionFromReleaseFile(void)
  * Get Java version of running JVM
  * Attempt getting the Java version info from 'classlib.properties' first,
  * if not successful, try 'release' file next,
- * if still no version info found, 'J2SE_LATEST | J2SE_SHAPE_LATEST' is returned 
+ * if still no version info found, 'J2SE_LATEST | J2SE_SHAPE_LATEST' is returned
  *
  * @return 'J2SE_xx | J2SE_SHAPE_xx' decoded from 'classlib.properties' or 'release',
  *         or 'J2SE_LATEST | J2SE_SHAPE_LATEST'.
@@ -1583,7 +1581,7 @@ typedef struct J9SpecialArguments {
  * and return the total size required for the strings
  */
 static UDATA
-initialArgumentScan(JavaVMInitArgs *args, J9SpecialArguments *specialArgs) 
+initialArgumentScan(JavaVMInitArgs *args, J9SpecialArguments *specialArgs)
 {
 	BOOLEAN xCheckFound = FALSE;
 	const char *xCheckString = "-Xcheck";
@@ -1939,7 +1937,7 @@ jint JNICALL JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args) {
 
 	/* no tracing for this function, since it's unlikely to be used once the VM is running and the trace engine is initialized */
 	preloadLibraries();
-	
+
 #ifdef WIN32
 	if (GetCurrentDirectoryW(J9_MAX_PATH, unicodeTemp) == 0) {
 		strcpy(cwd, "\\");
@@ -1977,11 +1975,11 @@ jint JNICALL JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args) {
 #if defined(J9ZOS390)
 	/*
 	 * When we init the port lib, the 'Signal Reporter' thread will be spawned.
-	 * On z/OS, we need to know whether this thread should be spawned as a medium 
+	 * On z/OS, we need to know whether this thread should be spawned as a medium
 	 * or heavy weight thread. We do this here but we will only take into
 	 * account JAVA_THREAD_MODEL - i.e., if the customer is using '-Xthr:tw=heavy'
-	 * instead of the env var, the 'Signal Reporter' thread will still be launched 
-	 * as a medium weight thread (see PR100512). 
+	 * instead of the env var, the 'Signal Reporter' thread will still be launched
+	 * as a medium weight thread (see PR100512).
 	 */
 	if (!setZOSThrWeight()) {
 		return JNI_ERR;
@@ -2103,7 +2101,7 @@ jint JNICALL JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args) {
 		 * The catalog has already been set above. */
 		memoryCheck_initialize(&j9portLibrary, "all", NULL);
 	}
-	
+
 	{
 		char *optionsDefaultFileLocation = NULL;
 		BOOLEAN doAddExtDir = FALSE;
@@ -2210,7 +2208,7 @@ jint JNICALL JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args) {
 
 #if CALL_BUNDLED_FUNCTIONS_DIRECTLY
 	result = J9_CreateJavaVM((JavaVM**)&BFUjavaVM, penv, &createParams);
-#else 
+#else
 	result = globalCreateVM((JavaVM**)&BFUjavaVM, penv, &createParams);
 #endif /* CALL_BUNDLED_FUNCTIONS_DIRECTLY  */
 
@@ -2371,7 +2369,7 @@ JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs)
 
 jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *vm_args) {
 	UDATA requestedVersion = (UDATA)((JDK1_1InitArgs *)vm_args)->version;
-	
+
 	switch (requestedVersion) {
 	case JNI_VERSION_1_2:
 	case JNI_VERSION_1_4:
@@ -2381,8 +2379,8 @@ jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *vm_args) {
 	case JNI_VERSION_10:
 		return JNI_OK;
 	}
-	
-	return JNI_EVERSION;	
+
+	return JNI_EVERSION;
 }
 
 
@@ -2709,18 +2707,6 @@ preloadLibrary(char* dllName, BOOLEAN inJVMDir)
  *	Included everywhere because the makefile generator makes it hard to create different export lists
  *	for different platforms.
  */
-int
-pre_block(pre_block_t buf)
-{
-	return 0;
-}
-
-
-
-int
-post_block() {
-	return 0;
-}
 
 #if defined(AIXPPC)
 static void
@@ -5326,7 +5312,7 @@ JVM_Socket(jint domain, jint type, jint protocol)
  *
  * @param descriptor socket file descriptor
  * @param result the number of bytes that can be read without blocking
- * 
+ *
  * @return result of this JVM method, 0 for failure, 1 (or non-zero value) for success
  */
 jint JNICALL
@@ -5407,7 +5393,7 @@ JVM_Timeout(jint descriptor, jint timeout)
 #endif
 
 #if defined(J9UNIX) || defined(J9ZOS390) || defined(OSX)
-	jint returnVal = 0; 
+	jint returnVal = 0;
 	jint crazyCntr = 10;
 	fd_set fdset;
 #endif
@@ -6245,12 +6231,12 @@ setZOSThrWeight(void)
 }
 
 /**
- * @return ZOS_THR_WEIGHT_HEAVY or ZOS_THR_WEIGHT_MEDIUM if the customer is 
+ * @return ZOS_THR_WEIGHT_HEAVY or ZOS_THR_WEIGHT_MEDIUM if the customer is
  * explicitly requesting heavy or medium weight threads via the
- * JAVA_THREAD_MODEL env var. Otherwise, it returns 
+ * JAVA_THREAD_MODEL env var. Otherwise, it returns
  * ZOS_THR_WEIGHT_NOT_FOUND.
  */
-static UDATA 
+static UDATA
 checkZOSThrWeightEnvVar(void)
 {
 	UDATA retVal = ZOS_THR_WEIGHT_NOT_FOUND;
@@ -6261,7 +6247,7 @@ checkZOSThrWeightEnvVar(void)
 	if (NULL != val) {
 		/*
 		 * If the customer did not request heavy weight, assume medium.
-		 * Note that the goal here is not to properly parse the env 
+		 * Note that the goal here is not to properly parse the env
 		 * var. This is done in threadParseArguments() and it will flag
 		 * if the customer attempts to pass a bad value in the env var.
 		 */
