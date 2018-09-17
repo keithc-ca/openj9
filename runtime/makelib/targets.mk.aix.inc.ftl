@@ -139,13 +139,6 @@ else
   UMA_EXE_LINK_POSTFLAGS :=
 endif
 
-$(patsubst %.s,%.o,$(filter %.s,$(UMA_FILES_TO_PREPROCESS))) : %$(UMA_DOT_O) : %.s
-	cc -P $(CPPFLAGS) $*.s
-	sed 's/\!/\#/g' $*.i > $*.spp
-	aspp $(UMA_ASPP_DEBUG) $*.spp $*.dbg
-	$(AS) $(ASFLAGS) $*.dbg
-	-rm $*.dbg $*.i $*.spp
-
 ifdef UMA_TREAT_WARNINGS_AS_ERRORS
   ifndef UMA_SUPPRESS_WARNINGS_AS_ERRORS
     CFLAGS += -qhalt=w

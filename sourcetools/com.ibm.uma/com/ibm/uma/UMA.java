@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2017 IBM Corp. and others
+ * Copyright (c) 2001, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -674,7 +674,6 @@ public class UMA {
 			buffer.append(platform.writeMakefileExtras(artifact).toString());
 			writeMakefileStubs(buffer, module, artifact);
 			writeMakefileVPathInformation(buffer, module, artifact);
-			buffer.append(platform.writeMakefilePostscript(artifact).toString());
 			if (artifact.getCommands().isEmpty()) {
 				buffer.append("\ninclude "+UMA_PATH_TO_ROOT_VAR+UMA_TARGET_MAKEFILE_WITH_PATH+"\n");
 			} else {

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2017 IBM Corp. and others
+ * Copyright (c) 2001, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -44,7 +44,6 @@ import freemarker.template.TemplateModel;
 
 public abstract class PlatformImplementation implements IPlatform {
 
-	static final String asmFilesRequiringPreprocessing = "asmFilesRequiringPreprocessing";
 	static final String DLL_BASE_ADDRESS = "dllBaseAddress";
 	
 	ConfigurationImpl configuration;
@@ -62,23 +61,7 @@ public abstract class PlatformImplementation implements IPlatform {
 	public void decorateModules( Vector<Module> modules ) throws UMAException {
 		// default of do nothing
 	}
-	
-	public StringBuffer writePreprocessingDirectives(Artifact artifact) throws UMAException {
-		StringBuffer buffer = new StringBuffer();
-		String [] files = artifact.getData(asmFilesRequiringPreprocessing);
-		if (files != null) {
-			for ( String file : files ) {
-				buffer.append("UMA_FILES_TO_PREPROCESS+="+file+"\n");
-			}
-		}
-		return buffer;
-	}
-	
-	
-	public StringBuffer writeMakefilePostscript(Artifact artifact) throws UMAException{
-		return writePreprocessingDirectives(artifact);
-	}
-	
+
 	protected String getFlagStringForAS(Flag flag) throws UMAException {
 		String flagString = "";
 		if ( isType("qnx") || (isType("linux") && (!(isProcessor("ppc") && !isType("montavista")))) ) {

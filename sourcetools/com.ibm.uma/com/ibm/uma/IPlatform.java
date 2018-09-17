@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2017 IBM Corp. and others
+ * Copyright (c) 2001, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -39,7 +39,6 @@ public interface IPlatform {
 	// Per Artifact API
 	public abstract void writePlatformSpecificFiles(Artifact artifact) throws UMAException;
 	public abstract StringBuffer writeMakefileExtras(Artifact artifact) throws UMAException;
-	public abstract StringBuffer writeMakefilePostscript(Artifact artifact) throws UMAException;
 	public abstract StringBuffer writeMakefileFlagsLine(Artifact artifact) throws UMAException;
 
 	

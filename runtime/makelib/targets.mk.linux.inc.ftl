@@ -417,20 +417,6 @@ endif
   endif
 </#if>
 
-<#if uma.spec.processor.arm>
-$(patsubst %.s,%.o,$(filter %.s,$(UMA_FILES_TO_PREPROCESS))) : %$(UMA_DOT_O) : %.s
-	sed -f $(UMA_PATH_TO_ROOT)compiler/build/scripts/armasm2gas.sed $*.s > $*.S
-	$(CPP) $(CPPFLAGS) $(UMA_C_INCLUDES) $*.S > $*.spp
-	-rm $*.S
-	$(AS) $(ASFLAGS) $(VMASMDEBUG) -o $*.o $*.spp
-	-rm $*.spp
-<#elseif uma.spec.processor.ppc>
-$(patsubst %.s,%.o,$(filter %.s,$(UMA_FILES_TO_PREPROCESS))) : %$(UMA_DOT_O) : %.s
-	$(CPP) -P $(CPPFLAGS) $*.s | sed 's/\!/\#/g' > $*.spp.s
-	$(AS) $(ASFLAGS) $*.spp.s
-	-rm $*.spp.s
-</#if>
-
 ifdef UMA_TREAT_WARNINGS_AS_ERRORS
   ifndef UMA_SUPPRESS_WARNINGS_AS_ERRORS
     <#if uma.spec.processor.ppc>
