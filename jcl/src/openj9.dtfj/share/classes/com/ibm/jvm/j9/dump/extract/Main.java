@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2004, 2017 IBM Corp. and others
+ * Copyright (c) 2004, 2018 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -54,6 +54,7 @@ public class Main {
 		private static class Register {
 			final String name;
 			final long value;
+
 			Register(String name, long value) {
 				this.name = name;
 				this.value = value;
@@ -93,12 +94,26 @@ public class Main {
 		public DummyBuilder(File rootDirectory, long environment)
 		{
 			_virtualRootDirectory = rootDirectory;
-			
-			// See comment about AIX above. In Java 6 the JVM libraries have moved to platform directories in sdk/jre/lib
-			// and the main binary is still in sdk/jre/bin, so fix is to prime the extra search paths with sdk/jre/bin.
-			String jre_bin = System.getProperty("java.home") + File.separator + "bin";
-			File javaPath = new File(jre_bin);
-			_successfulSearchPaths.add(javaPath);
+
+			String lib_path = System.getProperty("java.library.path");
+			if (lib_path != null) {
+				for (String lib_dir : lib_path.split(File.pathSeparator)) {
+					_successfulSearchPaths.add(new File(lib_dir));
+				}
+			}
+
+			String java_home = System.getProperty("java.home");
+			if (java_home != null) {
+				// On most platforms, libraries are in jre/lib.
+				_successfulSearchPaths.add(new File(java_home, "lib"));
+
+				// See comment about AIX above. The JVM libraries have moved
+				// to platform directories in jre/lib and the main binary is
+				// still in jre/bin, so fix is to prime the extra search paths
+				// with sdk/jre/bin.
+
+				_successfulSearchPaths.add(new File(java_home, "bin"));
+			}
 			this._environmentPointer = environment;
 		}
 
@@ -148,14 +163,13 @@ public class Main {
 			return new Object();
 		}
 
-		public ClosingFileReader openFile(String nameOrPath) throws IOException
-		{
+		public ClosingFileReader openFile(String nameOrPath) throws IOException {
 			File fileRep = new File(nameOrPath);
-			
-			if ((null != _virtualRootDirectory) && (fileRep.isAbsolute())) {
+
+			if ((null != _virtualRootDirectory) && fileRep.isAbsolute()) {
 				//this is to allow system files (referenced via absolute paths) from the target machine to be put into a different directory as to not conflict with the system files on the host machine
 				fileRep = sysFileRelative(_virtualRootDirectory, fileRep);
-			} else if ((!fileRep.isAbsolute()) && (!fileRep.exists())) {
+			} else if (!fileRep.isAbsolute() && !fileRep.exists()) {
 				//the file is relative and doesn't exist so try looking for it in the other locations where we have seen files
 				Iterator paths = _successfulSearchPaths.iterator();
 				String filename = fileRep.getName();
@@ -180,7 +194,7 @@ public class Main {
 				}
 				return reader;
 			}
-			
+
 			ClosingFileReader zosReader = new ClosingFileReader(fileRep);
 			return zosReader;
 		}
@@ -208,7 +222,6 @@ public class Main {
 			return result;
 		}
 
-
 		public Object buildSymbol(Object addressSpace, String functionName, long relocatedFunctionAddress) {
 			return new Object();
 		}
@@ -216,23 +229,20 @@ public class Main {
 		public void setExecutableUnavailable(String description) {
 			_executableAvailable = false;
 		}
-		
-		public boolean isExecutableAvailable()
-		{
+
+		public boolean isExecutableAvailable() {
 			return _executableAvailable;
 		}
 
 		public Object buildAddressSpace(String name, int id) {
 			return new Object();
 		}
-		
-		public void setOSType(String osType)
-		{
+
+		public void setOSType(String osType) {
 			// Do nothing
 		}
-		
-		public void setCPUType(String cpuType)
-		{
+
+		public void setCPUType(String cpuType) {
 			// Do nothing
 		}
 
@@ -388,7 +398,7 @@ public class Main {
 	private Main(String dumpName, File virtualRootDirectory, boolean verbose, boolean throwExceptions)
 	{
 		// System.err.println("Main.Main entered dn=" + dumpName + " vrd=" + virtualRootDirectory + " v=" + verbose);
-		
+
 		_dumpName = dumpName;
 		_virtualRootDirectory = virtualRootDirectory;
 		_verbose = verbose;
@@ -444,14 +454,14 @@ public class Main {
 		//We can use the current address space to sniff the environment from the J9RAS structure,
 		//then recreate the dump (the environment pointer can be used to find the IBM_COMMAND_LINE
 		//variable and get the executable that way).
-		if (_dump instanceof NewElfDump && ! _builder.isExecutableAvailable()) {
+		if (_dump instanceof NewElfDump && !_builder.isExecutableAvailable()) {
 			long environmentPointer = 0;
 			try {
 				environmentPointer = getEnvironmentPointer(_dump.getAddressSpace());
 			} catch (Throwable t) {
-				errorMessage("Error. Unable to locate executable for " + dumpName , JEXTRACT_INTERNAL_ERROR, t);
+				errorMessage("Error. Unable to locate executable for " + dumpName, JEXTRACT_INTERNAL_ERROR, t);
 			}
-			
+
 			if (environmentPointer != 0) {
 				_builder = new DummyBuilder(_virtualRootDirectory, environmentPointer);
 				try {
@@ -462,10 +472,10 @@ public class Main {
 				_dump.extract(_builder);
 			}
 		}
-		
+
 		report("Read memory image from " + _dumpName);
 	}
-	
+
 	private void runZip(String outputName) {
 		// Zip up the dump, libraries and (optionally) XML file
 		List files = new ArrayList();
@@ -474,8 +484,7 @@ public class Main {
 		for (Iterator iter = _dump.getAdditionalFileNames(); iter.hasNext();) {
 			files.add(iter.next());
 		}
-		
-			
+
 		try {
 			// Add the trace formatting template files (Traceformat.dat and J9TraceFormat.dat) into the zip
 			String lib_dir = System.getProperty("java.home") + File.separator + "lib" + File.separator;
@@ -485,14 +494,17 @@ public class Main {
 			String j9trace = lib_dir + "J9TraceFormat.dat";
 			if (new File(j9trace).exists())
 				files.add(j9trace);
-			
+			String omrtrace = lib_dir + "OMRTraceFormat.dat";
+			if (new File(omrtrace).exists())
+				files.add(omrtrace);
+
 			// Add the debugger extension library into the zip, available only on AIX
 			String osName = System.getProperty("os.name");
-			if (osName != null && osName.equalsIgnoreCase("AIX")) {
+			if ("AIX".equalsIgnoreCase(osName)) {
 				files.add("libdbx_j9.so");
 			}
 		} catch (Exception e) {
-				// Ignore
+			// Ignore
 		}
 
 		try {
@@ -507,12 +519,12 @@ public class Main {
 		report("Type '!j9help' for help.");
 		report("Type 'quit' to quit.");
 		report("(Commands must be prefixed with '!')");
-		
+
 		BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
 		IAbstractAddressSpace addressSpace = _dump.getAddressSpace();
 		if (addressSpace == null) {
 			report("Error. Address space not found in dump: " + _dumpName +
-			". Dump is truncated, corrupted or does not contain a supported JVM.");
+					". Dump is truncated, corrupted or does not contain a supported JVM.");
 			return;
 		}
 		
@@ -520,8 +532,7 @@ public class Main {
 			while (true) {
 				report("> ");
 				String command = input.readLine().trim();
-				if ("quit".equalsIgnoreCase(command) ||
-					"q".equalsIgnoreCase(command)) {
+				if ("quit".equalsIgnoreCase(command) || "q".equalsIgnoreCase(command)) {
 					break;
 				}
 				try {
@@ -530,24 +541,22 @@ public class Main {
 					report(e.getMessage());
 					report("Failure detected during command execution, see previous message(s).");
 				}
-			} 
+			}
 		} catch (IOException e) {
 			report("Error reading input.");
 		}
 	}
-	
-	private static void report(String message)
-	{
+
+	private static void report(String message) {
 		System.err.println(message);
 	}
 
 	private static void createZipFromFileNames(String zipFileName, Iterator fileNames, Builder fileResolver) throws Exception
 	{
 		report("Creating archive file: " + zipFileName);
-		ZipOutputStream zip;
 		try {
 			Set filesInZip = new HashSet();
-			zip = new ZipOutputStream(new FileOutputStream(zipFileName));
+			ZipOutputStream zip = new ZipOutputStream(new FileOutputStream(zipFileName));
 			byte[] buffer = new byte[ZIP_BUFFER_SIZE];
 			while (fileNames.hasNext()) {
 				String name = (String) fileNames.next();
@@ -555,12 +564,9 @@ public class Main {
 					ClosingFileReader in = fileResolver.openFile(name);
 					boolean mvsfile = in.isMVSFile();
 					String absolute = in.getAbsolutePath();
-					if (absolute.equals(new File(name).getAbsolutePath()) || mvsfile == true)
-					{
+					if (mvsfile || absolute.equals(new File(name).getAbsolutePath())) {
 						report("Adding \"" + name + "\"");
-					}
-					else
-					{
+					} else {
 						report("Adding \"" + name + "\" (found at \"" + absolute + "\")");
 					}
 					if (mvsfile) {
@@ -572,7 +578,7 @@ public class Main {
 					} else {
 						// Add files by absolute name so they have the right path in the zip.
 						// Guard against two names in fileNames mapping to the same absolute path.
-						if( !filesInZip.contains(absolute) ) {
+						if (!filesInZip.contains(absolute)) {
 							// note that we can't just use the file name, we have to use
 							// the full path since they may share a name
 							// note also that we will use the original path and not the
@@ -582,13 +588,13 @@ public class Main {
 							filesInZip.add(absolute);
 							zipEntry.setTime((new File(absolute)).lastModified());
 							zip.putNextEntry(zipEntry);
-							
+
 							copy(fileStream, zip, buffer);
 							fileStream.close();
 						}
 					}
-				} catch (FileNotFoundException e1) {
-					report("Warning:  Could not find file \"" + name + "\" for inclusion in archive");
+				} catch (FileNotFoundException e) {
+					report("Warning: Could not find file \"" + name + "\" for inclusion in archive");
 				} catch (IOException e) {
 					throw new Exception("Failure adding file " + name + " to archive", e); // chain the exception
 				} finally {
@@ -598,7 +604,7 @@ public class Main {
 			try {
 				zip.close();
 			} catch (IOException e) {
-				throw new Exception("Failure closing archive file (" + zipFileName + ") : " + e.getMessage());
+				throw new Exception("Failure closing archive file (" + zipFileName + "): " + e.getMessage());
 			}
 		} catch (FileNotFoundException e1) {
 			throw new Exception("Could not find archive file to output to: " + e1.getMessage());
@@ -613,8 +619,7 @@ public class Main {
 	 * @param buffer The buffer to use to hold intermediate data (this buffer may be quite large so re-using it from the callsite allows for less re-allocation of the same large buffer)
 	 * @throws IOException
 	 */
-	private static void copy(InputStream from, OutputStream to, byte[] buffer) throws IOException
-	{
+	private static void copy(InputStream from, OutputStream to, byte[] buffer) throws IOException {
 		for (int count = from.read(buffer); count != -1; count = from.read(buffer)) {
 			to.write(buffer, 0, count);
 		}
@@ -628,15 +633,14 @@ public class Main {
 	 * @param buffer The buffer to use to hold intermediate data (this buffer may be quite large so re-using it from the callsite allows for less re-allocation of the same large buffer)
 	 * @throws IOException
 	 */
-	private static void copy(ClosingFileReader from, OutputStream to, byte[] buffer) throws IOException
-	{
+	private static void copy(ClosingFileReader from, OutputStream to, byte[] buffer) throws IOException {
 		for (int count = from.read(buffer); count != -1; count = from.read(buffer)) {
 			to.write(buffer, 0, count);
 		}
 	}
 
-	
 	private native long getEnvironmentPointer(IAbstractAddressSpace dump) throws Exception;
+
 	private native void doCommand(IAbstractAddressSpace dump, String command) throws Exception;
 
 }
