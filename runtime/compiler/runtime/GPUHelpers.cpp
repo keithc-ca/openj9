@@ -365,23 +365,95 @@ static bool loadCudaRuntimeLibrary(int tracing)
 #if (defined(LINUX) || !defined(TR_TARGET_X86))
    dlerror(); //clear preexisting error flags.
    void* libCudartPointer = dlopen("libcudart.so", RTLD_LAZY);
-#else
-   HINSTANCE libCudartPointer = LoadLibrary("cudart64_75.dll"); //TODO: change this to support future versions of the runtime library
 
+   /* Include forward-compatible support for runtime libraries. */
+#if CUDA_VERSION <= 10000
+   if (!libCudartPointer)
+	  libCudartPointer = LoadLibrary("libcudart.so.10.0");
+#endif /* CUDA_VERSION <= 10000 */
+#if CUDA_VERSION <= 9020
+   if (!libCudartPointer)
+	  libCudartPointer = LoadLibrary("libcudart.so.9.2");
+#endif /* CUDA_VERSION <= 9020 */
+#if CUDA_VERSION <= 9010
+   if (!libCudartPointer)
+	  libCudartPointer = LoadLibrary("libcudart.so.9.1");
+#endif /* CUDA_VERSION <= 9010 */
+#if CUDA_VERSION <= 9000
+   if (!libCudartPointer)
+	  libCudartPointer = LoadLibrary("libcudart.so.9.0");
+#endif /* CUDA_VERSION <= 9000 */
+#if CUDA_VERSION <= 8000
+   if (!libCudartPointer)
+	  libCudartPointer = LoadLibrary("libcudart.so.8.0");
+#endif /* CUDA_VERSION <= 8000 */
+#if CUDA_VERSION <= 7050
+   if (!libCudartPointer)
+      libCudartPointer = LoadLibrary("libcudart.so.7.5");
+#endif /* CUDA_VERSION <= 7050 */
+#if CUDA_VERSION <= 7000
+   if (!libCudartPointer)
+      libCudartPointer = LoadLibrary("libcudart.so.7.0");
+#endif /* CUDA_VERSION <= 7000 */
+#if CUDA_VERSION <= 6050
+   if (!libCudartPointer)
+      libCudartPointer = LoadLibrary("libcudart.so.6.5");
+#endif /* CUDA_VERSION <= 6050 */
+#if CUDA_VERSION <= 6000
+   if (!libCudartPointer)
+      libCudartPointer = LoadLibrary("libcudart.so.6.0");
+#endif /* CUDA_VERSION <= 6000 */
+#if CUDA_VERSION <= 5050
+   if (!libCudartPointer)
+      libCudartPointer = LoadLibrary("libcudart.so.5.5");
+#endif /* CUDA_VERSION <= 5050 */
+#else
+   HINSTANCE libCudartPointer = NULL;
+
+   /* Include forward-compatible support for runtime libraries. */
+#if CUDA_VERSION <= 10000
+   if (!libCudartPointer)
+	  libCudartPointer = LoadLibrary("cudart64_100.dll");
+#endif /* CUDA_VERSION <= 10000 */
+#if CUDA_VERSION <= 9020
+   if (!libCudartPointer)
+	  libCudartPointer = LoadLibrary("cudart64_92.dll");
+#endif /* CUDA_VERSION <= 9020 */
+#if CUDA_VERSION <= 9010
+   if (!libCudartPointer)
+	  libCudartPointer = LoadLibrary("cudart64_91.dll");
+#endif /* CUDA_VERSION <= 9010 */
+#if CUDA_VERSION <= 9000
+   if (!libCudartPointer)
+	  libCudartPointer = LoadLibrary("cudart64_90.dll");
+#endif /* CUDA_VERSION <= 9000 */
+#if CUDA_VERSION <= 8000
+   if (!libCudartPointer)
+	  libCudartPointer = LoadLibrary("cudart64_80.dll");
+#endif /* CUDA_VERSION <= 8000 */
+#if CUDA_VERSION <= 7050
+   if (!libCudartPointer)
+      libCudartPointer = LoadLibrary("cudart64_75.dll");
+#endif /* CUDA_VERSION <= 7050 */
+#if CUDA_VERSION <= 7000
    if (!libCudartPointer)
       libCudartPointer = LoadLibrary("cudart64_70.dll");
-
+#endif /* CUDA_VERSION <= 7000 */
+#if CUDA_VERSION <= 6050
    if (!libCudartPointer)
       libCudartPointer = LoadLibrary("cudart64_65.dll");
-
+#endif /* CUDA_VERSION <= 6050 */
+#if CUDA_VERSION <= 6000
    if (!libCudartPointer)
       libCudartPointer = LoadLibrary("cudart64_60.dll");
-
+#endif /* CUDA_VERSION <= 6000 */
+#if CUDA_VERSION <= 5050
    if (!libCudartPointer)
       libCudartPointer = LoadLibrary("cudart64_55.dll");
+#endif /* CUDA_VERSION <= 5050 */
 
    if (tracing > 0 && !libCudartPointer)
-      TR_VerboseLog::writeLine(TR_Vlog_GPU, "\tDynamic linking error: Unable to locate Cuda Runtime library cudart64_75.dll\n");
+      TR_VerboseLog::writeLine(TR_Vlog_GPU, "\tDynamic linking error: Unable to locate Cuda Runtime library cudart64_*.dll\n");
 #endif
    if (checkDlError(tracing, !libCudartPointer)) return false;
 
@@ -2485,4 +2557,3 @@ extern "C" int regionEntryGPU () { return 0; }
 extern "C" int regionExitGPU () { return 0; }
 extern "C" int getStateGPU () { return 0; }
 #endif
-
