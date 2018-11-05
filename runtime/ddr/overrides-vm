@@ -35,8 +35,10 @@ opaquetype=j9objectmonitor_t
 opaquetype=UDATA
 
 # Rename constants in J9BuildFlags as required for backwards compatibility.
-
+fieldoverride.J9BuildFlags.J9VM_ARCH_ARM=arch_arm
 fieldoverride.J9BuildFlags.J9VM_ARCH_S390=arch_s390
+fieldoverride.J9BuildFlags.J9VM_ARCH_POWER=arch_power
+fieldoverride.J9BuildFlags.J9VM_ARCH_X86=arch_x86
 fieldoverride.J9BuildFlags.J9VM_ENV_DATA64=env_data64
 fieldoverride.J9BuildFlags.J9VM_ENV_LITTLE_ENDIAN=env_littleEndian
 fieldoverride.J9BuildFlags.J9VM_GC_ARRAYLETS=gc_arraylets
