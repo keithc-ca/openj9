@@ -32,10 +32,9 @@ import java.util.regex.Pattern;
 import com.ibm.j9ddr.StructureReader.StructureDescriptor;
 
 /**
- * Helper class for working with structure data
+ * Helper class for working with structure data.
  * 
  * @author andhall
- *
  */
 public class StructureTypeManager
 {
@@ -228,6 +227,187 @@ public class StructureTypeManager
 			return TYPE_ENUM;
 		}
 
+		return decodeOther(type);
+	}
+
+	private static final Pattern WordSeparator = Pattern.compile("\\s+");
+
+	private static int decodeOther(String type) {
+		// we break out of this block as soon as the input is no longer considered 'good'
+		good: {
+			int bits = 0;
+			int num_char = 0;
+			int num_short = 0;
+			int num_int = 0;
+			int num_long = 0;
+			int num_signed = 0;
+			int num_unsigned = 0;
+			int num_std_signed = 0;
+			int num_std_unsigned = 0;
+
+			/*
+			 * C allows types and modifiers in any order, so we count the number of
+			 * occurrences of each word to verify the combination is reasonable.
+			 */
+			for (String word : WordSeparator.split(type)) {
+				int num = 0;
+
+				switch (word) {
+				// built-in types and modifiers 
+				case "char":
+					num_char += 1;
+					num = num_char;
+					break;
+				case "short":
+					num_short += 1;
+					num = num_short;
+					break;
+				case "int":
+					num_int += 1;
+					num = num_int;
+					break;
+				case "long":
+					// 'long' can be repeated twice: test the old count
+					num = num_long;
+					num_long += 1;
+					break;
+				case "signed":
+					num_signed += 1;
+					num = num_signed;
+					break;
+				case "unsigned":
+					num_unsigned += 1;
+					num = num_unsigned;
+					break;
+
+				/*
+				 * Capture the width of a standard type and whether it is signed or
+				 * unsigned. This also disallows the combination of a standard type
+				 * together with 'signed' or 'unsigned' keywords.
+				 */
+
+				// standard signed types
+				case "int8_t":
+					bits = 8;
+					num_signed += 1;
+					num_std_signed += 1;
+					num = num_std_signed;
+					break;
+				case "int16_t":
+					bits = 16;
+					num_signed += 1;
+					num_std_signed += 1;
+					num = num_std_signed;
+					break;
+				case "int32_t":
+					bits = 32;
+					num_signed += 1;
+					num_std_signed += 1;
+					num = num_std_signed;
+					break;
+				case "int64_t":
+					bits = 64;
+					num_signed += 1;
+					num_std_signed += 1;
+					num = num_std_signed;
+					break;
+
+				// standard unsigned types
+				case "uint8_t":
+					bits = 8;
+					num_unsigned += 1;
+					num_std_unsigned += 1;
+					num = num_std_unsigned;
+					break;
+				case "uint16_t":
+					bits = 16;
+					num_unsigned += 1;
+					num_std_unsigned += 1;
+					num = num_std_unsigned;
+					break;
+				case "uint32_t":
+					bits = 32;
+					num_unsigned += 1;
+					num_std_unsigned += 1;
+					num = num_std_unsigned;
+					break;
+				case "uint64_t":
+					bits = 64;
+					num_unsigned += 1;
+					num_std_unsigned += 1;
+					num = num_std_unsigned;
+					break;
+
+				// standard pointer types
+				case "intptr_t":
+					bits = -1;
+					num_signed += 1;
+					num_std_signed += 1;
+					num = num_std_signed;
+					break;
+				case "uintptr_t":
+					bits = -1;
+					num_unsigned += 1;
+					num_std_unsigned += 1;
+					num = num_std_unsigned;
+					break;
+
+				default:
+					break good;
+				}
+
+				if (num > 1) {
+					break good;
+				}
+			}
+
+			if ((num_signed + num_unsigned) > 1) {
+				// at most one of 'signed' or 'unsigned' is allowed
+				break good;
+			}
+
+			int num_std = num_std_signed + num_std_unsigned;
+
+			if (num_std > 1) {
+				// at most one standard type is allowed
+				break good;
+			} else if (num_std > 0) {
+				if ((num_char + num_short + num_int + num_long) > 0) {
+					// standard types cannot be combined with built-in types
+					break good;
+				}
+			} else if ((1 == num_char) && (0 == num_short) && (0 == num_int) && (0 == num_long)) {
+				bits = 8;
+			} else if ((0 == num_char) && (1 == num_short) && (1 >= num_int) && (0 == num_long)) {
+				bits = 16;
+			} else if ((0 == num_char) && (0 == num_short) && (1 == num_int) && (0 == num_long)) {
+				bits = 32;
+			} else if ((0 == num_char) && (0 == num_short) && (1 >= num_int) && (1 == num_long)) {
+				bits = -1; // assume 'long' and 'intptr_t' are the same size
+			} else if ((0 == num_char) && (0 == num_short) && (1 >= num_int) && (2 == num_long)) {
+				bits = 64;
+			} else {
+				break good;
+			}
+
+			// types are signed unless explicitly 'unsigned'
+			switch (bits) {
+			case -1:
+				return (0 == num_unsigned) ? TYPE_IDATA : TYPE_UDATA;
+			case 8:
+				return (0 == num_unsigned) ? TYPE_I8 : TYPE_U8;
+			case 16:
+				return (0 == num_unsigned) ? TYPE_I16 : TYPE_U16;
+			case 32:
+				return (0 == num_unsigned) ? TYPE_I32 : TYPE_U32;
+			case 64:
+				return (0 == num_unsigned) ? TYPE_I64 : TYPE_U64;
+			default:
+				throw new IllegalStateException();
+			}
+		}
+
+		// we found an unreasonable combination of keywords
 		return TYPE_UNKNOWN;
 	}
 
