@@ -156,12 +156,12 @@ public class StructureTypeManager
 		}
 	}
 
-	private static final Pattern CVQualifierPattern = Pattern.compile("\\s*\\b(const|volatile)\\s+");
+	private static final Pattern CVQualifierPattern = Pattern.compile("\\b(const|volatile)\\s+");
 
 	public int getType(String rawType)
 	{
 		// strip out any const/volatile qualifiers
-		String type = CVQualifierPattern.matcher(rawType).replaceAll("");
+		String type = CVQualifierPattern.matcher(rawType).replaceAll("").trim();
 
 		// look for the simple types
 		if (simpleTypeCodeMap.containsKey(type)) {
