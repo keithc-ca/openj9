@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar19-SE-OpenJ9]*/
 /*******************************************************************************
- * Copyright (c) 2017, 2018 IBM Corp. and others
+ * Copyright (c) 2017, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -540,7 +540,7 @@ public final class Unsafe {
 	 * @param exchangeValue value that will be set in obj at offset if compare is successful
 	 * @return value in obj at offset before this operation. This will be compareValue if the exchange was successful
 	 */
-	public final native long compareAndExchangeLong(Object obj, long offset, long compareValue, long exchangeVale);
+	public final native long compareAndExchangeLong(Object obj, long offset, long compareValue, long exchangeValue);
 
 	/**
 	 * Atomically sets the parameter value at offset in obj if the compare value 
@@ -1012,7 +1012,7 @@ public final class Unsafe {
 	 * Gets the value of the byte in memory referenced by offset.
 	 * This is a non-volatile operation.
 	 * 
-	 * @param locations where to retrieve value in memory
+	 * @param offset where to retrieve value in memory
 	 * @return byte value stored in memory
 	 */
 	public byte getByte(long offset) {
@@ -1215,6 +1215,7 @@ public final class Unsafe {
 	 * Reallocates a block of memory.
 	 * If size passed is 0, no memory will be allocated.
 	 * 
+	 * @param address address of existing block, or 0
 	 * @param size requested size of memory in bytes
 	 * @return starting address of memory, or 0 if size is 0
 	 * 
@@ -1382,8 +1383,8 @@ public final class Unsafe {
 	/**
 	 * Returns byte offset to field.
 	 * 
-	 * @param class with desired field
-	 * @param string name of desired field
+	 * @param c with desired field
+	 * @param fieldName name of desired field
 	 * @return offset to start of class or interface
 	 * 
 	 * @throws NullPointerException if field parameter is null
@@ -1427,7 +1428,7 @@ public final class Unsafe {
 	/**
 	 * Determines whether class has been initialized.
 	 * 
-	 * @param class to verify
+	 * @param c class to verify
 	 * @return true if method has not been initialized, false otherwise
 	 * 
 	 * @throws NullPointerException if class is null
@@ -2116,9 +2117,9 @@ public final class Unsafe {
 	 * @param setValue value that will be set in obj at offset if compare is successful
 	 * @return boolean value indicating whether the field was updated
 	 */
-	public final boolean weakCompareAndSetDoublePlain(Object obj, long offset, double compareValue, double swapValue) {
+	public final boolean weakCompareAndSetDoublePlain(Object obj, long offset, double compareValue, double setValue) {
 		return weakCompareAndSetLongPlain(obj, offset, Double.doubleToRawLongBits(compareValue),
-				Double.doubleToRawLongBits(swapValue));
+				Double.doubleToRawLongBits(setValue));
 	}
 
 	/**
@@ -2134,9 +2135,9 @@ public final class Unsafe {
 	 * @return boolean value indicating whether the field was updated
 	 */
 	public final boolean weakCompareAndSetDoubleAcquire(Object obj, long offset, double compareValue,
-			double swapValue) {
+			double setValue) {
 		return weakCompareAndSetLongAcquire(obj, offset, Double.doubleToRawLongBits(compareValue),
-				Double.doubleToRawLongBits(swapValue));
+				Double.doubleToRawLongBits(setValue));
 	}
 
 	/**
@@ -2152,9 +2153,9 @@ public final class Unsafe {
 	 * @return boolean value indicating whether the field was updated
 	 */
 	public final boolean weakCompareAndSetDoubleRelease(Object obj, long offset, double compareValue,
-			double swapValue) {
+			double setValue) {
 		return weakCompareAndSetLongRelease(obj, offset, Double.doubleToRawLongBits(compareValue),
-				Double.doubleToRawLongBits(swapValue));
+				Double.doubleToRawLongBits(setValue));
 	}
 
 	/**
@@ -2169,9 +2170,9 @@ public final class Unsafe {
 	 * @param setValue value that will be set in obj at offset if compare is successful
 	 * @return boolean value indicating whether the field was updated
 	 */
-	public final boolean weakCompareAndSetDouble(Object obj, long offset, double compareValue, double swapValue) {
+	public final boolean weakCompareAndSetDouble(Object obj, long offset, double compareValue, double setValue) {
 		return weakCompareAndSetLong(obj, offset, Double.doubleToRawLongBits(compareValue),
-				Double.doubleToRawLongBits(swapValue));
+				Double.doubleToRawLongBits(setValue));
 	}
 
 	/**
@@ -5222,7 +5223,7 @@ public final class Unsafe {
 
 	/**
 	 * Gets the value of the int in the obj parameter referenced by offset
-	 *  that may be unaligned in memory.
+	 * that may be unaligned in memory.
 	 * This is a non-volatile operation.
 	 * 
 	 * @param obj object from which to retrieve the value
@@ -5539,34 +5540,35 @@ public final class Unsafe {
 	/* 
 	 * Private methods 
 	 */
+
 	/* @return true if offset accesses an int that is aligned in memory, else false */
-	private boolean isOffsetIntAligned(long offset) {
+	private static boolean isOffsetIntAligned(long offset) {
 		/* Masks bits that must be 0 to be int aligned. */
 		final long OFFSET_ALIGNED_INT = 0b11L;
 		return (0L == (OFFSET_ALIGNED_INT & offset));
 	}
 	
 	/* @return true if offset accesses a long that is aligned in memory, else false */
-	private boolean isOffsetLongAligned(long offset) {
+	private static boolean isOffsetLongAligned(long offset) {
 		/* Masks bits that must be 0 to be long aligned. */
 		final long OFFSET_ALIGNED_LONG = 0b111L;
 		return (0L == (OFFSET_ALIGNED_LONG & offset));
 	}
 
 	/* @return true if offset accesses a short that is aligned in memory, else false */
-	private boolean isOffsetShortAligned(long offset) {
+	private static boolean isOffsetShortAligned(long offset) {
 		/* Masks bits that must be 0 to be short aligned. */
 		final long OFFSET_ALIGNED_SHORT = 0b1L;
 		return (0L == (OFFSET_ALIGNED_SHORT & offset));
 	}
 
 	/* @return true if offset accesses a char that is aligned in memory, else false */
-	private boolean isOffsetCharAligned(long offset) {
+	private static boolean isOffsetCharAligned(long offset) {
 		return isOffsetShortAligned(offset);
 	}
 
 	/* @return new instance of IllegalArgumentException. */
-	private RuntimeException invalidInput() {
+	private static RuntimeException invalidInput() {
 		return new IllegalArgumentException();
 	}
 
@@ -5610,8 +5612,8 @@ public final class Unsafe {
 	 * @throws IllegalArgumentException if 16 bit primitive would span multiple
 	 * memory blocks
 	 */
-	private void compareAndExchange16BitsOffsetChecks(long offset) {
-		if ((IS_BIG_ENDIAN) && (BYTE_OFFSET_MASK == (BYTE_OFFSET_MASK & offset))) {
+	private static void compareAndExchange16BitsOffsetChecks(long offset) {
+		if ((!UNALIGNED_ACCESS) && (!isOffsetShortAligned(offset))) {
 			/*[MSG "K0700", "Update spans the word, not supported"]*/
 			throw new IllegalArgumentException(com.ibm.oti.util.Msg.getString("K0700")); //$NON-NLS-1$
 		}
@@ -5727,9 +5729,10 @@ public final class Unsafe {
 	 * Verify that that no bits are set in long past the least
 	 * significant 32.
 	 * 
+	 * @param value value to be tested
 	 * @return true if no bits past 32 are set, false otherwise
 	 */
-	private boolean is32BitClean(long value) {
+	private static boolean is32BitClean(long value) {
 		long shiftedValue = value >>> 32;
 		return (0L == shiftedValue);
 	}
@@ -5737,9 +5740,10 @@ public final class Unsafe {
 	/* 
 	 * Verify that parameter is a valid size.
 	 * 
+	 * @param value value to be tested
 	 * @throws IllegalArgumentException if parameter is not valid
 	 */
-	private void checkSize(long value) {
+	private static void checkSize(long value) {
 		if (BYTES_IN_INT == ADDRESS_SIZE) {
 			if (!is32BitClean(value)) {
 				throw invalidInput();
@@ -5756,9 +5760,10 @@ public final class Unsafe {
 	 * maximum possible value of a native address. Address may 
 	 * be negative to support sign extended pointers.
 	 * 
+	 * @param address address to be tested
 	 * @throws IllegalArgumentException if address is invalid
 	 */
-	private void checkNativeAddress(long address) {
+	private static void checkNativeAddress(long address) {
 		if (BYTES_IN_INT == ADDRESS_SIZE) {
 			long shiftedValue = address >> 32;
 			
@@ -5775,12 +5780,14 @@ public final class Unsafe {
 		}
 	}
 
-	/* 
+	/**
 	 * Verify that parameter is a valid offset in obj.
-	 * 
+	 *
+	 * @param obj object to be tested
+	 * @param offset offset to be tested
 	 * @throws IllegalArgumentException if offset is invalid
 	 */
-	private void checkOffset(Object obj, long offset) {
+	private static void checkOffset(Object obj, long offset) {
 		if (BYTES_IN_INT == ADDRESS_SIZE) {
 			boolean isClean = is32BitClean(offset);
 			if (!isClean) {
@@ -5796,9 +5803,11 @@ public final class Unsafe {
 	/* 
 	 * Verify that parameter is a valid offset in obj.
 	 * 
+	 * @param obj object to be tested
+	 * @param offset offset to be tested
 	 * @throws IllegalArgumentException if offset is invalid
 	 */
-	private void checkPointer(Object obj, long offset) {
+	private static void checkPointer(Object obj, long offset) {
 		if (null == obj) {
 			checkNativeAddress(offset);
 		} else {
@@ -5811,7 +5820,7 @@ public final class Unsafe {
 	 * 
 	 * @throws IllegalArgumentException if verification fails
 	 */
-	private void checkPrimitiveArray(Class<?> c) {
+	private static void checkPrimitiveArray(Class<?> c) {
 		Class<?> cType = c.getComponentType();
 
 		if (null == cType || !cType.isPrimitive()) {
@@ -5823,9 +5832,11 @@ public final class Unsafe {
 	 * Verify that parameter is a valid offset in obj,
 	 * and obj is a valid array.
 	 * 
+	 * @param obj object to be tested
+	 * @param offset offset to be tested
 	 * @throws IllegalArgumentException if verification fails
 	 */
-	private void checkPrimitivePointer(Object obj, long offset) {
+	private static void checkPrimitivePointer(Object obj, long offset) {
 		checkPointer(obj, offset);
 
 		if (null != obj) {
@@ -5838,7 +5849,7 @@ public final class Unsafe {
 	 * 
 	 * @throws IllegalArgumentException if parameter is not valid
 	 */
-	private void allocateMemoryChecks(long size) {
+	private static void allocateMemoryChecks(long size) {
 		checkSize(size);
 	}
 
@@ -5847,18 +5858,22 @@ public final class Unsafe {
 	 * 
 	 * @throws IllegalArgumentException if parameters are not valid
 	 */
-	private void reallocateMemoryChecks(long address, long size) {
+	private static void reallocateMemoryChecks(long address, long size) {
 		checkPointer(null, address);
 		checkSize(size);
 	}
 
-	/* 
+	/**
 	 * Verify that parameters are valid.
 	 * 
+	 * @param obj object into which to store the value
+	 * @param startIndex position of the value in obj
+	 * @param size the number of bytes to be set to the value
+	 * @param replace overwrite memory with this value
 	 * @throws IllegalArgumentException if startIndex is illegal in obj, or 
 	 * if size is invalid
 	 */
-	private void setMemoryChecks(Object obj, long startIndex, long size, byte replace) {
+	private static void setMemoryChecks(Object obj, long startIndex, long size, byte replace) {
 		checkPrimitivePointer(obj, startIndex);
 		checkSize(size);
 	}
@@ -5869,7 +5884,7 @@ public final class Unsafe {
 	 * @throws IllegalArgumentException if srcOffset is illegal in srcObj, 
 	 * if destOffset is illegal in destObj, or if size is invalid
 	 */
-	private void copyMemoryChecks(Object srcObj, long srcOffset, Object destObj, long destOffset, long size) {
+	private static void copyMemoryChecks(Object srcObj, long srcOffset, Object destObj, long destOffset, long size) {
 		checkSize(size);
 		checkPrimitivePointer(srcObj, srcOffset);
 		checkPrimitivePointer(destObj, destOffset);
@@ -5882,7 +5897,7 @@ public final class Unsafe {
 	 * if destOffset is illegal in destObj, if copySize is invalid or copySize is not
 	 * a multiple of elementSize
 	 */
-	private void copySwapMemoryChecks(Object srcObj, long srcOffset, Object destObj, long destOffset, long copySize,
+	private static void copySwapMemoryChecks(Object srcObj, long srcOffset, Object destObj, long destOffset, long copySize,
 			long elementSize) {
 		checkSize(copySize);
 		if ((2 == elementSize) || (4 == elementSize) || (8 == elementSize)) {
@@ -5902,7 +5917,7 @@ public final class Unsafe {
 	 * 
 	 * @throws IllegalArgumentException if parameter is not valid
 	 */
-	private void freeMemoryChecks(long startIndex) {
+	private static void freeMemoryChecks(long startIndex) {
 		checkPointer(null, startIndex);
 	}
 
@@ -5915,7 +5930,7 @@ public final class Unsafe {
 	 * @return allocated array of desired length and type, or null
 	 * if class type is not a primitive wrapper
 	 */
-	private Object allocateUninitializedArray0(Class<?> c, int length) {
+	private static Object allocateUninitializedArray0(Class<?> c, int length) {
 		Object result = null;
 
 		if (c == Byte.TYPE) {
@@ -5940,22 +5955,22 @@ public final class Unsafe {
 	}
 
 	/* Convert short primitive to char. */
-	private char s2c(short value) {
+	private static char s2c(short value) {
 		return (char) value;
 	}
 
 	/*  Convert char primitive to short. */
-	private short c2s(char value) {
+	private static short c2s(char value) {
 		return (short) value;
 	}
 
 	/* Convert byte primitive to boolean. */
-	private boolean byte2bool(byte value) {
+	private static boolean byte2bool(byte value) {
 		return (value != 0);
 	}
 
 	/* Convert boolean primitive to byte. */
-	private byte bool2byte(boolean value) {
+	private static byte bool2byte(boolean value) {
 		return (value) ? (byte) 1 : (byte) 0;
 	}
 
