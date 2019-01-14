@@ -1,6 +1,6 @@
-/*[INCLUDE-IF Sidecar19-SE]*/
+/*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2018, 2018 IBM Corp. and others
+ * Copyright (c) 2018, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -22,7 +22,137 @@
  *******************************************************************************/
 package java.util;
 
+/*[IF Sidecar19-SE]*/
 import com.ibm.gpu.spi.GPUAssist;
+/*[ELSE]*/
+/**
+ * GPUAssist expresses the ability to use one or more GPUs
+ * to assist the various sort methods of java.util.Arrays.
+ */
+interface GPUAssist {
+
+	/**
+	 * GPUAssist.Provider enables discovery of a implementation of GPUAssist
+	 * via the ServiceLoader.load method.
+	 */
+	interface Provider {
+
+		/**
+		 * Answer a GPUAssist implementation if one is available and enabled\
+		 * or null otherwise.
+		 * 
+		 * @return a GPUAssist implementation or null
+		 */
+		GPUAssist getGPUAssist();
+
+	}
+
+	/**
+	 * A default implementation of GPUAssist that always defers to using the CPU.
+	 */
+	GPUAssist NONE = new GPUAssist() {
+
+		@Override
+		public boolean trySort(double[] array, int fromIndex, int toIndex) {
+			return false;
+		}
+
+		@Override
+		public boolean trySort(float[] array, int fromIndex, int toIndex) {
+			return false;
+		}
+
+		@Override
+		public boolean trySort(int[] array, int fromIndex, int toIndex) {
+			return false;
+		}
+
+		@Override
+		public boolean trySort(long[] array, int fromIndex, int toIndex) {
+			return false;
+		}
+
+	};
+
+	/**
+	 * If sort is enabled on the GPU, and the array slice has a reasonable
+	 * size for using a GPU, sort the region of the given array of values
+	 * into ascending order, on the first available device.
+	 * 
+	 * @param array
+	 *          the array that will be sorted
+	 * @param fromIndex
+	 *          the range starting index (inclusive)
+	 * @param toIndex
+	 *          the range ending index (exclusive)
+	 * @return true if the sort was successful, false otherwise
+	 * @throws ArrayIndexOutOfBoundsException
+	 *          if fromIndex is negative or toIndex is larger than
+	 *          the length of the array 
+	 * @throws IllegalArgumentException if fromIndex &gt; toIndex
+	 */
+	boolean trySort(double[] array, int fromIndex, int toIndex);
+
+	/**
+	 * If sort is enabled on the GPU, and the array slice has a reasonable
+	 * size for using a GPU, sort the region of the given array of values
+	 * into ascending order, on the first available device.
+	 * 
+	 * @param array
+	 *          the array that will be sorted
+	 * @param fromIndex
+	 *          the range starting index (inclusive)
+	 * @param toIndex
+	 *          the range ending index (exclusive)
+	 * @return true if the sort was successful, false otherwise
+	 * @throws ArrayIndexOutOfBoundsException
+	 *          if fromIndex is negative or toIndex is larger than
+	 *          the length of the array 
+	 * @throws IllegalArgumentException if fromIndex &gt; toIndex
+	 */
+	boolean trySort(float[] array, int fromIndex, int toIndex);
+
+	/**
+	 * If sort is enabled on the GPU, and the array slice has a reasonable
+	 * size for using a GPU, sort the region of the given array of values
+	 * into ascending order, on the first available device.
+	 * 
+	 * @param array
+	 *          the array that will be sorted
+	 * @param fromIndex
+	 *          the range starting index (inclusive)
+	 * @param toIndex
+	 *          the range ending index (exclusive)
+	 * @return true if the sort was successful, false otherwise
+	 * @throws ArrayIndexOutOfBoundsException
+	 *          if fromIndex is negative or toIndex is larger than
+	 *          the length of the array 
+	 * @throws IllegalArgumentException if fromIndex &gt; toIndex
+	 */
+	boolean trySort(int[] array, int fromIndex, int toIndex);
+
+	/**
+	 * If sort is enabled on the GPU, and the array slice has a reasonable
+	 * size for using a GPU, sort the region of the given array of values
+	 * into ascending order, on the first available device.
+	 * 
+	 * @param array
+	 *          the array that will be sorted
+	 * @param fromIndex
+	 *          the range starting index (inclusive)
+	 * @param toIndex
+	 *          the range ending index (exclusive)
+	 * @return true if the sort was successful, false otherwise
+	 * @throws ArrayIndexOutOfBoundsException
+	 *          if fromIndex is negative or toIndex is larger than
+	 *          the length of the array 
+	 * @throws IllegalArgumentException if fromIndex &gt; toIndex
+	 */
+	boolean trySort(long[] array, int fromIndex, int toIndex);
+
+}
+
+/*[ENDIF] Sidecar19-SE*/
 
 final class GPUAssistHolder {
 
