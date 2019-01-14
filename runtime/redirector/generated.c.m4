@@ -1,6 +1,6 @@
 changequote(`[',`]')dnl
 /*******************************************************************************
- * Copyright (c) 2001, 2018 IBM Corp. and others
+ * Copyright (c) 2001, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -31,7 +31,6 @@ changequote(`[',`]')dnl
 #include <dlfcn.h>
 #endif /* AIXPPC || J9ZOS390 || LINUX || OSX */
 
-
 #include "j9.h"
 #include "jni.h"
 
@@ -46,7 +45,7 @@ changequote(`[',`]')dnl
 #define dlsym   dllqueryfn
 #define dlopen(a,b)     dllload(a)
 #define dlclose dllfree
-#endif
+#endif /* J9ZOS390 */
 
 include(helpers.m4)
 
@@ -57,12 +56,12 @@ $2
 ])
 dnl        (name,cc, decorate, ret, args..)
 
-/* Manual typedefs for functions that can't be generated easily */
+/* Manual typedefs for functions that can't be generated easily. */
 typedef int (*jio_fprintf_Type)(FILE * stream, const char * format, ...);
 typedef int (*jio_snprintf_Type)(char * str, int n, const char * format, ...);
 typedef void (JNICALL *JVM_OnExit_Type)(void (*func)(void));
- 
-/* Generated typedefs for all forwarded functions */
+
+/* Generated typedefs for all forwarded functions. */
 define([_X],
 [typedef $4 ($2 *$1_Type)(join([, ],mshift(4,$@)));])dnl
 include([forwarders.m4])
@@ -75,7 +74,6 @@ static JVM_OnExit_Type global_JVM_OnExit;
 define([_X],[static $1_Type global_$1;])
 include([forwarders.m4])
 
-
 static volatile JVM_LoadSystemLibrary_Type global_JVM_LoadSystemLibrary;
 
 #if defined(AIXPPC)
@@ -83,7 +81,7 @@ static int table_initialized = 0;
 
 /* defined in redirector.c */
 int openLibraries(const char *libraryDir);
-#endif
+#endif /* AIXPPC */
 
 int
 jio_fprintf(FILE * stream, const char * format, ...)
@@ -113,12 +111,11 @@ JVM_OnExit(void (*func)(void))
 	if(global_JVM_OnExit != NULL) {
 		global_JVM_OnExit( func );
 	} else {
-		exit(999); 
+		exit(999);
 	}
 }
 
-
-dnl        (1-name,2-cc, 3-decorate, 4-ret, 5-args..)
+dnl        (1-name, 2-cc, 3-decorate, 4-ret, 5-args..)
 define([_X],
 [dnl
 $4 $2
@@ -136,10 +133,10 @@ $1(join([, ],mshift(4,$@)))
 		}
 		/* re-try to run this function */
 		invokePrefix($4)[]$1(arg_names_list(mshift(4,$@)));
-#endif
+#endif /* AIXPPC */
 	} else {
 		printf("Fatal Error: Missing forwarder for $1[]()");
-		exit(969); 
+		exit(969);
 	}
 }
 ])
@@ -152,16 +149,15 @@ static void *functionLookup(void *dllAddr, const char *functionName) {
 	/* remove the decorations (leading _ and trailing @<number>) if present. */
 #define J9_SYM_MAX 256
 	char localFunctionName[[J9_SYM_MAX]];
-	char *addrOfAtSymbol, *startOfFunctionName;
+	char *startOfFunctionName = (char *)((functionName[[0]] == '_') ? (functionName + 1) : functionName);
+	char *addrOfAtSymbol = strchr(startOfFunctionName, '@');
 
 	if(strlen(functionName) >= J9_SYM_MAX) {
 		printf("Symbol too long - %s - exiting\n", functionName);
+		exit(997);
 	}
 
-	startOfFunctionName = (char *) ((functionName[[0]] == '_') ? (functionName + 1) : functionName);
-
-	addrOfAtSymbol = strchr(functionName, '@');
-	if(addrOfAtSymbol) {
+	if (NULL != addrOfAtSymbol) {
 		memcpy(localFunctionName, startOfFunctionName, addrOfAtSymbol - startOfFunctionName);
 		localFunctionName[[addrOfAtSymbol - startOfFunctionName]] = '\0';
 	} else {
@@ -173,9 +169,9 @@ static void *functionLookup(void *dllAddr, const char *functionName) {
 	return GetProcAddress(dllAddr, localFunctionName);
 #else
 	return (void *)dlsym(dllAddr, localFunctionName);
-#endif
+#endif /* WIN32 */
 
-#endif
+#endif /* WIN32 && !J9VM_ENV_DATA64 */
 }
 dnl        (1-name,2-cc, 3-decorate, 4-ret, 5-args..)
 define([_X],[	global_$1 = ($1_Type) functionLookup(vmdll, "decorate_function_name($@)" );])dnl
@@ -198,7 +194,7 @@ JVM_LoadSystemLibrary(const char *libName)
 		Sleep(5);	// 5ms
 #else
 		usleep(5000);	// 5ms
-#endif		
+#endif
 		count++;
 	}
 	if(global_JVM_LoadSystemLibrary != NULL) {
@@ -213,30 +209,29 @@ JVM_LoadSystemLibrary(const char *libName)
 		}
 		/* re-try to run this function */
 		return JVM_LoadSystemLibrary( libName );
-#endif
+#endif /* AIXPPC */
 	} else {
 		printf("Fatal Error: Missing forwarder for JVM_LoadSystemLibrary()");
-		exit(969); 
+		exit(969);
 	}
 }
 
 /*
- * Following method JVM_InitAgentProperties() has been copied from actual JVM dll (implemented within \VM_Sidecar\j9vm\j7vmi.c) to 
- * this redirector dll. This is to address the issue identified by "RTC PR 104487: SVT:Eclipse:jdtdebug org.eclipse.core - 
+ * Following method JVM_InitAgentProperties() has been copied from actual JVM dll (implemented within \VM_Sidecar\j9vm\j7vmi.c) to
+ * this redirector dll. This is to address the issue identified by "RTC PR 104487: SVT:Eclipse:jdtdebug org.eclipse.core -
  * Fails with Cannot load module libjvm.so file".
  *
- * This PR exposed that the JVM can be quite slow to finish lookupJVMFunctions() and complete the function table initialization such that 
- * a separated thread calling JVM_InitAgentProperties can fail with error "Cannot load module  libjvm.so file". 
- * Coping this method into redirector allows the call without finishing the function table initialization. 
- *      
- * The method is still kept within the actual jvm dll in case that a launcher uses that jvm dll directly without going through this redirector. 
- * If this method need to be modified, the changes have to be synchronized for both versions. 
- * 
- * The reason that this method can be copied into here (redirector) is that it doesn't require any other VM function support. 
+ * This PR exposed that the JVM can be quite slow to finish lookupJVMFunctions() and complete the function table initialization such that
+ * a separated thread calling JVM_InitAgentProperties can fail with error "Cannot load module  libjvm.so file".
+ * Coping this method into redirector allows the call without finishing the function table initialization.
+ *
+ * The method is still kept within the actual jvm dll in case that a launcher uses that jvm dll directly without going through this redirector.
+ * If this method need to be modified, the changes have to be synchronized for both versions.
+ *
+ * The reason that this method can be copied into here (redirector) is that it doesn't require any other VM function support.
  * As following comments, this method simply returns incoming agent_props to make the agent happy.
  * If there is a need in the future to modify this method and other VM function support are required, this method need to be moved back to JVM dll.
- * In such case, other means have to be developed to ensure this method still accessible in situations identified by PR 104487 mentioned above. 
- *   	 
+ * In such case, other means have to be developed to ensure this method still accessible in situations identified by PR 104487 mentioned above.
  */
 
 /*
