@@ -1,10 +1,4 @@
 /*[INCLUDE-IF Sidecar16]*/
-package com.ibm.oti.util;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-
 /*******************************************************************************
  * Copyright (c) 1998, 2019 IBM Corp. and others
  *
@@ -26,7 +20,10 @@ import java.io.PrintWriter;
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package com.ibm.oti.util;
 
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.UTFDataFormatException;
 import java.io.UnsupportedEncodingException;
 import java.security.ProtectionDomain;
@@ -160,7 +157,7 @@ private static void convert(String s, StringBuilder buf) {
 	}
 }
 
-public static boolean startsWithDriveLetter(String path){
+public static boolean startsWithDriveLetter(String path) {
 	// returns true if the string starts with <letter>:, example, d:
 	if (!(path.charAt(1) == ':')) {
 		return false;
