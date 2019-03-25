@@ -1,7 +1,4 @@
 /*[INCLUDE-IF Sidecar16]*/
-
-package com.ibm.oti.util;
-
 /*******************************************************************************
  * Copyright (c) 2004, 2014 IBM Corp. and others
  *
@@ -23,13 +20,17 @@ package com.ibm.oti.util;
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package com.ibm.oti.util;
 
+import java.io.IOException;
 import java.lang.reflect.AccessibleObject;
 import java.security.Policy;
 import java.security.PrivilegedAction;
 import java.security.Security;
-import java.util.*;
-import java.io.IOException;
+import java.util.Hashtable;
+import java.util.Locale;
+import java.util.ResourceBundle;
+
 import com.ibm.oti.vm.MsgHelp;
 
 /**
@@ -40,9 +41,9 @@ import com.ibm.oti.vm.MsgHelp;
  * @author OTI
  * @version initial
  */
-public class PriviAction implements PrivilegedAction {
+public class PriviAction implements PrivilegedAction<Object> {
 
-    // unique id for each possible action; used in switch statement in run()
+	// unique id for each possible action; used in switch statement in run()
     private int action;
 
     private static final int GET_SYSTEM_PROPERTY = 1;
@@ -78,9 +79,10 @@ public class PriviAction implements PrivilegedAction {
      * 
      * @see MsgHelp#loadMessages(String)
      */
-    public static PrivilegedAction loadMessages(String resourceName) {
-    	return new PriviAction(LOAD_MESSAGES, resourceName);
-    }
+    public static PrivilegedAction<Hashtable> loadMessages(String resourceName) {
+		PrivilegedAction<?> action = new PriviAction(LOAD_MESSAGES, resourceName);
+		return (PrivilegedAction<Hashtable>) action;
+	}
 
     private PriviAction(int action, String arg) {
         this.action = action;
@@ -160,27 +162,30 @@ public class PriviAction implements PrivilegedAction {
      * 
      * @see java.security.PrivilegedAction#run()
      */
+    @Override
     public Object run() {
-        switch (action) {
-        case GET_SYSTEM_PROPERTY:
-            return System.getProperty(stringArg1, stringArg2);
-        case GET_SECURITY_PROPERTY:
-            return Security.getProperty(stringArg1);
-        case GET_SECURITY_POLICY:
-            return Policy.getPolicy();
-        case LOAD_MESSAGES:
-            try {
-                return MsgHelp.loadMessages(stringArg1);
-            } catch (IOException e) {
-        		    e.printStackTrace();
-        	   }
-       		return null;
-        case GET_BUNDLE:
-        	   return ResourceBundle.getBundle(stringArg1, locale);
-        case SET_ACCESSIBLE:
-        	   accessible.setAccessible(true);
-        	   // fall through
-        }
-        return null;
+		switch (action) {
+		case GET_SYSTEM_PROPERTY:
+			return System.getProperty(stringArg1, stringArg2);
+		case GET_SECURITY_PROPERTY:
+			return Security.getProperty(stringArg1);
+		case GET_SECURITY_POLICY:
+			return Policy.getPolicy();
+		case LOAD_MESSAGES:
+			try {
+				return MsgHelp.loadMessages(stringArg1);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			break;
+		case GET_BUNDLE:
+			return ResourceBundle.getBundle(stringArg1, locale);
+		case SET_ACCESSIBLE:
+			accessible.setAccessible(true);
+			break;
+		default:
+			break;
+		}
+		return null;
     }
 }

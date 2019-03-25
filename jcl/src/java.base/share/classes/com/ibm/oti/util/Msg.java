@@ -1,9 +1,6 @@
 /*[INCLUDE-IF Sidecar16]*/
-
-package com.ibm.oti.util;
-
 /*******************************************************************************
- * Copyright (c) 1998, 2014 IBM Corp. and others
+ * Copyright (c) 1998, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -23,10 +20,12 @@ package com.ibm.oti.util;
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package com.ibm.oti.util;
 
 import java.security.AccessController;
-import java.util.*;
-import com.ibm.oti.vm.*;
+import java.util.Hashtable;
+
+import com.ibm.oti.vm.MsgHelp;
 
 /**
  * This class retrieves strings from a resource bundle
@@ -58,14 +57,13 @@ import com.ibm.oti.vm.*;
 public class Msg {
 
 	// Properties holding the system messages.
-	static private Hashtable messages;
-	
+	private static final Hashtable<?, ?> messages;
+
 	static {
 		// Attempt to load the messages.
-		messages = (Hashtable) AccessController.doPrivileged(
+		messages = AccessController.doPrivileged(
 				PriviAction.loadMessages("com/ibm/oti/util/ExternalMessages")); //$NON-NLS-1$
 	}
-
 
 	/**
 	 * Retrieves a message which has no arguments.
@@ -79,13 +77,14 @@ public class Msg {
 	 *					the message for that key in the system
 	 *					message bundle.
 	 */
-	static public String getString (String msg) {
-		if (messages == null)
-			return msg;
-		String resource = (String)messages.get(msg);
-		if (resource == null)
-			return msg;
-		return resource;
+	static public String getString(String msg) {
+		if (messages != null) {
+			String resource = (String) messages.get(msg);
+			if (resource != null) {
+				return resource;
+			}
+		}
+		return msg;
 	}
 	
 	/**
@@ -102,16 +101,16 @@ public class Msg {
      *                  the message for that key in the system
      *                  message bundle.
      */
-    static public String getString (String msg, Object arg) {
-        String format = msg;
-    
-        if (messages != null) {
-            format = (String) messages.get(msg);
-            if (format == null) format = msg;
-        }
-    
-        return MsgHelp.format(format, arg);
-    }
+	static public String getString (String msg, Object arg) {
+		String format = msg;
+
+		if (messages != null) {
+			format = (String) messages.get(msg);
+			if (format == null) format = msg;
+		}
+
+		return MsgHelp.format(format, arg);
+	}
     
 	/**
 	 * Retrieves a message which takes 1 integer argument.
@@ -209,7 +208,7 @@ public class Msg {
 	 *					the message for that key in the system
 	 *					message bundle.
 	 */
-	static public String getString (String msg, String defaultMsg, Object[] args) {
+	static public String getString(String msg, String defaultMsg, Object[] args) {
 		String format = null;
 		if (messages != null) {
 			format = (String) messages.get(msg);
@@ -234,12 +233,11 @@ public class Msg {
 	 *					another object to insert in the formatted output.
 	 * @param		arg3 Object
 	 *					another object to insert in the formatted output.
-	  * @return		String
+	 * @return		String
 	 *					the message for that key in the system
 	 *					message bundle.
 	 */
-
 	static public String getString(String msg, Object arg1, Object arg2, String arg3) {
-		return getString(msg, new Object[] {arg1, arg2, arg3});
+		return getString(msg, new Object[] { arg1, arg2, arg3 });
 	}
 }
