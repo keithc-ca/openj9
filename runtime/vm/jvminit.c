@@ -3182,13 +3182,15 @@ processVMArgsFromFirstToLast(J9JavaVM * vm)
 			vm->extendedRuntimeFlags |= J9_EXTENDED_RUNTIME_POSITIVE_HASHCODE;
 		} else if (enablePositiveHashCode < disablePositiveHashCode) {
 			vm->extendedRuntimeFlags &= ~(UDATA)J9_EXTENDED_RUNTIME_POSITIVE_HASHCODE;
-		} else if (0 == strcmp(testString, VMOPT_XXDEBUGLOCALMAPPER)) {
-			/* There is no option to revert to the non-debug local mapper as using such
-			 * an option when in debug mode would result in issues where the debugger
-			 * may have the wrong view of data
-			 */
-			installDebugLocalMapper(vm);
 		}
+	}
+
+	if (-1 != FIND_AND_CONSUME_ARG(EXACT_MATCH, VMOPT_XXDEBUGLOCALMAPPER, NULL)) {
+		/* There is no option to revert to the non-debug local mapper as using such
+		 * an option when in debug mode would result in issues where the debugger
+		 * may have the wrong view of data.
+		 */
+		installDebugLocalMapper(vm);
 	}
 
 	/* -Xbootclasspath and -Xbootclasspath/p are not supported from Java 9 onwards */
