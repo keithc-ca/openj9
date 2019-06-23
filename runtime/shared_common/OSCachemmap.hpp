@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2018 IBM Corp. and others
+ * Copyright (c) 2001, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -33,18 +33,18 @@
 
 /**
  * A class to manage Shared Classes on Operating System level
- * 
+ *
  * This class provides an abstraction of a shared memory mapped file
  */
 class SH_OSCachemmap : public SH_OSCacheFile
 {
 public:
 	static IDATA getCacheStats(J9JavaVM* vm, const char* cacheDirName, const char* filePath, SH_OSCache_Info* returnVal, UDATA reason);
-	  
+
 	SH_OSCachemmap(J9PortLibrary* portlib, J9JavaVM* vm, const char* cacheDirName, const char* cacheName, J9SharedClassPreinitConfig* piconfig, IDATA numLocks,
 			UDATA createFlag, UDATA verboseFlags, U_64 runtimeFlags, I_32 openMode, J9PortShcVersion* versionData, SH_OSCacheInitializer* initializer);
 	/*This constructor should only be used by this class or its parent*/
-	SH_OSCachemmap() {};
+	SH_OSCachemmap() {}
 
 	/**
 	 * Override new operator
@@ -53,7 +53,7 @@ public:
 	 *
 	 * @return The value of memoryPtrArg
 	 */
-	void *operator new(size_t sizeArg, void *memoryPtrArg) { return memoryPtrArg; };
+	void *operator new(size_t sizeArg, void *memoryPtrArg) { return memoryPtrArg; }
 
 	virtual bool startup(J9JavaVM* vm, const char* ctrlDirName, UDATA cacheDirPerm, const char* cacheName, J9SharedClassPreinitConfig* piconfig, IDATA numLocks,
 			UDATA createFlag, UDATA verboseFlags, U_64 runtimeFlags, I_32 openMode, UDATA storageKeyTesting, J9PortShcVersion* versionData, SH_OSCacheInitializer* initializer, UDATA reason);
@@ -61,26 +61,26 @@ public:
 	virtual IDATA destroy(bool suppressVerbose, bool isReset = false);
 
 	virtual void cleanup();
-	
+
 	virtual void* attach(J9VMThread *currentThread, J9PortShcVersion* expectedVersionData);
-	
+
 #if defined (J9SHR_MSYNC_SUPPORT)
 	virtual IDATA syncUpdates(void* start, UDATA length, U_32 flags);
 #endif
-	
+
 	virtual IDATA getWriteLockID(void);
 	virtual IDATA getReadWriteLockID(void);
 	virtual IDATA acquireWriteLock(UDATA lockID);
 	virtual IDATA releaseWriteLock(UDATA lockID);
-  	
+
 	virtual void runExitCode();
-	
+
 	virtual IDATA getLockCapabilities();
-	
+
 	virtual void initialize(J9PortLibrary* portLibrary, char* memForConstructor, UDATA generation);
-	
+
 	virtual IDATA setRegionPermissions(J9PortLibrary* portLibrary, void *address, UDATA length, UDATA flags);
-	
+
 	virtual UDATA getPermissionsRegionGranularity(J9PortLibrary* portLibrary);
 
 	virtual U_32 getTotalSize();
@@ -96,11 +96,11 @@ protected:
 private:
 	I_64 _actualFileLength;
 	J9MmapHandle *_mapFileHandle;
-	
+
 	UDATA _finalised;
-	
+
 	omrthread_monitor_t _lockMutex[J9SH_OSCACHE_MMAP_LOCK_COUNT];
-	
+
 	SH_CacheFileAccess _cacheFileAccess;
 
 	IDATA acquireAttachReadLock(UDATA generation, LastErrorInfo *lastErrorInfo);
@@ -108,16 +108,16 @@ private:
 
 	IDATA internalAttach(bool isNewCache, UDATA generation);
 	void internalDetach(UDATA generation);
-	
+
 	I_32 updateLastAttachedTime(OSCachemmap_header_version_current *cacheHeader);
 	I_32 updateLastDetachedTime();
 	I_32 createCacheHeader(OSCachemmap_header_version_current *cacheHeader, J9PortShcVersion* versionData);
 	bool setCacheLength(U_32 cacheSize, LastErrorInfo *lastErrorInfo);
 	I_32 initializeDataHeader(SH_OSCacheInitializer *initializer);
 	void detach();
-	
+
 	bool deleteCacheFile(LastErrorInfo *lastErrorInfo);
-	
+
 	void finalise();
 };
 

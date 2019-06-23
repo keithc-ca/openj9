@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2018 IBM Corp. and others
+ * Copyright (c) 2001, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -40,7 +40,7 @@ typedef OSCache_vmem_header1 OSCachevmem_header_version_current;
 
 /**
  * A class to manage Shared Classes on Operating System level
- * 
+ *
  * This class provides an abstraction of a shared memory mapped file
  */
 class SH_OSCachevmem : public SH_OSCacheFile
@@ -49,7 +49,7 @@ public:
 	SH_OSCachevmem(J9PortLibrary* portlib, const char* cachedirname, const char* cacheName, J9SharedClassPreinitConfig* piconfig, IDATA numLocks,
 			UDATA createFlag, UDATA verboseFlags, U_64 runtimeFlags, I_32 openMode, J9PortShcVersion* versionData, SH_OSCacheInitializer* initializer);
 	/*This constructor should only be used by this class or its parent*/
-	SH_OSCachevmem() {};
+	SH_OSCachevmem() {}
 
 	/**
 	 * Override new operator
@@ -58,7 +58,7 @@ public:
 	 *
 	 * @return The value of memoryPtrArg
 	 */
-	void *operator new(size_t sizeArg, void *memoryPtrArg) { return memoryPtrArg; };
+	void *operator new(size_t sizeArg, void *memoryPtrArg) { return memoryPtrArg; }
 
 	virtual bool startup(const char* ctrlDirName, UDATA cacheDirPerm, const char* cacheName, J9SharedClassPreinitConfig* piconfig, IDATA numLocks,
 			UDATA createFlag, UDATA verboseFlags, U_64 runtimeFlags, I_32 openMode, UDATA storageKeyTesting, J9PortShcVersion* versionData, SH_OSCacheInitializer* initializer, UDATA reason);
@@ -69,24 +69,24 @@ public:
 	virtual IDATA destroy(bool suppressVerbose, bool isReset);
 
 	virtual void cleanup();
-	
+
 	virtual void* attach(J9VMThread *currentThread, J9PortShcVersion* expectedVersionData);
-	
+
 	IDATA getWriteLockID(void);
 	IDATA getReadWriteLockID(void);
 	virtual IDATA acquireWriteLock(UDATA lockID);
 	virtual IDATA releaseWriteLock(UDATA lockID);
-  	
+
 	virtual IDATA setRegionPermissions(J9PortLibrary* portLibrary, void *address, UDATA length, UDATA flags);
-	
+
 	virtual UDATA getPermissionsRegionGranularity(J9PortLibrary* portLibrary);
 
 	virtual void runExitCode();
-	
+
 	virtual IDATA getLockCapabilities();
-	
+
 	virtual void initialize(J9PortLibrary* portLibrary, char* memForConstructor, UDATA generation);
-	
+
 	virtual U_32 getTotalSize();
 
 	virtual UDATA getJavacoreData(J9JavaVM *vm, J9SharedClassJavacoreDataDescriptor* descriptor);
@@ -95,11 +95,11 @@ protected:
 
 	virtual void errorHandler(U_32 moduleName, U_32 id, LastErrorInfo *lastErrorInfo);
 	virtual void * getAttachedMemory();
-	
+
 private:
 	I_64 _actualFileLength;
 	UDATA _writeLockCounter;
-	
+
 	omrthread_monitor_t _lockMutex[J9SH_OSCACHE_VMEM_LOCK_COUNT];
 
 	virtual IDATA getNewWriteLockID();

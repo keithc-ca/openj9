@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2017 IBM Corp. and others
+ * Copyright (c) 2001, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -34,15 +34,14 @@
 #define MMAP_CACHEHEADERSIZE SHC_PAD(sizeof(OSCachemmap_header_version_current), SHC_WORDALIGN)
 #define MMAP_DATASTARTFROMHEADER(dataStartFieldAddr) SRP_GET(*dataStartFieldAddr, void *);
 
-
 /* DO NOT use UDATA/IDATA in the cache headers so that 32-bit/64-bit JVMs can read each others headers
  * This is why OSCache_mmap_header2 was added
- * 
+ *
  * Versioning is achieved by using the typedef aliases below
  */
 
-/* CMVC 145095: There are 5 locks, but only 2 are used. If we ever use more 
- * we need to re-fix SH_OSCachemmap::acquireWriteLock b/c it assumes 2 
+/* CMVC 145095: There are 5 locks, but only 2 are used. If we ever use more
+ * we need to re-fix SH_OSCachemmap::acquireWriteLock b/c it assumes 2
  * locks when attempting to resolve EDEADLK.
  */
 #define J9SH_OSCACHE_MMAP_LOCK_COUNT 5
@@ -50,7 +49,7 @@
 #define J9SH_OSCACHE_MMAP_LOCKID_READWRITELOCK 1
 
 typedef struct OSCache_mmap_header1 {
-	char eyecatcher[J9SH_OSCACHE_MMAP_EYECATCHER_LENGTH+1];
+	char eyecatcher[J9SH_OSCACHE_MMAP_EYECATCHER_LENGTH + 1];
 	OSCache_header1 oscHdr;
 	UDATA cacheInitComplete;
 	UDATA unused[9];
@@ -63,7 +62,7 @@ typedef struct OSCache_mmap_header1 {
 } OSCache_mmap_header1;
 
 typedef struct OSCache_mmap_header2 {
-	char eyecatcher[J9SH_OSCACHE_MMAP_EYECATCHER_LENGTH+1];
+	char eyecatcher[J9SH_OSCACHE_MMAP_EYECATCHER_LENGTH + 1];
 	OSCache_header2 oscHdr;
 	I_64 createTime;
 	I_64 lastAttachedTime;
@@ -100,7 +99,7 @@ typedef enum SH_CacheFileAccess {
 
 /**
  * A class to manage Shared Classes on Operating System level
- * 
+ *
  * This class provides an abstraction of a file
  */
 class SH_OSCacheFile : public SH_OSCache
@@ -113,7 +112,7 @@ public:
 	 *
 	 * @return The value of memoryPtrArg
 	 */
-	void *operator new(size_t sizeArg, void *memoryPtrArg) { return memoryPtrArg; };
+	void *operator new(size_t sizeArg, void *memoryPtrArg) { return memoryPtrArg; }
 
 	virtual IDATA getError();
 
@@ -129,15 +128,15 @@ public:
 
 protected:
 	virtual void errorHandler(U_32 moduleName, U_32 id, LastErrorInfo *lastErrorInfo);
-	
+
 	IDATA _fileHandle;
-	
+
 	IDATA acquireHeaderWriteLock(UDATA generation, LastErrorInfo *lastErrorInfo);
 	IDATA releaseHeaderWriteLock(UDATA generation, LastErrorInfo *lastErrorInfo);
 
 	IDATA tryAcquireAttachWriteLock(UDATA generation);
-	IDATA releaseAttachWriteLock(UDATA generation); 
-	
+	IDATA releaseAttachWriteLock(UDATA generation);
+
 	IDATA isCacheHeaderValid(OSCachemmap_header_version_current *header, J9PortShcVersion* expectedVersionData);
 
 	bool openCacheFile(bool doCreateFile, LastErrorInfo *lastErrorInfo);

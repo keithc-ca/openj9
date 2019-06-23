@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2018 IBM Corp. and others
+ * Copyright (c) 2001, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -29,13 +29,13 @@
 #include "pool_api.h"
 
 /* DO NOT use UDATA/IDATA in the cache headers so that 32-bit/64-bit JVMs can read each others headers
- * This is why OSCache_sysv_header3 was added.  
- * 
+ * This is why OSCache_sysv_header3 was added.
+ *
  * Versioning is achieved by using the typedef aliases below
  */
 
 typedef struct OSCache_sysv_header1 {
-	char eyecatcher[J9PORT_SHMEM_EYECATCHER_LENGTH+1];
+	char eyecatcher[J9PORT_SHMEM_EYECATCHER_LENGTH + 1];
 	UDATA version;
 	U_64 modlevel;
 	UDATA size;
@@ -44,7 +44,7 @@ typedef struct OSCache_sysv_header1 {
 } OSCache_sysv_header1;
 
 typedef struct OSCache_sysv_header2 {
-	char eyecatcher[J9PORT_SHMEM_EYECATCHER_LENGTH+1];
+	char eyecatcher[J9PORT_SHMEM_EYECATCHER_LENGTH + 1];
 	OSCache_header1 oscHdr;
 	UDATA inDefaultControlDir;
 	UDATA cacheInitComplete;
@@ -52,7 +52,7 @@ typedef struct OSCache_sysv_header2 {
 } OSCache_sysv_header2;
 
 typedef struct OSCache_sysv_header3 {
-	char eyecatcher[J9PORT_SHMEM_EYECATCHER_LENGTH+1];
+	char eyecatcher[J9PORT_SHMEM_EYECATCHER_LENGTH + 1];
 	OSCache_header2 oscHdr;
 	U_32 inDefaultControlDir;
 	I_32 attachedSemid;
@@ -96,7 +96,7 @@ typedef enum SH_SysvShmAccess {
 
 /**
  * A class to manage Shared Classes on Operating System level
- * 
+ *
  * This class provides and abstraction of a shared memory region and its control
  * mutex.
  *
@@ -117,12 +117,12 @@ public:
 	 *
 	 * @return The value of memoryPtr
 	 */
-	void *operator new(size_t size, void *memoryPtr) { return memoryPtr; };
+	void *operator new(size_t size, void *memoryPtr) { return memoryPtr; }
 
 	static SH_OSCache* newInstance(J9PortLibrary* portlib, SH_OSCache* memForConstructor);
 
 	static UDATA getRequiredConstrBytes(void);
-	
+
 	IDATA destroy(bool suppressVerbose, bool isReset = false);
 
 	void cleanup(void);
@@ -131,23 +131,23 @@ public:
 	IDATA getReadWriteLockID(void);
 	IDATA acquireWriteLock(UDATA lockID);
 	IDATA releaseWriteLock(UDATA lockID);
-  	
+
 	static IDATA getCacheStats(J9JavaVM* vm, const char* ctrlDirName, UDATA groupPerm, const char* filePath, SH_OSCache_Info* cacheInfo, UDATA reason);
-	
+
 	void *attach(J9VMThread *currentThread, J9PortShcVersion* expectedVersionData);
-	
+
 #if defined (J9SHR_MSYNC_SUPPORT)
-	IDATA syncUpdates(void* start, UDATA length, U_32 flags); 
+	IDATA syncUpdates(void* start, UDATA length, U_32 flags);
 #endif
-	
+
 	IDATA getError(void);
-	
+
 	void runExitCode(void);
-	
+
 	IDATA getLockCapabilities(void);
-	
+
 	IDATA setRegionPermissions(struct J9PortLibrary* portLibrary, void *address, UDATA length, UDATA flags);
-	
+
 	UDATA getPermissionsRegionGranularity(struct J9PortLibrary* portLibrary);
 
 	virtual U_32 getTotalSize();
@@ -157,9 +157,9 @@ public:
 	static IDATA findAllKnownCaches(struct J9PortLibrary* portlib, UDATA j2seVersion, struct J9Pool* cacheList);
 
 	static UDATA findfirst(struct J9PortLibrary *portLibrary, char *cacheDir, char *resultbuf);
-	
+
 	static I_32 findnext(struct J9PortLibrary *portLibrary, UDATA findHandle, char *resultbuf);
-	
+
 	static void findclose(struct J9PortLibrary *portLibrary, UDATA findhandle);
 
 	static IDATA getSysvHeaderFieldOffsetForGen(UDATA headerGen, UDATA fieldID);
@@ -172,14 +172,13 @@ public:
 
 /* protected: */
 	/*This constructor should only be used by this class and parent*/
-	SH_OSCachesysv() {};
+	SH_OSCachesysv() {}
 	virtual void initialize(J9PortLibrary* portLib_, char* memForConstructor, UDATA generation);
 
-protected :
-	
+protected:
 	virtual void errorHandler(U_32 moduleName, U_32 id, LastErrorInfo *lastErrorInfo);
 	virtual void * getAttachedMemory();
-  
+
 private:
 	j9shmem_handle* _shmhandle;
 	j9shsem_handle* _semhandle;
@@ -192,7 +191,7 @@ private:
 	char* _shmFileName;
 	char* _semFileName;
 	bool _openSharedMemory;
-	
+
 	UDATA _storageKeyTesting;
 
 	const J9SharedClassPreinitConfig* config;
@@ -233,7 +232,7 @@ private:
 	static void* getSysvHeaderFieldAddressForGen(void* header, UDATA headerGen, UDATA fieldID);
 
 	IDATA getNewWriteLockID(void);
-	
+
 	SH_SysvSemAccess checkSemaphoreAccess(LastErrorInfo *lastErrorInfo);
 	SH_SysvShmAccess checkSharedMemoryAccess(LastErrorInfo *lastErrorInfo);
 
@@ -255,6 +254,3 @@ private:
 };
 
 #endif /* !defined(OSCACHESYSV_HPP_INCLUDED) */
-
-
-
