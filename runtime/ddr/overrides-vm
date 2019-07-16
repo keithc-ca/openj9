@@ -68,7 +68,6 @@ fieldoverride.J9BuildFlags.J9VM_JIT_FULL_SPEED_DEBUG=jit_fullSpeedDebug
 fieldoverride.J9BuildFlags.J9VM_OPT_DEBUG_INFO_SERVER=opt_debugInfoServer
 fieldoverride.J9BuildFlags.J9VM_OPT_JVMTI=opt_jvmti
 fieldoverride.J9BuildFlags.J9VM_OPT_SHARED_CLASSES=opt_sharedClasses
-fieldoverride.J9BuildFlags.J9VM_THR_LOCK_NURSERY=thr_lockNursery
 fieldoverride.J9BuildFlags.J9VM_THR_LOCK_RESERVATION=thr_lockReservation
 
 # Type overrides - mostly adding data to SRPs.

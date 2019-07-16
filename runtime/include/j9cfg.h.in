@@ -273,8 +273,6 @@ extern "C" {
 #cmakedefine J9VM_THR_ASYNC_NAME_UPDATE
 #cmakedefine J9VM_THR_EXTRA_CHECKS
 #cmakedefine J9VM_THR_JLM_HST
-#cmakedefine J9VM_THR_LOCK_NURSERY
-#cmakedefine J9VM_THR_LOCK_NURSERY_FAT_ARRAYS
 #cmakedefine J9VM_THR_LOCK_RESERVATION
 #cmakedefine J9VM_THR_PREEMPTIVE
 #cmakedefine J9VM_THR_SMART_DEFLATION

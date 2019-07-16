@@ -246,7 +246,6 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-excepti
 		<flag id="test_cunit" value="true"/>
 		<flag id="test_jvmti" value="true"/>
 		<flag id="thr_asyncNameUpdate" value="true"/>
-		<flag id="thr_lockNursery" value="true"/>
 		<flag id="thr_smartDeflation" value="true"/>
 		<flag id="uma_gnuDebugSymbols" value="true"/>
 	</flags>

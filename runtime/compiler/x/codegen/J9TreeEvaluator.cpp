@@ -7133,48 +7133,20 @@ static bool genZeroInitObject(
    // since i'm always confused,
    // here is the layout of an object
    //
-   // #if defined(J9VM_THR_LOCK_NURSERY)
-   //
    // on 32-bit
-   //     for an indexable object [header = 4 or 3 slots]
-   //     #if defined(J9VM_THR_LOCK_NURSERY_FAT_ARRAYS)
-   //     --clazz-- --flags-- --monitor-- --size-- <--data-->
-   //     #else
+   //     for an indexable object [header = 3 slots]
    //     --clazz-- --flags-- --size-- <--data-->
-   //     #endif
    //
    //     for a non-indexable object (if the object has sync methods, monitor
    //     slot is part of the data slots) [header = 2 slots]
    //     --clazz-- --flags-- <--data-->
    //
    // on 64-bit
-   //     for an indexable object [header = 3 or 2 slots]
-   //     #if defined(J9VM_THR_LOCK_NURSERY_FAT_ARRAYS)
-   //     --clazz-- --flags+size-- --monitor-- <--data-->
-   //     #else
+   //     for an indexable object [header = 2 slots]
    //     --clazz-- --flags+size-- <--data-->
-   //     #endif
    //
    //     for a non-indexable object [header = 2 slots]
    //     --clazz-- --flags-- <--data-->
-   //
-   // #else
-   //
-   // on 32-bit
-   //     for an indexable object [header = 4 slots]
-   //     --clazz-- --flags-- --monitor-- --size-- <--data-->
-   //
-   //     for a non-indexable object [header = 3 slots]
-   //     --clazz-- --flags-- --monitor-- <--data-->
-   //
-   // on 64-bit
-   //     for an indexable object [header = 3 slots]
-   //     --clazz-- --flags+size-- --monitor-- <--data-->
-   //
-   //     for a non-indexable object [header = 3 slots]
-   //     --clazz-- --flags-- --monitor-- <--data-->
-   //
-   // #endif
    //
    // Packed Objects adds two more fields,
    //

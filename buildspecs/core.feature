@@ -119,7 +119,6 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-excepti
 		<flag id="prof_countArgsTemps" value="false"/>
 		<flag id="prof_jvmti" value="false"/>
 		<flag id="thr_extraChecks" value="false"/>
-		<flag id="thr_lockNurseryFatArrays" value="false"/>
 		<flag id="thr_preemptive" value="true"/>
 		<flag id="uma_tracegenc" value="false"/>
 	</flags>

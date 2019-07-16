@@ -1988,7 +1988,6 @@ Pass J9PORT_SIG_OPTIONS_ZOS_USE_CEEHDLR into j9sig_set_options()  before the fir
 		<ifRemoved></ifRemoved>
 		<requires>
 			<require flag="interp_compressedObjectHeader"/>
-			<require flag="thr_lockNursery"/>
 		</requires>
 	</flag>
 	<flag id="temp_keepFlagsSlot">
@@ -2020,17 +2019,6 @@ Pass J9PORT_SIG_OPTIONS_ZOS_USE_CEEHDLR into j9sig_set_options()  before the fir
 	<flag id="thr_jlmHst">
 		<description>VM uses Extended JVMPI for Java Lock Monitor to profile locking behaviours - counts, timings and histograms only</description>
 		<ifRemoved>Java Lock Monitor cannot be enabled</ifRemoved>
-	</flag>
-	<flag id="thr_lockNursery">
-		<description>object header does not contain the monitor word</description>
-		<ifRemoved>object header will contain the monitor word</ifRemoved>
-	</flag>
-	<flag id="thr_lockNurseryFatArrays">
-		<description>lock nursery, but arrays always contain the monitor word</description>
-		<ifRemoved>array object header will not contain the monitor word</ifRemoved>
-		<requires>
-			<require flag="thr_lockNursery"/>
-		</requires>
 	</flag>
 	<flag id="thr_lockReservation">
 		<description>Include support for reserved locks</description>
