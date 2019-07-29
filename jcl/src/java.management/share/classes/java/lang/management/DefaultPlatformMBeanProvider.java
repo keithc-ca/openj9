@@ -61,7 +61,7 @@ final class DefaultPlatformMBeanProvider extends sun.management.spi.PlatformMBea
 			.addInterface(java.lang.management.OperatingSystemMXBean.class)
 			.register(allComponents);
 
-		LoggingMXBeanImpl logging = LoggingMXBeanImpl.getInstance();
+		LoggingMXBeanImpl.Logging logging = LoggingMXBeanImpl.getInstance();
 
 		/*
 		 * The logging bean will be included only if the java.logging module is present.

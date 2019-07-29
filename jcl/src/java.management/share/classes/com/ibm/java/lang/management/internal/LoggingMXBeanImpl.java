@@ -33,7 +33,6 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Optional;
 /*[ELSE]*/
-import java.util.logging.LoggingMXBean;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -46,292 +45,304 @@ import javax.management.ObjectName;
  *
  * @since 1.5
  */
-public final class LoggingMXBeanImpl
-/*[IF !Sidecar19-SE]*/
-		extends javax.management.StandardMBean
-/*[ENDIF]*/
+public final class LoggingMXBeanImpl {
+
+	public static final class Logging
 		implements
-/*[IF !Sidecar19-SE]*/
-			LoggingMXBean,
+/*[IF Sidecar19-SE]*/
+			PlatformLoggingMXBean
+/*[ELSE]
+			LoggingMXBean
 /*[ENDIF]*/
-			PlatformLoggingMXBean {
+	 {
 
-	private static final LoggingMXBeanImpl instance = createInstance();
+		static Logging createInstance() {
+			/*[IF Sidecar19-SE]*/
+			final Optional<Module> java_logging = ModuleLayer.boot().findModule("java.logging"); //$NON-NLS-1$
 
-	private static LoggingMXBeanImpl createInstance() {
+			if (!java_logging.isPresent()) {
+				return null;
+			}
+
+			PrivilegedAction<Logging> action = new PrivilegedAction<Logging>() {
+				@Override
+				public Logging run() {
+					try {
+						return new Logging(java_logging.get());
+					} catch (Exception e) {
+						throw handleError(e);
+					}
+				}
+			};
+
+			return AccessController.doPrivileged(action);
+			/*[ELSE]
+			return new Logging();
+			/*[ENDIF]*/
+		}
+
 		/*[IF Sidecar19-SE]*/
-		final Optional<Module> java_logging = ModuleLayer.boot().findModule("java.logging"); //$NON-NLS-1$
+		private final String logManager_LOGGING_MXBEAN_NAME;
+		private final Method logManager_getLogManager;
+		private final Method logManager_getLogger;
+		private final Method logManager_getLoggerNames;
 
-		if (!java_logging.isPresent()) {
-			return null;
-		}
+		private final Method level_getName;
+		private final Method level_parse;
 
-		PrivilegedAction<LoggingMXBeanImpl> action = new PrivilegedAction<LoggingMXBeanImpl>() {
-			@Override
-			public LoggingMXBeanImpl run() {
-				try {
-					return new LoggingMXBeanImpl(java_logging.get());
-				} catch (Exception e) {
-					throw handleError(e);
-				}
-			}
-		};
-
-		return AccessController.doPrivileged(action);
-		/*[ELSE]
-		return new LoggingMXBeanImpl();
+		private final Method logger_getLevel;
+		private final Method logger_getName;
+		private final Method logger_getParent;
+		private final Method logger_setLevel;
 		/*[ENDIF]*/
-	}
 
-	/*[IF Sidecar19-SE]*/
-	private final String logManager_LOGGING_MXBEAN_NAME;
-	private final Method logManager_getLogManager;
-	private final Method logManager_getLogger;
-	private final Method logManager_getLoggerNames;
+		/**
+		 * the object name
+		 */
+		private ObjectName objectName;
 
-	private final Method level_getName;
-	private final Method level_parse;
+		/**
+		 * Constructor intentionally private to prevent instantiation by others.
+		 */
+		/*[IF Sidecar19-SE]*/
+		private Logging(Module logging) throws Exception {
+			super();
 
-	private final Method logger_getLevel;
-	private final Method logger_getName;
-	private final Method logger_getParent;
-	private final Method logger_setLevel;
-	/*[ENDIF]*/
+			Class<?> managerClass = Class.forName(logging, "java.util.logging.LogManager"); //$NON-NLS-1$
 
-	/**
-	 * the object name
-	 */
-	private ObjectName objectName;
+			logManager_LOGGING_MXBEAN_NAME = (String) managerClass.getField("LOGGING_MXBEAN_NAME").get(null); //$NON-NLS-1$
+			logManager_getLogManager = managerClass.getMethod("getLogManager"); //$NON-NLS-1$
+			logManager_getLogger = managerClass.getMethod("getLogger", String.class); //$NON-NLS-1$
+			logManager_getLoggerNames = managerClass.getMethod("getLoggerNames"); //$NON-NLS-1$
 
-	/**
-	 * Constructor intentionally private to prevent instantiation by others.
-	 */
-	/*[IF Sidecar19-SE]*/
-	private LoggingMXBeanImpl(Module logging) throws Exception {
-		super();
+			Class<?> levelClass = Class.forName(logging, "java.util.logging.Level"); //$NON-NLS-1$
 
-		Class<?> managerClass = Class.forName(logging, "java.util.logging.LogManager"); //$NON-NLS-1$
+			level_getName = levelClass.getMethod("getName"); //$NON-NLS-1$
+			level_parse = levelClass.getMethod("parse", String.class); //$NON-NLS-1$
 
-		logManager_LOGGING_MXBEAN_NAME = (String) managerClass.getField("LOGGING_MXBEAN_NAME").get(null); //$NON-NLS-1$
-		logManager_getLogManager = managerClass.getMethod("getLogManager"); //$NON-NLS-1$
-		logManager_getLogger = managerClass.getMethod("getLogger", String.class); //$NON-NLS-1$
-		logManager_getLoggerNames = managerClass.getMethod("getLoggerNames"); //$NON-NLS-1$
+			Class<?> loggerClass = Class.forName(logging, "java.util.logging.Logger"); //$NON-NLS-1$
 
-		Class<?> levelClass = Class.forName(logging, "java.util.logging.Level"); //$NON-NLS-1$
+			logger_getLevel = loggerClass.getMethod("getLevel"); //$NON-NLS-1$
+			logger_getName = loggerClass.getMethod("getName"); //$NON-NLS-1$
+			logger_getParent = loggerClass.getMethod("getParent"); //$NON-NLS-1$
+			logger_setLevel = loggerClass.getMethod("setLevel", levelClass); //$NON-NLS-1$
+		}
+		/*[ELSE]*/
+		private Logging() {
+			super();
+		}
+		/*[ENDIF]*/
 
-		level_getName = levelClass.getMethod("getName"); //$NON-NLS-1$
-		level_parse = levelClass.getMethod("parse", String.class); //$NON-NLS-1$
-
-		Class<?> loggerClass = Class.forName(logging, "java.util.logging.Logger"); //$NON-NLS-1$
-
-		logger_getLevel = loggerClass.getMethod("getLevel"); //$NON-NLS-1$
-		logger_getName = loggerClass.getMethod("getName"); //$NON-NLS-1$
-		logger_getParent = loggerClass.getMethod("getParent"); //$NON-NLS-1$
-		logger_setLevel = loggerClass.getMethod("setLevel", levelClass); //$NON-NLS-1$
-	}
-	/*[ELSE]*/
-	private LoggingMXBeanImpl() {
-		super(PlatformLoggingMXBean.class, true);
-	}
-	/*[ENDIF]*/
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public ObjectName getObjectName() {
-		if (objectName == null) {
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public ObjectName getObjectName() {
+			if (objectName == null) {
 /*[IF Sidecar19-SE]*/
-			objectName = ManagementUtils.createObjectName(logManager_LOGGING_MXBEAN_NAME);
+				objectName = ManagementUtils.createObjectName(logManager_LOGGING_MXBEAN_NAME);
 /*[ELSE]*/
-			objectName = ManagementUtils.createObjectName(LogManager.LOGGING_MXBEAN_NAME);
+				objectName = ManagementUtils.createObjectName(LogManager.LOGGING_MXBEAN_NAME);
 /*[ENDIF]*/
-		}
-		return objectName;
-	}
-
-	/**
-	 * Singleton accessor method.
-	 *
-	 * @return the <code>LoggingMXBeanImpl</code> singleton.
-	 */
-	public static LoggingMXBeanImpl getInstance() {
-		return instance;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String getLoggerLevel(String loggerName) {
-		String result = null;
-
-/*[IF Sidecar19-SE]*/
-		try {
-			Object logger = getLoggerFromName(loggerName);
-/*[ELSE]
-			Logger logger = LogManager.getLogManager().getLogger(loggerName);
-/*[ENDIF]*/
-
-			if (logger != null) {
-				// The named Logger exists. Now attempt to obtain its log level.
-/*[IF Sidecar19-SE]*/
-				Object level = logger_getLevel.invoke(logger);
-/*[ELSE]
-				Level level = logger.getLevel();
-/*[ENDIF]*/
-				if (level != null) {
-/*[IF Sidecar19-SE]*/
-					result = (String) level_getName.invoke(level);
-/*[ELSE]
-					result = level.getName();
-/*[ENDIF]*/
-				} else {
-					// A null return from getLevel() means that the Logger
-					// is inheriting its log level from an ancestor. Return an
-					// empty string to the caller.
-					result = ""; //$NON-NLS-1$
-				}
 			}
-/*[IF Sidecar19-SE]*/
-		} catch (Exception e) {
-			throw handleError(e);
-		}
-/*[ENDIF]*/
-
-		return result;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public List<String> getLoggerNames() {
-		// By default, return an empty list to caller
-		List<String> result = new ArrayList<>();
-		Enumeration<?> enumeration;
-
-/*[IF Sidecar19-SE]*/
-		try {
-			Object logManagerInstance = logManager_getLogManager.invoke(null);
-			enumeration = (Enumeration<?>) logManager_getLoggerNames.invoke(logManagerInstance);
-		} catch (Exception e) {
-			throw handleError(e);
-		}
-/*[ELSE]*/
-		enumeration = LogManager.getLogManager().getLoggerNames();
-/*[ENDIF]*/
-		if (enumeration != null) {
-			while (enumeration.hasMoreElements()) {
-				result.add((String) enumeration.nextElement());
-			}
+			return objectName;
 		}
 
-		return result;
-	}
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public String getLoggerLevel(String loggerName) {
+			String result = null;
 
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public String getParentLoggerName(String loggerName) {
-		String result = null;
-
-/*[IF Sidecar19-SE]*/
-		try {
-			Object logger = getLoggerFromName(loggerName);
-/*[ELSE]
-			Logger logger = LogManager.getLogManager().getLogger(loggerName);
-/*[ENDIF]*/
-			if (logger != null) {
-				// The named Logger exists. Now attempt to obtain its parent.
-/*[IF Sidecar19-SE]*/
-				Object parent = logger_getParent.invoke(logger);
-/*[ELSE]
-				Logger parent = logger.getParent();
-/*[ENDIF]*/
-				if (parent != null) {
-					// There is a parent
-/*[IF Sidecar19-SE]*/
-					result = (String) logger_getName.invoke(parent);
-/*[ELSE]
-					result = parent.getName();
-/*[ENDIF]*/
-				} else {
-					// logger must be the root Logger
-					result = ""; //$NON-NLS-1$
-				}
-			}
-/*[IF Sidecar19-SE]*/
-		} catch (Exception e) {
-			throw handleError(e);
-		}
-/*[ENDIF]*/
-
-		return result;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	public void setLoggerLevel(String loggerName, String levelName) {
-/*[IF Sidecar19-SE]*/
-		final Object logger;
-		try {
-			logger = getLoggerFromName(loggerName);
-		} catch (Exception e) {
-			throw handleError(e);
-		}
-/*[ELSE]
-		final Logger logger = LogManager.getLogManager().getLogger(loggerName);
-/*[ENDIF]*/
-
-		if (logger != null) {
-			// The named Logger exists. Now attempt to set its level. The
-			// below attempt to parse a Level from the supplied levelName
-			// will throw an IllegalArgumentException if levelName is not
-			// a valid level name.
 /*[IF Sidecar19-SE]*/
 			try {
-				Object newLevel = level_parse.invoke(null, levelName);
-				logger_setLevel.invoke(logger, newLevel);
+				Object logger = getLoggerFromName(loggerName);
+/*[ELSE]
+				Logger logger = LogManager.getLogManager().getLogger(loggerName);
+/*[ENDIF]*/
+
+				if (logger != null) {
+					// The named Logger exists. Now attempt to obtain its log level.
+/*[IF Sidecar19-SE]*/
+					Object level = logger_getLevel.invoke(logger);
+/*[ELSE]
+					Level level = logger.getLevel();
+/*[ENDIF]*/
+					if (level != null) {
+/*[IF Sidecar19-SE]*/
+						result = (String) level_getName.invoke(level);
+/*[ELSE]
+						result = level.getName();
+/*[ENDIF]*/
+					} else {
+						// A null return from getLevel() means that the Logger
+						// is inheriting its log level from an ancestor. Return an
+						// empty string to the caller.
+						result = ""; //$NON-NLS-1$
+					}
+				}
+/*[IF Sidecar19-SE]*/
+			} catch (Exception e) {
+				throw handleError(e);
+			}
+/*[ENDIF]*/
+
+			return result;
+		}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public List<String> getLoggerNames() {
+			// By default, return an empty list to caller
+			List<String> result = new ArrayList<>();
+			Enumeration<?> enumeration;
+
+/*[IF Sidecar19-SE]*/
+			try {
+				Object logManagerInstance = logManager_getLogManager.invoke(null);
+				enumeration = (Enumeration<?>) logManager_getLoggerNames.invoke(logManagerInstance);
 			} catch (Exception e) {
 				throw handleError(e);
 			}
 /*[ELSE]*/
-			Level newLevel = Level.parse(levelName);
-			logger.setLevel(newLevel);
+			enumeration = LogManager.getLogManager().getLoggerNames();
 /*[ENDIF]*/
-		} else {
-			// Named Logger does not exist.
-			/*[MSG "K05E7", "Unable to find Logger with name {0}."]*/
-			throw new IllegalArgumentException(com.ibm.oti.util.Msg.getString("K05E7", loggerName)); //$NON-NLS-1$
+			if (enumeration != null) {
+				while (enumeration.hasMoreElements()) {
+					result.add((String) enumeration.nextElement());
+				}
+			}
+
+			return result;
 		}
-	}
+
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public String getParentLoggerName(String loggerName) {
+			String result = null;
 
 /*[IF Sidecar19-SE]*/
-	private Object getLoggerFromName(String loggerName) throws Exception {
-		Object logManagerInstance = logManager_getLogManager.invoke(null);
-		return logManager_getLogger.invoke(logManagerInstance, loggerName);
-	}
+			try {
+				Object logger = getLoggerFromName(loggerName);
+/*[ELSE]
+				Logger logger = LogManager.getLogManager().getLogger(loggerName);
+/*[ENDIF]*/
+				if (logger != null) {
+					// The named Logger exists. Now attempt to obtain its parent.
+/*[IF Sidecar19-SE]*/
+					Object parent = logger_getParent.invoke(logger);
+/*[ELSE]
+					Logger parent = logger.getParent();
+/*[ENDIF]*/
+					if (parent != null) {
+						// There is a parent
+/*[IF Sidecar19-SE]*/
+						result = (String) logger_getName.invoke(parent);
+/*[ELSE]
+						result = parent.getName();
+/*[ENDIF]*/
+					} else {
+						// logger must be the root Logger
+						result = ""; //$NON-NLS-1$
+					}
+				}
+/*[IF Sidecar19-SE]*/
+			} catch (Exception e) {
+				throw handleError(e);
+			}
+/*[ENDIF]*/
 
-	/* Handle error thrown by method invoke as internal error */
-	private static InternalError handleError(Exception error) {
-		// invoke throws InvocationTargetException if the method it is invoking throws an error.
-		// Unwrap that error for this class to maintain its specification.
-		if (error instanceof InvocationTargetException) {
-			Throwable cause = error.getCause();
+			return result;
+		}
 
-			if (cause instanceof Error) {
-				throw (Error) cause;
-			} else if (cause instanceof RuntimeException) {
-				throw (RuntimeException) cause;
+		/**
+		 * {@inheritDoc}
+		 */
+		@Override
+		public void setLoggerLevel(String loggerName, String levelName) {
+/*[IF Sidecar19-SE]*/
+			final Object logger;
+			try {
+				logger = getLoggerFromName(loggerName);
+			} catch (Exception e) {
+				throw handleError(e);
+			}
+/*[ELSE]
+			final Logger logger = LogManager.getLogManager().getLogger(loggerName);
+/*[ENDIF]*/
+
+			if (logger != null) {
+				// The named Logger exists. Now attempt to set its level. The
+				// below attempt to parse a Level from the supplied levelName
+				// will throw an IllegalArgumentException if levelName is not
+				// a valid level name.
+/*[IF Sidecar19-SE]*/
+				try {
+					Object newLevel = level_parse.invoke(null, levelName);
+					logger_setLevel.invoke(logger, newLevel);
+				} catch (Exception e) {
+					throw handleError(e);
+				}
+/*[ELSE]*/
+				Level newLevel = Level.parse(levelName);
+				logger.setLevel(newLevel);
+/*[ENDIF]*/
+			} else {
+				// Named Logger does not exist.
+				/*[MSG "K05E7", "Unable to find Logger with name {0}."]*/
+				throw new IllegalArgumentException(com.ibm.oti.util.Msg.getString("K05E7", loggerName)); //$NON-NLS-1$
 			}
 		}
 
-		throw new InternalError(error.toString(), error);
+/*[IF Sidecar19-SE]*/
+		private Object getLoggerFromName(String loggerName) throws Exception {
+			Object logManagerInstance = logManager_getLogManager.invoke(null);
+			return logManager_getLogger.invoke(logManagerInstance, loggerName);
+		}
+
+		/* Handle error thrown by method invoke as internal error */
+		private static InternalError handleError(Exception error) {
+			// invoke throws InvocationTargetException if the method it is invoking throws an error.
+			// Unwrap that error for this class to maintain its specification.
+			if (error instanceof InvocationTargetException) {
+				Throwable cause = error.getCause();
+
+				if (cause instanceof Error) {
+					throw (Error) cause;
+				} else if (cause instanceof RuntimeException) {
+					throw (RuntimeException) cause;
+				}
+			}
+
+			throw new InternalError(error.toString(), error);
+		}
+/*[ENDIF]*/
+
+	 }
+
+/*[IF !Sidecar19-SE]*/
+	/*
+	 * A compliant MXBean must implement exactly one interface.
+	 */
+	public interface LoggingMXBean extends PlatformLoggingMXBean, java.util.logging.LoggingMXBean {
+		/* no additional features */
 	}
 /*[ENDIF]*/
+
+	private static final Logging instance = Logging.createInstance();
+
+	/**
+	 * Singleton accessor method.
+	 *
+	 * @return the <code>Logging</code> singleton.
+	 */
+	public static Logging getInstance() {
+		return instance;
+	}
 
 }

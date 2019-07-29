@@ -72,7 +72,7 @@ public class TestLoggingMXBean {
 		attribs.put("ObjectName", new AttributeData(String.class.getName(), true, false, false));
 	}
 
-	private LoggingMXBeanImpl lb;
+	private LoggingMXBeanImpl.Logging lb;
 
 	private Enumeration<String> loggerNamesEnumeration;
 
@@ -105,7 +105,7 @@ public class TestLoggingMXBean {
 	@Test
 	public final void testIsSingleton() {
 		// Verify we always get the same instance
-		LoggingMXBeanImpl bean = LoggingMXBeanImpl.getInstance();
+		LoggingMXBeanImpl.Logging bean = LoggingMXBeanImpl.getInstance();
 		AssertJUnit.assertSame(lb, bean);
 	}
 
