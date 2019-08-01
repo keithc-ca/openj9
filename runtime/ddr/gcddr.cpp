@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017, 2018 IBM Corp. and others
+ * Copyright (c) 2017, 2019 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -43,6 +43,10 @@
 # include "FinalizeListManager.hpp"
 #endif /* J9VM_GC_FINALIZATION */
 
+#if defined(OMR_GC_MODRON_CONCURRENT_MARK)
+#include "ConcurrentSafepointCallback.hpp"
+#endif /* OMR_GC_MODRON_CONCURRENT_MARK */
+
 #if defined(OMR_GC_SEGREGATED_HEAP)
 # include "MemoryPoolSegregated.hpp"
 # include "MemorySubSpaceSegregated.hpp"
@@ -77,6 +81,10 @@ GC_DdrDebugLink(MM_HeapRegionDescriptor::RegionType)
 #if defined(J9VM_GC_FINALIZATION)
 GC_DdrDebugLink(GC_FinalizeListManager)
 #endif /* J9VM_GC_FINALIZATION */
+
+#if defined(OMR_GC_MODRON_CONCURRENT_MARK)
+GC_DdrDebugLink(MM_ConcurrentSafepointCallback)
+#endif /* OMR_GC_MODRON_CONCURRENT_MARK */
 
 #if defined(OMR_GC_SEGREGATED_HEAP)
 GC_DdrDebugLink(MM_MemoryPoolSegregated)
