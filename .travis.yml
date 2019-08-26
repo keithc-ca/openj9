@@ -25,43 +25,22 @@ language: cpp
 cache:
   directories:
     - $HOME/.ccache
-dist: xenial
+dist: bionic
 addons:
   apt:
     packages:
-      - autoconf
-      - ca-certificates
-      - ccache
-      - cpio
-      - file
-      - g++-4.8
-      - gcc-4.8
-      - git
-      - git-core
+      - clang-7
       - libasound2-dev
+      - libclang-7-dev
       - libcups2-dev
       - libdwarf-dev
-      - libelf-dev
-      - libfreetype6-dev
       - libnuma-dev
       - libx11-dev
-      - libxext-dev
-      - libxrender-dev
-      - libxt-dev
-      - libxtst-dev
       - libxrandr-dev
-      - make
+      - libxtst-dev
+      - llvm-7-dev
       - nasm
-      - pkg-config
-      - realpath
       - ssh
-      - unzip
-      - wget
-      - zip
-      - clang-3.8
-      - llvm-3.8
-      - libclang-3.8-dev
-      - llvm-3.8-dev
 before_script:
   - ccache -s -z --max-size=1G
 script:
@@ -71,4 +50,4 @@ after_script:
 env:
   # Note Currently enabling RUN_LINT and RUN_BUILD simultaneously is not supported
   - RUN_BUILD=yes RUN_LINT=no
-  - RUN_BUILD=no RUN_LINT=yes
+  - RUN_BUILD=no  RUN_LINT=yes

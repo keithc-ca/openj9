@@ -38,18 +38,18 @@ tar -xzf bootjdk11.tar.gz
 rm -f bootjdk11.tar.gz
 mv $(ls | grep -i jdk) bootjdk11
 export JAVA_HOME="$PWD/bootjdk11"
-export PATH="${JAVA_HOME}/bin:${PATH}"
+export PATH="$JAVA_HOME/bin:$PATH"
 cd $SRCDIR
 
 # Note Currently enabling RUN_LINT and RUN_BUILD simultaneously is not supported
-if test "x$RUN_LINT" = "xyes"; then
+if test "x$RUN_LINT" = xyes ; then
   llvm-config --version
   clang++ --version
 
   export J9SRC=$PWD/runtime
   export OMRCHECKER_DIR=$J9SRC/omr/tools/compiler/OMRChecker
   export CMAKE_BUILD_DIR=$PWD/build
-  export LLVM_CONFIG=llvm-config-3.8 CLANG=clang++-3.8 CXX_PATH=clang++-3.8 CXX=clang++-3.8
+  export LLVM_CONFIG=llvm-config-7 CLANG=clang++-7 CXX_PATH=clang++-7 CXX=clang++-7
 
   cd $J9SRC
   git clone --depth 1 --branch openj9 https://github.com/eclipse/openj9-omr.git omr
@@ -71,11 +71,7 @@ if test "x$RUN_LINT" = "xyes"; then
   make -j $MAKE_JOBS -f linter.mk
 fi
 
-if test "x$RUN_BUILD" = "xyes"; then
-  if ! wget https://ci.eclipse.org/openj9/userContent/freemarker-2.3.8.jar -O freemarker.jar ; then
-    wget https://sourceforge.net/projects/freemarker/files/freemarker/2.3.8/freemarker-2.3.8.tar.gz/download -O freemarker.tgz
-    tar -xzf freemarker.tgz freemarker-2.3.8/lib/freemarker.jar --strip=2
-  fi
+if test "x$RUN_BUILD" = xyes ; then
   cd ..
   # Shallow clone of the openj9-openjdk-jdk9 repo to speed up clone / reduce server load.
   git clone --depth 1 https://github.com/ibmruntimes/openj9-openjdk-jdk11.git
@@ -93,7 +89,7 @@ if test "x$RUN_BUILD" = "xyes"; then
   cd openj9-openjdk-jdk11 && bash get_source.sh -openj9-repo=$TRAVIS_BUILD_DIR -openj9-branch=$TRAVIS_BRANCH -openj9-sha=$OPENJ9_SHA
 
   # Limit number of jobs to work around g++ internal compiler error.
-  bash configure --with-freemarker-jar=$TRAVIS_BUILD_DIR/freemarker.jar --with-jobs=$MAKE_JOBS --with-num-cores=$MAKE_JOBS --enable-ccache --with-cmake --disable-ddr
+  bash configure --disable-warnings-as-errors --enable-ccache --with-cmake --with-jobs=$MAKE_JOBS --with-num-cores=$MAKE_JOBS
   make images EXTRA_CMAKE_ARGS="-DOMR_WARNINGS_AS_ERRORS=FALSE"
   # Minimal sniff test - ensure java -version works.
   ./build/linux-x86_64-normal-server-release/images/jdk/bin/java -version
