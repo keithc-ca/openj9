@@ -1,4 +1,5 @@
 #!/bin/bash
+
 ###############################################################################
 # Copyright (c) 2018, 2019 IBM Corp. and others
 #
@@ -27,7 +28,7 @@ set -e
 set -x
 
 # Based on https://blog.travis-ci.com/2014-12-17-faster-builds-with-container-based-infrastructure/ travis container
-# Build machines have 2 cores and 4 gigs of memory.  Attempt to double provision the number of cores for the make.
+# Build machines have 2 cores and 4GB of memory. Double provision the number of cores for the make.
 MAKE_JOBS=4
 
 # download bootstrap jdk
@@ -43,13 +44,16 @@ cd $SRCDIR
 
 # Note Currently enabling RUN_LINT and RUN_BUILD simultaneously is not supported
 if test "x$RUN_LINT" = xyes ; then
-  llvm-config --version
-  clang++ --version
-
   export J9SRC=$PWD/runtime
   export OMRCHECKER_DIR=$J9SRC/omr/tools/compiler/OMRChecker
   export CMAKE_BUILD_DIR=$PWD/build
-  export LLVM_CONFIG=llvm-config-7 CLANG=clang++-7 CXX_PATH=clang++-7 CXX=clang++-7
+  export LLVM_CONFIG=llvm-config-7
+  export CLANG=clang++-7
+  export CXX_PATH=clang++-7
+  export CXX=clang++-7
+
+  $LLVM_CONFIG --version
+  $CLANG --version
 
   cd $J9SRC
   git clone --depth 1 --branch openj9 https://github.com/eclipse/openj9-omr.git omr
