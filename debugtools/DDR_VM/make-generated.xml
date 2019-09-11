@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Copyright (c) 2019, 2019 IBM Corp. and others
+
+This program and the accompanying materials are made available under
+the terms of the Eclipse Public License 2.0 which accompanies this
+distribution and is available at https://www.eclipse.org/legal/epl-2.0/
+or the Apache License, Version 2.0 which accompanies this distribution and
+is available at https://www.apache.org/licenses/LICENSE-2.0.
+
+This Source Code may also be made available under the following
+Secondary Licenses when the conditions for such availability set
+forth in the Eclipse Public License, v. 2.0 are satisfied: GNU
+General Public License, version 2 with the GNU Classpath
+Exception [1] and GNU General Public License, version 2 with the
+OpenJDK Assembly Exception [2].
+
+[1] https://www.gnu.org/software/classpath/license.html
+[2] http://openjdk.java.net/legal/assembly-exception.html
+
+SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
+-->
+<project name="DDR_VM" default="main" basedir=".">
+
+	<macrodef name="tostring">
+		<attribute name="ref" />
+		<attribute name="var" />
+		<attribute name="prefix" default="" />
+		<attribute name="suffix" default="" />
+		<sequential>
+			<property name="@{var}" value="@{prefix}${toString:@{ref}}@{suffix}" />
+		</sequential>
+	</macrodef>
+
+	<target name="setup">
+		<property name="up3" location="../../.." />
+
+		<dirset id="dir-a" dir="${up3}">
+			<include name="*jdk11/build/*/support/ddr/classes" />
+		</dirset>
+
+		<dirset id="dir-b" dir="${up3}">
+			<include name="build/*/support/ddr/classes" />
+		</dirset>
+
+		<condition property="dir-id" value="dir-a" else="dir-b">
+			<resourcecount refid="dir-a" when="equal" count="1" />
+		</condition>
+
+		<condition property="dir-good">
+			<resourcecount refid="${dir-id}" when="equal" count="1" />
+		</condition>
+
+		<fail message="Can't locate support/ddr/classes" unless="dir-good" />
+
+		<echo message="dir-a: ${toString:dir-a}" />
+		<echo message="dir-b: ${toString:dir-b}" />
+		<tostring var="classes-dir" prefix="${up3}/" ref="${dir-id}" />
+	</target>
+
+	<target name="main" depends="setup">
+		<property name="generated.jar" location="generated.jar" />
+
+		<jar basedir="${classes-dir}" compress="true" destfile="${generated.jar}" filesonly="true">
+			<include name="**/*.class" />
+		</jar>
+	</target>
+
+</project>
