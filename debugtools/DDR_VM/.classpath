@@ -6,6 +6,7 @@
 	<classpathentry kind="lib" path="/binaries/common/ibm/ibmjzos.jar"/>
 	<classpathentry kind="lib" path="/binaries/vm/ibm/dtfj.pkg.tck-head.jar"/>
 	<classpathentry kind="lib" path="/binaries/common/third/ant-1.8.1.jar"/>
+	<classpathentry kind="lib" path="generated.jar"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/pConfig SIDECAR18-DTFJ"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/pConfig SIDECAR18-TRACEFORMAT"/>
 	<classpathentry combineaccessrules="false" exported="true" kind="src" path="/pConfig SIDECAR18-SE"/>
