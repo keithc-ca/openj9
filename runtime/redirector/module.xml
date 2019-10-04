@@ -42,7 +42,7 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-excepti
 		</commands>
 	</artifact>
 
-	<artifact type="shared" name="jvm" scope="redirector" loadgroup="top" buildlocal="true" appendrelease="false">
+	<artifact type="shared" name="jvm" loadgroup="top" buildlocal="true" appendrelease="false">
 		<include-if condition="spec.flags.module_j9vm"/>
 		<options>
 			<!-- Need this for compatibility with older UMA versions in ifix streams. -->
@@ -81,7 +81,7 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-excepti
 		<includes>
 			<include path="j9include"/>
 			<include path="j9oti"/>
-			<include path="jvm"/>
+			<include path="j9jvm"/>
 			<include path="$(OMRPORT_SRCDIR)zos390" type="relativepath">
 				<include-if condition="spec.zos_390.*"/>
 			</include>

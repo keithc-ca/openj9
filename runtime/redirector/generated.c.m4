@@ -1,6 +1,6 @@
 changequote(`[',`]')dnl
 /*******************************************************************************
- * Copyright (c) 2001, 2021 IBM Corp. and others
+ * Copyright (c) 2001, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -20,7 +20,9 @@ changequote(`[',`]')dnl
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+
 /* generated.c */
+
 #if defined(WIN32)
 #include <windows.h>
 #include <tchar.h>
@@ -42,10 +44,10 @@ changequote(`[',`]')dnl
 #include <dll.h>
 #include "atoe.h"
 #include <stdlib.h>
-#define dlsym   dllqueryfn
-#define dlopen(a,b)     dllload(a)
-#define dlclose dllfree
+#define dlsym dllqueryfn
 #endif /* defined(J9ZOS390) */
+
+#define DEBUG_REDIRECTOR 0
 
 include(helpers.m4)
 
@@ -57,7 +59,7 @@ typedef void (JNICALL *JVM_OnExit_Type)(void (*func)(void));
 /* Generated typedefs for all forwarded functions. */
 dnl (1-name, 2-cc, 3-decorate, 4-ret, 5-args...)
 define([_X],
-[typedef $4 ($2 *$1_Type)(join([, ],mshift(4,$@)));])dnl
+[typedef $4 (ifelse($2,,,$2[ ])*$1_Type)(join([, ],mshift(4,$@)));])dnl
 include([forwarders.m4])dnl
 typedef void *(JNICALL *JVM_LoadSystemLibrary_Type)(const char *libName);
 
@@ -70,13 +72,6 @@ define([_X],[static $1_Type global_$1;])
 include([forwarders.m4])dnl
 
 static volatile JVM_LoadSystemLibrary_Type global_JVM_LoadSystemLibrary;
-
-#if defined(AIXPPC)
-static int table_initialized = 0;
-
-/* defined in redirector.c */
-int openLibraries(const char *libraryDir);
-#endif /* defined(AIXPPC) */
 
 int
 jio_fprintf(FILE *stream, const char *format, ...)
@@ -113,38 +108,41 @@ JVM_OnExit(void (*func)(void))
 dnl (1-name, 2-cc, 3-decorate, 4-ret, 5-args...)
 define([_X],
 [dnl
-$4 $2
+$4[]ifelse($2,,,[ ]$2)
 $1(join([, ],mshift(4,$@)))
 {
-	while (NULL == global_$1) {
-#if defined(AIXPPC)
-		if (!table_initialized) {
-			/* attempt to open the 'main redirector' so we can try again */
-			int openedLibraries = openLibraries("");
-			if (JNI_ERR == openedLibraries) {
-				fprintf(stdout, "Internal Error: Failed to initialize redirector - exiting\n");
-				exit(998);
-			}
-		} else
-#endif /* defined(AIXPPC) */
-		{
-			fprintf(stdout, "Fatal Error: Missing forwarder for %s[]()\n", "$1");
-			exit(969);
-		}
+	if (NULL == global_$1) {
+		fprintf(stdout, "Fatal Error: Missing forwarder for %s[]()\n", "$1");
+		exit(969);
 	}
 	invokePrefix($4)[]global_$1(arg_names_list(mshift(4,$@)));
 }
 ])dnl
 include([forwarders.m4])dnl
 
+#if DEBUG_REDIRECTOR
+static int missingFunctions = 0;
+#endif /* DEBUG_REDIRECTOR */
+
 static void *
 functionLookup(void *vmdll, const char *functionName)
 {
+	void *address = NULL;
+
 #if defined(WIN32)
-	return GetProcAddress(vmdll, functionName);
+	address = GetProcAddress(vmdll, functionName);
 #else /* defined(WIN32) */
-	return (void *)dlsym(vmdll, functionName);
+	address = (void *)dlsym(vmdll, functionName);
 #endif /* defined(WIN32) */
+
+#if DEBUG_REDIRECTOR
+	if (NULL == address) {
+		fprintf(stdout, "forwarder '%s' not found\n", functionName);
+		missingFunctions += 1;
+	}
+#endif /* DEBUG_REDIRECTOR */
+
+	return address;
 }
 
 #if defined(WIN32) && !defined(J9VM_ENV_DATA64)
@@ -161,57 +159,50 @@ functionLookup(void *vmdll, const char *functionName)
 void
 lookupJVMFunctions(void *vmdll)
 {
+#if DEBUG_REDIRECTOR
+	missingFunctions = 0;
+#endif /* DEBUG_REDIRECTOR */
+
 	global_JVM_OnExit = (JVM_OnExit_Type)functionLookup(vmdll, DECORATED_NAME(JVM_OnExit, 4));
 dnl (1-name, 2-cc, 3-decorate, 4-ret, 5-args...)
 define([_X],[	global_$1 = ($1_Type)functionLookup(vmdll, decorate_function_name($@));])dnl
 include([forwarders.m4])dnl
 	global_JVM_LoadSystemLibrary = (JVM_LoadSystemLibrary_Type)functionLookup(vmdll, DECORATED_NAME(JVM_LoadSystemLibrary, 4));
-#if defined(AIXPPC)
-	table_initialized = 1;
-#endif /* defined(AIXPPC) */
+
+#if DEBUG_REDIRECTOR
+	if (0 != missingFunctions) {
+		fprintf(stdout, "Fatal Error: %d missing forwarders.\n", missingFunctions);
+		fflush(stdout);
+		exit(969);
+	}
+#endif /* DEBUG_REDIRECTOR */
 }
 
 void * JNICALL
 JVM_LoadSystemLibrary(const char *libName)
 {
 	int count = 0;
-#if defined(AIXPPC)
-retry:
-#endif /* defined(AIXPPC) */
-	while ((NULL == global_JVM_LoadSystemLibrary) && (count < 6000)) {
+	for (count = 0; count < 6000; ++count) {
+		if (NULL != global_JVM_LoadSystemLibrary) {
+			return global_JVM_LoadSystemLibrary(libName);
+		}
 #if defined(WIN32)
 		Sleep(5); /* 5 milliseconds */
 #else /* defined(WIN32) */
 		usleep(5000); /* 5 milliseconds */
 #endif /* defined(WIN32) */
-		count += 1;
 	}
-	if (NULL != global_JVM_LoadSystemLibrary) {
-		return global_JVM_LoadSystemLibrary(libName);
-#if defined(AIXPPC)
-	} else if (!table_initialized) {
-		/* attempt to open the 'main redirector' so we can try again */
-		int openedLibraries = openLibraries("");
-		if (JNI_ERR == openedLibraries) {
-			fprintf(stdout, "Internal Error: Failed to initialize redirector - exiting\n");
-			exit(998);
-		}
-		count = 0;
-		goto retry;
-#endif /* defined(AIXPPC) */
-	} else {
-		fprintf(stdout, "Fatal Error: Missing forwarder for %s()\n", "JVM_LoadSystemLibrary");
-		exit(969);
-	}
+	fprintf(stdout, "Fatal Error: Missing forwarder for %s()\n", "JVM_LoadSystemLibrary");
+	exit(969);
 }
 
 /*
- * Following method JVM_InitAgentProperties() has been copied from actual JVM dll (implemented within \VM_Sidecar\j9vm\j7vmi.c) to
+ * Following method JVM_InitAgentProperties() has been copied from actual JVM dll (implemented within j7vmi.c) to
  * this redirector dll. This is to address the issue identified by "RTC PR 104487: SVT:Eclipse:jdtdebug org.eclipse.core -
  * Fails with Cannot load module libjvm.so file".
  *
  * This PR exposed that the JVM can be quite slow to finish lookupJVMFunctions() and complete the function table initialization such that
- * a separated thread calling JVM_InitAgentProperties can fail with error "Cannot load module  libjvm.so file".
+ * a separate thread calling JVM_InitAgentProperties can fail with error "Cannot load module libjvm.so file".
  * Coping this method into redirector allows the call without finishing the function table initialization.
  *
  * The method is still kept within the actual jvm dll in case that a launcher uses that jvm dll directly without going through this redirector.

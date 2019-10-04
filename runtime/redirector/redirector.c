@@ -24,11 +24,11 @@
 #define DEBUG
 #endif
 
-#ifdef WIN32
+#if defined(WIN32)
 #include <windows.h>
 #include <tchar.h>
 #include <io.h>
-#endif /* WIN32 */
+#endif /* defined(WIN32) */
 
 #include "j9.h"
 #include "jni.h"
@@ -44,7 +44,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#endif
+#endif /* !defined(WIN32) */
 
 #if defined(J9ZOS39064)
 #include "omrutil.h"
@@ -61,41 +61,36 @@ typedef jint (JNICALL *DestroyVM)(JavaVM *);
 
 static JavaVMInitArgs *args = NULL;
 
-static CreateVM globalCreateVM=NULL;
-static InitArgs globalInitArgs=NULL;
-static GetVMs globalGetVMs=NULL;
-static DestroyVM globalDestroyVM=NULL;
+static CreateVM globalCreateVM = NULL;
+static InitArgs globalInitArgs = NULL;
+static GetVMs globalGetVMs = NULL;
+static DestroyVM globalDestroyVM = NULL;
 
 static JavaVM * globalVM = NULL;
 
-#if defined(AIXPPC)
-/* Used to keep track of whether or not opening of the "main redirector" has been attempted. 
- * Avoiding an infinite loop when libjvm.a is soft linked to libjvm.so
- */
-static int attempted_to_open_main = 0;
-
-int openLibraries(const char *libraryDir);
-#else /* defined(AIXPPC) */
 static int openLibraries(const char *libraryDir);
-#endif /* defined(AIXPPC) */
 static const char *isPackagedWithCompressedRefs(void);
 static BOOLEAN isPackagedWithSubdir(const char *subdir);
 static void showVMChoices(void);
 
-#ifdef WIN32
+#if defined(WIN32)
 #define J9_MAX_PATH _MAX_PATH
-static HINSTANCE j9vm_dllHandle = (HINSTANCE) 0;
-#else
+static HINSTANCE j9vm_dllHandle = (HINSTANCE)0;
+#else /* defined(WIN32) */
 #define J9_MAX_PATH PATH_MAX
 static void *j9vm_dllHandle = NULL;
-#endif
+#endif /* defined(WIN32) */
 /* define a size for the buffer which will hold the directory name containing the libjvm.so */
 #define J9_VM_DIR_LENGTH 32
+
+/* The names of the public and private JVM shared libraries. */
+#define EXTERNAL_VM_NAME "jvm"
+#define INTERNAL_VM_NAME "j9jvm"
 
 /*
  * Keep this structure synchronized with gc_policy_name table in parseGCPolicy()
  */
-typedef enum gc_policy{
+typedef enum gc_policy {
 	GC_POLICY_OPTTHRUPUT,
 	GC_POLICY_OPTAVGPAUSE,
 	GC_POLICY_GENCON,
@@ -106,14 +101,14 @@ typedef enum gc_policy{
 
 #if defined(LINUX) || defined(OSX)
 /* defining _GNU_SOURCE allows the use of dladdr() in dlfcn.h */
-#ifndef _GNU_SOURCE
+#if !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
-#endif /* _GNU_SOURCE */
+#endif /* !define(_GNU_SOURCE) */
 #define __USE_GNU 1
 #include <dlfcn.h>
 #endif
 
-#ifdef AIXPPC
+#if defined(AIXPPC)
 #include <stdlib.h>
 #include <sys/ldr.h>
 #include <load.h>
@@ -132,16 +127,13 @@ typedef enum gc_policy{
 #define J9FSTAT fstat
 #endif /* defined(J9ZOS390) */
 
-#ifndef PATH_MAX
+#if !defined(PATH_MAX)
 #define PATH_MAX 1023
-#endif
+#endif /* !defined(PATH_MAX) */
 #define ENVVAR_JAVA_OPTIONS "_JAVA_OPTIONS"
 #define ENVVAR_OPENJ9_JAVA_OPTIONS "OPENJ9_JAVA_OPTIONS"
 #define ENVVAR_IBM_JAVA_OPTIONS "IBM_JAVA_OPTIONS"
 
-#if defined(AIXPPC)
-static J9StringBuffer* getLibraryNameWithPath(J9StringBuffer *buffer);
-#endif /* defined(AIXPPC) */
 static J9StringBuffer* getjvmBin(BOOLEAN removeSubdir);
 static void chooseJVM(JavaVMInitArgs *args, char *retBuffer, size_t bufferLength);
 static void addToLibpath(const char *dir);
@@ -154,7 +146,7 @@ static void jvmBufferFree(J9StringBuffer* buffer);
 static BOOLEAN parseGCPolicy(char *buffer, int *value);
 #define MIN_GROWTH 128
 
-#define XMX	"-Xmx"
+#define XMX "-Xmx"
 
 /* We use forward slashes here because J9VM_LIB_ARCH_DIR is not used on Windows. */
 #if (JAVA_SPEC_VERSION >= 9) || defined(OSX)
@@ -218,7 +210,7 @@ addToLibpath(const char *dir)
 	int putenvSize;
 	int putenvErrno;
 
-	if (!dir) {
+	if (NULL == dir) {
 		return;
 	}
 
@@ -229,24 +221,24 @@ addToLibpath(const char *dir)
 	oldPath = getenv("LIBPATH");
 	DBG_MSG(("\nLIBPATH before = %s\n", oldPath ? oldPath : "<empty>"));
 
-	newSize = (oldPath ? strlen(oldPath) : 0) + strlen(dir) + 2;  /* 1 for :, 1 for \0 terminator */
+	newSize = ((NULL != oldPath) ? strlen(oldPath) : 0) + strlen(dir) + 2; /* 1 for :, 1 for \0 terminator */
 	newPath = malloc(newSize);
 
-	if(!newPath) {
+	if (NULL == newPath) {
 		fprintf(stderr, "addToLibpath malloc(%d) 1 failed, aborting\n", newSize);
 		abort();
 	}
 
 	/* prepend the new path */
 	strcpy(newPath, dir);
-	if (oldPath) {
+	if (NULL != oldPath) {
 		strcat(newPath, ":");
 		strcat(newPath, oldPath);
 	}
 
 	putenvSize = newSize + strlen("LIBPATH=");
 	putenvPath = malloc(putenvSize);
-	if(!putenvPath) {
+	if (NULL ==putenvPath) {
 		fprintf(stderr, "addToLibpath malloc(%d) 2 failed, aborting\n", putenvSize);
 		abort();
 	}
@@ -257,35 +249,35 @@ addToLibpath(const char *dir)
 	putenvErrno = errno;
 	free(putenvPath);
 
-#ifdef DEBUG
+#if defined(DEBUG)
 	printf("\nLIBPATH after = %s\n", getenv("LIBPATH"));
-#endif
+#endif /* defined(DEBUG) */
 	free(newPath);
 
 	if (rc != 0) {
 		fprintf(stderr, "addToLibpath putenv(%s) failed: %s\n", putenvPath, strerror(putenvErrno));
 		abort();
 	}
-#endif
+#endif /* defined(J9ZOS390) */
 }
 
 void
 freeGlobals(void)
 {
 #if defined(WIN32)
-	if (NULL != j9vm_dllHandle) {
+	if ((HINSTANCE)0 != j9vm_dllHandle) {
 		FreeLibrary(j9vm_dllHandle);
+		j9vm_dllHandle = (HINSTANCE)0;
 	}
-#else
-	int rc = 0;
+#else /* defined(WIN32) */
 	if (NULL != j9vm_dllHandle) {
-		rc = dlclose(j9vm_dllHandle);
+		int rc = dlclose(j9vm_dllHandle);
 		if (0 != rc) {
-			printf("Error closing jvm library: \"%s\"\n", dlerror());
+			printf("Error closing " INTERNAL_VM_NAME " library: \"%s\"\n", dlerror());
 		}
 		j9vm_dllHandle = NULL;
 	}
-#endif
+#endif /* defined(WIN32) */
 	if (NULL != args) {
 		free(args);
 		args = NULL;
@@ -298,7 +290,7 @@ showVMChoices(void)
 	if (isPackagedWithCompressedRefs()) {
 		fprintf(stdout, "\nThe following options control global VM configuration:\n\n");
 		fprintf(stdout, "  -Xcompressedrefs              use compressed heap references\n");
-	} 
+	}
 }
 
 static int xcompressed = -1;
@@ -396,7 +388,7 @@ scan_u64(char **scan_start, U_64* result)
 
 		total += digitValue;
 
-		rc = 0;	/* we found at least one digit */
+		rc = 0; /* we found at least one digit */
 
 		c++;
 	}
@@ -492,7 +484,7 @@ checkEnvOptions(char *envOptions, int *gcPolicy, char **xcompressedstr, char **x
 		xnocompressed = 0;
 		*xnocompressedstr = VMOPT_XXNOUSECOMPRESSEDOOPS;
 	}
-	
+
 	*xjvmstr = strstr(envOptions, VMOPT_XJVM);
 	if (NULL != *xjvmstr) {
 		char *space = NULL;
@@ -519,7 +511,7 @@ checkEnvOptions(char *envOptions, int *gcPolicy, char **xcompressedstr, char **x
  * @param retBuffer The buffer which will be populated with the directory name (must be big enough to contain the name and the NULL byte)
  * @param bufferLength The side of the retBuffer
  *
- * Returns the name of the directory containing the libjvm.so VM library  in the caller-provided retBuffer (with a terminating NULL byte)
+ * Returns the name of the directory containing the libjvm.so VM library in the caller-provided retBuffer (with a terminating NULL byte)
  *
  * Exits and prints an error message on error. Returns on success.
  */
@@ -546,7 +538,7 @@ chooseJVM(JavaVMInitArgs *args, char *retBuffer, size_t bufferLength)
 	char *xmxstr = NULL;
 	U_64 requestedHeapSize = 0;
 
-	/* 
+	/*
 	 * The command line is handled below but look into the multiple JAVA_OPTIONS environment variables here, since it is a special case.
 	 * First look at OPENJ9_JAVA_OPTIONS, or IBM_JAVA_OPTIONS if OPENJ9_JAVA_OPTIONS isn't defined.
 	 */
@@ -556,7 +548,7 @@ chooseJVM(JavaVMInitArgs *args, char *retBuffer, size_t bufferLength)
 		checkEnvOptions(envOptions, &gcPolicy, &xcompressedstr, &xnocompressedstr, &xjvmstr, &xjvm, &namedVM, &nameLength, &xmxstr);
 	}
 #endif /* (JAVA_SPEC_VERSION != 8) || defined(OPENJ9_BUILD) */
-	
+
 	envOptions = getenv(ENVVAR_OPENJ9_JAVA_OPTIONS);
 	if (NULL == envOptions) {
 		envOptions = getenv(ENVVAR_IBM_JAVA_OPTIONS);
@@ -603,7 +595,7 @@ chooseJVM(JavaVMInitArgs *args, char *retBuffer, size_t bufferLength)
 	 * The check is based on increasing 'optEnabled' counter for every mutually exclusive sidecar related
 	 * arguments. If optEnabled is found to be bigger than 1, we have a problem.
 	 */
-	if ( xjvm != -1 ) {
+	if (-1 != xjvm) {
 		/*
 		 * xjvm overrides most other options. If the user specified -Xjvm: trust that they know what they're doing.
 		 * 1) redirector invokes the chosen sidecar (through -Xjvm:[sidecar]) without raising any conflict.
@@ -615,7 +607,6 @@ chooseJVM(JavaVMInitArgs *args, char *retBuffer, size_t bufferLength)
 
 		xnocompressed = -1;
 		xnocompressedstr = NULL;
-
 	}
 
 	/*
@@ -635,7 +626,6 @@ chooseJVM(JavaVMInitArgs *args, char *retBuffer, size_t bufferLength)
 		optionUsed = xjvmstr;
 		basePointer = namedVM;
 	} else {
-
 		/*
 		 * If compressedrefs VM is included to the package
 		 * and requested heap size is smaller then maximum heap size recommended for compressed refs VM
@@ -686,9 +676,9 @@ chooseJVM(JavaVMInitArgs *args, char *retBuffer, size_t bufferLength)
 	}
 
 	/* check that the chosen VM exists */
-	if (!isPackagedWithSubdir(retBuffer) ) {
+	if (!isPackagedWithSubdir(retBuffer)) {
 		fprintf(stdout, "Selected VM [%s] ", retBuffer);
-		if ( NULL != optionUsed ) {
+		if (NULL != optionUsed) {
 			fprintf(stdout, "by option %s ", optionUsed);
 		}
 		fprintf(stdout, "does not exist.\n");
@@ -724,17 +714,17 @@ chooseJVM(JavaVMInitArgs *args, char *retBuffer, size_t bufferLength)
 /**
  *  jint JNICALL JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args)
  *  Load and initialize a virtual machine instance.
- *	This provides an invocation API that runs the J9 VM in BFU/sidecar mode
+ *  This provides an invocation API that runs the J9 VM in BFU/sidecar mode
  *
  *  @param pvm pointer to the location where the JavaVM interface
- *			pointer will be placed
+ *          pointer will be placed
  *  @param penv pointer to the location where the JNIEnv interface
- *			pointer for the main thread will be placed
+ *          pointer for the main thread will be placed
  *  @param vm_args java virtual machine initialization arguments
  *
  *  @returns zero on success; otherwise, return a negative number
  *
- *	DLL: jvm
+ *  DLL: jvm
  */
 jint JNICALL
 JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args)
@@ -781,7 +771,7 @@ JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args)
 		}
 	}
 
-	openedLibraries  = openLibraries(namedVM);
+	openedLibraries = openLibraries(namedVM);
 
 	if(openedLibraries == JNI_ERR) {
 		fprintf(stdout, "Failed to find VM - aborting\n");
@@ -798,15 +788,15 @@ JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args)
 	dlopen("libjava.so", RTLD_NOW);
 #endif
 
-#ifdef DEBUG
+#if defined(DEBUG)
 	fprintf(stdout, "Calling... args=%p, pvm=%p(%p), penv=%p(%p)\n", args, pvm, *pvm, penv, *penv);
 	fflush(stdout);
-#endif
+#endif /* defined(DEBUG) */
 	result = globalCreateVM(pvm, penv, args);
-#ifdef DEBUG
+#if defined(DEBUG)
 	fprintf(stdout, "Finished, result=%d args=%p, pvm=%p(%p), penv=%p(%p)\n", result, args, pvm, *pvm, penv, *penv);
 	fflush(stdout);
-#endif
+#endif /* defined(DEBUG) */
 
 	if (result == JNI_OK) {
 		globalVM = *pvm;
@@ -827,19 +817,19 @@ JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args)
 }
 
 /**
- *	jint JNICALL JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs)
+ *  jint JNICALL JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs)
  *  Return pointers to all the virtual machine instances that have been
  *  created.
- *	This provides an invocation API that runs the J9 VM in BFU/sidecar mode
+ *  This provides an invocation API that runs the J9 VM in BFU/sidecar mode
  *
  *  @param vmBuf pointer to the buffer where the pointer to virtual
- *			machine instances will be placed
+ *          machine instances will be placed
  *  @param bufLen the length of the buffer
  *  @param nVMs a pointer to an integer
  *
  *  @returns zero on success; otherwise, return a negative number
  *
- *	DLL: jvm
+ *  DLL: jvm
  */
 jint JNICALL
 JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs)
@@ -855,7 +845,7 @@ JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs)
 	iconv_init();
 #endif
 
-	if(NULL != globalGetVMs) {
+	if (NULL != globalGetVMs) {
 		result = globalGetVMs(vmBuf, bufLen, nVMs);
 	} else {
 		/* if this is NULL, then no VM has been started yet.  This implies we should return 0 */
@@ -879,17 +869,17 @@ JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs)
 }
 
 /**
- *	jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *vm_args)
+ *  jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *vm_args)
  *  Return a default configuration for the java virtual machine
  *  implementation.
- *	This provides an invocation API that runs the J9 VM in BFU/sidecar mode
+ *  This provides an invocation API that runs the J9 VM in BFU/sidecar mode
  *
  *  @param vm_args pointer to a vm-specific initialization structure
- *			into which the default arguments are filled.
+ *          into which the default arguments are filled.
  *
  *  @returns zero on success; otherwise, return a negative number
  *
- *	DLL: jvm
+ *  DLL: jvm
  */
 jint JNICALL
 JNI_GetDefaultJavaVMInitArgs(void *vm_args)
@@ -964,16 +954,16 @@ isPackagedWithSubdir(const char *subdir)
 		return FALSE;
 	}
 
-#if ! defined(WIN32)
+#if !defined(WIN32)
 	/* remember the length before appending subdir */
 	jvmBinLength = strlen(jvmBufferData(buffer));
-#endif /* ! WIN32 */
+#endif /* !defined(WIN32) */
 	buffer = jvmBufferCat(buffer, subdir);
 
 #if defined(WIN32)
 	MultiByteToWideChar(OS_ENCODING_CODE_PAGE, OS_ENCODING_MB_FLAGS, jvmBufferData(buffer), -1, unicodeDLLName, (int)strlen(jvmBufferData(buffer)) + 1);
 	rc = (INVALID_FILE_ATTRIBUTES != GetFileAttributesW(unicodeDLLName));
-#else /* WIN32 */
+#else /* defined(WIN32) */
 	rc = (-1 != stat(jvmBufferData(buffer), &statBuf));
 
 	if ((FALSE == rc) && (jvmBinLength > 0)) {
@@ -991,9 +981,9 @@ isPackagedWithSubdir(const char *subdir)
 
 		rc = (-1 != stat(jvmBufferData(buffer), &statBuf));
 	}
-#endif /* WIN32 */
+#endif /* defined(WIN32) */
 
-	free (buffer);
+	free(buffer);
 	return rc;
 }
 
@@ -1008,9 +998,6 @@ findDir(const char *libraryDir) {
 	BOOLEAN isClassic = FALSE;
 #if !defined(WIN32)
 	struct stat statBuf;
-#endif
-#if defined(AIXPPC)
-	J9StringBuffer *libraryNameWithPath = NULL;
 #endif
 
 	DBG_MSG(("trying dir: %s with base: %s\n", libraryDir, jvmBufferData(buffer)));
@@ -1043,70 +1030,24 @@ findDir(const char *libraryDir) {
 	}
 #endif /* ! WIN32 */
 
-#if defined(AIXPPC)
-	/* It is possible to open multiple redirectors on AIX.
-	 * This leads to issues with global function static being properly initialized.
-	 * To avoid those problems, designate the redirector in jre/lib/<arch>/j9vm/libjvm.so
-	 * as the main redirector.  If a redirector is not this one, it will try and open
-	 * the main and redirect to it instead of trying to open the target libjvm.so.
-	 *
-	 * NOTE: it is possible that jre/lib/<arch>/j9vm/libjvm.a is a soft link to
-	 * jre/lib/<arch>/j9vm/libjvm.so.  If this happens and libjvm.a is opened before libjvm.so
-	 * we will try to open libjvm.so and the OS will simply return the already open copy of libjvm.a.
-	 * We need to detect this case and avoid it.
-	 * We can't simply check for libjvm.a and not try libjvm.so since if they are not soft linked there
-	 * would be uninitialized function pointers in the function table.
-	 * So, try to get to the main at least once.  If we detect that we have tried to open the main
-	 * then we are the main so don't try again.*/
-	libraryNameWithPath = getLibraryNameWithPath(libraryNameWithPath);
-	if ((0 == attempted_to_open_main) && (NULL == strstr(jvmBufferData(libraryNameWithPath), J9VM_LIB_ARCH_DIR "j9vm/libjvm.so"))) {
-		J9StringBuffer *tmpBuffer = jvmBufferCat(NULL, jvmBufferData(buffer));
-		char *tmpBufferData = jvmBufferData(tmpBuffer);
+	/* remove trailing directory */
+	truncatePath(jvmBufferData(buffer), FALSE); /* at ../<dir> */
+	truncatePath(jvmBufferData(buffer), TRUE);  /* at ../ */
 
-		/* mark that we tried to open the main redirector */
-		attempted_to_open_main = 1;
+	DBG_MSG(("trying after dir: %s with base: %s\n", libraryDir, jvmBufferData(buffer)));
 
-		/* strip back the path */
-		truncatePath(tmpBufferData, FALSE); /* at jre/bin/classic -or- jre/lib/<arch>/classic */
-		truncatePath(tmpBufferData, FALSE); /* at jre/bin -or- jre/lib/<arch> */
-		truncatePath(tmpBufferData, FALSE); /* at jre -or- jre/lib */
-
-		/* build up the path to the location of the one true redirector */
-		removeSuffix(tmpBufferData, "/lib");
-		tmpBuffer = jvmBufferCat(tmpBuffer, J9VM_LIB_ARCH_DIR "j9vm");
-		jvmBufferFree(buffer);
-		buffer = tmpBuffer;
-		DBG_MSG(("redirector to one true redirector: %s\n", jvmBufferData(buffer)));
-	} else
-#endif /* AIXPPC */
-	{
-		/* remove trailing directory */
-		truncatePath(jvmBufferData(buffer), FALSE); /* at ../<dir> */
-		truncatePath(jvmBufferData(buffer), TRUE);  /* at ../ */
-
-		DBG_MSG(("trying after dir: %s with base: %s\n", libraryDir, jvmBufferData(buffer)));
-
-		/* add the libraryDir */
-		buffer = jvmBufferCat(buffer, libraryDir);
-	}
+	/* add the libraryDir */
+	buffer = jvmBufferCat(buffer, libraryDir);
 
 	return buffer;
 }
-
 
 /*
  * opens the jvm.dll in directory named "libraryDir" at the same depth
  * as this directory.  Sets the global function pointers up for
  * passthrough.
- * 
- * on AIX this function is used in the generated.c functions to find the 'main' 
- * redirector (see details in findDir()).
  */
-#if defined(AIXPPC)
-int
-#else
 static int
-#endif
 openLibraries(const char *libraryDir)
 {
 	J9StringBuffer *buffer = NULL;
@@ -1122,33 +1063,32 @@ openLibraries(const char *libraryDir)
 #endif
 
 	/* add the DLL name */
-#ifdef WIN32
-	buffer = jvmBufferCat(buffer, "\\");
-	buffer = jvmBufferCat(buffer, "jvm.dll");
+#if defined(WIN32)
+	buffer = jvmBufferCat(buffer, "\\" INTERNAL_VM_NAME J9PORT_LIBRARY_SUFFIX);
 	/* open the DLL and look up the symbols */
 	DBG_MSG(("trying %s\n", jvmBufferData(buffer)));
 	MultiByteToWideChar(OS_ENCODING_CODE_PAGE, OS_ENCODING_MB_FLAGS, jvmBufferData(buffer), -1, unicodePath, (int)strlen(jvmBufferData(buffer)) + 1);
 	j9vm_dllHandle = LoadLibraryW(unicodePath);
-	if(!j9vm_dllHandle) {
+	if ((HINSTANCE)0 == j9vm_dllHandle) {
 		return JNI_ERR;
 	}
 
-	globalCreateVM = (CreateVM) GetProcAddress (j9vm_dllHandle, (LPCSTR) "JNI_CreateJavaVM");
-	globalInitArgs = (InitArgs) GetProcAddress (j9vm_dllHandle, (LPCSTR) "JNI_GetDefaultJavaVMInitArgs");
-	globalGetVMs = (GetVMs) GetProcAddress (j9vm_dllHandle, (LPCSTR) "JNI_GetCreatedJavaVMs");
-	if (!globalCreateVM || !globalInitArgs || !globalGetVMs) {
+	globalCreateVM = (CreateVM) GetProcAddress(j9vm_dllHandle, (LPCSTR) "JNI_CreateJavaVM");
+	globalInitArgs = (InitArgs) GetProcAddress(j9vm_dllHandle, (LPCSTR) "JNI_GetDefaultJavaVMInitArgs");
+	globalGetVMs = (GetVMs) GetProcAddress(j9vm_dllHandle, (LPCSTR) "JNI_GetCreatedJavaVMs");
+	if ((NULL == globalCreateVM) || (NULL == globalInitArgs) || (NULL == globalGetVMs)) {
 		FreeLibrary(j9vm_dllHandle);
-		fprintf(stderr,"jvm.dll failed to load: global entrypoints not found\n");
+		fprintf(stderr, INTERNAL_VM_NAME J9PORT_LIBRARY_SUFFIX " failed to load: global entrypoints not found\n");
 		return JNI_ERR;
 	}
-#else /* WIN32 */
-	buffer = jvmBufferCat(buffer, "/libjvm" J9PORT_LIBRARY_SUFFIX);
+#else /* defined(WIN32) */
+	buffer = jvmBufferCat(buffer, "/lib" INTERNAL_VM_NAME J9PORT_LIBRARY_SUFFIX);
 	/* open the DLL and look up the symbols */
 #if defined(AIXPPC)
 	/* CMVC 137341:
 	 * dlopen() searches for libraries using the LIBPATH envvar as it was when the process
 	 * was launched.  This causes multiple issues such as:
-	 *  - finding 32 bit binaries for libomrsig.so instead of the 64 bit binary needed and vice versa
+	 *  - finding 32-bit binaries for libomrsig.so instead of the 64-bit binary needed and vice versa
 	 *  - finding compressed reference binaries instead of non-compressed ref binaries
 	 *
 	 * calling loadAndInit(libname, 0 -> no flags, NULL -> use the currently defined LIBPATH) allows
@@ -1158,20 +1098,20 @@ openLibraries(const char *libraryDir)
 	loadAndInit(jvmBufferData(buffer), L_RTLD_LOCAL, NULL);
 #endif /* defined(AIXPPC) */
 	j9vm_dllHandle = dlopen(jvmBufferData(buffer), RTLD_LAZY);
-	if(!j9vm_dllHandle) {
-			fprintf(stderr, "failed to open <%s> - reason: <%s>\n", jvmBufferData(buffer), dlerror());
-			return JNI_ERR;
-	}
-
-	globalCreateVM = (CreateVM) dlsym (j9vm_dllHandle, "JNI_CreateJavaVM");
-	globalInitArgs = (InitArgs) dlsym (j9vm_dllHandle, "JNI_GetDefaultJavaVMInitArgs");
-	globalGetVMs = (GetVMs) dlsym (j9vm_dllHandle, "JNI_GetCreatedJavaVMs");
-	if (!globalCreateVM || !globalInitArgs || !globalGetVMs) {
-		dlclose(j9vm_dllHandle);
-		fprintf(stderr,"jvm.dll failed to load: global entrypoints not found\n");
+	if (NULL == j9vm_dllHandle) {
+		fprintf(stderr, "failed to open <%s> - reason: <%s>\n", jvmBufferData(buffer), dlerror());
 		return JNI_ERR;
 	}
-#endif /* WIN32 */
+
+	globalCreateVM = (CreateVM) dlsym(j9vm_dllHandle, "JNI_CreateJavaVM");
+	globalInitArgs = (InitArgs) dlsym(j9vm_dllHandle, "JNI_GetDefaultJavaVMInitArgs");
+	globalGetVMs = (GetVMs) dlsym(j9vm_dllHandle, "JNI_GetCreatedJavaVMs");
+	if ((NULL == globalCreateVM) || (NULL == globalInitArgs) || (NULL == globalGetVMs)) {
+		dlclose(j9vm_dllHandle);
+		fprintf(stderr, "lib" INTERNAL_VM_NAME J9PORT_LIBRARY_SUFFIX " failed to load: global entrypoints not found\n");
+		return JNI_ERR;
+	}
+#endif /* defined(WIN32) */
 
 	lookupJVMFunctions(j9vm_dllHandle);
 	free(buffer);
@@ -1182,9 +1122,8 @@ openLibraries(const char *libraryDir)
  * The getjvmBin method needs to be implemented for Win32, Linux, AIX, and z/OS.
  * Note that the result buffer is assumed to be J9_MAX_PATH length and the value returned via the buffer.
  * MUST be terminated with a DIR_SLASH_CHAR.
-*/
-
-#ifdef WIN32
+ */
+#if defined(WIN32)
 static J9StringBuffer*
 getjvmBin(BOOLEAN removeSubdir)
 {
@@ -1193,7 +1132,7 @@ getjvmBin(BOOLEAN removeSubdir)
 	DWORD unicodeDLLNameLength = 0;
 	char result[J9_MAX_PATH];
 
-	unicodeDLLNameLength = GetModuleFileNameW(GetModuleHandle("jvm"), unicodeDLLName, (J9_MAX_PATH + 1));
+	unicodeDLLNameLength = GetModuleFileNameW(GetModuleHandle(EXTERNAL_VM_NAME), unicodeDLLName, (J9_MAX_PATH + 1));
 	/* Don't use truncated path */
 	if (unicodeDLLNameLength > (DWORD)J9_MAX_PATH) {
 		fprintf(stderr, "ERROR: cannot determine JAVA home directory\n");
@@ -1213,10 +1152,10 @@ getjvmBin(BOOLEAN removeSubdir)
 
 	return buffer;
 }
-#endif
+#endif /* defined(WIN32) */
 
 #if (defined(LINUX) || defined(OSX)) && !defined(J9ZTPF)
-static J9StringBuffer*
+static J9StringBuffer *
 getjvmBin(BOOLEAN removeSubdir)
 {
 	J9StringBuffer *buffer = NULL;
@@ -1239,56 +1178,8 @@ getjvmBin(BOOLEAN removeSubdir)
 }
 #endif /* (defined(LINUX) || defined(OSX)) && !defined(J9ZTPF) */
 
-#ifdef AIXPPC
-static J9StringBuffer*
-getLibraryNameWithPath(J9StringBuffer *buffer)
-{
-	struct ld_info *linfo, *linfop;
-	int             linfoSize, rc;
-	char           *myAddress, *filename, *membername;
-
-	/* get loader information */
-	linfoSize = 1024;
-	linfo = malloc(linfoSize);
-	for(;;) {
-		rc = loadquery(L_GETINFO, linfo, linfoSize);
-		if (rc != -1) {
-			break;
-		}
-		linfoSize *=2; /* insufficient buffer size - increase */
-		linfo = realloc(linfo, linfoSize);
-	}
-
-	/* find entry for my loaded object */
-	myAddress = ((char **)&getjvmBin)[0];
-	for (linfop = linfo;;) {
-		char *textorg  = (char *)linfop->ldinfo_textorg;
-		char *textend  = textorg + (unsigned long)linfop->ldinfo_textsize;
-		if (myAddress >=textorg && (myAddress < textend)) {
-			break;
-		}
-		if (!linfop->ldinfo_next) {
-			abort();
-		}
-		linfop = (struct ld_info *)((char *)linfop + linfop->ldinfo_next);
-	}
-
-	filename   = linfop->ldinfo_filename;
-	membername = filename+strlen(filename)+1;
-#ifdef DEBUG
-	printf("ldinfo: filename is %s. membername is %s\n", filename, membername);
-#endif
-	buffer = jvmBufferCat(buffer, filename);
-	free(linfo);
-
-#ifdef DEBUG
-	printf("getLibraryNameWithPath ret: %s\n", jvmBufferData(buffer));
-#endif
-
-	return buffer;
-}
-
-static J9StringBuffer*
+#if defined(AIXPPC)
+static J9StringBuffer *
 getjvmBin(BOOLEAN removeSubdir)
 {
 	J9StringBuffer *buffer = NULL;
@@ -1299,12 +1190,12 @@ getjvmBin(BOOLEAN removeSubdir)
 	/* get loader information */
 	linfoSize = 1024;
 	linfo = malloc(linfoSize);
-	for(;;) {
+	for (;;) {
 		rc = loadquery(L_GETINFO, linfo, linfoSize);
 		if (rc != -1) {
 			break;
 		}
-		linfoSize *=2; /* insufficient buffer size - increase */
+		linfoSize *= 2; /* insufficient buffer size - increase */
 		linfo = realloc(linfo, linfoSize);
 	}
 
@@ -1323,10 +1214,10 @@ getjvmBin(BOOLEAN removeSubdir)
 	}
 
 	filename   = linfop->ldinfo_filename;
-	membername = filename+strlen(filename)+1;
-#ifdef DEBUG
-	printf("[%p]ldinfo: filename is %s. membername is %s\n",  myAddress, filename, membername);
-#endif
+	membername = filename + strlen(filename) + 1;
+#if defined(DEBUG)
+	printf("[%p]ldinfo: filename is %s. membername is %s\n", myAddress, filename, membername);
+#endif /* defined(DEBUG) */
 	buffer = jvmBufferCat(buffer, filename);
 	if (removeSubdir) {
 		/* remove libjvm.so */
@@ -1337,14 +1228,13 @@ getjvmBin(BOOLEAN removeSubdir)
 
 	free(linfo);
 
-#ifdef DEBUG
+#if defined(DEBUG)
 	printf("[%p] getjvmbin ret: %s\n", myAddress, jvmBufferData(buffer));
-#endif
+#endif /* defined(DEBUG) */
 
 	return buffer;
 }
-
-#endif
+#endif /* defined(AIXPPC) */
 
 #if defined(J9ZOS390) || defined(J9ZTPF)
 
@@ -1359,23 +1249,23 @@ isFileInDir(char *dir, char *file)
 	FILE *f;
 
 	/* Construct 'full' path */
-	if (dir[strlen(dir)-1] == DIR_SLASH_CHAR) {
+	if (dir[strlen(dir) - 1] == DIR_SLASH_CHAR) {
 		/* remove trailing DIR_SLASH_CHAR */
-		dir[strlen(dir)-1] = '\0';
+		dir[strlen(dir) - 1] = '\0';
 	}
 
 	l = strlen(dir) + strlen(file) + 2; /* 2= '/' + null char */
 	fullpath = malloc(l);
 	strcpy(fullpath, dir);
 	fullpath[strlen(dir)] = DIR_SLASH_CHAR;
-	strcpy(fullpath+strlen(dir)+1, file);
+	strcpy(fullpath + strlen(dir) + 1, file);
 
 	/* See if file exists - use fopen() for portability */
 	f = fopen(fullpath, "rb");
-	if (f) {
+	if (NULL != f) {
 		fclose(f);
 	}
-	return f!=0;
+	return NULL != f;
 }
 
 J9StringBuffer*
@@ -1394,20 +1284,20 @@ findDirContainingFile(J9StringBuffer *buffer, char *paths, char pathSeparator, c
 	startOfDir = endOfDir = paths;
 	for (isEndOfPaths=FALSE, foundIt=FALSE; !foundIt && !isEndOfPaths; endOfDir++) {
 		isEndOfPaths = endOfDir[0] == '\0';
-		if (isEndOfPaths || (endOfDir[0] == pathSeparator))  {
+		if (isEndOfPaths || (endOfDir[0] == pathSeparator)) {
 			endOfDir[0] = '\0';
 			if (strlen(startOfDir) && isFileInDir(startOfDir, fileToFind)) {
 				foundIt = TRUE;
 				/*strcpy(result, startOfDir);*/
 				buffer = jvmBufferCat(buffer, startOfDir);
 			}
-			startOfDir = endOfDir+1;
+			startOfDir = endOfDir + 1;
 		}
 	}
 	free(paths); /* from strdup() */
 	/*return foundIt;*/
 
-	if ( !foundIt) {
+	if (!foundIt) {
 		fprintf(stderr, "ERROR: cannot determine JAVA home directory");
 		abort();
 	}
@@ -1464,7 +1354,8 @@ getjvmBin(BOOLEAN removeSubdir)
 }
 #endif /* defined(J9ZOS390) || defined(J9ZTPF) */
 
-static J9StringBuffer* jvmBufferCat(J9StringBuffer* buffer, const char* string)
+static J9StringBuffer *
+jvmBufferCat(J9StringBuffer* buffer, const char* string)
 {
 	UDATA len = strlen(string);
 
@@ -1477,10 +1368,12 @@ static J9StringBuffer* jvmBufferCat(J9StringBuffer* buffer, const char* string)
 	return buffer;
 }
 
-static J9StringBuffer* jvmBufferEnsure(J9StringBuffer* buffer, UDATA len) {
+static J9StringBuffer *
+jvmBufferEnsure(J9StringBuffer* buffer, UDATA len)
+{
 	if (buffer == NULL) {
 		UDATA newSize = len > MIN_GROWTH ? len : MIN_GROWTH;
-		buffer = (J9StringBuffer*) malloc( newSize + 1 + sizeof(UDATA));	/* 1 for null terminator */
+		buffer = (J9StringBuffer*) malloc( newSize + 1 + sizeof(UDATA)); /* 1 for null terminator */
 		if (buffer != NULL) {
 			buffer->remaining = newSize;
 			buffer->data[0] = '\0';
@@ -1503,17 +1396,22 @@ static J9StringBuffer* jvmBufferEnsure(J9StringBuffer* buffer, UDATA len) {
 	return buffer;
 }
 
-static char* jvmBufferData(J9StringBuffer* buffer) {
+static char *
+jvmBufferData(J9StringBuffer* buffer)
+{
 	return buffer ? buffer->data : NULL;
 }
 
-static void jvmBufferFree(J9StringBuffer* buffer) {
-	if(buffer) {
+static void
+jvmBufferFree(J9StringBuffer* buffer)
+{
+	if (NULL != buffer) {
 		free(buffer);
 	}
 }
 
-static BOOLEAN parseGCPolicy(char *buffer, int *value)
+static BOOLEAN
+parseGCPolicy(char *buffer, int *value)
 {
 	const char *gc_policy_name[] = {
 			"optthruput",
