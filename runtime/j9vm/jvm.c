@@ -847,9 +847,9 @@ getj9bin()
 	int foundPosition = 0;
 
 	/* assumes LIBPATH (or LD_LIBRARY_PATH for z/TPF) points to where all libjvm.so can be found */
-	while(foundPosition = findDirUplevelToDirContainingFile(&result, LD_ENV_PATH, ':', "libjvm.so", 0, foundPosition)) {
+	while (foundPosition = findDirUplevelToDirContainingFile(&result, LD_ENV_PATH, ':', "libj9jvm.so", 0, foundPosition)) {
 		/* now screen to see if match is the right libjvm.so - it needs to have a j9vm DLL either in this dir, or in the parent. */
-		DBG_MSG(("found a libjvm.so at offset %d - looking at elem: %s\n", foundPosition, result));
+		DBG_MSG(("found libj9jvm.so at offset %d - looking at elem: %s\n", foundPosition, result));
 
 		/* first try this dir - this will be true for 'vm in subdir' cases, and is the likely Java 6 case as of SR1. */
 		if (isFileInDir(jvmBufferData(result), "lib" VMDLL_NAME J9PORT_LIBRARY_SUFFIX)) {
@@ -2259,6 +2259,9 @@ int isFileInDir(char *dir, char *file){
 		}
 		free(fullpath);
 	}
+
+	DBG_MSG(("\njvm:isFileInDir(%s,%s) = %d\n", dir, file, foundFile));
+
 	return foundFile;
 }
 

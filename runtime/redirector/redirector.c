@@ -75,9 +75,7 @@ int openLibraries(const char *libraryDir);
 #else /* defined(AIXPPC) */
 static int openLibraries(const char *libraryDir);
 #endif /* defined(AIXPPC) */
-static const char *isPackagedWithCompressedRefs(void);
 static BOOLEAN isPackagedWithSubdir(const char *subdir);
-static void showVMChoices(void);
 
 #ifdef WIN32
 #define J9_MAX_PATH _MAX_PATH
@@ -98,7 +96,7 @@ UDATA getUserExtendedPrivateAreaMemoryType();
 /*
  * Keep this structure synchronized with gc_policy_name table in parseGCPolicy()
  */
-typedef enum gc_policy{
+typedef enum gc_policy {
 	GC_POLICY_OPTTHRUPUT,
 	GC_POLICY_OPTAVGPAUSE,
 	GC_POLICY_GENCON,
@@ -322,15 +320,6 @@ freeGlobals(void)
 	if (NULL != args) {
 		free(args);
 		args = NULL;
-	}
-}
-
-static void
-showVMChoices(void)
-{
-	if (isPackagedWithCompressedRefs()) {
-		fprintf(stdout, "\nThe following options control global VM configuration:\n\n");
-		fprintf(stdout, "  -Xcompressedrefs              use compressed heap references\n");
 	}
 }
 
@@ -676,7 +665,7 @@ chooseJVM(JavaVMInitArgs *args, char *retBuffer, size_t bufferLength)
 				basePointer = COMPRESSEDREFS_DIR;
 			}
 		}
-		}
+	}
 
 	/*
 	 * Jazz 31002 : if -XXvm:ignoreUnrecognized is specified and that the targeted VM
@@ -941,17 +930,6 @@ JNI_GetDefaultJavaVMInitArgs(void *vm_args)
 	}
 }
 
-#define strsubdir(subdir) (isPackagedWithSubdir((subdir)) ? (subdir) : NULL)
-
-/*
- * Returns the subdirectory name if a compressed references VM is included in the package containing the redirector
- */
-static const char *
-isPackagedWithCompressedRefs(void)
-{
-	return strsubdir(COMPRESSEDREFS_DIR);
-}
-
 static BOOLEAN
 isPackagedWithSubdir(const char *subdir)
 {
@@ -1000,7 +978,7 @@ isPackagedWithSubdir(const char *subdir)
 	}
 #endif /* WIN32 */
 
-	free (buffer);
+	free(buffer);
 	return rc;
 }
 
@@ -1186,13 +1164,13 @@ openLibraries(const char *libraryDir)
 }
 
 /*
- * The getjvmBin method needs to be implemented for Win32, Linux, AIX, and z/OS.
- * Note that the result buffer is assumed to be J9_MAX_PATH length and the value returned via the buffer.
- * MUST be terminated with a DIR_SLASH_CHAR.
-*/
+ * The getjvmBin() function needs to be implemented for Win32, Linux, AIX, and z/OS.
+ * Note that the result buffer is assumed to be J9_MAX_PATH length and the value
+ * returned via the buffer MUST be terminated with a DIR_SLASH_CHAR.
+ */
 
-#ifdef WIN32
-static J9StringBuffer*
+#if defined(WIN32)
+static J9StringBuffer *
 getjvmBin(BOOLEAN removeSubdir)
 {
 	J9StringBuffer *buffer = NULL;
@@ -1213,7 +1191,7 @@ getjvmBin(BOOLEAN removeSubdir)
 	buffer = jvmBufferCat(NULL, result);
 
 	if (removeSubdir) {
-		/* remove jvm.dll */
+		/* remove \jvm.dll */
 		truncatePath(jvmBufferData(buffer), FALSE);
 	}
 	/* remove jvm.dll or classes */
@@ -1221,10 +1199,10 @@ getjvmBin(BOOLEAN removeSubdir)
 
 	return buffer;
 }
-#endif
+#endif /* defined(WIN32) */
 
 #if (defined(LINUX) || defined(OSX)) && !defined(J9ZTPF)
-static J9StringBuffer*
+static J9StringBuffer *
 getjvmBin(BOOLEAN removeSubdir)
 {
 	J9StringBuffer *buffer = NULL;
@@ -1237,7 +1215,7 @@ getjvmBin(BOOLEAN removeSubdir)
 	}
 	buffer = jvmBufferCat(NULL, libraryInfo.dli_fname);
 	if (removeSubdir) {
-		/* remove libjvm.so */
+		/* remove /libjvm.so */
 		truncatePath(jvmBufferData(buffer), FALSE);
 	}
 	/* remove libjvm.so or j9vm */
@@ -1247,8 +1225,8 @@ getjvmBin(BOOLEAN removeSubdir)
 }
 #endif /* (defined(LINUX) || defined(OSX)) && !defined(J9ZTPF) */
 
-#ifdef AIXPPC
-static J9StringBuffer*
+#if defined(AIXPPC)
+static J9StringBuffer *
 getLibraryNameWithPath(J9StringBuffer *buffer)
 {
 	struct ld_info *linfo, *linfop;
@@ -1263,7 +1241,7 @@ getLibraryNameWithPath(J9StringBuffer *buffer)
 		if (rc != -1) {
 			break;
 		}
-		linfoSize *=2; /* insufficient buffer size - increase */
+		linfoSize *= 2; /* insufficient buffer size - increase */
 		linfo = realloc(linfo, linfoSize);
 	}
 
@@ -1282,7 +1260,7 @@ getLibraryNameWithPath(J9StringBuffer *buffer)
 	}
 
 	filename   = linfop->ldinfo_filename;
-	membername = filename+strlen(filename)+1;
+	membername = filename + strlen(filename) + 1;
 #ifdef DEBUG
 	printf("ldinfo: filename is %s. membername is %s\n", filename, membername);
 #endif
@@ -1296,7 +1274,7 @@ getLibraryNameWithPath(J9StringBuffer *buffer)
 	return buffer;
 }
 
-static J9StringBuffer*
+static J9StringBuffer *
 getjvmBin(BOOLEAN removeSubdir)
 {
 	J9StringBuffer *buffer = NULL;
@@ -1312,7 +1290,7 @@ getjvmBin(BOOLEAN removeSubdir)
 		if (rc != -1) {
 			break;
 		}
-		linfoSize *=2; /* insufficient buffer size - increase */
+		linfoSize *= 2; /* insufficient buffer size - increase */
 		linfo = realloc(linfo, linfoSize);
 	}
 
@@ -1331,13 +1309,13 @@ getjvmBin(BOOLEAN removeSubdir)
 	}
 
 	filename   = linfop->ldinfo_filename;
-	membername = filename+strlen(filename)+1;
+	membername = filename + strlen(filename) + 1;
 #ifdef DEBUG
 	printf("[%p]ldinfo: filename is %s. membername is %s\n", myAddress, filename, membername);
 #endif
 	buffer = jvmBufferCat(buffer, filename);
 	if (removeSubdir) {
-		/* remove libjvm.so */
+		/* remove /libjvm.so */
 		truncatePath(jvmBufferData(buffer), FALSE);
 	}
 	/* remove libjvm.so or j9vm */
@@ -1351,8 +1329,7 @@ getjvmBin(BOOLEAN removeSubdir)
 
 	return buffer;
 }
-
-#endif
+#endif /* defined(AIXPPC) */
 
 #if defined(J9ZOS390) || defined(J9ZTPF)
 
@@ -1367,26 +1344,29 @@ isFileInDir(char *dir, char *file)
 	FILE *f;
 
 	/* Construct 'full' path */
-	if (dir[strlen(dir)-1] == DIR_SLASH_CHAR) {
+	if (dir[strlen(dir) - 1] == DIR_SLASH_CHAR) {
 		/* remove trailing DIR_SLASH_CHAR */
-		dir[strlen(dir)-1] = '\0';
+		dir[strlen(dir) - 1] = '\0';
 	}
 
 	l = strlen(dir) + strlen(file) + 2; /* 2= '/' + null char */
 	fullpath = malloc(l);
 	strcpy(fullpath, dir);
 	fullpath[strlen(dir)] = DIR_SLASH_CHAR;
-	strcpy(fullpath+strlen(dir)+1, file);
+	strcpy(fullpath+strlen(dir) + 1, file);
 
 	/* See if file exists - use fopen() for portability */
 	f = fopen(fullpath, "rb");
 	if (f) {
 		fclose(f);
 	}
-	return f!=0;
+
+	DBG_MSG(("\nisFileInDir(%s,%s) = %d\n", dir, file, NULL != f));
+
+	return NULL != f;
 }
 
-J9StringBuffer*
+static J9StringBuffer *
 findDirContainingFile(J9StringBuffer *buffer, char *paths, char pathSeparator, char *fileToFind)
 {
 	char *startOfDir, *endOfDir;
@@ -1400,30 +1380,28 @@ findDirContainingFile(J9StringBuffer *buffer, char *paths, char pathSeparator, c
 
 	/* Search each dir in the list for fileToFind */
 	startOfDir = endOfDir = paths;
-	for (isEndOfPaths=FALSE, foundIt=FALSE; !foundIt && !isEndOfPaths; endOfDir++) {
+	for (isEndOfPaths = FALSE, foundIt = FALSE; !foundIt && !isEndOfPaths; endOfDir++) {
 		isEndOfPaths = endOfDir[0] == '\0';
 		if (isEndOfPaths || (endOfDir[0] == pathSeparator)) {
 			endOfDir[0] = '\0';
 			if (strlen(startOfDir) && isFileInDir(startOfDir, fileToFind)) {
 				foundIt = TRUE;
-				/*strcpy(result, startOfDir);*/
 				buffer = jvmBufferCat(buffer, startOfDir);
 			}
-			startOfDir = endOfDir+1;
+			startOfDir = endOfDir + 1;
 		}
 	}
 	free(paths); /* from strdup() */
-	/*return foundIt;*/
 
-	if ( !foundIt) {
+	if (!foundIt) {
 		fprintf(stderr, "ERROR: cannot determine JAVA home directory");
 		abort();
 	}
 	return buffer;
 }
 
-J9StringBuffer*
-findDirUplevelToDirContainingFile(J9StringBuffer *buffer, char *pathEnvar, char pathSeparator, char *fileInPath, int upLevels)
+static J9StringBuffer *
+findDirUplevelToDirContainingFile(J9StringBuffer *buffer, char *pathEnvar, char pathSeparator, char *fileInPath)
 {
 	/* Get the list of paths */
 	char *paths = getenv(pathEnvar);
@@ -1431,37 +1409,32 @@ findDirUplevelToDirContainingFile(J9StringBuffer *buffer, char *pathEnvar, char 
 		return NULL;
 	}
 
+	DBG_MSG(("\nfindDirUplevelToDirContainingFile(%s) %s = %s\n", fileInPath, pathEnvar, paths));
+
 	/* find the directory */
 	if (buffer = findDirContainingFile(buffer, paths, pathSeparator, fileInPath)) {
-		/* Now move upLevel to it - this may not work for directories of the form
-		 * /xxx/yyy/..      ... and so on.
-		 * If that is a problem, could always use /.. to move up.
-		 */
-		for (; upLevels > 0; upLevels--) {
-			truncatePath(jvmBufferData(buffer), FALSE);
-		}
-		/* the above loop destroyed the last DIR_SLASH_CHAR so re-add it */
+		/* add the required DIR_SLASH_CHAR */
 		buffer = jvmBufferCat(buffer, "/");
 	}
 
 	return buffer;
 }
 
-static J9StringBuffer*
+static J9StringBuffer *
 getjvmBin(BOOLEAN removeSubdir)
 {
-	J9StringBuffer *buffer = NULL;
-
-	/* assumes LIBPATH points to where libjvm.so can be found */
 #if defined(J9ZOS390)
-	buffer = findDirUplevelToDirContainingFile(buffer, "LIBPATH", ':', "libjvm.so", 0);
+	char *envVarName = "LIBPATH";
 #else
-	buffer = findDirUplevelToDirContainingFile(buffer, "LD_LIBRARY_PATH", ':', "libjvm" J9PORT_LIBRARY_SUFFIX, 0);
+	char *envVarName = "LD_LIBRARY_PATH";
 #endif
+	char *libName = "lib" "jvm" J9PORT_LIBRARY_SUFFIX;
+	/* assumes the env var points to a place where libjvm.so can be found */
+	J9StringBuffer *buffer = findDirUplevelToDirContainingFile(NULL, envVarName, ':', libName);
 
 	if (NULL != buffer) {
 		if (removeSubdir) {
-			/* remove libjvm.so */
+			/* remove trailing DIR_SLASH_CHAR */
 			truncatePath(jvmBufferData(buffer), FALSE);
 		}
 		/* remove libjvm.so or j9vm */
@@ -1472,7 +1445,8 @@ getjvmBin(BOOLEAN removeSubdir)
 }
 #endif /* defined(J9ZOS390) || defined(J9ZTPF) */
 
-static J9StringBuffer* jvmBufferCat(J9StringBuffer* buffer, const char* string)
+static J9StringBuffer *
+jvmBufferCat(J9StringBuffer *buffer, const char *string)
 {
 	UDATA len = strlen(string);
 
@@ -1485,7 +1459,9 @@ static J9StringBuffer* jvmBufferCat(J9StringBuffer* buffer, const char* string)
 	return buffer;
 }
 
-static J9StringBuffer* jvmBufferEnsure(J9StringBuffer* buffer, UDATA len) {
+static J9StringBuffer *
+jvmBufferEnsure(J9StringBuffer *buffer, UDATA len)
+{
 	if (buffer == NULL) {
 		UDATA newSize = len > MIN_GROWTH ? len : MIN_GROWTH;
 		buffer = (J9StringBuffer*) malloc( newSize + 1 + sizeof(UDATA)); /* 1 for null terminator */
@@ -1511,17 +1487,22 @@ static J9StringBuffer* jvmBufferEnsure(J9StringBuffer* buffer, UDATA len) {
 	return buffer;
 }
 
-static char* jvmBufferData(J9StringBuffer* buffer) {
+static char *
+jvmBufferData(J9StringBuffer *buffer)
+{
 	return buffer ? buffer->data : NULL;
 }
 
-static void jvmBufferFree(J9StringBuffer* buffer) {
-	if(buffer) {
+static void
+jvmBufferFree(J9StringBuffer *buffer)
+{
+	if (buffer) {
 		free(buffer);
 	}
 }
 
-static BOOLEAN parseGCPolicy(char *buffer, int *value)
+static BOOLEAN
+parseGCPolicy(char *buffer, int *value)
 {
 	const char *gc_policy_name[] = {
 			"optthruput",
