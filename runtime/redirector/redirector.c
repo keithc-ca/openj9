@@ -20,7 +20,7 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-#if 0
+#if defined(AIXPPC)
 #define DEBUG
 #endif
 
@@ -306,11 +306,11 @@ freeGlobals(void)
 #if defined(WIN32)
 	if (NULL != j9vm_dllHandle) {
 		FreeLibrary(j9vm_dllHandle);
+		j9vm_dllHandle = NULL;
 	}
 #else
-	int rc = 0;
 	if (NULL != j9vm_dllHandle) {
-		rc = dlclose(j9vm_dllHandle);
+		int rc = dlclose(j9vm_dllHandle);
 		if (0 != rc) {
 			printf("Error closing jvm library: \"%s\"\n", dlerror());
 		}
@@ -1089,10 +1089,9 @@ findDir(const char *libraryDir) {
  * redirector (see details in findDir()).
  */
 #if defined(AIXPPC)
+static
+#endif /* defined(AIXPPC) */
 int
-#else
-static int
-#endif
 openLibraries(const char *libraryDir)
 {
 	J9StringBuffer *buffer = NULL;
@@ -1114,7 +1113,7 @@ openLibraries(const char *libraryDir)
 	DBG_MSG(("trying %s\n", jvmBufferData(buffer)));
 	MultiByteToWideChar(OS_ENCODING_CODE_PAGE, OS_ENCODING_MB_FLAGS, jvmBufferData(buffer), -1, unicodePath, (int)strlen(jvmBufferData(buffer)) + 1);
 	j9vm_dllHandle = LoadLibraryW(unicodePath);
-	if(!j9vm_dllHandle) {
+	if (!j9vm_dllHandle) {
 		return JNI_ERR;
 	}
 
@@ -1123,7 +1122,7 @@ openLibraries(const char *libraryDir)
 	globalGetVMs = (GetVMs) GetProcAddress (j9vm_dllHandle, (LPCSTR) "JNI_GetCreatedJavaVMs");
 	if (!globalCreateVM || !globalInitArgs || !globalGetVMs) {
 		FreeLibrary(j9vm_dllHandle);
-		fprintf(stderr,"jvm.dll failed to load: global entrypoints not found\n");
+		fprintf(stderr, "jvm.dll failed to load: global entrypoints not found\n");
 		return JNI_ERR;
 	}
 #else /* WIN32 */
@@ -1136,24 +1135,24 @@ openLibraries(const char *libraryDir)
 	 *  - finding 32 bit binaries for libomrsig.so instead of the 64 bit binary needed and vice versa
 	 *  - finding compressed reference binaries instead of non-compressed ref binaries
 	 *
-	 * calling loadAndInit(libname, 0 -> no flags, NULL -> use the currently defined LIBPATH) allows
+	 * calling loadAndInit(libname, flags: L_RTLD_LOCAL, NULL -> use the currently defined LIBPATH) allows
 	 * us to load the library with the current libpath instead of the one at process creation
 	 * time. We can then call dlopen() as per normal and the just loaded library will be found.
-	 * */
+	 */
 	loadAndInit(jvmBufferData(buffer), L_RTLD_LOCAL, NULL);
 #endif /* defined(AIXPPC) */
 	j9vm_dllHandle = dlopen(jvmBufferData(buffer), RTLD_LAZY);
-	if(!j9vm_dllHandle) {
+	if (NULL == j9vm_dllHandle) {
 			fprintf(stderr, "failed to open <%s> - reason: <%s>\n", jvmBufferData(buffer), dlerror());
 			return JNI_ERR;
 	}
 
-	globalCreateVM = (CreateVM) dlsym (j9vm_dllHandle, "JNI_CreateJavaVM");
-	globalInitArgs = (InitArgs) dlsym (j9vm_dllHandle, "JNI_GetDefaultJavaVMInitArgs");
-	globalGetVMs = (GetVMs) dlsym (j9vm_dllHandle, "JNI_GetCreatedJavaVMs");
+	globalCreateVM = (CreateVM) dlsym(j9vm_dllHandle, "JNI_CreateJavaVM");
+	globalInitArgs = (InitArgs) dlsym(j9vm_dllHandle, "JNI_GetDefaultJavaVMInitArgs");
+	globalGetVMs = (GetVMs) dlsym(j9vm_dllHandle, "JNI_GetCreatedJavaVMs");
 	if (!globalCreateVM || !globalInitArgs || !globalGetVMs) {
 		dlclose(j9vm_dllHandle);
-		fprintf(stderr,"jvm.dll failed to load: global entrypoints not found\n");
+		fprintf(stderr, OPENJ9_VM_NAME J9PORT_LIBRARY_SUFFIX " failed to load: global entrypoints not found\n");
 		return JNI_ERR;
 	}
 #endif /* WIN32 */

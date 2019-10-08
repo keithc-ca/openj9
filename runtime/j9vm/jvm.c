@@ -20,7 +20,7 @@
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
 
-#if 0
+#if defined(AIXPPC)
 #define DEBUG
 #define DEBUG_TEST
 #endif
@@ -285,13 +285,12 @@ static UDATA protectedStrerror(J9PortLibrary* portLib, void* savedErrno);
 static UDATA strerrorSignalHandler(struct J9PortLibrary* portLibrary, U_32 gpType, void* gpInfo, void* userData);
 static void throwNewUnsatisfiedLinkError(JNIEnv *env, char *message);
 static int findDirContainingFile(J9StringBuffer **result, char *paths, char pathSeparator, char *fileToFind, int elementsToSkip);
-static int findDirUplevelToDirContainingFile(J9StringBuffer **result, char *pathEnvar, char pathSeparator, char *fileInPath, int upLevels, int elementsToSkip);
+static int findDirUplevelToDirContainingFile(J9StringBuffer **result, char *pathEnvar, char pathSeparator, char *fileInPath, int elementsToSkip);
 static void truncatePath(char *inputPath);
 
 #if defined(WIN32)
 static jint formatErrorMessage(int errorCode, char *inBuffer, jint inBufferLength);
 #endif
-
 
 /**
  * Preload the VM, Thread, and Port libraries using platform-specific
@@ -474,8 +473,9 @@ static void freeGlobals(void)
 	j9Buffer = NULL;
 }
 
-static J9StringBuffer* jvmBufferEnsure(J9StringBuffer* buffer, UDATA len) {
-
+static J9StringBuffer *
+jvmBufferEnsure(J9StringBuffer* buffer, UDATA len)
+{
 	if (buffer == NULL) {
 		UDATA newSize = len > MIN_GROWTH ? len : MIN_GROWTH;
 		buffer = (J9StringBuffer*) malloc( newSize + 1 + sizeof(UDATA));	/* 1 for null terminator */
@@ -500,8 +500,7 @@ static J9StringBuffer* jvmBufferEnsure(J9StringBuffer* buffer, UDATA len) {
 	return buffer;
 }
 
-
-static J9StringBuffer*
+static J9StringBuffer *
 jvmBufferCat(J9StringBuffer* buffer, const char* string)
 {
 	UDATA len = strlen(string);
@@ -515,12 +514,14 @@ jvmBufferCat(J9StringBuffer* buffer, const char* string)
 	return buffer;
 }
 
-
-static char* jvmBufferData(J9StringBuffer* buffer) {
+static char *
+jvmBufferData(J9StringBuffer* buffer)
+{
 	return buffer ? buffer->data : NULL;
 }
 
-jint JNICALL DestroyJavaVM(JavaVM * javaVM)
+jint JNICALL
+DestroyJavaVM(JavaVM * javaVM)
 {
 	jint rc;
 
@@ -586,7 +587,6 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserv
 
 	return rcDllMain;
 }
-
 
 static BOOLEAN
 preloadLibraries(void)
@@ -759,7 +759,6 @@ bfuThreadStart(J9HookInterface** vmHooks, UDATA eventNum, void* eventData, void*
 	}
 }
 
-
 static void
 bfuThreadEnd(J9HookInterface** vmHooks, UDATA eventNum, void* eventData, void* userData)
 {
@@ -771,7 +770,6 @@ bfuThreadEnd(J9HookInterface** vmHooks, UDATA eventNum, void* eventData, void* u
 		vmThread->sidecarEvent = NULL;
 	}
 }
-
 
 static void bfuInterrupt(J9VMThread * vmThread)
 {
@@ -847,7 +845,7 @@ getj9bin()
 	int foundPosition = 0;
 
 	/* assumes LIBPATH (or LD_LIBRARY_PATH for z/TPF) points to where all libjvm.so can be found */
-	while (foundPosition = findDirUplevelToDirContainingFile(&result, LD_ENV_PATH, ':', "libj9jvm.so", 0, foundPosition)) {
+	while (foundPosition = findDirUplevelToDirContainingFile(&result, LD_ENV_PATH, ':', "libj9jvm.so", foundPosition)) {
 		/* now screen to see if match is the right libjvm.so - it needs to have a j9vm DLL either in this dir, or in the parent. */
 		DBG_MSG(("found libj9jvm.so at offset %d - looking at elem: %s\n", foundPosition, result));
 
@@ -1548,7 +1546,6 @@ jint JNICALL JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args) {
 	specialArgs.executableJarPath = NULL;
 	specialArgs.ibmMallocTraceSet = &ibmMallocTraceSet;
 #ifdef J9ZTPF
-
     result = tpf_eownrc(TPF_SET_EOWNR, "IBMRT4J                        ");
 
     if (result < 0)  {
@@ -2319,33 +2316,18 @@ int findDirContainingFile(J9StringBuffer **result, char *paths, char pathSeparat
 	}
 }
 
-
-
-int findDirUplevelToDirContainingFile(J9StringBuffer **result, char *pathEnvar, char pathSeparator, char *fileInPath, int upLevels, int elementsToSkip) {
-	char *paths;
-	int   rc;
-
+static int
+findDirUplevelToDirContainingFile(J9StringBuffer **result, char *pathEnvar, char pathSeparator, char *fileInPath, int elementsToSkip)
+{
 	/* Get the list of paths */
-	paths = getenv(pathEnvar);
-	if (!paths) {
+	char *paths = getenv(pathEnvar);
+	if (NULL == paths) {
 		return FALSE;
 	}
 
 	/* find the directory */
-	rc = findDirContainingFile(result, paths, pathSeparator, fileInPath, elementsToSkip);
-
-	/* Now move upLevel to it - this may not work for directories of form
-		/aaa/bbb/..      ... and so on.
-		If that is a problem, could always use /.. to move up.
-	*/
-	if (rc) {
-		for (; upLevels > 0; upLevels--) {
-			truncatePath(jvmBufferData(*result));
-		}
-	}
-   return rc;
+	return findDirContainingFile(result, paths, pathSeparator, fileInPath, elementsToSkip);
 }
-
 
 void
 exitHook(J9JavaVM *vm)
@@ -2375,18 +2357,18 @@ exitHook(J9JavaVM *vm)
 #endif /* CALL_BUNDLED_FUNCTIONS_DIRECTLY */
 }
 
-static void*
+static void *
 preloadLibrary(char* dllName, BOOLEAN inJVMDir)
 {
 	J9StringBuffer *buffer = NULL;
-	void* handle = NULL;
+	void *handle = NULL;
 #ifdef WIN32
 	wchar_t unicodePath[J9_MAX_PATH];
 	char * bufferData;
 	size_t bufferLength;
 #endif
 
-	if(inJVMDir) {
+	if (inJVMDir) {
 		buffer = jvmBufferCat(buffer, jvmBufferData(j9binBuffer));
 	} else {
 		buffer = jvmBufferCat(buffer, jvmBufferData(jrebinBuffer));
@@ -2507,7 +2489,6 @@ addToLibpath(const char *dir, BOOLEAN isPrepend)
 	} else {
 		strcpy(newPath, dir);
 	}
-
 #else
 	/* ZOS doesn't like it when we pre-pend to LIBPATH */
 	if (oldPath) {
@@ -3343,7 +3324,6 @@ protectedStrerror(J9PortLibrary* portLib, void* savedErrno)
 	return (UDATA) strerror((int) (IDATA) savedErrno);
 }
 
-
 static UDATA
 strerrorSignalHandler(struct J9PortLibrary* portLibrary, U_32 gpType, void* gpInfo, void* userData)
 {
@@ -3351,7 +3331,8 @@ strerrorSignalHandler(struct J9PortLibrary* portLibrary, U_32 gpType, void* gpIn
 }
 
 static void
-throwNewUnsatisfiedLinkError(JNIEnv *env, char *message) {
+throwNewUnsatisfiedLinkError(JNIEnv *env, char *message)
+{
 	jclass exceptionClass = (*env)->FindClass(env, "java/lang/UnsatisfiedLinkError");
 	if (NULL != exceptionClass) {
 		(*env)->ThrowNew(env, exceptionClass, message);
@@ -3363,7 +3344,8 @@ throwNewUnsatisfiedLinkError(JNIEnv *env, char *message) {
  * Remove one segment of a path.
  */
 static void
-truncatePath(char *inputPath) {
+truncatePath(char *inputPath)
+{
 	char *lastOccurence = strrchr(inputPath, DIR_SEPARATOR);
 	/* strrchr() returns NULL if it cannot find the character */
 	if (NULL != lastOccurence) {
@@ -3472,18 +3454,17 @@ JVM_LoadSystemLibrary(const char *libName)
 	 *  - finding 32 bit binaries for libomrsig.so instead of the 64 bit binary needed and vice versa
 	 *  - finding compressed reference binaries instead of non-compressed ref binaries
 	 *
-	 * calling loadAndInit(libname, 0 -> no flags, NULL -> use the currently defined LIBPATH) allows
+	 * calling loadAndInit(libname, flags: L_RTLD_LOCAL, NULL -> use the currently defined LIBPATH) allows
 	 * us to load the library with the current libpath instead of the one at process creation
 	 * time. We can then call dlopen() as per normal and the just loaded library will be found.
 	 * */
 	loadAndInit((char *)libName, L_RTLD_LOCAL, NULL);
 #endif
-	dllHandle = dlopen( (char *)libName, RTLD_LAZY );
-	if(NULL != dllHandle ) {
+	dllHandle = dlopen((char *)libName, RTLD_LAZY);
+	if (NULL != dllHandle) {
 		Trc_SC_LoadSystemLibrary_Exit(dllHandle);
 		return dllHandle;
 	}
-
 #endif /* defined(J9UNIX) || defined(J9ZOS390) */
 
 	/* We are here means we failed to load library. Throw java.lang.UnsatisfiedLinkError */
@@ -3502,7 +3483,6 @@ JVM_LoadSystemLibrary(const char *libName)
 
 	return NULL;
 }
-
 
 
 /**
@@ -3547,7 +3527,6 @@ JVM_LoadLibrary(const char *libName)
 
 _end:
 	SetErrorMode(prevMode);
-
 #endif
 
 #if defined(J9UNIX) || defined(J9ZOS390)
@@ -3559,13 +3538,13 @@ _end:
 	 *  - finding 32 bit binaries for libomrsig.so instead of the 64 bit binary needed and vice versa
 	 *  - finding compressed reference binaries instead of non-compressed ref binaries
 	 *
-	 * calling loadAndInit(libname, 0 -> no flags, NULL -> use the currently defined LIBPATH) allows
+	 * calling loadAndInit(libname, flags: L_RTLD_LOCAL, NULL -> use the currently defined LIBPATH) allows
 	 * us to load the library with the current libpath instead of the one at process creation
 	 * time. We can then call dlopen() as per normal and the just loaded library will be found.
 	 * */
 	loadAndInit((char *)libName, L_RTLD_LOCAL, NULL);
 #endif
-	dllHandle = dlopen( (char *)libName, RTLD_LAZY );
+	dllHandle = dlopen((char *)libName, RTLD_LAZY);
 	if(NULL != dllHandle) {
 		Trc_SC_LoadLibrary_Exit(dllHandle);
 		return dllHandle;
@@ -3582,7 +3561,6 @@ _end:
 	Trc_SC_LoadLibrary_Exit(NULL);
 	return NULL;
 }
-
 
 /**
  *  void* JNICALL JVM_FindLibraryEntry(UDATA handle, char *functionName)
@@ -3619,7 +3597,6 @@ JVM_FindLibraryEntry(void* handle, const char *functionName)
 	return result;
 }
 
-
 /**
  * JVM_SetLength
  */
@@ -3653,7 +3630,6 @@ JVM_SetLength(jint fd, jlong length)
 
 	return result;
 }
-
 
 /**
 * JVM_Write
