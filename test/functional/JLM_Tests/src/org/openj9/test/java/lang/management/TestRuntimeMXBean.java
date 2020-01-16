@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2019 IBM Corp. and others
+ * Copyright (c) 2005, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-
 package org.openj9.test.java.lang.management;
 
 import org.testng.annotations.AfterClass;
@@ -585,7 +584,7 @@ public class TestRuntimeMXBean {
 
 	@Test
 	public final void testGetMBeanInfo() {
-		MBeanInfo mbi = null;
+		MBeanInfo mbi;
 		try {
 			mbi = mbs.getMBeanInfo(objName);
 		} catch (InstanceNotFoundException e) {
@@ -603,39 +602,38 @@ public class TestRuntimeMXBean {
 		// Now make sure that what we got back is what we expected.
 
 		// Class name
-		AssertJUnit.assertTrue(mbi.getClassName().equals(rb.getClass().getName()));
+		AssertJUnit.assertEquals(rb.getClass().getName(), mbi.getClassName());
 
 		// No public constructors
 		MBeanConstructorInfo[] constructors = mbi.getConstructors();
 		AssertJUnit.assertNotNull(constructors);
-		AssertJUnit.assertTrue(constructors.length == 0);
+		AssertJUnit.assertEquals(0, constructors.length);
 
 		// No public operations
 		MBeanOperationInfo[] operations = mbi.getOperations();
 		AssertJUnit.assertNotNull(operations);
-		AssertJUnit.assertTrue(operations.length == 0);
+		AssertJUnit.assertEquals(0, operations.length);
 
 		// No notifications
 		MBeanNotificationInfo[] notifications = mbi.getNotifications();
 		AssertJUnit.assertNotNull(notifications);
-		AssertJUnit.assertTrue(notifications.length == 0);
+		AssertJUnit.assertEquals(0, notifications.length);
 
 		// Print description and the class name (not necessarily identical).
 		logger.debug("MBean description for " + rb.getClass().getName() + ": " + mbi.getDescription());
 
-		// Sixteen attributes - none writable - and eight IBM specific.
-		MBeanAttributeInfo[] attributes = mbi.getAttributes();
-		AssertJUnit.assertNotNull(attributes);
+		// 25 or 26 attributes - none writable - and eight IBM specific
 		int attrNbr;
-		if (org.openj9.test.util.VersionCheck.major() >=14) {
-			attrNbr = 26;
-		} else {
+		if (org.openj9.test.util.VersionCheck.major() < 14) {
 			// Java 8 - 13
 			attrNbr = 25;
+		} else {
+			attrNbr = 26;
 		}
-		org.testng.Assert.assertEquals(attributes.length, attrNbr, "wrong number of attributes");
-		for (int i = 0; i < attributes.length; i++) {
-			MBeanAttributeInfo info = attributes[i];
+		MBeanAttributeInfo[] attributes = mbi.getAttributes();
+		AssertJUnit.assertNotNull(attributes);
+		org.testng.Assert.assertEquals(attrNbr, attributes.length, "wrong number of attributes");
+		for (MBeanAttributeInfo info : attributes) {
 			AssertJUnit.assertNotNull(info);
 			AllManagementTests.validateAttributeInfo(info, TestRuntimeMXBean.ignoredAttributes, attribs);
 		} // end for

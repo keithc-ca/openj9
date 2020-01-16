@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2005, 2019 IBM Corp. and others
+ * Copyright (c) 2005, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-
 package org.openj9.test.java.lang.management;
 
 import org.testng.annotations.AfterClass;
@@ -68,7 +67,7 @@ public class TestThreadMXBean {
 	static {
 		ignoredAttributes = new HashSet<>();
 		ignoredAttributes.add("ObjectName");
-		attribs = new Hashtable<String, AttributeData>();
+		attribs = new Hashtable<>();
 		attribs.put("AllThreadIds", new AttributeData("[J", true, false, false));
 		attribs.put("CurrentThreadCpuTime", new AttributeData(Long.TYPE.getName(), true, false, false));
 		attribs.put("CurrentThreadUserTime", new AttributeData(Long.TYPE.getName(), true, false, false));
@@ -84,7 +83,7 @@ public class TestThreadMXBean {
 		attribs.put("ThreadCpuTimeSupported", new AttributeData(Boolean.TYPE.getName(), true, false, true));
 		attribs.put("ObjectMonitorUsageSupported", new AttributeData(Boolean.TYPE.getName(), true, false, true));
 		attribs.put("SynchronizerUsageSupported", new AttributeData(Boolean.TYPE.getName(), true, false, true));
-	}// end static initializer
+	} // end static initializer
 
 	private ThreadMXBean tb;
 
@@ -123,9 +122,8 @@ public class TestThreadMXBean {
 		int count = tb.getThreadCount();
 		long[] ids = tb.getAllThreadIds();
 		logger.debug("Current count = " + count);
-		logger.debug("Current ids count = " + ids.length);
-
 		AssertJUnit.assertNotNull(ids);
+		logger.debug("Current ids count = " + ids.length);
 	}
 
 	@Test
@@ -135,15 +133,17 @@ public class TestThreadMXBean {
 		try {
 			long[] nativeTIDs = tb.getNativeThreadIds(threadIds);
 			AssertJUnit.assertNotNull(nativeTIDs);
+			AssertJUnit.assertEquals(threadIds.length, nativeTIDs.length);
 			for (int iter = 0; iter < nativeTIDs.length; iter++) {
+				long nativeTID = nativeTIDs[iter];
 				/* Threads in the virtual machine can die off between us querying for JLM.tId and obtaining
 				 * the corresponding native identifiers.  This is really not an error, then, if some of these
 				 * slots are filled with -1 to represent this fact (that the thread is no longer available).
 				 */
-				if (nativeTIDs[iter] <= 0) {
+				if (nativeTID <= 0) {
 					logger.debug("Thread corresponding to " + threadIds[iter] + " is no longer available with the OS.");
 				} else {
-					logger.debug("Native thread ID " + nativeTIDs[iter] + " assigned to thread: " + threadIds[iter]);
+					logger.debug("Native thread ID " + nativeTID + " assigned to thread: " + threadIds[iter]);
 				}
 			}
 		} catch (Exception e) {
@@ -947,7 +947,7 @@ public class TestThreadMXBean {
 
 	@Test
 	public final void testGetAttributes() {
-		AttributeList attributes = null;
+		AttributeList attributes;
 		try {
 			attributes = mbs.getAttributes(objName, attribs.keySet().toArray(new String[] {}));
 		} catch (InstanceNotFoundException e) {
@@ -1029,7 +1029,7 @@ public class TestThreadMXBean {
 		Attribute tcte = new Attribute("ThreadCpuTimeEnabled", new Boolean(true));
 		attList.add(tcme);
 		attList.add(tcte);
-		AttributeList setAttrs = null;
+		AttributeList setAttrs;
 		try {
 			setAttrs = mbs.setAttributes(objName, attList);
 		} catch (InstanceNotFoundException e) {
@@ -1063,7 +1063,7 @@ public class TestThreadMXBean {
 			return;
 		}
 		AssertJUnit.assertNotNull(setAttrs);
-		AssertJUnit.assertTrue(setAttrs.size() == 0);
+		AssertJUnit.assertEquals(0, setAttrs.size());
 
 		// Another failure scenario - a non-writable attribute...
 		badList = new AttributeList();
@@ -1081,7 +1081,7 @@ public class TestThreadMXBean {
 			return;
 		}
 		AssertJUnit.assertNotNull(setAttrs);
-		AssertJUnit.assertTrue(setAttrs.size() == 0);
+		AssertJUnit.assertEquals(0, setAttrs.size());
 
 		// Yet another failure scenario - a wrongly-typed attribute...
 		badList = new AttributeList();
@@ -1099,7 +1099,7 @@ public class TestThreadMXBean {
 			return;
 		}
 		AssertJUnit.assertNotNull(setAttrs);
-		AssertJUnit.assertTrue(setAttrs.size() == 0);
+		AssertJUnit.assertEquals(0, setAttrs.size());
 	}
 
 	@Test
@@ -1285,7 +1285,7 @@ public class TestThreadMXBean {
 			// Verify that after this operation is invoked, the
 			// peak thread count equals the value of current thread count
 			// taken prior to this method call.
-			AssertJUnit.assertTrue(tb.getPeakThreadCount() == tb.getThreadCount());
+			AssertJUnit.assertEquals(tb.getThreadCount(), tb.getPeakThreadCount());
 		} catch (Exception e) {
 			Assert.fail("Unexpected exception.");
 		}
@@ -1293,7 +1293,7 @@ public class TestThreadMXBean {
 
 	@Test
 	public final void testGetMBeanInfo() {
-		MBeanInfo mbi = null;
+		MBeanInfo mbi;
 		try {
 			mbi = mbs.getMBeanInfo(objName);
 		} catch (InstanceNotFoundException e) {
@@ -1311,7 +1311,7 @@ public class TestThreadMXBean {
 		// Now make sure that what we got back is what we expected.
 
 		// Class name
-		AssertJUnit.assertTrue(mbi.getClassName().equals(tb.getClass().getName()));
+		AssertJUnit.assertEquals(tb.getClass().getName(), mbi.getClassName());
 
 		// No public constructors
 		MBeanConstructorInfo[] constructors = mbi.getConstructors();
@@ -1319,11 +1319,11 @@ public class TestThreadMXBean {
 		AssertJUnit.assertEquals(0, constructors.length);
 
 		int opNbr;
-		if (org.openj9.test.util.VersionCheck.major() >=14) {
-			opNbr = 16;
-		} else {
+		if (org.openj9.test.util.VersionCheck.major() < 14) {
 			// Java 8 - 13
 			opNbr = 14;
+		} else {
+			opNbr = 16;
 		}
 		MBeanOperationInfo[] operations = mbi.getOperations();
 		AssertJUnit.assertNotNull(operations);
@@ -1337,7 +1337,7 @@ public class TestThreadMXBean {
 		// Print description and the class name (not necessarily identical).
 		logger.debug("MBean description for " + tb.getClass().getName() + ": " + mbi.getDescription());
 
-		// 14 attributes
+		// 15 attributes
 		MBeanAttributeInfo[] attributes = mbi.getAttributes();
 		AssertJUnit.assertNotNull(attributes);
 		AssertJUnit.assertEquals(15, attributes.length);
