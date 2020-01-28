@@ -1,5 +1,5 @@
 ################################################################################
-# Copyright (c) 2017, 2019 IBM Corp. and others
+# Copyright (c) 2017, 2020 IBM Corp. and others
 #
 # This program and the accompanying materials are made available under
 # the terms of the Eclipse Public License 2.0 which accompanies this
@@ -70,16 +70,6 @@ set_property(DIRECTORY PROPERTY COMPILE_DEFINITIONS ${compile_defs})
 
 omr_add_tracegen(env/j9jit.tdf)
 
-# this is a workaround because the jit code is inconsistent about how it includes the tracegen files
-# It only really works if we put it in the source tree
-add_custom_command(
-	OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/env/ut_j9jit.h
-	DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/ut_j9jit.h
-	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/ut_j9jit.h" "${CMAKE_CURRENT_SOURCE_DIR}/env/ut_j9jit.h"
-	VERBATIM
-)
-add_custom_target(j9jit_tracegen DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/env/ut_j9jit.h)
-
 # JITSERVER_SUPPORT and protobuf
 if(JITSERVER_SUPPORT)
 	message(STATUS "JITServer is supported")
@@ -135,18 +125,17 @@ if(JITSERVER_SUPPORT)
 	include_directories(${OPENSSL_INCLUDE_DIR})
 endif()
 
-#TODO We should get rid of this, but its still required by the compiler_support module in omr
-set(J9SRC  ${j9vm_SOURCE_DIR})
+# TODO We should get rid of this, but its still required by the compiler_support module in omr
+set(J9SRC ${j9vm_SOURCE_DIR})
 
-
-#include compiler support module from OMR
+# include compiler support module from OMR
 include(OmrCompilerSupport)
 
 # Override masm2gas with J9JIT version until we've
 # resolved the divergence.
-set(masm2gas_path  build/scripts/masm2gas.pl )
+set(masm2gas_path build/scripts/masm2gas.pl )
 get_filename_component(masm2gas_path ${masm2gas_path} ABSOLUTE)
-set(MASM2GAS_PATH  ${masm2gas_path} CACHE INTERNAL "MASM2GAS PATH")
+set(MASM2GAS_PATH ${masm2gas_path} CACHE INTERNAL "MASM2GAS PATH")
 
 # The list of files that are added to the compiler in addition
 # To the defaults provided by create_omr_compiler_library
@@ -221,7 +210,6 @@ set(REMOVED_OMR_FILES
 	${omr_SOURCE_DIR}/compiler/ilgen/OMRVirtualMachineRegisterInStruct.cpp
 	${omr_SOURCE_DIR}/compiler/ilgen/OMRVirtualMachineState.cpp
 )
-
 
 get_target_property(compiler_defines j9vm_compiler_defines INTERFACE_COMPILE_DEFINITIONS)
 # Extra defines not provided by the create_omr_compiler_library call
@@ -327,8 +315,8 @@ omr_stringify(J9_CFLAGS_STR ${J9_CFLAGS} ${J9_SHAREDFLAGS})
 omr_stringify(J9_CXXFLAGS_STR ${J9_CXXFLAGS} ${J9_SHAREDFLAGS})
 
 # Note: This is explicitly overriding what's provided by
-#       the VM CMakeLists, as they pass -fno-exceptions
-#       right now, and the JIT needs exceptions
+# the VM CMakeLists, as they pass -fno-exceptions
+# right now, and the JIT needs exceptions
 set(CMAKE_CXX_FLAGS "${J9_CXXFLAGS_STR}")
 set(CMAKE_C_FLAGS "${J9_CFLAGS_STR}")
 
@@ -383,7 +371,7 @@ set_source_files_properties(
 
 if(OMR_OS_LINUX)
 	set_property(TARGET j9jit APPEND_STRING PROPERTY
-		LINK_FLAGS "  -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/build/scripts/j9jit.linux.exp")
+		LINK_FLAGS " -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/build/scripts/j9jit.linux.exp")
 	target_link_libraries(j9jit PRIVATE m)
 elseif(OMR_OS_WINDOWS)
 	target_sources(j9jit PRIVATE build/scripts/j9jit.def)
