@@ -145,7 +145,6 @@ macro(j9jit_files)
 	set(J9JIT_FILES ${J9JIT_FILES} ${ARGN} CACHE INTERNAL "The computed list of j9jit files")
 endmacro(j9jit_files)
 
-j9jit_files(${CMAKE_CURRENT_BINARY_DIR}/ut_j9jit.c)
 # Add our subdirs.
 add_subdirectory(codegen)
 add_subdirectory(compile)
