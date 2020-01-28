@@ -60,7 +60,7 @@ j9jit_files(
 	env/SystemSegmentProvider.cpp
 	env/VMJ9.cpp
 
-	${CMAKE_CURRENT_BINARY_DIR}/env/ut_j9jit.c
+	${CMAKE_CURRENT_BINARY_DIR}/ut_j9jit.c
 )
 
 if(JITSERVER_SUPPORT)
