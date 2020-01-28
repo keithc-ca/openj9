@@ -330,7 +330,6 @@ create_omr_compiler_library(NAME j9jit
 
 add_dependencies(j9jit
 	omrgc_hookgen
-	j9jit_tracegen
 	j9jit_generate
 )
 
