@@ -68,8 +68,6 @@ get_directory_property(compile_defs COMPILE_DEFINITIONS)
 list(REMOVE_ITEM compile_defs "_HAS_EXCEPTIONS=0")
 set_property(DIRECTORY PROPERTY COMPILE_DEFINITIONS ${compile_defs})
 
-omr_add_tracegen(env/j9jit.tdf)
-
 # JITSERVER_SUPPORT and protobuf
 if(JITSERVER_SUPPORT)
 	message(STATUS "JITServer is supported")
