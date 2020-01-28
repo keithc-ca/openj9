@@ -330,6 +330,11 @@ add_dependencies(j9jit
 	j9jit_generate
 )
 
+target_sources(j9jit
+	PRIVATE
+		${CMAKE_CURRENT_BINARY_DIR}/env/ut_j9jit.c
+)
+
 if(JITSERVER_SUPPORT)
 	add_dependencies(j9jit j9jit_proto)
 endif()
