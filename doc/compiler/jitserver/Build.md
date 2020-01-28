@@ -20,7 +20,6 @@ OpenJDK Assembly Exception [2].
 SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
 -->
 
-
 There are currently 3 supported build procedures. Select the one that best suits your needs.
 
 - [Building the whole VM](#vm). The complete build process (Most correct and recommended). Produces a complete JVM as output (including the JIT).
@@ -77,10 +76,10 @@ apt-get update \
  && apt-get install -qq -y --no-install-recommends gcc-7 g++-7 \
  && rm -rf /var/lib/apt/lists/*
 
-ln -sf /usr/bin/g++ /usr/bin/c++ \
- && ln -sf /usr/bin/g++-7 /usr/bin/g++ \
- && ln -sf /usr/bin/gcc /usr/bin/cc \
- && ln -sf /usr/bin/gcc-7 /usr/bin/gcc
+ln -sf gcc-7 /usr/bin/cc \
+ && ln -sf gcc-7 /usr/bin/gcc \
+ && ln -sf g++-7 /usr/bin/c++ \
+ && ln -sf g++-7 /usr/bin/g++
 
 cd /root \
  && wget https://sourceforge.net/projects/freemarker/files/freemarker/2.3.8/freemarker-2.3.8.tar.gz/download -O freemarker.tar.gz \
@@ -92,10 +91,6 @@ cd /root \
  && tar -xzf bootjdk8.tar.gz \
  && rm -f bootjdk8.tar.gz \
  && mv $(ls | grep -i jdk) bootjdk8
-
-#########
-# Version 3.5.1 of protobuf has been validated to work on x86. On Z and PowerPC a version of 3.7.1 or higher is needed.
-#########
 
 wget https://github.com/protocolbuffers/protobuf/releases/download/v3.7.1/protobuf-cpp-3.7.1.tar.gz \
  && tar -xvzf protobuf-cpp-3.7.1.tar.gz \
@@ -134,18 +129,17 @@ If you already have an SDK enabled with JITServer and just want to rebuild the J
 
 ```
 export JAVA_HOME=/your/sdk
-export J9SRC="$JAVA_HOME"/jre/lib/amd64/compressedrefs
+export J9SRC="$JAVA_HOME/jre/lib/amd64/compressedrefs"
 export JIT_SRCBASE=/your/openj9/runtime
 export OMR_SRCBASE=/your/omr
 
 export JITSERVER_SUPPORT=1
 
-ln -s "$OMR_SRCBASE" "$JIT_SRCBASE"/omr
-cp "$J9SRC"/compiler/env/ut_j9jit.* "$JIT_SRCBASE"/compiler/env/
+ln -s "$OMR_SRCBASE" "$JIT_SRCBASE/omr"
 
-cd "$JIT_SRCBASE"/runtime/compiler
-make -f compiler.mk -C "$JIT_SRCBASE"/compiler -j$(nproc) J9SRC="$JAVA_HOME"/jre/lib/amd64/compressedrefs/ JIT_SRCBASE=.. BUILD_CONFIG=debug J9_VERSION=29 JIT_OBJBASE=../objs
-cp "$JIT_SRCBASE"/compiler/../objs/libj9jit29.so "$J9SRC"
+cd "$JIT_SRCBASE/runtime/compiler"
+make -f compiler.mk -C "$JIT_SRCBASE/compiler" -j$(nproc) J9SRC="$JAVA_HOME/jre/lib/amd64/compressedrefs/" JIT_SRCBASE=.. BUILD_CONFIG=debug J9_VERSION=29 JIT_OBJBASE=../objs
+cp "$JIT_SRCBASE/compiler/../objs/libj9jit29.so" "$J9SRC"
 ```
 
 The only new addition to the build process for JITServer is to protobuf schema files. These are supposed to be build automatically, but it keeps getting broken by upstream changes to openJ9. So, if you get errors about missing files named like `compile.pb.h`, try building the make target `proto` by adding the word `proto` to the end of the make command above.
