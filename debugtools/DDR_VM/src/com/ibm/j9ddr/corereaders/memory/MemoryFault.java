@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2014 IBM Corp. and others
+ * Copyright (c) 2009, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -25,71 +25,56 @@ import com.ibm.j9ddr.AddressedCorruptDataException;
 
 /**
  * Exception class representing a memory fault (GPF)
- * 
+ *
  * @author andhall
- * 
  */
-public class MemoryFault extends AddressedCorruptDataException
-{
+public class MemoryFault extends AddressedCorruptDataException {
 
 	private static final long serialVersionUID = 4274925376210643492L;
 
-	String message = null;
-	
+	private final String message;
+
 	/**
-	 * 
 	 * @param address
 	 *            Address that caused fault
 	 */
-	public MemoryFault(long address)
-	{
-		super(address, (String)null);
+	public MemoryFault(long address) {
+		this(address, null, null);
 	}
 
 	/**
-	 * 
 	 * @param address
 	 *            Address that caused fault
 	 * @param message
 	 *            Exception message
 	 */
-	public MemoryFault(long address, String message)
-	{
-		super(address, (String) null);
+	public MemoryFault(long address, String message) {
+		this(address, message, null);
+	}
+
+	/**
+	 * @param address
+	 *            Address that caused fault
+	 * @param cause
+	 *            Underlying throwable that caused memory fault
+	 */
+	public MemoryFault(long address, Throwable cause) {
+		this(address, null, cause);
+	}
+
+	/**
+	 * @param address
+	 *            Address that caused fault
+	 * @param message
+	 *            Exception message
+	 * @param cause
+	 *            Underlying throwable that caused memory fault
+	 */
+	public MemoryFault(long address, String message, Throwable cause) {
+		super(address, cause);
 		this.message = message;
 	}
 
-	/**
-	 * 
-	 * @param address
-	 *            Address that caused fault
-	 * @param t
-	 *            Underlying throwable that caused memory fault
-	 */
-	public MemoryFault(long address, Throwable t)
-	{
-		super(address, t);
-	}
-
-	/**
-	 * 
-	 * @param address
-	 *            Address that caused fault
-	 * @param message
-	 *            Exception message
-	 * @param t
-	 *            Underlying throwable that caused memory fault
-	 */
-	public MemoryFault(long address, String message, Throwable t)
-	{
-		super(address, t);
-	}
-
-	private static String buildDefaultMessage(long address)
-	{
-		return String.format("Memory Fault reading 0x%08X ", address);
-	}
-	
 	/* Creating the message up front is quite expensive, particularly if
 	 * it's then caught and ignored so generate the message when it's
 	 * requested.
@@ -97,6 +82,11 @@ public class MemoryFault extends AddressedCorruptDataException
 	 */
 	@Override
 	public String getMessage() {
-		return buildDefaultMessage(address) + ((message==null)?"":": " + message);
+		if (message != null) {
+			return String.format("Memory Fault reading 0x%08X : %s", address, message);
+		} else {
+			return String.format("Memory Fault reading 0x%08X", address);
+		}
 	}
+
 }

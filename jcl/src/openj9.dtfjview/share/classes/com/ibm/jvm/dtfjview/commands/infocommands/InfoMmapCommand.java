@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2004, 2017 IBM Corp. and others
+ * Copyright (c) 2004, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -40,24 +40,24 @@ import com.ibm.java.diagnostics.utils.plugins.DTFJPlugin;
 import com.ibm.jvm.dtfjview.commands.BaseJdmpviewCommand;
 import com.ibm.jvm.dtfjview.commands.helpers.Utils;
 
-@DTFJPlugin(version="1.*", runtime=false)
-public class InfoMmapCommand extends BaseJdmpviewCommand{
-	
+@DTFJPlugin(version = "1.*", runtime = false)
+public class InfoMmapCommand extends BaseJdmpviewCommand {
+
 	{
-		addCommand("info mmap", "[address] [-verbose] [-sort:<size|address>]", "Outputs a list of all memory segments in the address space");	
+		addCommand("info mmap", "[address] [-verbose] [-sort:<size|address>]",
+				"Outputs a list of all memory segments in the address space");
 	}
-	
+
 	public void run(String command, String[] args, IContext context, PrintStream out) throws CommandException {
-		
 		boolean verbose = false;
 		ImagePointer addressPointer = null;
 		Comparator<ImageSection> sortOrder = null;
-		
-		if(initCommand(command, args, context, out)) {
-			return;		//processing already handled by super class
+
+		if (initCommand(command, args, context, out)) {
+			return; //processing already handled by super class
 		}
-		
-		for( String arg: args) {
+
+		for (String arg : args) {
 			if (Utils.SORT_BY_SIZE_FLAG.equals(arg)) {
 				sortOrder = new SizeComparator();
 			} else if (Utils.SORT_BY_ADDRESS_FLAG.equals(arg)) {
@@ -68,7 +68,7 @@ public class InfoMmapCommand extends BaseJdmpviewCommand{
 				// longFromString will return a Long or null if we couldn't parse
 				// the argument as a number.
 				Long address = Utils.longFromString(arg);
-				if( address == null ) {
+				if (address == null) {
 					out.println("\"info mmap\" -unknown parameter " + arg);
 					return;
 				} else {
@@ -77,36 +77,31 @@ public class InfoMmapCommand extends BaseJdmpviewCommand{
 			}
 		}
 
-		List<ImageSection> sortedSections = new LinkedList<ImageSection>();
+		List<ImageSection> sortedSections = new LinkedList<>();
 		Iterator<ImageSection> imageSections = ctx.getAddressSpace().getImageSections();
-		while( imageSections.hasNext() ) {
+		while (imageSections.hasNext()) {
 			sortedSections.add(imageSections.next());
 		}
-		if( sortOrder != null ) {
+		if (sortOrder != null) {
 			Collections.sort(sortedSections, sortOrder);
 		}
-		
-		int addrSize = ctx.getProcess().getPointerSize() == 64 ? 16 : 8;
+
 		// Width for decimals can vary as we use the locales format (via %,d)
-		int decWidth = 0;
-		int hexWidth = 0;
-		if( addrSize == 16 ) {
-			hexWidth = String.format("%016x", Long.MAX_VALUE).length();
-			decWidth = String.format("(%,d)", Long.MAX_VALUE).length();
-		} else {
-			hexWidth = String.format("%08x", Integer.MAX_VALUE).length();
-			decWidth = String.format("(%,d)", Integer.MAX_VALUE).length();
-		}
-		out.printf("%-"+hexWidth+"s\t%-"+hexWidth+"s\t%-"+hexWidth+"s\t%-"+decWidth+"s\tRead/Write/Execute", "Start Address", "End Address", "Size", "Size");
+		long maxValue = ctx.getProcess().getPointerSize() <= 32 ? Integer.MAX_VALUE : Long.MAX_VALUE;
+		int decWidth = String.format("(%,d)", maxValue).length(); //$NON-NLS-1$
+		int hexWidth = String.format("%x", maxValue).length(); //$NON-NLS-1$
+
+		out.printf("%-" + hexWidth + "s\t%-" + hexWidth + "s\t%-" + hexWidth + "s\t%-" + decWidth
+				+ "s\tRead/Write/Execute", "Start Address", "End Address", "Size", "Size");
 		out.println();
 		long totalSize = 0;
 		long totalSizeRwx = 0;
-		Iterator sortedIterator = sortedSections.iterator();
-		while(sortedIterator.hasNext()){
-			ImageSection imageSection = (ImageSection)sortedIterator.next();
-			if( addressPointer != null ) {
-				if( imageSection.getBaseAddress().getAddress() <= addressPointer.getAddress() &&
-					imageSection.getBaseAddress().add(imageSection.getSize()).getAddress() > addressPointer.getAddress() ) {
+		Iterator<?> sortedIterator = sortedSections.iterator();
+		while (sortedIterator.hasNext()) {
+			ImageSection imageSection = (ImageSection) sortedIterator.next();
+			if (addressPointer != null) {
+				if (imageSection.getBaseAddress().getAddress() <= addressPointer.getAddress()
+				&& imageSection.getBaseAddress().add(imageSection.getSize()).getAddress() > addressPointer.getAddress()) {
 					// Print this address
 				} else {
 					continue;
@@ -117,86 +112,75 @@ public class InfoMmapCommand extends BaseJdmpviewCommand{
 			long endAddress = startAddress + size - 1;
 			totalSize += size;
 			String decSize = String.format("(%,d)", size);
-			out.printf("0x%0"+hexWidth+"x\t0x%0"+hexWidth+"x\t0x%0"+hexWidth+"x\t%-"+decWidth+"s\t", startAddress, endAddress, size, decSize);
+			out.printf("0x%0" + hexWidth + "x\t0x%0" + hexWidth + "x\t0x%0" + hexWidth + "x\t%-" + decWidth + "s\t",
+					startAddress, endAddress, size, decSize);
 
 			Properties props = imageSection.getProperties();
-			if( props != null ) {
+			if (props != null) {
 				boolean rwx = false;
-				if( Boolean.TRUE.toString().equals( props.get("readable") ) ) {
+				if (Boolean.TRUE.toString().equals(props.get("readable"))) {
 					out.print("R");
 					rwx = true;
 				}
-				if( Boolean.TRUE.toString().equals( props.get("writable") ) ) {
+				if (Boolean.TRUE.toString().equals(props.get("writable"))) {
 					out.print("W");
 					rwx = true;
 				}
-				if( Boolean.TRUE.toString().equals( props.get("executable") ) ) {
+				if (Boolean.TRUE.toString().equals(props.get("executable"))) {
 					out.print("X");
 					rwx = true;
 				}
-				if( rwx ) {
+				if (rwx) {
 					totalSizeRwx += size;
 				}
 			}
-			if( verbose || addressPointer != null ) {
+			if (verbose || addressPointer != null) {
 				out.println();
 				out.println("Name:\t" + imageSection.getName());
-				String[] keys = props.keySet().toArray(new String[0]);
-				ArrayList<String> table = new ArrayList<String>(keys.length);
-				int maxLen = 0;
-				Arrays.sort(keys);
-				// We may have a lot of properties so print them out in two columns.
-				for( String key: keys ) {
-					String formatted = String.format("%s=%s", key, props.get(key));
-					table.add(formatted);
-					maxLen = Math.max(maxLen, formatted.length());
+				if (props != null) {
+					String[] keys = props.keySet().toArray(new String[0]);
+					Arrays.sort(keys);
+					ArrayList<String> table = new ArrayList<>(keys.length);
+					int maxLen = 0;
+					// We may have a lot of properties so print them out in two columns.
+					for (String key : keys) {
+						String formatted = String.format("%s=%s", key, props.get(key));
+						table.add(formatted);
+						maxLen = Math.max(maxLen, formatted.length());
+					}
+					Iterator<String> tableIterator = table.iterator();
+					String tableFormatString = "\t%-" + maxLen + "s\t%-" + maxLen + "s\n";
+					while (tableIterator.hasNext()) {
+						out.printf(tableFormatString, tableIterator.next(),
+								tableIterator.hasNext() ? tableIterator.next() : "");
+					}
 				}
-				Iterator<String> tableIterator = table.iterator();
-				String tableFormatString = "\t%-"+maxLen+"s\t%-"+maxLen+"s\n";
-				while( tableIterator.hasNext() ) {
-					out.printf(tableFormatString, tableIterator.next(), tableIterator.hasNext()?tableIterator.next():"");
-					
-				}
-				out.println();
-			} else {
-				out.println();
 			}
-				
+			out.println();
 		}
-		if( addressPointer == null ) {
-			if( totalSizeRwx > 0 && totalSize != totalSizeRwx) {
+		if (addressPointer == null) {
+			if (totalSizeRwx > 0 && totalSize != totalSizeRwx) {
 				out.printf("Total size (Readable, Writable or Executable): 0x%1$x (%1$,d) bytes\n", totalSizeRwx);
 			}
 			out.printf("Total size: 0x%1$x (%1$,d) bytes\n", totalSize);
 		}
-		
 	}
 
-	private static int cmp(long n1, long n2) {
-		if( n1 == n2 ) {
-			return 0;
-		} else if( n1 > n2 ) {
-			return 1;
-		} else {
-			return -1;
-		}
-	}
-	
-	private class SizeComparator implements Comparator<ImageSection> {
-
+	private static final class SizeComparator implements Comparator<ImageSection> {
+		@Override
 		public int compare(ImageSection o1, ImageSection o2) {
 			long s1 = o1.getSize();
 			long s2 = o2.getSize();
-			return cmp(s1,s2);
+			return Long.compare(s1, s2);
 		}
 	}
-	
-	private class AddressComparator implements Comparator<ImageSection> {
 
+	private static final class AddressComparator implements Comparator<ImageSection> {
+		@Override
 		public int compare(ImageSection o1, ImageSection o2) {
 			long a1 = o1.getBaseAddress().getAddress();
 			long a2 = o2.getBaseAddress().getAddress();
-			return cmp(a1,a2);
+			return Long.compare(a1, a2);
 		}
 	}
 

@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2004, 2017 IBM Corp. and others
+ * Copyright (c) 2004, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -37,7 +37,7 @@ import com.ibm.java.diagnostics.utils.plugins.DTFJPlugin;
 import com.ibm.jvm.dtfjview.commands.BaseJdmpviewCommand;
 import com.ibm.jvm.dtfjview.commands.helpers.Exceptions;
 
-@DTFJPlugin(version="1.*", runtime=false)
+@DTFJPlugin(version = "1.*", runtime = false)
 public class InfoSymCommand extends BaseJdmpviewCommand {
 
 	protected static final String longDesc = "parameters: none, module name\n\n"
@@ -53,24 +53,24 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 			+ "info mod * will all modules with sections " + "and symbols.";
 
 	{
-		addCommand("info sym", "", "an alias for 'mod'");				//this is kept for backwards compatibility
+		addCommand("info sym", "", "an alias for 'mod'"); // this is kept for backwards compatibility
 		addCommand("info mod", "", "outputs module information");
 	}
-	
+
 	public void run(String command, String[] args, IContext context, PrintStream out) throws CommandException {
-		if(initCommand(command, args, context, out)) {
-			return;		//processing already handled by super class
+		if (initCommand(command, args, context, out)) {
+			return; //processing already handled by super class
 		}
-		switch(args.length) {
-			case 0 :
-				listModules(null);
-				break;
-			case 1 :
-				listModules(args[0]);
-				break;
-			default :
-				out.println("\"info sym\" command takes either 0 or 1 parameters");
-				break;
+		switch (args.length) {
+		case 0:
+			listModules(null);
+			break;
+		case 1:
+			listModules(args[0]);
+			break;
+		default:
+			out.println("\"info sym\" command takes either 0 or 1 parameters");
+			break;
 		}
 	}
 
@@ -79,10 +79,10 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 
 		try {
 			Object e = ip.getExecutable();
-			if( e instanceof ImageModule ) {
+			if (e instanceof ImageModule) {
 				ImageModule exe = (ImageModule) e;
-				if (moduleName != null ) {
-					if ( checkModuleName(exe.getName(), moduleName)) {
+				if (moduleName != null) {
+					if (checkModuleName(exe.getName(), moduleName)) {
 						printModule(exe, true);
 					}
 				} else {
@@ -91,15 +91,14 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 			} else if (e instanceof CorruptData) {
 				CorruptData corruptObj = (CorruptData) e;
 				// warn the user that this image library is corrupt
-				out.print("\t  <corrupt executable encountered: "
-						+ corruptObj.toString() + ">\n\n");
+				out.print("\t  <corrupt executable encountered: " + corruptObj.toString() + ">\n\n");
 			}
 		} catch (DataUnavailable e) {
 			out.println(Exceptions.getDataUnavailableString());
 		} catch (CorruptDataException e) {
 			out.println(Exceptions.getCorruptDataExceptionString());
 		}
-		Iterator iLibs;
+		Iterator<?> iLibs;
 		try {
 			iLibs = ip.getLibraries();
 		} catch (DataUnavailable du) {
@@ -109,7 +108,7 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 			iLibs = null;
 			out.println(Exceptions.getCorruptDataExceptionString());
 		}
-				
+
 		// iterate through the libraries
 		while (null != iLibs && iLibs.hasNext()) {
 			Object next = iLibs.next();
@@ -119,11 +118,10 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 				try {
 					currentName = mod.getName();
 				} catch (CorruptDataException e) {
-					out.print("\t  <corrupt library name: "
-							+ mod.toString() + ">\n\n");
+					out.print("\t  <corrupt library name: " + mod.toString() + ">\n\n");
 				}
-				if (moduleName != null ) {
-					if ( checkModuleName(currentName, moduleName)) {
+				if (moduleName != null) {
+					if (checkModuleName(currentName, moduleName)) {
 						printModule(mod, true);
 					}
 				} else {
@@ -132,8 +130,7 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 			} else if (next instanceof CorruptData) {
 				CorruptData corruptObj = (CorruptData) next;
 				// warn the user that this image library is corrupt
-				out.print("\t  <corrupt library encountered: "
-						+ corruptObj.toString() + ">\n\n");
+				out.print("\t  <corrupt library encountered: " + corruptObj + ">\n\n");
 			} else {
 				// unexpected type in iterator
 				out.print("\t  <corrupt library encountered>\n\n");
@@ -147,9 +144,9 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 		} catch (CorruptDataException cde) {
 			out.print("\t  " + Exceptions.getCorruptDataExceptionString());
 		}
-		
+
 		try {
-			String addressInHex = String.format("0x%x",imageModule.getLoadAddress());
+			String addressInHex = String.format("0x%x", imageModule.getLoadAddress());
 			out.print(" @ " + addressInHex);
 		} catch (DataUnavailable e) {
 			// if we do not have the load address, simply omit it
@@ -157,10 +154,10 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 			// if we do not have the load address, simply omit it
 		}
 
-		Iterator itSection = imageModule.getSections();
-		
+		Iterator<?> itSection = imageModule.getSections();
+
 		if (itSection.hasNext()) {
-			out.print(", sections:\n");		
+			out.print(", sections:\n");
 		} else {
 			out.print(", <no section information>\n");
 		}
@@ -173,8 +170,7 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 				out.print("\t   0x"
 						+ Long.toHexString(is.getBaseAddress().getAddress())
 						+ " - 0x"
-						+ Long.toHexString(is.getBaseAddress().getAddress()
-								+ is.getSize()));
+						+ Long.toHexString(is.getBaseAddress().getAddress() + is.getSize()));
 				out.print(", name: \"");
 				out.print(is.getName());
 				out.print("\", size: 0x");
@@ -190,14 +186,12 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 		}
 		if (printSymbols) {
 			out.print("\t  " + "symbols:\n");
-			Iterator itSymbols = imageModule.getSymbols();
+			Iterator<?> itSymbols = imageModule.getSymbols();
 			while (itSymbols.hasNext()) {
 				Object next = itSymbols.next();
 				if (next instanceof ImageSymbol) {
 					ImageSymbol is = (ImageSymbol) next;
-					out.print("\t   0x"
-							+ Long.toHexString(is.getAddress().getAddress()));
-
+					out.print("\t   0x" + Long.toHexString(is.getAddress().getAddress()));
 					out.print(", name: \"");
 					out.print(is.getName());
 					out.print("\"\n");
@@ -213,11 +207,10 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 		out.print("\n");
 	}
 
-	private boolean checkModuleName(final String name,
-			String moduleName) {
+	private static boolean checkModuleName(final String name, String moduleName) {
 		boolean wildCardStart = false;
 		boolean wildCardEnd = false;
-		
+
 		moduleName = moduleName.trim();
 		if (moduleName.startsWith("*")) {
 			wildCardStart = true;
@@ -233,22 +226,20 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 		}
 		if (!wildCardStart && !wildCardEnd && moduleName.equals(name)) {
 			return true;
-		} else if (wildCardStart && !wildCardEnd
-				&& name.endsWith(moduleName)) {
+		} else if (wildCardStart && !wildCardEnd && name.endsWith(moduleName)) {
 			return true;
-		} else if (!wildCardStart && wildCardEnd
-				&& name.startsWith(moduleName)) {
+		} else if (!wildCardStart && wildCardEnd && name.startsWith(moduleName)) {
 			return true;
-		} else if (wildCardStart && wildCardEnd
-				&& name.indexOf(moduleName) >= 0) {
+		} else if (wildCardStart && wildCardEnd && name.indexOf(moduleName) >= 0) {
 			return true;
 		}
 		return false;
 	}
-	
+
 	@Override
 	public void printDetailedHelp(PrintStream out) {
 		out.println(longDesc);
-		
+
 	}
+
 }
