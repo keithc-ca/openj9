@@ -22,6 +22,7 @@
  *******************************************************************************/
 package com.ibm.dtfj.image;
 
+import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -50,7 +51,14 @@ public interface ImageAddressSpace {
      * @see CorruptData
      */
     public Iterator getProcesses();
-    
+
+	/**
+	 * Return the byte order of this address space.
+	 *
+	 * @return the byte order of this address space
+	 */
+	public ByteOrder getByteOrder();
+
     /**
      * A factory method for creating pointers into this address space.
      * @param address the address to point to.

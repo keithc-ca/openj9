@@ -23,8 +23,11 @@
 package com.ibm.jvm.dtfjview.commands;
 
 import java.io.PrintStream;
+import java.nio.ByteOrder;
 
+import com.ibm.dtfj.image.ImageAddressSpace;
 import com.ibm.java.diagnostics.utils.IContext;
+import com.ibm.java.diagnostics.utils.IDTFJContext;
 import com.ibm.java.diagnostics.utils.commands.CommandException;
 import com.ibm.java.diagnostics.utils.plugins.DTFJPlugin;
 
@@ -40,22 +43,23 @@ public class FindPtrCommand extends BaseJdmpviewCommand {
 	@Override
 	public void run(String command, String[] args, IContext context, PrintStream out) throws CommandException {
 		if (initCommand(command, args, context, out)) {
-			return; //processing already handled by super class
+			return; // processing already handled by super class
 		}
 		if (args.length == 1) {
 			String line = args[0];
 			if (line.endsWith(",")) {
-				//in order for the split to work there needs to always be a last parameter present. If it is missing we can default to only displaying the first match.
+				// In order for the split to work there needs to always be a last parameter present.
+				// If it is missing we can default to only displaying the first match.
 				line += "1";
 			}
 			String[] params = line.split(",");
 			if (!isParametersValid(params)) {
 				return;
 			}
-			if (isLittleEndian()) {
+			if (isLittleEndian(context)) {
 				pattern = reorderBytes();
 			}
-			String parameters = getparameters(params);
+			String parameters = getParameters(params);
 
 			out.println("issuing: find" + " " + parameters);
 
@@ -65,7 +69,7 @@ public class FindPtrCommand extends BaseJdmpviewCommand {
 		}
 	}
 
-	private String getparameters(String[] params) {
+	private String getParameters(String[] params) {
 		String temp = "0x" + pattern;
 		for (int i = 1; i < params.length; i++) {
 			temp += ("," + params[i]);
@@ -84,9 +88,16 @@ public class FindPtrCommand extends BaseJdmpviewCommand {
 		return temp;
 	}
 
-	private boolean isLittleEndian() {
-		// TODO implement this method once the API is available
-		return true;
+	private static boolean isLittleEndian(IContext context) {
+		if (context instanceof IDTFJContext) {
+			ImageAddressSpace addressSpace = ((IDTFJContext) context).getAddressSpace();
+
+			if (ByteOrder.LITTLE_ENDIAN == addressSpace.getByteOrder()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	private boolean isParametersValid(String[] params) {
