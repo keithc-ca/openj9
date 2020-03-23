@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2014 IBM Corp. and others
+ * Copyright (c) 2004, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -19,9 +19,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-
 package com.ibm.j9ddr.corereaders;
-
 
 import java.io.File;
 import java.io.IOException;
@@ -35,42 +33,47 @@ import com.ibm.j9ddr.corereaders.memory.IMemorySource;
 /**
  * @author ccristal
  */
-public abstract class AbstractCoreReader implements ICore
-{
+public abstract class AbstractCoreReader implements ICore {
 
 	protected ImageInputStream _fileReader;
-	protected Collection<? extends IMemorySource> _memoryRanges = new ArrayList<IMemorySource>();
 
-	private ShutdownHook _fileTracker = new ShutdownHook();
+	protected Collection<? extends IMemorySource> _memoryRanges;
+
+	private final ShutdownHook _fileTracker;
+
 	protected File coreFile;
+
+	protected AbstractCoreReader() {
+		super();
+		coreFile = null;
+		_fileReader = null;
+		_fileTracker = new ShutdownHook();
+		_memoryRanges = new ArrayList<>();
+	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if((obj == null) || !(obj instanceof AbstractCoreReader)) {
-			return false;
-		}
-		AbstractCoreReader reader = (AbstractCoreReader) obj;
-		if(coreFile == null) {
-			//this reader is working from a stream
-			if(reader.coreFile != null) {
-				return false;
+		if (obj instanceof AbstractCoreReader) {
+			AbstractCoreReader reader = (AbstractCoreReader) obj;
+			if (coreFile != null) {
+				// this reader is working from a file
+				return coreFile.equals(reader.coreFile);
+			} else {
+				// this reader is working from a stream
+				if (reader.coreFile == null) {
+					return _fileReader.equals(reader._fileReader);
+				}
 			}
-			return _fileReader.equals(reader._fileReader);
-		} else {
-			//this reader is working from a file
-			if(reader.coreFile == null) {
-				return false;
-			}
-			return coreFile.equals(reader.coreFile);
 		}
+		return false;
 	}
 
 	@Override
 	public int hashCode() {
-		if(coreFile == null) {
-			return super.hashCode();
+		if (coreFile != null) {
+			return coreFile.hashCode();
 		}
-		return coreFile.hashCode();
+		return super.hashCode();
 	}
 	
 	/**
@@ -153,13 +156,15 @@ public abstract class AbstractCoreReader implements ICore
 
 	protected String readString() throws IOException
 	{
-		StringBuffer buffer = new StringBuffer();
-		byte b = readByte();
-		while (0 != b) {
-			buffer.append(new String(new byte[] { b }, "ASCII"));
-			b = readByte();
+		for (StringBuilder buffer = new StringBuilder();;) {
+			char ch = (char) (readByte() & 0xFF);
+
+			if (ch != 0) {
+				buffer.append(ch);
+			} else {
+				return buffer.toString();
+			}
 		}
-		return buffer.toString();
 	}
 
 	public static String format(int i)
@@ -174,27 +179,23 @@ public abstract class AbstractCoreReader implements ICore
 
 	protected static long readLong(byte[] data, int start)
 	{
-		return (0xFF00000000000000L & (((long) data[start + 0]) << 56))
-				| (0x00FF000000000000L & (((long) data[start + 1]) << 48))
-				| (0x0000FF0000000000L & (((long) data[start + 2]) << 40))
-				| (0x000000FF00000000L & (((long) data[start + 3]) << 32))
-				| (0x00000000FF000000L & (((long) data[start + 4]) << 24))
-				| (0x0000000000FF0000L & (((long) data[start + 5]) << 16))
-				| (0x000000000000FF00L & (((long) data[start + 6]) << 8))
-				| (0x00000000000000FFL & (data[start + 7]));
+		long hi = readInt(data, start);
+		long lo = readInt(data, start + 4);
+		return (hi << 32) | (lo & 0xFFFFFFFF);
 	}
 
 	protected static int readInt(byte[] data, int start)
 	{
-		return (0xFF000000 & ((data[start + 0]) << 24))
-				| (0x00FF0000 & ((data[start + 1]) << 16))
-				| (0x0000FF00 & ((data[start + 2]) << 8))
-				| (0x000000FF & (data[start + 3]));
+		return ((data[start + 0] & 0xFF) << 24)
+			 | ((data[start + 1] & 0xFF) << 16)
+			 | ((data[start + 2] & 0xFF) <<  8)
+			 |  (data[start + 3] & 0xFF);
 	}
-	
+
 	public void close() throws IOException {
-		if(_fileReader != null) {
+		if (_fileReader != null) {
 			_fileReader.close();
 		}
 	}
+
 }

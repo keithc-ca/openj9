@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2004, 2019 IBM Corp. and others
+ * Copyright (c) 2004, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -26,12 +26,12 @@ import java.io.IOException;
 
 import javax.imageio.stream.ImageInputStream;
 
-
 public class DumpFactory {
+
 	public static ICoreFileReader createDumpForCore(ImageInputStream stream) throws IOException {
 		return createDumpForCore(stream, false);
 	}
-	
+
 	public static ICoreFileReader createDumpForCore(ImageInputStream stream, boolean verbose) throws IOException {
 		// TODO try next format if there is an IOException thrown from the test
 		ICoreFileReader corefile = null;
@@ -42,6 +42,8 @@ public class DumpFactory {
 				corefile = NewElfDump.dumpFromFile(stream, verbose);
 			} else if (NewAixDump.isSupportedDump(stream)) {
 				corefile = NewAixDump.dumpFromFile(stream);
+			} else if (NewMachoDump.isSupportedDump(stream)) {
+				corefile = NewMachoDump.dumpFromFile(stream);
 			} else if (NewZosDump.isSupportedDump(stream)) {
 				corefile = NewZosDump.dumpFromFile(stream);
 			}
@@ -52,4 +54,5 @@ public class DumpFactory {
 
 		return corefile;
 	}
+
 }

@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-
 package com.ibm.j9ddr.corereaders.macho;
 
 import java.io.File;
@@ -32,31 +31,31 @@ import com.ibm.j9ddr.corereaders.ICore;
 import com.ibm.j9ddr.corereaders.ICoreFileReader;
 import com.ibm.j9ddr.corereaders.InvalidDumpFormatException;
 
-public class MachoDumpReaderFactory implements ICoreFileReader
-{
+public class MachoDumpReaderFactory implements ICoreFileReader {
 
-	public ICore processDump(String path) throws InvalidDumpFormatException, IOException
-	{
+	public ICore processDump(String path) throws InvalidDumpFormatException, IOException {
 		return MachoDumpReader.getReaderForFile(new File(path));
 	}
 
-	public ICore processDump(ImageInputStream in) throws InvalidDumpFormatException, IOException
-	{
+	public ICore processDump(ImageInputStream in) throws InvalidDumpFormatException, IOException {
 		return MachoDumpReader.getReaderForFile(in);
 	}
 
-	public DumpTestResult testDump(String path) throws IOException
-	{
+	public DumpTestResult testDump(String path) throws IOException {
 		File dumpFile = new File(path);
-		if (! dumpFile.exists()) {
-			return DumpTestResult.FILE_NOT_FOUND;
+		if (dumpFile.exists()) {
+			return MachoDumpReader.isMACHO(CoreReader.getFileHeader(path))
+					? DumpTestResult.RECOGNISED_FORMAT
+					: DumpTestResult.UNRECOGNISED_FORMAT;
 		}
-		return MachoDumpReader.isMACHO(CoreReader.getFileHeader(path)) ? DumpTestResult.RECOGNISED_FORMAT : DumpTestResult.UNRECOGNISED_FORMAT;
+
+		return DumpTestResult.FILE_NOT_FOUND;
 	}
 
-	public DumpTestResult testDump(ImageInputStream in) throws IOException
-	{
-		return MachoDumpReader.isMACHO(CoreReader.getFileHeader(in)) ? DumpTestResult.RECOGNISED_FORMAT : DumpTestResult.UNRECOGNISED_FORMAT;
+	public DumpTestResult testDump(ImageInputStream in) throws IOException {
+		return MachoDumpReader.isMACHO(CoreReader.getFileHeader(in))
+				? DumpTestResult.RECOGNISED_FORMAT
+				: DumpTestResult.UNRECOGNISED_FORMAT;
 	}
 
 }

@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2004, 2017 IBM Corp. and others
+ * Copyright (c) 2004, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -26,17 +26,24 @@ import java.io.IOException;
 
 import javax.imageio.stream.ImageInputStream;
 
-
 public class DumpReader implements ResourceReleaser {
-	private ImageInputStream _file;
-	private boolean _is64Bit;
 
-	public DumpReader(ImageInputStream f, boolean is64Bit) {
-		_file = f;
+	private final ImageInputStream _file;
+
+	private final boolean _is64Bit;
+
+	public DumpReader(ImageInputStream file, boolean is64Bit) {
+		super();
+		_file = file;
 		_is64Bit = is64Bit;
 	}
 
-	public byte[] readBytes(int n) throws IOException {
+	@SuppressWarnings("static-method")
+	public boolean isLittleEndian() {
+		return false;
+	}
+
+	public final byte[] readBytes(int n) throws IOException {
 		byte[] buffer = new byte[n];
 		_file.readFully(buffer);
 		return buffer;
@@ -44,6 +51,10 @@ public class DumpReader implements ResourceReleaser {
 
 	public int readInt() throws IOException {
 		return _file.readInt();
+	}
+
+	public long readUnsignedInt() throws IOException {
+		return _file.readUnsignedInt();
 	}
 
 	public void seek(long position) throws IOException {
@@ -58,27 +69,33 @@ public class DumpReader implements ResourceReleaser {
 		return _file.readShort();
 	}
 
-	public byte readByte() throws IOException {
+	public int readUnsignedShort() throws IOException {
+		return _file.readUnsignedShort();
+	}
+
+	public final byte readByte() throws IOException {
 		return _file.readByte();
 	}
-	
-	public long readAddress() throws IOException
-	{
-		long ptr = 0;
-		
-		if (_is64Bit) {
-			ptr = readLong();
-		} else {
-			ptr = (0xFFFFFFFFL & readInt());
-		}
-		return ptr;
+
+	public final int readUnsignedByte() throws IOException {
+		return _file.readUnsignedByte();
 	}
-	
-	public long getPosition() throws IOException {
+
+	public final long readAddress() throws IOException {
+		if (_is64Bit) {
+			return readLong();
+		} else {
+			return readUnsignedInt();
+		}
+	}
+
+	public final long getPosition() throws IOException {
 		return _file.getStreamPosition();
 	}
 
-	public void releaseResources() throws IOException {
+	@Override
+	public final void releaseResources() throws IOException {
 		_file.close();
 	}
+
 }

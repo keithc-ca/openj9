@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2004, 2019 IBM Corp. and others
+ * Copyright (c) 2004, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -50,10 +50,12 @@ import com.ibm.dtfj.corereaders.NewElfDump;
 import com.ibm.dtfj.addressspace.IAbstractAddressSpace;
 
 public class Main {
+
 	private static class DummyBuilder implements Builder {
 		private static class Register {
 			final String name;
 			final long value;
+
 			Register(String name, long value) {
 				this.name = name;
 				this.value = value;
@@ -96,9 +98,9 @@ public class Main {
 			
 			// See comment about AIX above. In Java 6 the JVM libraries have moved to platform directories in sdk/jre/lib
 			// and the main binary is still in sdk/jre/bin, so fix is to prime the extra search paths with sdk/jre/bin.
-			String jre_bin = System.getProperty("java.home") + File.separator + "bin";
-			File javaPath = new File(jre_bin);
-			_successfulSearchPaths.add(javaPath);
+			String java_home = System.getProperty("java.home");
+			File jre_bin = new File(java_home, "bin");
+			_successfulSearchPaths.add(jre_bin);
 			this._environmentPointer = environment;
 		}
 
@@ -476,23 +478,21 @@ public class Main {
 
 		try {
 			// Add trace formatting template files (Traceformat.dat, J9TraceFormat.dat and OMRTraceFormat.dat) into the archive.
-			String lib_dir = System.getProperty("java.home") + File.separator + "lib" + File.separator;
-			String trace = lib_dir + "TraceFormat.dat";
-			if (new File(trace).exists()) {
-				files.add(trace);
+			File lib_dir = new File(System.getProperty("java.home"), "lib");
+			File trace = new File(lib_dir, "TraceFormat.dat");
+			if (trace.exists()) {
+				files.add(trace.getAbsolutePath());
 			}
-			String j9trace = lib_dir + "J9TraceFormat.dat";
-			if (new File(j9trace).exists()) {
-				files.add(j9trace);
+			File j9trace = new File(lib_dir, "J9TraceFormat.dat");
+			if (j9trace.exists()) {
+				files.add(j9trace.getAbsolutePath());
 			}
-			String omrtrace = lib_dir + "OMRTraceFormat.dat";
-			if (new File(omrtrace).exists()) {
-				files.add(omrtrace);
+			File omrtrace = new File(lib_dir, "OMRTraceFormat.dat");
+			if (omrtrace.exists()) {
+				files.add(omrtrace.getAbsolutePath());
 			}
-
 			// Add the debugger extension library into the zip, available only on AIX
-			String osName = System.getProperty("os.name");
-			if (osName != null && osName.equalsIgnoreCase("AIX")) {
+			if ("AIX".equalsIgnoreCase(System.getProperty("os.name"))) {
 				files.add("libdbx_j9.so");
 			}
 		} catch (Exception e) {
@@ -559,7 +559,7 @@ public class Main {
 					ClosingFileReader in = fileResolver.openFile(name);
 					boolean mvsfile = in.isMVSFile();
 					String absolute = in.getAbsolutePath();
-					if (absolute.equals(new File(name).getAbsolutePath()) || mvsfile == true)
+					if (mvsfile || absolute.equals(new File(name).getAbsolutePath()))
 					{
 						report("Adding \"" + name + "\"");
 					}
@@ -576,7 +576,7 @@ public class Main {
 					} else {
 						// Add files by absolute name so they have the right path in the zip.
 						// Guard against two names in fileNames mapping to the same absolute path.
-						if( !filesInZip.contains(absolute) ) {
+						if (!filesInZip.contains(absolute)) {
 							// note that we can't just use the file name, we have to use
 							// the full path since they may share a name
 							// note also that we will use the original path and not the
@@ -586,7 +586,7 @@ public class Main {
 							filesInZip.add(absolute);
 							zipEntry.setTime((new File(absolute)).lastModified());
 							zip.putNextEntry(zipEntry);
-							
+
 							copy(fileStream, zip, buffer);
 							fileStream.close();
 						}

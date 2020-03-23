@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2004, 2017 IBM Corp. and others
+ * Copyright (c) 2004, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -26,46 +26,40 @@ import java.io.IOException;
 
 import javax.imageio.stream.ImageInputStream;
 
-
 public class LittleEndianDumpReader extends DumpReader {
-	public LittleEndianDumpReader(ImageInputStream stream, boolean is64Bit)
-	{
+
+	public LittleEndianDumpReader(ImageInputStream stream, boolean is64Bit) {
 		super(stream, is64Bit);
 	}
 
-	public short readShort() throws IOException {
-		return byteSwap(super.readShort());
+	@Override
+	public final boolean isLittleEndian() {
+		return true;
 	}
 
-	public int readInt() throws IOException {
-		return byteSwap(super.readInt());
+	@Override
+	public final short readShort() throws IOException {
+		return Short.reverseBytes(super.readShort());
 	}
 
-	public long readLong() throws IOException {
-		return byteSwap(super.readLong());
+	@Override
+	public final int readUnsignedShort() throws IOException {
+		return Short.toUnsignedInt(readShort());
 	}
 
-	private short byteSwap(short s) {
-		return (short)(((s >> 8) & 0x00ff) | ((s << 8) & 0xff00));
+	@Override
+	public final int readInt() throws IOException {
+		return Integer.reverseBytes(super.readInt());
 	}
 
-	private int byteSwap(int i) {
-		return
-			((i >> 24) & 0x000000ff) |
-			((i >>  8) & 0x0000ff00) |
-			((i <<  8) & 0x00ff0000) |
-			((i << 24) & 0xff000000);
+	@Override
+	public final long readUnsignedInt() throws IOException {
+		return Integer.toUnsignedLong(readInt());
 	}
 
-	private long byteSwap(long l) {
-		return
-			((l >> 56) & 0x00000000000000ffL) |
-			((l >> 40) & 0x000000000000ff00L) |
-			((l >> 24) & 0x0000000000ff0000L) |
-			((l >>  8) & 0x00000000ff000000L) |
-			((l <<  8) & 0x000000ff00000000L) |
-			((l << 24) & 0x0000ff0000000000L) |
-			((l << 40) & 0x00ff000000000000L) |
-			((l << 56) & 0xff00000000000000L);
+	@Override
+	public final long readLong() throws IOException {
+		return Long.reverseBytes(super.readLong());
 	}
+
 }
