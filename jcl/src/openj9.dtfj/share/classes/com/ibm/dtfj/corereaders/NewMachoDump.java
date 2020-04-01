@@ -40,6 +40,7 @@
  *******************************************************************************/
 package com.ibm.dtfj.corereaders;
 
+import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
@@ -47,6 +48,7 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,7 +64,6 @@ import com.ibm.dtfj.image.ImageModule;
 /**
  * TODO document this class
  */
-// @SuppressWarnings("unused")
 public final class NewMachoDump extends CoreReaderSupport {
 
 	private static abstract class Address {
@@ -128,44 +129,6 @@ public final class NewMachoDump extends CoreReaderSupport {
 	private static class DataEntry {
 		//
 	}
-
-	//	private static abstract class ElfFile {
-	//
-	//		long _offset;
-	//
-	//		DumpReader _reader;
-	//
-	//		abstract int addressSize();
-	//
-	//		abstract long padToWordBoundary(long l);
-	//
-	//		byte[] readBytes(int n) throws IOException {
-	//			return _reader.readBytes(n);
-	//		}
-	//
-	//		abstract long readElfWord() throws IOException;
-	//
-	//		abstract Address readElfWordAsAddress() throws IOException;
-	//
-	//		abstract ProgramHeaderEntry readProgramHeaderEntry() throws IOException;
-	//
-	//		abstract Iterator<Symbol> readSymbolsAt(SectionHeaderEntry entry) throws IOException;
-	//
-	//		@SuppressWarnings("static-method")
-	//		Iterator<SectionHeaderEntry> sectionHeaderEntries() {
-	//			return Collections.emptyIterator();
-	//		}
-	//
-	//		@SuppressWarnings({ "static-method", "unused" })
-	//		SectionHeaderEntry sectionHeaderEntryAt(int i) {
-	//			return null;
-	//		}
-	//
-	//		protected void seek(long position) throws IOException {
-	//			_reader.seek(position + _offset);
-	//		}
-	//
-	//	}
 
 	@SuppressWarnings("unused")
 	private static final class Header {
@@ -258,6 +221,23 @@ public final class NewMachoDump extends CoreReaderSupport {
 			if (DEBUG) {
 				dumpSegments(commands);
 			}
+		}
+
+		long getFileOffset(long vmOffset) {
+			for (Command command : commands) {
+				if (command.cmdType == Command.LC_SEGMENT_64) {
+					Segment segment = (Segment) command;
+					long base = segment.vmaddr;
+
+					if ((base <= vmOffset) && (vmOffset < base + segment.vmsize)) {
+						if (segment.fileSize != 0) {
+							return vmOffset - base + segment.fileOffset;
+						}
+					}
+				}
+			}
+
+			return 0;
 		}
 
 		List<MemoryRange> getMemoryRangesWithOffset(long vmOffset) {
@@ -579,6 +559,24 @@ public final class NewMachoDump extends CoreReaderSupport {
 		return new NewMachoDump(file, reader, isLittleEndian);
 	}
 
+	private static MachFile machFileFrom(ClosingFileReader file) throws IOException {
+		int magic = file.readInt();
+		DumpReader reader;
+
+		switch (magic) {
+		case Header.MACHO_64:
+			reader = new DumpReader(file, true);
+			break;
+		case Header.MACHO_64_REV:
+			reader = new LittleEndianDumpReader(file, true);
+			break;
+		default:
+			return null;
+		}
+
+		return new MachFile(reader, 0);
+	}
+
 	/**
 	 * Attempts to track down the file with given filename in :-delimited path
 	 *
@@ -666,20 +664,6 @@ public final class NewMachoDump extends CoreReaderSupport {
 		this.file = file;
 		this.isLittleEndian = isLittleEndian;
 		this.memoryRanges = new ArrayList<>();
-
-		// FIXME will we ever see multiple PHEs mapped to the same address?
-		// FIXME if so, should the first or the last entry seen take precedence?
-
-		//	for (Iterator<ProgramHeaderEntry> iter = file.programHeaderEntries(); iter.hasNext();) {
-		//		ProgramHeaderEntry entry = iter.next();
-		//		MemoryRange range = entry.asMemoryRange();
-		//
-		//		if (null != range) {
-		//			// See comments to CMVC 137737
-		//			_memoryRanges.add(range);
-		//		}
-		//	}
-
 	}
 
 	//	private Iterator<?> buildModuleSections(Builder builder, Object addressSpace, MachFile executable,
@@ -731,18 +715,18 @@ public final class NewMachoDump extends CoreReaderSupport {
 	//	}
 
 	private Object buildProcess(Builder builder, Object addressSpace, String pid, String commandLine,
-			Properties environmentVariables, Object currentThread, Iterator<?> threads, String executableName)
+			Properties environmentVariables, Object currentThread, String executableName)
 			throws IOException, MemoryAccessException {
+		List<?> threads = Collections.emptyList();
 		List<?> modules = readModules(builder, addressSpace, executableName);
 		Iterator<?> libraries = modules.iterator();
 		Object executable = libraries.hasNext() ? libraries.next() : null;
 
-		return builder.buildProcess(addressSpace, pid, commandLine, environmentVariables, currentThread, threads,
-				executable, libraries, 8);
+		return builder.buildProcess(addressSpace, pid, commandLine, environmentVariables, currentThread,
+				threads.iterator(), executable, libraries, 8);
 	}
 
-	//	private Object buildThread(Builder builder, Object addressSpace, String pid, Map<String, Address> registers,
-	//			Properties properties, int signalNumber) throws MemoryAccessException, IOException {
+	//	private Object buildThread(Builder builder, Object addressSpace, String pid, Map<String, Address> registers, Properties properties, int signalNumber) throws MemoryAccessException, IOException {
 	//		List<Object> frames = new ArrayList<>();
 	//		List<Object> sections = new ArrayList<>();
 	//		long stackPointer = file.getStackPointerFrom(registers).asAddress();
@@ -800,13 +784,11 @@ public final class NewMachoDump extends CoreReaderSupport {
 
 			List<Object> threads = new ArrayList<>();
 
-			// TODO
-
-			//	for (Iterator<DataEntry> iter = file.threadEntries(); iter.hasNext();) {
-			//		DataEntry entry = iter.next();
-			//
-			//		threads.add(readThread(entry, builder, addressSpace));
-			//	}
+			for (Command command : file.commands) {
+				if (command.cmdType == Command.LC_THREAD) {
+					threads.add(buildThread(builder, (Thread) command));
+				}
+			}
 
 			List<Object> processes = new ArrayList<>();
 
@@ -848,64 +830,68 @@ public final class NewMachoDump extends CoreReaderSupport {
 		return additionalFileNames.iterator();
 	}
 
-	//	private Properties getEnvironmentVariables(Builder builder) throws MemoryAccessException, IOException {
-	//		// builder.getEnvironmentAddress() points to a pointer to a null
-	//		// terminated list of addresses which point to strings of form x=y
-	//
-	//		// Get environment variable addresses
-	//		long environmentAddress = builder.getEnvironmentAddress();
-	//
-	//		if (0 == environmentAddress) {
-	//			return null;
-	//		}
-	//
-	//		List<Address> addresses = new ArrayList<>();
-	//
-	//		seekToAddress(environmentAddress);
-	//
-	//		Address address = file.readElfWordAsAddress();
-	//
-	//		try {
-	//			seekToAddress(address.asAddress());
-	//			address = file.readElfWordAsAddress();
-	//
-	//			while (false == address.isNil()) {
-	//				addresses.add(address);
-	//				address = file.readElfWordAsAddress();
-	//			}
-	//		} catch (IOException e) {
-	//			// CMVC 161796
-	//			// catch the IO exception, give up trying to extract the env vars and attempt to carry on parsing the core file
-	//
-	//			// CMVC 164739
-	//			// Cannot propagate detected condition upwards without changing external (and internal) APIs.
-	//		}
-	//
-	//		// Get environment variables
-	//		Properties environment = new Properties();
-	//
-	//		for (Address variable : addresses) {
-	//			try {
-	//				String pair = file.readStringAtAddress(variable.asAddress());
-	//
-	//				if (pair != null) {
-	//					// now pair is the x=y string
-	//					int equal = pair.indexOf('=');
-	//
-	//					if (equal != -1) {
-	//						String key = pair.substring(0, equal);
-	//						String value = pair.substring(equal + 1);
-	//
-	//						environment.put(key, value);
-	//					}
-	//				}
-	//			} catch (IOException e) {
-	//				// carry on getting other environment variables
-	//			}
-	//		}
-	//
-	//		return environment;
-	//	}
+	private Properties getEnvironmentVariables(Builder builder) {
+		// builder.getEnvironmentAddress() points to a pointer to a null
+		// terminated list of addresses which point to strings of form x=y
+
+		// get environment variable addresses
+		long environmentAddress = builder.getEnvironmentAddress();
+		DumpReader reader = file.reader;
+		List<Long> addresses = new ArrayList<>();
+
+		if (environmentAddress != 0) {
+			long fileOffset = file.getFileOffset(environmentAddress);
+
+			if (fileOffset != 0)
+				try {
+					reader.seek(fileOffset);
+
+					long address = reader.readAddress();
+
+					reader.seek(address);
+
+					for (;;) {
+						address = reader.readAddress();
+
+						if (address == 0) {
+							break;
+						}
+
+						addresses.add(Long.valueOf(address));
+					}
+				} catch (IOException e) {
+					// get as many environment variables as we can
+				}
+		}
+
+		Properties environment = new Properties();
+
+		for (Long address : addresses) {
+			long fileOffset = file.getFileOffset(address.longValue());
+
+			if (fileOffset != 0) {
+				try {
+					String pair = readStringAt(reader, fileOffset);
+
+					if (pair != null) {
+						// pair is a string: name=value
+						int equal = pair.indexOf('=');
+
+						if (equal != -1) {
+							String key = pair.substring(0, equal);
+							String value = pair.substring(equal + 1);
+
+							environment.put(key, value);
+						}
+					}
+				} catch (IOException e) {
+					// carry on getting other environment variables
+				}
+			}
+		}
+
+		return environment;
+	}
 
 	@Override
 	protected MemoryRange[] getMemoryRangesAsArray() {
@@ -972,31 +958,27 @@ public final class NewMachoDump extends CoreReaderSupport {
 		return null;
 	}
 
-	//	private List<?> readLibrariesAt(Builder builder, Object addressSpace, long imageStart)
-	//			throws MemoryAccessException, IOException {
-	//		// System.err.println("NewMachoDump.readLibrariesAt() entered is=0x" + Long.toHexString(imageStart));
-	//
-	//		// Create the method return value
+	//	private List<?> readLibrariesAt(Builder builder, Object addressSpace, long imageStart) throws MemoryAccessException, IOException {
+	//		// create the method return value
 	//		List<Object> libraries = new ArrayList<>();
 	//
-	//		// Seek to the start of the dynamic section
+	//		// seek to the start of the dynamic section
 	//		seekToAddress(imageStart);
 	//
-	//		// Loop reading the dynamic section tag-value/pointer pairs until a 'debug'
-	//		// entry is found
+	//		// loop reading the dynamic section tag-value/pointer pairs until a 'debug' entry is found
 	//		long tag;
 	//		long address;
 	//
 	//		do {
-	//			// Read the tag and the value/pointer (only used after the loop has terminated)
+	//			// read the tag and the value/pointer (only used after the loop has terminated)
 	//			tag = file.readElfWord();
 	//			address = file.readElfWord();
 	//
-	//			// Check that the tag is valid. As there may be some debate about the
+	//			// check that the tag is valid. As there may be some debate about the
 	//			// set of valid values, a message will be issued but reading will continue
 	//			/*
 	//			 * CMVC 161449 - SVT:70:jextract invalid tag error
-	//			 * The range of valid values in the header has been expanded, so increasing the valid range
+	//			 * the range of valid values in the header has been expanded, so increasing the valid range
 	//			 * http://refspecs.freestandards.org/elf/gabi4+/ch5.dynamic.html
 	//			 * DT_RUNPATH 			29 	d_val 	optional 	optional
 	//			 * DT_FLAGS 			30 	d_val 	optional 	optional
@@ -1010,16 +992,14 @@ public final class NewMachoDump extends CoreReaderSupport {
 	//					System.err.println("Error reading dynamic section. Invalid tag value '0x" + Long.toHexString(tag));
 	//				}
 	//			}
-	//
-	//			// System.err.println("Found dynamic section tag 0x" + Long.toHexString(tag));
 	//		} while ((tag != DT_NULL) && (tag != DT_DEBUG));
 	//
-	//		// If there is no debug section, there is nothing to do
+	//		// if there is no debug section, there is nothing to do
 	//		if (tag != DT_DEBUG) {
 	//			return libraries;
 	//		}
 	//
-	//		// Seek to the start of the debug data
+	//		// seek to the start of the debug data
 	//		seekToAddress(address);
 	//
 	//		// NOTE the rendezvous structure is described in /usr/include/link.h
@@ -1031,10 +1011,10 @@ public final class NewMachoDump extends CoreReaderSupport {
 	//		//		ElfW(Addr) r_ldbase;
 	//		//	};
 	//		//	struct link_map {
-	//		//		ElfW(Addr) l_addr;		/* Base address shared object is loaded at.  */
-	//		//		char *l_name;			/* Absolute file name object was found in.  */
-	//		//		ElfW(Dyn) *l_ld;		/* Dynamic section of the shared object.  */
-	//		//		struct link_map *l_next, *l_prev;	/* Chain of loaded objects.  */
+	//		//		ElfW(Addr) l_addr;		/* Base address shared object is loaded at. */
+	//		//		char *l_name;			/* Absolute file name object was found in. */
+	//		//		ElfW(Dyn) *l_ld;		/* Dynamic section of the shared object. */
+	//		//		struct link_map *l_next, *l_prev;	/* Chain of loaded objects. */
 	//		//	};
 	//
 	//		file.readElfWord(); // ignore version (and alignment padding)
@@ -1070,8 +1050,7 @@ public final class NewMachoDump extends CoreReaderSupport {
 	//				// Detect this by spotting that the name does not begin with "/" - the names should
 	//				// always be full pathnames. In this case just ignore this one.
 	//				// See defect CMVC 184115
-	//				if ((null != range) && (range.getVirtualAddress() == loadedBaseAddress) && (null != name)
-	//						&& name.startsWith("/")) {
+	//				if ((null != range) && (range.getVirtualAddress() == loadedBaseAddress) && (null != name) && name.startsWith("/")) {
 	//					try {
 	//						ClosingFileReader file = builder.openFile(name);
 	//
@@ -1101,8 +1080,7 @@ public final class NewMachoDump extends CoreReaderSupport {
 	//						// As for null file return above, if we can't find the library file we follow the normal
 	//						// DTFJ convention and leave the properties, sections and symbols iterators empty.
 	//					}
-	//					libraries.add(
-	//							builder.buildModule(name, properties, sections, symbols.iterator(), loadedBaseAddress));
+	//					libraries.add(builder.buildModule(name, properties, sections, symbols.iterator(), loadedBaseAddress));
 	//				}
 	//			}
 	//		}
@@ -1112,7 +1090,7 @@ public final class NewMachoDump extends CoreReaderSupport {
 
 	private ImageModule processExecutableFile(MachFile executableFile, long offset) throws IOException {
 		List<Symbol> symbols = new ArrayList<>();
-		Collection<? extends MemoryRange> ememoryRanges = executableFile.getMemoryRangesWithOffset(offset);
+		Collection<? extends MemoryRange> ranges = executableFile.getMemoryRangesWithOffset(offset);
 
 		// Module m = new Module(process, "executable", symbols, memoryRanges, executableFile.streamOffset, new Properties());
 
@@ -1137,43 +1115,40 @@ public final class NewMachoDump extends CoreReaderSupport {
 		List<Object> dylinkers = new ArrayList<>();
 
 		{
-			// List modules = new ArrayList();
-
 			String exeName = System.getProperty(SYSTEM_PROP_EXECUTABLE, executableName);
 			String classpath = System.getProperty("java.class.path", "."); //$NON-NLS-1$ //$NON-NLS-2$
+			@SuppressWarnings("resource")
 			ClosingFileReader fileReader = findFileInPath(builder, exeName, classpath);
 
 			if (fileReader == null) {
-				builder.setExecutableUnavailable("File \"" + exeName + "\" not found");
+				builder.setExecutableUnavailable("File \"" + exeName + "\" not found"); //$NON-NLS-1$ //$NON-NLS-2$
 			} else {
-				MachFile executable = null; // elfFileFrom(fileReader);
+				MachFile executable = machFileFrom(fileReader);
 
-				if (executable == null) {
-					builder.setExecutableUnavailable("Executable file \"" + exeName + "\" not found");
+				if ((executable == null) || (executable.header.fileType != MH_EXECUTE)) {
+					builder.setExecutableUnavailable("File \"" + exeName + "\" is not an executable"); //$NON-NLS-1$ //$NON-NLS-2$
 				} else {
-					//	ProgramHeaderEntry dynamic = null;
-					//
-					//	for (Iterator iter = executable.programHeaderEntries(); iter.hasNext();) {
-					//		ProgramHeaderEntry entry = (ProgramHeaderEntry) iter.next();
-					//		if (entry.isDynamic()) {
-					//			dynamic = entry;
-					//			break;
-					//		}
-					//	}
-					//
-					//	if (dynamic != null) {
+					Properties properties = new Properties();
+					Iterator<Object> sections = Collections.emptyIterator();
+					Iterator<Object> symbols = Collections.emptyIterator();
+					long startAddress = 0;
+
+					//	executables.add(executable);
+
+					builder.buildModule(exeName, properties, sections, symbols, startAddress);
+
+					//	if (null != dynamic) {
 					//		List symbols = readSymbolsFrom(builder, addressSpace, executable, dynamic.virtualAddress);
 					//		long imageStart = dynamic.virtualAddress;
 					//		if (isValidAddress(imageStart)) {
-					//			Iterator sections = buildModuleSections(builder, addressSpace, executable,
-					//					dynamic.virtualAddress);
+					//			Iterator sections = _buildModuleSections(builder, addressSpace, executable, dynamic.virtualAddress);
 					//			Properties properties = executable.getProperties();
-					//			modules.add(
-					//					builder.buildModule(exeName, properties, sections, symbols.iterator(), imageStart));
+					//			modules.add(builder.buildModule(executableName, properties, sections, symbols.iterator(),imageStart));
 					//			modules.addAll(readLibrariesAt(builder, addressSpace, imageStart));
-					//			_additionalFileNames.add(exeName);
+					//			_additionalFileNames.add(executableName);
 					//		}
 					//	}
+
 				}
 			}
 
@@ -1191,7 +1166,7 @@ public final class NewMachoDump extends CoreReaderSupport {
 			//			} else {
 			//				moduleFile = new Elf32File(_file._reader, entry.fileOffset);
 			//			}
-			//			// Now search the dynamic entries for this so file to get it's SONAME.
+			//			// Now search the dynamic entries for this .so file to get it's SONAME.
 			//			// "lib.so" is returned for the executable and should be ignored.
 			//			String soname = moduleFile.getSONAME();
 			//			if (soname != null && !"lib.so".equals(soname)) {
@@ -1216,10 +1191,6 @@ public final class NewMachoDump extends CoreReaderSupport {
 			DumpReader reader = file.reader;
 
 			try {
-				reader.seek(segment.fileOffset);
-
-				// TODO
-
 				int magic = reader.readInt();
 
 				if (Header.isMACHO(magic)) {
@@ -1227,13 +1198,13 @@ public final class NewMachoDump extends CoreReaderSupport {
 
 					switch (innerFile.header.fileType) {
 					case MH_EXECUTE:
-						// executable = processExecutableFile(innerFile, segment.vmaddr);
+						// TODO executable = processExecutableFile(innerFile, segment.vmaddr);
 						break;
 					case MH_DYLIB:
-						// modules.add(processModuleFile(innerFile, segment));
+						// TODO modules.add(processModuleFile(innerFile, segment));
 						break;
 					case MH_DYLINKER:
-						// dylinkerMachFile = innerFile;
+						// TODO dylinkerMachFile = innerFile;
 						break;
 					default:
 						break;
@@ -1262,7 +1233,6 @@ public final class NewMachoDump extends CoreReaderSupport {
 		//		ElfFile executable = elfFileFrom(file);
 		//
 		//		if (null != executable) {
-		//			// System.err.println("NewMachoDump.readModules() found executable object");
 		//			ProgramHeaderEntry dynamic = null;
 		//
 		//			for (Iterator<ProgramHeaderEntry> iter = executable.programHeaderEntries(); iter.hasNext();) {
@@ -1275,7 +1245,6 @@ public final class NewMachoDump extends CoreReaderSupport {
 		//			}
 		//
 		//			if (null != dynamic) {
-		//				// System.err.println("NewMachoDump.readModules() found 'dynamic' program header object");
 		//				List<?> symbols = readSymbolsFrom(builder, addressSpace, executable, dynamic.virtualAddress);
 		//				long imageStart = dynamic.virtualAddress;
 		//
@@ -1291,11 +1260,9 @@ public final class NewMachoDump extends CoreReaderSupport {
 		//				}
 		//			}
 		//		} else {
-		//			// call in here if we can't find the executable
 		//			builder.setExecutableUnavailable("Executable file \"" + executableName + "\" not found");
 		//		}
 		//	} else {
-		//		// call in here if we can't find the executable
 		//		builder.setExecutableUnavailable("File \"" + executableName + "\" not found");
 		//		if (_verbose) {
 		//			System.err.println("Warning: executable " + executableName + " not found, unable to collect libraries."
@@ -1303,7 +1270,7 @@ public final class NewMachoDump extends CoreReaderSupport {
 		//		}
 		//	}
 		//
-		//	// Get all the loaded modules .so names to make sure we have the
+		//	// get all the loaded modules .so names to make sure we have the
 		//	// full list of libraries for jextract to zip up. CMVC 194366
 		//	for (ProgramHeaderEntry entry : file._programHeaderEntries) {
 		//		if (!entry.isLoadable()) {
@@ -1313,7 +1280,7 @@ public final class NewMachoDump extends CoreReaderSupport {
 		//		try {
 		//			ElfFile moduleFile = new Elf64File(file._reader, entry.fileOffset);
 		//
-		//			// Now search the dynamic entries for this so file to get it's SONAME.
+		//			// Now search the dynamic entries for this .so file to get it's SONAME.
 		//			// "lib.so" is returned for the executable and should be ignored.
 		//			String soname = moduleFile.getSONAME();
 		//
@@ -1336,102 +1303,73 @@ public final class NewMachoDump extends CoreReaderSupport {
 		return modules;
 	}
 
-	//	private Object readProcess(DataEntry entry, Builder builder, Object addressSpace, List<Object> threads)
-	//			throws IOException, CorruptCoreException, MemoryAccessException {
-	//		file.seek(entry.offset);
-	//		file.readByte(); // ignore state
-	//		file.readByte(); // ignore sname
-	//		file.readByte(); // ignore zombie
-	//		file.readByte(); // ignore nice
-	//		file.seek(entry.offset + file.padToWordBoundary(4));
-	//		file.readElfWord(); // ignore flags
-	//		readUID(); // ignore uid
-	//		readUID(); // ignore gid
-	//		long elfPID = file.readUnsignedInt();
-	//
-	//		file.readInt(); // ignore ppid
-	//		file.readInt(); // ignore pgrp
-	//		file.readInt(); // ignore sid
-	//
-	//		// Ignore filler. Command-line is last 80 bytes (defined by ELF_PRARGSZ in elfcore.h).
-	//		// Command-name is 16 bytes before command-line.
-	//		file.seek(entry.offset + entry.size - 96);
-	//		file.readBytes(16); // ignore command
-	//		String dumpCommandLine = new String(file.readBytes(ELF_PRARGSZ), StandardCharsets.US_ASCII).trim();
-	//
-	//		Properties environment = getEnvironmentVariables(builder);
-	//		String alternateCommandLine = "";
-	//		if (null != environment) {
-	//			alternateCommandLine = environment.getProperty("IBM_JAVA_COMMAND_LINE", "");
-	//		}
-	//
-	//		String commandLine = dumpCommandLine.length() >= alternateCommandLine.length() ? dumpCommandLine
-	//				: alternateCommandLine;
-	//
-	//		int space = commandLine.indexOf(" ");
-	//		String executable = commandLine;
-	//		if (0 < space) {
-	//			executable = executable.substring(0, space);
-	//		}
-	//
-	//		// On Linux, the VM forks before dumping, and it's the forked process which generates the dump.
-	//		// Therefore, the PID reported in the ELF file is different from the original Java process PID.
-	//		// To work around this problem, the PID of the original process and the TID of the original failing
-	//		// thread have been added to the J9RAS structure. However, the ImageThread corresponding to the
-	//		// original failing thread has to be faked up, since it isn't one of the threads read from the dump
-	//		// (which are relative to the forked process).
-	//
-	//		String pid = Long.toString(elfPID);
-	//		Object failingThread = threads.get(0);
-	//
-	//		// Get the PID from the J9RAS structure, if possible
-	//		// otherwise use the one of the forked process
-	//		if (null != _j9rasReader) {
-	//			boolean didFork = true;
-	//
-	//			try {
-	//				long rasPID = _j9rasReader.getProcessID();
-	//
-	//				if (elfPID != rasPID) {
-	//					// PIDs are different, therefore fork+dump has happened.
-	//					// In this case, rasPID is the correct PID to report
-	//					pid = Long.toString(rasPID);
-	//				} else {
-	//					// PIDs are equal, so the dump must have been generated externally.
-	//					// In this case, the failing thread is the one reported by ELF,
-	//					// not the one read from J9RAS.
-	//					didFork = false;
-	//				}
-	//			} catch (UnsupportedOperationException use) {
-	//			}
-	//
-	//			if (didFork) {
-	//				try {
-	//					long tid = _j9rasReader.getThreadID();
-	//					// fake a thread with no other useful info than the TID.
-	//					failingThread = builder.buildThread(Long.toString(tid), Collections.EMPTY_LIST.iterator(),
-	//							Collections.EMPTY_LIST.iterator(), Collections.EMPTY_LIST.iterator(), new Properties(), 0);
-	//					threads.add(0, failingThread);
-	//				} catch (UnsupportedOperationException uoe) {
-	//				}
-	//			}
-	//		}
-	//
-	//		return buildProcess(builder, addressSpace, pid, commandLine, getEnvironmentVariables(builder), failingThread,
-	//				threads.iterator(), executable);
-	//	}
+	private Object readProcess(Builder builder, Object addressSpace, List<Object> threads)
+			throws IOException, CorruptCoreException, MemoryAccessException {
+		//		// get the PID from the J9RAS structure, if possible
+		//		// otherwise use the one of the forked process
+		//		if (null != _j9rasReader) {
+		//			boolean didFork = true;
+		//
+		//			try {
+		//				long rasPID = _j9rasReader.getProcessID();
+		//
+		//				if (elfPID != rasPID) {
+		//					// PIDs are different, therefore fork+dump has happened.
+		//					// In this case, rasPID is the correct PID to report
+		//					pid = Long.toString(rasPID);
+		//				} else {
+		//					// PIDs are equal, so the dump must have been generated externally.
+		//					// In this case, the failing thread is the one reported by ELF,
+		//					// not the one read from J9RAS.
+		//					didFork = false;
+		//				}
+		//			} catch (UnsupportedOperationException use) {
+		//			}
+		//
+		//			if (didFork) {
+		//				try {
+		//					long tid = _j9rasReader.getThreadID();
+		//					// fake a thread with no other useful info than the TID.
+		//					failingThread = builder.buildThread(Long.toString(tid), Collections.EMPTY_LIST.iterator(),
+		//							Collections.EMPTY_LIST.iterator(), Collections.EMPTY_LIST.iterator(), new Properties(), 0);
+		//					threads.add(0, failingThread);
+		//				} catch (UnsupportedOperationException uoe) {
+		//				}
+		//			}
+		//		}
+
+		String pid = "<pid>";
+		String commandLine = "<command>";
+		String failingThread = "<thread>";
+		String executable = "<exe>";
+
+		return buildProcess(builder, addressSpace, pid, commandLine, getEnvironmentVariables(builder), failingThread,
+				executable);
+	}
+
+	private static String readStringAt(DumpReader reader, long fileOffset) throws IOException {
+		reader.seek(fileOffset);
+
+		for (ByteArrayOutputStream buffer = new ByteArrayOutputStream();;) {
+			byte ascii = reader.readByte();
+
+			if (ascii == 0) {
+				return new String(buffer.toByteArray(), StandardCharsets.US_ASCII);
+			}
+
+			buffer.write(ascii);
+		}
+	}
 
 	private String readStringAt(long address) throws IOException {
 		if (isValidAddress(address)) {
-			// FIXME
-			// return file.readStringAtAddress(address);
+			return readStringAt(file.reader, address);
 		}
 
 		return null;
 	}
 
-	//	private List<Object> readSymbolsFrom(Builder builder, Object addressSpace, ElfFile file, long baseAddress)
-	//			throws IOException {
+	//	private List<Object> readSymbolsFrom(Builder builder, Object addressSpace, ElfFile file, long baseAddress) throws IOException {
 	//		List<Object> symbols = new ArrayList<>();
 	//
 	//		for (Iterator<SectionHeaderEntry> iter = file.sectionHeaderEntries(); iter.hasNext();) {
@@ -1445,8 +1383,7 @@ public final class NewMachoDump extends CoreReaderSupport {
 	//		return symbols;
 	//	}
 
-	//	private List<?> readSymbolsFrom(Builder builder, Object addressSpace, ElfFile file, SectionHeaderEntry entry,
-	//			long baseAddress) throws IOException {
+	//	private List<?> readSymbolsFrom(Builder builder, Object addressSpace, ElfFile file, SectionHeaderEntry entry, long baseAddress) throws IOException {
 	//		List<Object> symbols = new ArrayList<>();
 	//		SectionHeaderEntry stringTable = file.sectionHeaderEntryAt((int) entry.link);
 	//
@@ -1470,84 +1407,39 @@ public final class NewMachoDump extends CoreReaderSupport {
 	//	}
 
 	/*
-	 * NOTE: We only ever see one native thread due to the way we create core dumps.
+	 * NOTE: Only one native thread is expected due to the way core dumps are created.
 	 */
-	private Object readThread(DataEntry entry, Builder builder, Object addressSpace)
-			throws IOException, MemoryAccessException {
+	private Object buildThread(Builder builder, Thread thread) throws IOException, MemoryAccessException {
+		String pid = "<pid>"; // FIXME
 
-		// FIXME
+		List<Object> registers = new ArrayList<>();
 
-		//	file.seek(entry.offset);
-		//	int signalNumber = file.readInt(); //  signalNumber
-		//	file.readInt(); // ignore code
-		//	file.readInt(); // ignore errno
-		//	file.readShort(); // ignore cursig
-		//	file.readShort(); // ignore dummy
-		//	file.readElfWord(); // ignore pending
-		//	file.readElfWord(); // ignore blocked
-		//	long pid = file.readUnsignedInt();
-		//	file.readInt(); // ignore ppid
-		//	file.readInt(); // ignore pgroup
-		//	file.readInt(); // ignore session
-		//
-		//	long utimeSec = file.readElfWord(); // utime_sec
-		//	long utimeUSec = file.readElfWord(); // utime_usec
-		//	long stimeSec = file.readElfWord(); // stime_sec
-		//	long stimeUSec = file.readElfWord(); // stime_usec
-		//
-		//	file.readElfWord(); // ignore cutime_sec
-		//	file.readElfWord(); // ignore cutime_usec
-		//	file.readElfWord(); // ignore cstime_sec
-		//	file.readElfWord(); // ignore cstime_usec
-		//
-		//	Map<String, Address> registers = file.readRegisters(builder, addressSpace);
-		//	Properties properties = new Properties();
-		//
+		for (Thread.State state : thread.states) {
+			for (Map.Entry<String, Number> entry : state.registers.entrySet()) {
+				registers.add(builder.buildRegister(entry.getKey(), entry.getValue()));
+			}
+		}
+
+		List<Object> sections = Collections.emptyList();
+
+		List<Object> frames = Collections.emptyList();
+
+		Properties properties = new Properties();
+
 		//	properties.setProperty("Thread user time secs", Long.toString(utimeSec));
 		//	properties.setProperty("Thread user time usecs", Long.toString(utimeUSec));
 		//	properties.setProperty("Thread sys time secs", Long.toString(stimeSec));
 		//	properties.setProperty("Thread sys time usecs", Long.toString(stimeUSec));
-		//
-		//	return buildThread(builder, addressSpace, String.valueOf(pid), registers, properties, signalNumber);
 
-		return null;
+		int signalNumber = 0;
+
+		return builder.buildThread(pid, //
+				registers.iterator(), //
+				sections.iterator(), //
+				frames.iterator(), //
+				properties, //
+				signalNumber);
 	}
-
-	//	private long readUID() throws IOException {
-	//		return file.readUID();
-	//	}
-
-	private List<?> registersAsList(Builder builder, Map<String, Address> registers) {
-		List<Object> list = new ArrayList<>();
-
-		for (Map.Entry<String, Address> entry : registers.entrySet()) {
-			Address value = entry.getValue();
-			list.add(builder.buildRegister(entry.getKey(), value.asNumber()));
-		}
-
-		return list;
-	}
-
-	//	private void seekToAddress(long address) throws IOException {
-	//		ProgramHeaderEntry matchedEntry = null;
-	//
-	//		// FIXME
-	//
-	//		//	for (Iterator<ProgramHeaderEntry> iter = file.programHeaderEntries(); iter.hasNext();) {
-	//		//		ProgramHeaderEntry element = iter.next();
-	//		//
-	//		//		if (element.contains(address)) {
-	//		//			assert (null == matchedEntry) : "Multiple mappings for the same address";
-	//		//			matchedEntry = element;
-	//		//		}
-	//		//	}
-	//
-	//		if (null == matchedEntry) {
-	//			throw new IOException("No ProgramHeaderEntry found for address");
-	//		} else {
-	//			coreSeek(matchedEntry.fileOffset + (address - matchedEntry.virtualAddress));
-	//		}
-	//	}
 
 	/**
 	 * Method for extracting a string from a string table
@@ -1556,18 +1448,16 @@ public final class NewMachoDump extends CoreReaderSupport {
 	 * @param offset  : The offset of the required string
 	 * @return
 	 */
-	private String stringFromBytesAt(byte[] stringTableBytes, long offset) {
-		// Check that the offset is valid
+	private static String stringFromBytesAt(byte[] stringTableBytes, long offset) {
+		// check that the offset is valid
 		if (!((0 <= offset) && (offset < stringTableBytes.length))) {
 			return null;
 		}
 
-		// As the offset is now known to be small (definitely fits in 32 bits), it
-		// can be safely cast to an int
 		int startOffset = (int) offset;
 		int endOffset = startOffset;
 
-		// Scan along the characters checking they are valid (else undefined behaviour
+		// scan along the characters checking they are valid (else undefined behaviour
 		// converting to a string) and locating the terminating null (if any!!)
 		for (endOffset = startOffset; endOffset < stringTableBytes.length; ++endOffset) {
 			if (stringTableBytes[endOffset] >= 128) {
@@ -1577,17 +1467,14 @@ public final class NewMachoDump extends CoreReaderSupport {
 			}
 		}
 
-		// Check that the string is null terminated
+		// check that the string is null terminated
 		if (stringTableBytes[endOffset] != 0) {
 			return null;
 		}
 
-		// Convert the bytes to a string
+		// convert the bytes to a string
 		try {
-			String result = new String(stringTableBytes, startOffset, endOffset - startOffset,
-					StandardCharsets.US_ASCII);
-			// System.err.println("Read string '" + result + "' from string table");
-			return result;
+			return new String(stringTableBytes, startOffset, endOffset - startOffset, StandardCharsets.US_ASCII);
 		} catch (IndexOutOfBoundsException exception) {
 			System.err.println(
 					"Error (IndexOutOfBoundsException) converting string table characters. The core file is invalid and the results may unpredictable");
