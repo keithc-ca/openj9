@@ -64,25 +64,11 @@ import com.ibm.dtfj.image.ImageModule;
 /**
  * TODO document this class
  */
+@SuppressWarnings("boxing")
 public final class NewMachoDump extends CoreReaderSupport {
-
-	private static abstract class Address {
-
-		abstract Address add(long offset);
-
-		abstract long asAddress();
-
-		abstract Number asNumber();
-
-		abstract Address nil();
-
-	}
 
 	private static abstract class Command {
 
-		static final int LC_REQ_DYLD = 0x80000000;
-
-		// load command constants
 		static final int LC_SEGMENT_64 = 0x19;
 
 		static final int LC_THREAD = 0x4;
@@ -126,10 +112,6 @@ public final class NewMachoDump extends CoreReaderSupport {
 
 	}
 
-	private static class DataEntry {
-		//
-	}
-
 	@SuppressWarnings("unused")
 	private static final class Header {
 
@@ -164,7 +146,6 @@ public final class NewMachoDump extends CoreReaderSupport {
 
 	private static final class MachFile {
 
-		@SuppressWarnings("boxing")
 		private static void dumpSegments(Command[] commands) {
 			for (Command command : commands) {
 				if (command.cmdType == Command.LC_SEGMENT_64) {
@@ -359,12 +340,11 @@ public final class NewMachoDump extends CoreReaderSupport {
 			static final int X86_AVX512_STATE64 = 20;
 			static final int X86_AVX512_STATE = 21;
 
-			@SuppressWarnings({ "boxing", "nls" })
 			private static void readException(DumpReader reader, Map<String, Number> registers) throws IOException {
-				registers.put("trapno", reader.readShort());
-				registers.put("cpu", reader.readShort());
-				registers.put("err", reader.readInt());
-				registers.put("faultvaddr", reader.readLong());
+				registers.put("trapno", reader.readShort()); //$NON-NLS-1$
+				registers.put("cpu", reader.readShort()); //$NON-NLS-1$
+				registers.put("err", reader.readInt()); //$NON-NLS-1$
+				registers.put("faultvaddr", reader.readLong()); //$NON-NLS-1$
 			}
 
 			private static Number readFPValue(DumpReader reader, int bytes) throws IOException {
@@ -385,48 +365,46 @@ public final class NewMachoDump extends CoreReaderSupport {
 				return new BigInteger(data);
 			}
 
-			@SuppressWarnings({ "boxing", "nls" })
 			private static void readFloatState(DumpReader reader, Map<String, Number> registers) throws IOException {
-				registers.put("fpu_reserved[0]", reader.readUnsignedInt());
-				registers.put("fpu_reserved[1]", reader.readUnsignedInt());
+				registers.put("fpu_reserved[0]", reader.readUnsignedInt()); //$NON-NLS-1$
+				registers.put("fpu_reserved[1]", reader.readUnsignedInt()); //$NON-NLS-1$
 
-				registers.put("fpu_fcw", reader.readUnsignedShort());
-				registers.put("fpu_fsw", reader.readUnsignedShort());
-				registers.put("fpu_ftw", reader.readUnsignedByte());
-				registers.put("fpu_fsrv1", reader.readUnsignedByte());
-				registers.put("fpu_fop", reader.readUnsignedShort());
-				registers.put("fpu_ip", reader.readUnsignedInt());
-				registers.put("fpu_cs", reader.readUnsignedShort());
-				registers.put("fpu_rsrv2", reader.readUnsignedShort());
-				registers.put("fpu_dp", reader.readUnsignedInt());
-				registers.put("fpu_ds", reader.readUnsignedShort());
-				registers.put("fpu_rsrv3", reader.readUnsignedShort());
-				registers.put("fpu_mxcsr", reader.readUnsignedInt());
-				registers.put("fpu_mxcsrmask", reader.readUnsignedInt());
+				registers.put("fpu_fcw", reader.readUnsignedShort()); //$NON-NLS-1$
+				registers.put("fpu_fsw", reader.readUnsignedShort()); //$NON-NLS-1$
+				registers.put("fpu_ftw", reader.readUnsignedByte()); //$NON-NLS-1$
+				registers.put("fpu_fsrv1", reader.readUnsignedByte()); //$NON-NLS-1$
+				registers.put("fpu_fop", reader.readUnsignedShort()); //$NON-NLS-1$
+				registers.put("fpu_ip", reader.readUnsignedInt()); //$NON-NLS-1$
+				registers.put("fpu_cs", reader.readUnsignedShort()); //$NON-NLS-1$
+				registers.put("fpu_rsrv2", reader.readUnsignedShort()); //$NON-NLS-1$
+				registers.put("fpu_dp", reader.readUnsignedInt()); //$NON-NLS-1$
+				registers.put("fpu_ds", reader.readUnsignedShort()); //$NON-NLS-1$
+				registers.put("fpu_rsrv3", reader.readUnsignedShort()); //$NON-NLS-1$
+				registers.put("fpu_mxcsr", reader.readUnsignedInt()); //$NON-NLS-1$
+				registers.put("fpu_mxcsrmask", reader.readUnsignedInt()); //$NON-NLS-1$
 
 				// xmm registers are 16 bytes each; 10 bytes used and 6 bytes reserved
 				for (int i = 0; i < 8; ++i) {
-					registers.put("fpu_stmm" + i, readFPValue(reader, 10));
+					registers.put("fpu_stmm" + i, readFPValue(reader, 10)); //$NON-NLS-1$
 					readFPValue(reader, 6);
 				}
 
 				// xmm registers are 16 bytes each
 				for (int i = 0; i < 16; ++i) {
-					registers.put("fpu_xmm" + i, readFPValue(reader, 16));
+					registers.put("fpu_xmm" + i, readFPValue(reader, 16)); //$NON-NLS-1$
 				}
 
 				for (int i = 0; i < 6; ++i) {
-					registers.put("fpu_rsrv4[" + i + "]", readFPValue(reader, 16));
+					registers.put("fpu_rsrv4[" + i + "]", readFPValue(reader, 16)); //$NON-NLS-1$ //$NON-NLS-2$
 				}
 
-				registers.put("fpu_reserved1", reader.readUnsignedInt());
+				registers.put("fpu_reserved1", reader.readUnsignedInt()); //$NON-NLS-1$
 			}
 
-			@SuppressWarnings({ "boxing", "nls" })
 			private static void readRegisters(DumpReader reader, Map<String, Number> registers) throws IOException {
-				String names = "rax,rbx,rcx,rdx,rdi,rsi,rbp,rsp,r8,r9,r10,r11,r12,r13,r14,r15,rip,rflags,cs,fs,gs";
+				String names = "rax,rbx,rcx,rdx,rdi,rsi,rbp,rsp,r8,r9,r10,r11,r12,r13,r14,r15,rip,rflags,cs,fs,gs"; //$NON-NLS-1$
 
-				for (String name : names.split(",")) {
+				for (String name : names.split(",")) { //$NON-NLS-1$
 					registers.put(name, reader.readLong());
 				}
 			}
@@ -501,20 +479,7 @@ public final class NewMachoDump extends CoreReaderSupport {
 	}
 
 	private static final class Symbol {
-
-		private static final byte ST_TYPE_MASK = 0xF;
-		private static final byte STT_FUNC = 2;
-
-		int info;
-
-		int name;
-
-		int value;
-
-		boolean isFunction() {
-			return (info & ST_TYPE_MASK) == STT_FUNC;
-		}
-
+		//
 	}
 
 	private static final boolean DEBUG = true;
@@ -1477,7 +1442,7 @@ public final class NewMachoDump extends CoreReaderSupport {
 			return new String(stringTableBytes, startOffset, endOffset - startOffset, StandardCharsets.US_ASCII);
 		} catch (IndexOutOfBoundsException exception) {
 			System.err.println(
-					"Error (IndexOutOfBoundsException) converting string table characters. The core file is invalid and the results may unpredictable");
+					"Error (IndexOutOfBoundsException) converting string table characters. The core file is invalid and the results may unpredictable"); //$NON-NLS-1$
 		}
 
 		return null;
