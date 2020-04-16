@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corp. and others
+ * Copyright (c) 2000, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -79,7 +79,7 @@ public class TraceContext {
 
 	/* The message file being used by this particular context */
 	protected MessageFile messageFile;
-	protected Vector auxiliaryMessageFiles;
+	protected Vector<MessageFile> auxiliaryMessageFiles;
 
 	/* The trace headers used to initialize this context */
 	TraceFileHeader metadata;
@@ -95,16 +95,16 @@ public class TraceContext {
 	int debugLevel = 0;
 
 	/* time ordered list of live threads */
-	List threads = new ArrayList();
+	List<TraceThread> threads = new ArrayList<>();
 	/* live thread map */
-	Map threadMap = new HashMap();
+	Map<Long, TraceThread> threadMap = new HashMap<>();
 	boolean sorted = false;
 
 	/* Map of thread IDs to list of associated names */
-	Map knownThreads = new HashMap();
+	Map<Long, Set<String>> knownThreads = new HashMap<>();
 
 	/* The subset of threads we're interested in */
-	Set filteredThreads;
+	Set<Long> filteredThreads;
 
 	/* The time zone offset (in +/- minutes) to be added when formatting the time stamps */
 	int timezoneOffset = 0;
@@ -122,7 +122,7 @@ public class TraceContext {
 	 * @throws IOException
 	 */
 	private TraceContext(ByteBuffer data, PrintStream message, PrintStream error, PrintStream warning, PrintStream debug) throws IOException {
-		this.auxiliaryMessageFiles = new Vector();
+		this.auxiliaryMessageFiles = new Vector<>();
 		this.messageStream = message;
 		this.warningStream = warning;
 		this.errorStream = error;
@@ -239,7 +239,6 @@ public class TraceContext {
 		messageStream = stream;
 	}
 
-	
 	/**
 	 * @return
 	 */
@@ -274,7 +273,7 @@ public class TraceContext {
 
 	/**
 	 * Returns the size of the meta-data. This allows a file processor to skip to the
-	 * offset of the first record. 
+	 * offset of the first record.
 	 * @return the length of the meta-data
 	 */
 	public int getHeaderSize() {
@@ -282,8 +281,8 @@ public class TraceContext {
 	}
 
 	/**
-	 * Constructs a temporary TraceFileHeader from the supplied data and returns it's size
-	 * offset of the first record. 
+	 * Constructs a temporary TraceFileHeader from the supplied data and returns its size
+	 * offset of the first record.
 	 * @return the length of the meta-data
 	 */
 	public int getHeaderSize(ByteBuffer data) {
@@ -307,37 +306,37 @@ public class TraceContext {
 	public int getTraceType() {
 		return metadata.traceSection.type;
 	}
-	
+
 	/**
 	 * This forces the trace to a given type. This should only be necessary if you have metadata from
 	 * a VM when no subscribers were attached and data from a subscriber that was registered afterwards.
 	 * The inverted case could be true as well, but is much less likely to occur.
-	 * 
+	 *
 	 * If you're calling this then you should think about altering the sequence of calls used to get the
 	 * metadata and trace data.
-	 * 
+	 *
 	 * @param type - the type of the trace data to process, either TraceContext.INTERNAL or TraceContext.EXTERNAL
-	 * 
-	 * @deprecated this method is deprecated as it's use implies a problem elsewhere
+	 *
+	 * @deprecated this method is deprecated as its use implies a problem elsewhere
 	 */
 	@Deprecated
 	public void setTraceType(int type) {
 		boolean validType = true;
 		if (debugStream != null) {
 			String typeName;
-			switch(type) {
+			switch (type) {
 			case TraceContext.EXTERNAL:
 				typeName = "External";
 				break;
 			case TraceContext.INTERNAL:
-				typeName = "External";
+				typeName = "Internal";
 				break;
 			default:
-				typeName = "<"+type+" is an invalid trace type>";
+				typeName = "<" + type + " is an invalid trace type>";
 				validType = false;
 			}
 
-			this.debug(this, 1, "Forcing trace type to "+typeName+" at user request");
+			this.debug(this, 1, "Forcing trace type to " + typeName + " at user request");
 		}
 
 		if (metadata != null && metadata.traceSection != null && validType) {
@@ -346,7 +345,7 @@ public class TraceContext {
 			if (metadata == null || metadata.traceSection == null) {
 				this.error(this, "Unable to set trace type due to incomplete trace context");
 			} else {
-				this.error(this, "Unable to set trace type to invalid type "+type);				
+				this.error(this, "Unable to set trace type to invalid type " + type);
 			}
 		}
 	}
@@ -453,7 +452,7 @@ public class TraceContext {
 	/**
 	 * This method constructs a context that can be used to format trace records produced by the VM instance that created the meta-data provided.
 	 * The message file is used to format trace points into a human readable form and the print streams provided are where messages of that type are written to
-	 * @param data - trace meta-data 
+	 * @param data - trace meta-data
 	 * @param length - the length of the meta-data in the array
 	 * @param messageFile - a file containing format strings
 	 * @param message - informational message destination
@@ -470,7 +469,7 @@ public class TraceContext {
 	/**
 	 * This method constructs a context that can be used to format trace records produced by the VM instance that created the meta-data provided.
 	 * The message file is used to format trace points into a human readable form and the print streams provided are where messages of that type are written to
-	 * @param data - trace meta-data 
+	 * @param data - trace meta-data
 	 * @param messageFile - a file containing format strings
 	 * @param message - informational message destination
 	 * @param error - error message destination
@@ -486,7 +485,7 @@ public class TraceContext {
 	/**
 	 * This method constructs a context that can be used to format trace records produced by the VM instance that created the meta-data provided.
 	 * The message file is used to format trace points into a human readable form and the print streams provided are where messages of that type are written to
-	 * @param data - trace meta-data 
+	 * @param data - trace meta-data
 	 * @param messageFile - an input stream providing access to format strings
 	 * @param message - informational message destination
 	 * @param error - error message destination
@@ -529,7 +528,7 @@ public class TraceContext {
 	/**
 	 * Constructs a ByteStream with an endian representation suitable for use with data related
 	 * to the context creating it.
-	 * 
+	 *
 	 * @param data - initial contents of the stream
 	 * @param offset - offset into the data for the first byte of the stream
 	 * @param length - length past the offset for the last byte of data in the stream
@@ -545,19 +544,19 @@ public class TraceContext {
 	/**
 	 * This method is called to inform the context that we think the specified thread has
 	 * terminated. This allows us to tidy up after dead threads so we don't leak memory.
-	 * 
+	 *
 	 * If the thread has been re-used later on then we do not remove it as there will still be
 	 * more data available.
-	 * 
+	 *
 	 * @param thread - the terminated thread
-	 * @param moreData - true if the thread has more trace points after this one, false otherwise.
+	 * @param moreData - true if the thread has more trace points after this one, false otherwise
 	 */
 	synchronized void threadTerminated(TraceThread thread, boolean moreData) {
 		if (debugStream != null) {
-			debug(this, 2, "Thread " + thread + " terminated, removing thread from thread list? " + moreData);
+			debug(this, 2, "Thread " + thread + " terminated, removing thread from map" + (moreData ? "" : "and list"));
 		}
-		if( !moreData ) {
-			threadMap.remove(Long.valueOf(thread.getThreadID()));
+		threadMap.remove(Long.valueOf(thread.getThreadID()));
+		if (!moreData) {
 			threads.remove(thread);
 		}
 	}
@@ -572,7 +571,7 @@ public class TraceContext {
 	 */
 	private synchronized TraceThread addData(TraceRecord record) {
 		TraceThread thread;
-		
+
 		/* which thread does it belong to? */
 		// Use the J9VMThread pointer as the unique id.
 		Long ident = Long.valueOf(record.threadID);
@@ -586,16 +585,14 @@ public class TraceContext {
 		}
 
 		/* record the threads current name for historical reference */
-		if (knownThreads.containsKey(ident)) {
-			Set names = (Set)knownThreads.get(ident);
-			names.add(record.threadName);
-		} else {
-			Set names = new HashSet();
-			names.add(record.threadName);
+		Set<String> names = knownThreads.get(ident);
+		if (names == null) {
+			names = new HashSet<>();
 			knownThreads.put(ident, names);
 		}
-		
-		thread = (TraceThread)threadMap.get(ident);
+		names.add(record.threadName);
+
+		thread = threadMap.get(ident);
 		if (thread == null || thread.stream == null) {
 			thread = new TraceThread(this, record.threadID, record.threadSyn1, record.threadName);
 
@@ -607,7 +604,7 @@ public class TraceContext {
 			 * append the data and refresh the thread prior to
 			 * adding it to the thread list. That way we can insert
 			 * it at the front of the list and it'll be bubbled to
-			 * it's correct location rather than the full sort we
+			 * its correct location rather than the full sort we
 			 * currently do
 			 */
 			sorted = false;
@@ -616,7 +613,7 @@ public class TraceContext {
 			 * have created a context with metadata from before they subscribed.
 			 * If we've got multiple buffers from a single thread then we're external
 			 * regardless of what the metadata said.
-			 * 
+			 *
 			 * TODO: create a proper heuristic for TraceRecord to determine the wrapping style
 			 */
 			metadata.traceSection.type = TraceContext.EXTERNAL;
@@ -652,7 +649,7 @@ public class TraceContext {
 
 	/**
 	 * @see com.ibm.jvm.trace.format.api.TraceContext#addData(TraceRecord)
-	 * @param file - file containing trace data 
+	 * @param file - file containing trace data
 	 * @param offset - the offset in the file of the buffer
 	 * @return - the thread that generated the buffer
 	 * @throws IOException
@@ -676,22 +673,22 @@ public class TraceContext {
 	 * that are awaiting data for completion across all threads. When a trace point iterator
 	 * encounters one of the locations where data was discarded it will throw a MissingDataException
 	 * as for records discarded by the trace engine.
-	 * 
-	 * This makes the assumption that the records are being supplied chronologically. 
+	 *
+	 * This makes the assumption that the records are being supplied chronologically.
 	 */
 	public synchronized void discardedData() {
-		Iterator itr = threads.iterator();
+		Iterator<?> itr = threads.iterator();
 		while (itr.hasNext()) {
 			TraceThread thread = (TraceThread)itr.next();
-			
+
 			thread.userDiscardedData();
 		}
 	}
-	
+
 	/**
 	 * The time of trace initialization in the traced JVM in high precision format
 	 * This should be used in conjunction with the system start time
-	 * 
+	 *
 	 * @return - high precision start time
 	 */
 	public BigInteger getStartPlatform() {
@@ -707,65 +704,69 @@ public class TraceContext {
 	}
 
 	/**
-	 * Provides access to the current set of active threads
-	 *
+	 * Provides access to the current set of active threads.
 	 */
-	class ThreadListIterator implements Iterator {
+	static final class ThreadListIterator implements Iterator<TraceThread> {
 		/* The next thread to return via getThreads. This is needed because we delete threads once
 		 * they've been completely processed which results in ConMod Exceptions
 		 */
-		Object threadCursor = null;
-		List threads = null;
-		Iterator iterator;
+		TraceThread threadCursor = null;
+		List<TraceThread> threads;
+		Iterator<TraceThread> iterator;
 
-		ThreadListIterator(List list) {
+		ThreadListIterator(List<TraceThread> list) {
+			iterator = list.iterator();
 			threads = list;
-			iterator = threads.iterator();
+			threadCursor = null;
 		}
 
 		/* (non-Javadoc)
 		 * @see java.util.Iterator#hasNext()
 		 */
+		@Override
 		public boolean hasNext() {
-			return (iterator.hasNext() || threadCursor != null);
+			return iterator.hasNext() || (threadCursor != null);
 		}
 
 		/* (non-Javadoc)
 		 * @see java.util.Iterator#next()
 		 */
-		public Object next() {
-			Object obj = null;
+		@Override
+		public TraceThread next() {
+			TraceThread thread = null;
 
-			synchronized(threads) {
+			synchronized (threads) {
 				try {
 					if (threadCursor == null) {
 						threadCursor = iterator.next();
 					}
-	
-					obj = threadCursor;
+
+					thread = threadCursor;
 					threadCursor = iterator.next();
-	
-					return obj;
+
+					return thread;
 				} catch (ConcurrentModificationException e) {
-					if (threadCursor != null) {
-						Iterator itr = threads.iterator(); 
-						
-						/* skip to our cursor again - use object equality as threads can recur*/
-						while (itr.hasNext() && itr.next() != threadCursor);
-						iterator = itr;
-						
-						return next();
-					} else {
+					if (threadCursor == null) {
 						throw e;
 					}
+
+					Iterator<TraceThread> itr = threads.iterator();
+
+					/* skip to our cursor again - use object equality as threads can recur */
+					while (itr.hasNext() && itr.next() != threadCursor) {
+						/* searching */
+					}
+					iterator = itr;
+
+					return next();
 				} catch (NoSuchElementException e) {
 					threadCursor = null;
 
-					if (obj != null) {
-						return obj;
-					} else {
+					if (thread == null) {
 						throw e;
 					}
+
+					return thread;
 				}
 			}
 		}
@@ -773,6 +774,7 @@ public class TraceContext {
 		/* (non-Javadoc)
 		 * @see java.util.Iterator#remove()
 		 */
+		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}
@@ -781,9 +783,8 @@ public class TraceContext {
 	/**
 	 * Allows chronologically ordered access to trace points across all threads present in
 	 * the data set at the time of the call to next.
-	 *
 	 */
-	class SortedTracepointIterator implements Iterator {
+	final class SortedTracepointIterator implements Iterator<Object> {
 
 		/**
 		 * True if a call to next() will return a trace point, false if it will return null.
@@ -791,10 +792,11 @@ public class TraceContext {
 		 * context.
 		 * @see java.util.Iterator#hasNext()
 		 */
+		@Override
 		public boolean hasNext() {
 			sort();
 			if (threads.size() > 0) {
-				return ((TraceThread)threads.get(0)).getIterator().hasNext();
+				return threads.get(0).getIterator().hasNext();
 			}
 
 			return false;
@@ -805,10 +807,11 @@ public class TraceContext {
 		 * May return null.
 		 * @see java.util.Iterator#next()
 		 */
+		@Override
 		public Object next() {
 			sort();
 
-			TracePoint tp = (TracePoint)((TraceThread)threads.get(0)).getIterator().next();
+			TracePoint tp = (TracePoint) threads.get(0).getIterator().next();
 
 			/*
 			 * we set sorted to true because we know we're a well
@@ -822,7 +825,7 @@ public class TraceContext {
 		/**
 		 * This function is used to sort the known threads based on the time stamp of
 		 * their next trace point. When possible we preserve the ordering of the thread list so that
-		 * we only have to bubble the thread at the head of the list to it's new location and we're
+		 * we only have to bubble the thread at the head of the list to its new location and we're
 		 * once again sorted. This obviates the need for a full sort of the entire thread list each
 		 * time a trace point is returned.
 		 * Use of the thread level iterators breaks this ordering and mandates a full sort.
@@ -838,15 +841,15 @@ public class TraceContext {
 				 * Ensure that all threads are up to date first
 				 */
 				for (int i = 0; i < threads.size(); i++) {
-					((TraceThread)threads.get(i)).refresh();
+					threads.get(i).refresh();
 				}
 
 				Collections.sort(threads);
 				sorted = true;
-			} else if (threads.size() > 1 && ((TraceThread)threads.get(0)).compareTo(threads.get(1)) > 0) {
-				TraceThread bubble = (TraceThread)threads.get(0);
+			} else if (threads.size() > 1 && threads.get(0).compareTo(threads.get(1)) > 0) {
+				TraceThread bubble = threads.get(0);
 				threads.remove(0);
-				Iterator itr = threads.iterator();
+				Iterator<TraceThread> itr = threads.iterator();
 
 				for (int i = 0; itr.hasNext(); i++) {
 					if (bubble.compareTo(itr.next()) <= 0) {
@@ -877,7 +880,7 @@ public class TraceContext {
 	 * This method provides an iterator to walk the set of known threads; those that have not
 	 * returned trace points that indicate the thread is exiting. This iterator may be invalidated
 	 * by adding new trace data to the context.
-	 *  
+	 *
 	 * @return - iterator over non-dead threads
 	 */
 	public Iterator getThreads() {
@@ -894,7 +897,7 @@ public class TraceContext {
 	public Iterator getTracepoints() {
 		return new SortedTracepointIterator();
 	}
-	
+
 	/**
 	 * This method adds a thread id to the thread filter. Only those threads in the filter will have data
 	 * returned via any of the iterators.
@@ -902,9 +905,9 @@ public class TraceContext {
 	 */
 	public void addThreadToFilter(Long threadID) {
 		if (filteredThreads == null) {
-			filteredThreads = new TreeSet();
+			filteredThreads = new TreeSet<>();
 		}
-		
+
 		filteredThreads.add(threadID);
 	}
 
@@ -915,16 +918,14 @@ public class TraceContext {
 	public void setTimeZoneOffset(int minutes) {
 		timezoneOffset = minutes;
 	}
-	
+
 	/**
 	 * Formats a time stamp into a human readable form to nanosecond precision (not accuracy)
 	 * @param time - 64bit time stamp
 	 * @return - a time in the form hh:mm:ss.xxxxxxxxx
 	 */
 	final String getFormattedTime(BigInteger time) {
-
 		switch (metadata.processorSection.counter) {
-
 		case 2:
 		case 4:
 		case 5:
@@ -933,43 +934,17 @@ public class TraceContext {
 			 * X86 with RDTSC, MFTB, MSPR, J9
 			 */
 			if (version >= 1.1) {
-				/*
-				 * timeRaw == timesplitTime[0] == timeRaw /
-				 * hiprecsplitTime[1] == timeRaw % hiprec
-				 * secondsMillis[0] == ((timeRaw / hiprec) +
-				 * metadata.traceSection.startSystem) / 1000
-				 * secondsMillis[1] == ((timeRaw / hiprec) +
-				 * metadata.traceSection.startSystem) % 1000
-				 * nanos == ((((timeRaw / hiprec) +
-				 * metadata.traceSection.startSystem) % 1000)
-				 * 1000000) + (((timeRaw % hiprec) 1000000) /
-				 * hiprec)minutesSeconds[0] == (((timeRaw /
-				 * hiprec) + metadata.traceSection.startSystem)
-				 * / 1000) / 60minutesSeconds[1] == (((timeRaw /
-				 * hiprec) + metadata.traceSection.startSystem)
-				 * / 1000) % 60hoursMinutes[0] == ((((timeRaw /
-				 * hiprec) + metadata.traceSection.startSystem)
-				 * / 1000) / 60) / 60hoursMinutes[1] ==
-				 * ((((timeRaw / hiprec) +
-				 * metadata.traceSection.startSystem) / 1000) /
-				 * 60) % 60daysHours[0] == (((((timeRaw /
-				 * hiprec) + metadata.traceSection.startSystem)
-				 * / 1000) / 60) / 60) / 24daysHours[1] ==
-				 * (((((timeRaw / hiprec) +
-				 * metadata.traceSection.startSystem) / 1000) /
-				 * 60) / 60) % 24
-				 */
 				long timeRaw = time.subtract(metadata.traceSection.startPlatform).longValue();
 				long hiprec = highPrecisionTicksPerMillisecond.longValue();
 				long millis = (timeRaw / hiprec) + metadata.traceSection.startSystem.longValue() + (timezoneOffset * 60 * 1000);
-				long nanos = (((millis) % 1000) * 1000000) + (((timeRaw % hiprec) * 1000000) / hiprec);
-				long seconds = ((millis) / 1000) % 60;
-				long minutes = (((millis) / 1000) / 60) % 60;
 				long hours = ((((millis) / 1000) / 60) / 60) % 24;
+				long minutes = (((millis) / 1000) / 60) % 60;
+				long seconds = ((millis) / 1000) % 60;
+				long nanos = (((millis) % 1000) * 1000000) + (((timeRaw % hiprec) * 1000000) / hiprec);
 
-				return (hours < 10 ? "0" : "") + hours + ":" + (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds + "." + ("000000000".substring((nanos + "").length())) + nanos;
+				return String.format("%02d:%02d:%02d.%09d", hours, minutes, seconds, nanos);
 			} else {
-				return "0000000000000000".substring(time.toString(16).length()) + time.toString(16);
+				return String.format("%016x", time);
 			}
 		}
 
@@ -977,112 +952,77 @@ public class TraceContext {
 			/*
 			 * Power/Power PC
 			 */
-			long seconds;
-			long nanos;
-			long ss;
-			long mm;
-			long hh;
+			long seconds = (time.shiftRight(32).longValue() & 0xffffffffL) + (timezoneOffset * 60);
+			long hh = (seconds / 3600) % 24;
+			long mm = (seconds / 60) % 60;
+			long ss = seconds % 60;
+			long nanos = time.longValue() & 0xffffffffL;
 
-			seconds = (time.shiftRight(32).longValue() & 0xffffffffL) + (timezoneOffset * 60);
-			nanos = time.longValue() & 0xffffffffL;
-			ss = seconds % 60;
-			mm = (seconds / 60) % 60;
-			hh = (seconds / 3600) % 24;
-			try {
-				return "00".substring(Long.toString(hh).length()) + Long.toString(hh) + ":" + "00".substring(Long.toString(mm).length()) + Long.toString(mm) + ":" + "00".substring(Long.toString(ss).length()) + Long.toString(ss) + "." + "000000000".substring(Long.toString(nanos).length()) + Long.toString(nanos);
-			} catch (Exception e) {
-				this.debug(this, 1, "hh: " + Long.toString(hh) + " mm: " + Long.toString(mm) + " ss: " + Long.toString(ss) + " Nanos: " + Long.toString(nanos));
-				return "Bad Time: " + time.toString(16);
-			}
+			return String.format("%02d:%02d:%02d.%09d", hh, mm, ss, nanos);
 		}
 		case 6: {
 			/*
 			 * System/390
 			 */
-			long picos;
-			long micros;
-			long ss;
-			long mm;
-			long hh;
+			long micros = (time.shiftRight(12).longValue() & 0xfffffffffffffL) + (timezoneOffset * 60 * 1000000);
+			long hh = ((micros / 3600000000L) + timezoneOffset) % 24;
+			long mm = (micros / 60000000) % 60;
+			long ss = (micros / 1000000) % 60;
+			long picos = (((time.longValue() & 0xfffL) | ((micros % 1000000) << 12)) * 244140625) / 1000000;
 
-			micros = (time.shiftRight(12).longValue() & 0xfffffffffffffL) + (timezoneOffset * 60 * 1000000);
-			ss = (micros / 1000000) % 60;
-			mm = (micros / 60000000) % 60;
-			hh = ((micros / 3600000000L) + timezoneOffset) % 24;
-			micros = micros % 1000000;
-			picos = (((time.longValue() & 0xfffL) | (micros << 12)) * 244140625) / 1000000;
-			try {
-				return "00".substring(Long.toString(hh).length()) + Long.toString(hh) + ":" + "00".substring(Long.toString(mm).length()) + Long.toString(mm) + ":" + "00".substring(Long.toString(ss).length()) + Long.toString(ss) + "." + "000000000000".substring(Long.toString(picos).length()) + Long.toString(picos);
-			} catch (Exception e) {
-				this.debug(this, 1, "hh: " + Long.toString(hh) + " mm: " + Long.toString(mm) + " ss: " + Long.toString(ss) + " Picos: " + Long.toString(picos));
-				return "Bad Time: " + time.toString(16);
-			}
+			return String.format("%02d:%02d:%02d.%012d", hh, mm, ss, picos);
 		}
 		default: {
-			return "0000000000000000".substring(time.toString(16).length()) + time.toString(16);
+			return String.format("%016x", time);
 		}
 		}
 	}
 
 	public String formatPointer(long value) {
-		final String template = "0x0000000000000000";
+		final String template;
 
-		StringBuilder sb = new StringBuilder();
-		int end = Long.numberOfLeadingZeros(value) / 4;
 		if (getPointerSize() == 4) {
-			/* end default for 8 byte pointers */
-			end-= 8;
+			template = "0x%08x";
+		} else {
+			template = "0x%016x";
 		}
-		sb.append(template.substring(0, end + 2));
-		if (value > 0) {
-			/* we don't want to append an additional zero to the end when value is 0 */
-			sb.append(Long.toHexString(value));
-		}
-		
-		return sb.toString();
+
+		return String.format(template, value);
 	}
 
 	public String summary() {
-		StringBuilder sb = new StringBuilder("                Trace Summary"+System.getProperty("line.separator")+System.getProperty("line.separator"));
-		sb.append(metadata.serviceSection.summary());
-		sb.append(System.getProperty("line.separator"));
+		String nl = System.lineSeparator();
+		StringBuilder sb = new StringBuilder("                Trace Summary").append(nl);
+		sb.append(nl);
+		sb.append(metadata.serviceSection.summary()).append(nl);
 		sb.append(metadata.startupSection.summary());
 		/* startup section already has a trailing line separator */
-		sb.append(metadata.processorSection.summary());
-		sb.append(System.getProperty("line.separator"));
-		sb.append(metadata.activeSection.summary());
-		sb.append(System.getProperty("line.separator"));
-		sb.append(metadata.traceSection.summary());
-		sb.append(System.getProperty("line.separator"));
+		sb.append(metadata.processorSection.summary()).append(nl);
+		sb.append(metadata.activeSection.summary()).append(nl);
+		sb.append(metadata.traceSection.summary()).append(nl);
 
 		/* add the known threads */
-		sb.append("Active threads"+System.getProperty("line.separator"));
+		sb.append("Active threads").append(nl);
 
-		Iterator itr = knownThreads.keySet().iterator();
-		while (itr.hasNext()) {
-			Long key = (Long)itr.next();
-			Set<String> names = (Set<String>)knownThreads.get(key);
-			int size = names.size();
+		for (Map.Entry<Long, Set<String>> entry : knownThreads.entrySet()) {
+			Long key = entry.getKey();
+			Set<String> names = entry.getValue();
 
-			sb.append("        " + formatPointer(key.longValue()));
-			if (size > 1) {
-				sb.append("  (id reused)"+System.getProperty("line.separator"));
-				for (String name: names) {
-					sb.append("        ");
-					if (getPointerSize() == 4) {
-						sb.append("            " + name + System.getProperty("line.separator"));
-					} else {
-						sb.append("                    " + name + System.getProperty("line.separator"));
-					}
+			sb.append("        ").append(formatPointer(key.longValue()));
+			if (names.size() <= 1) {
+				for (String name : names) {
+					sb.append("  ").append(name).append(nl);
 				}
 			} else {
-				for (String name: names) {
-					sb.append("  "+ name + System.getProperty("line.separator"));
+				String spaces = getPointerSize() == 4 ? "" : "        ";
+				sb.append("  (id reused)").append(nl);
+				for (String name : names) {
+					sb.append("                    ").append(spaces).append(name).append(nl);
 				}
 			}
 		}
 
-		sb.append(System.getProperty("line.separator"));
+		sb.append(nl);
 
 		return sb.toString();
 	}
@@ -1095,134 +1035,139 @@ public class TraceContext {
 		int nameWidth = 0;
 		long hitMax = 0;
 		long bytesMax = 0;
-		
-		HashMap stats = this.messageFile.getStatistics();
+
+		Map<String, Properties> stats = this.messageFile.getStatistics();
 		for (int i = 0; i < this.auxiliaryMessageFiles.size(); i++) {
-			stats.putAll(((MessageFile)this.auxiliaryMessageFiles.get(i)).getStatistics());
+			stats.putAll(this.auxiliaryMessageFiles.get(i).getStatistics());
 		}
-		
-		TreeMap componentByteTotals = new TreeMap();
-		List componentTotals = new Vector();
-		TreeMap hitCount = new TreeMap();
-		List tracePointCounts = new Vector();
-		List tracePointBytes = new Vector();
-	
+
+		TreeMap<String, Long> componentByteTotals = new TreeMap<>();
+		List<NameValueTuple<Long>> componentTotals = new Vector<>();
+		TreeMap<String, Long> hitCount = new TreeMap<>();
+		List<NameValueTuple<Long>> tracePointCounts = new Vector<>();
+		List<NameValueTuple<Long>> tracePointBytes = new Vector<>();
+
 		/* generate totals per component and trace point */
-		Iterator itr = stats.keySet().iterator();
 		long totalBytes = 0;
-		while (itr.hasNext()) {
-			String tp = (String)itr.next();
-			Properties props = (Properties)stats.get(tp);
-		
+
+		for (Map.Entry<String, Properties> entry : stats.entrySet()) {
+			String tp = entry.getKey();
+			Properties props = entry.getValue();
+
 			String component = props.getProperty("component", "");
 			int width = tp.length();
-			if (width > nameWidth) {
+			if (nameWidth < width) {
 				nameWidth = width;
 			}
 
 			if (props.containsKey("count")) {
-				long count = (Long)props.get("count");
-				if (count > hitMax) {
+				long count = (Long) props.get("count");
+				if (hitMax < count) {
 					hitMax = count;
 				}
-				
+
 				hitCount.put(tp, Long.valueOf(count));
-				tracePointCounts.add(new NameValueTuple(tp, (Long)props.get("count"))); 
+				tracePointCounts.add(new NameValueTuple<>(tp, (Long) props.get("count")));
 			}
+
 			if (props.containsKey("bytes")) {
-				Long l = (Long)props.get("bytes");
-				if (l != null) {
-					long bytes = l.longValue();
-					if (bytes > bytesMax) {
-						bytesMax = bytes;
-					}
-					totalBytes+= bytes;
-					tracePointBytes.add(new NameValueTuple(tp, (Long)props.get("bytes")));
-	
-					long total = 0;
-					if (componentByteTotals.containsKey(component)) {
-						total = ((Long)componentByteTotals.get(component)).longValue();
-					}
-					componentByteTotals.put(component, Long.valueOf(total+bytes));
+				long bytes = (Long) props.get("bytes");
+				if (bytesMax < bytes) {
+					bytesMax = bytes;
 				}
+				totalBytes += bytes;
+				tracePointBytes.add(new NameValueTuple<>(tp, (Long) props.get("bytes")));
+
+				long total = 0;
+				if (componentByteTotals.containsKey(component)) {
+					total = (Long) componentByteTotals.get(component);
+				}
+				componentByteTotals.put(component, Long.valueOf(total + bytes));
 			}
 		}
-		
-		StringBuffer sb = new StringBuffer();
-		String nl = System.getProperty("line.separator");
 
+		StringBuffer sb = new StringBuffer();
+		String nl = System.lineSeparator();
 
 		/* Write out the component byte totals */
-		sb.append("Component totals (bytes)"+nl);
-		itr = componentByteTotals.keySet().iterator();
-		while (itr.hasNext()) {
-			String component = (String)itr.next();
-			componentTotals.add(new NameValueTuple(component, (Long)componentByteTotals.get(component)));
+		sb.append("Component totals (bytes)").append(nl);
+
+		for (Map.Entry<String, Long> entry : componentByteTotals.entrySet()) {
+			String component = entry.getKey();
+			Long total = entry.getValue();
+
+			componentTotals.add(new NameValueTuple<>(component, total));
 		}
-		
+
 		Collections.sort(componentTotals);
-		itr = componentTotals.iterator();
-		while (itr.hasNext()) {
-			NameValueTuple tuple = (NameValueTuple)itr.next();
-			sb.append(String.format("%-"+nameWidth+"s %d%n", tuple.name()+":", tuple.value()));
+
+		String totalFormat = "%-" + nameWidth + "s %d%n";
+		for (NameValueTuple<Long> tuple : componentTotals) {
+			sb.append(String.format(totalFormat, tuple.name() + ":", tuple.value()));
 		}
-		sb.append("Total bytes: "+totalBytes).append(nl);
+
+		sb.append("Total bytes: " + totalBytes).append(nl);
 		sb.append(nl);
 
-		
 		/* Write out the trace point hit count totals */
-		sb.append("Trace point counts:"+nl);
+		sb.append("Trace point counts:").append(nl);
 		Collections.sort(tracePointCounts);
-		itr = tracePointCounts.iterator();
-		while (itr.hasNext()) {
-			NameValueTuple tuple = (NameValueTuple)itr.next();
+
+		String countFormat = "%-" + nameWidth + "s %d (level: %2d)%n";
+		for (NameValueTuple<Long> tuple : tracePointCounts) {
 			String name = tuple.name();
-			Message msg = messageFile.getMessageFromID(name.substring(0, name.indexOf('.')), Integer.parseInt(name.substring(name.indexOf('.') + 1)));
-			sb.append(String.format("%-"+nameWidth+"s %d (level: %2d)%n", tuple.name()+":", tuple.value(), msg.getLevel()));
+			int dotIndex = name.indexOf('.');
+			int tpId = Integer.parseInt(name.substring(dotIndex + 1));
+			Message msg = messageFile.getMessageFromID(name.substring(0, dotIndex), tpId);
+
+			sb.append(String.format(countFormat, name + ":", tuple.value(), msg.getLevel()));
 		}
 		sb.append(nl);
-		
+
 		/* Write out the trace point byte totals */
-		sb.append("Trace point totals (bytes):"+nl);
+		sb.append("Trace point totals (bytes):").append(nl);
 		Collections.sort(tracePointBytes);
-		itr = tracePointBytes.iterator();
-		while (itr.hasNext()) {
-			NameValueTuple tuple = (NameValueTuple)itr.next();
+
+		String bytesFormat = "%-" + nameWidth + "s %-" + (Math.log10(bytesMax) + 1) + "d (%6.2f%%, level: %2d, hit count: %" + (Math.log10(hitMax) + 1) + "d)%n";
+		for (NameValueTuple<Long> tuple : tracePointBytes) {
 			String name = tuple.name();
-			Message msg = messageFile.getMessageFromID(name.substring(0, name.indexOf('.')), Integer.parseInt(name.substring(name.indexOf('.') + 1)));
-			sb.append(String.format("%-"+nameWidth+"s %-"+(Math.log10(bytesMax)+1)+"d (%6.2f%%, level: %2d, hit count: %-"+(Math.log10(hitMax)+1)+"d)%n", tuple.name()+":", tuple.value(), (((Long)tuple.value()).doubleValue()*100)/(double)totalBytes, msg.getLevel(), hitCount.get(tuple.name()) ));
+			int dotIndex = name.indexOf('.');
+			int tpId = Integer.parseInt(name.substring(dotIndex + 1));
+			Message msg = messageFile.getMessageFromID(name.substring(0, dotIndex), tpId);
+			Long bytes = tuple.value();
+			double bytesPercent = (bytes.doubleValue() * 100.0) / totalBytes;
+
+			sb.append(String.format(bytesFormat, name + ":",
+					bytes, bytesPercent, msg.getLevel(), hitCount.get(name)));
 		}
 
 		return sb.toString();
 	}
 }
 
-class NameValueTuple implements Comparable {
+final class NameValueTuple<T extends Comparable<T>> implements Comparable<NameValueTuple<T>> {
 	String name;
-	Comparable value;
-	
-	NameValueTuple(String name, Comparable value) {
+	T value;
+
+	NameValueTuple(String name, T value) {
 		this.name = name;
 		this.value = value;
 	}
 
-	public int compareTo(Object o) {
-		if (o instanceof NameValueTuple) {
-			return value.compareTo(((NameValueTuple)o).value);
-		}
-		
-		return 0;
+	@Override
+	public int compareTo(NameValueTuple<T> o) {
+		return value.compareTo(o.value);
 	}
-	
+
 	public String name() {
 		return name;
 	}
-	
-	public Comparable value() {
+
+	public T value() {
 		return value;
 	}
-	
-	public void setValue(Comparable value) {
+
+	public void setValue(T value) {
 		this.value = value;
 	}
 }

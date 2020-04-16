@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corp. and others
+ * Copyright (c) 2000, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -26,13 +26,10 @@ import java.math.BigInteger;
 import java.nio.BufferUnderflowException;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.Vector;
 
-public class TraceThread implements Comparable {
+public class TraceThread implements Comparable<TraceThread> {
 	TraceContext context;
 
 	BigInteger timerUpperWord = BigInteger.ZERO;
@@ -51,27 +48,22 @@ public class TraceThread implements Comparable {
 	TracePointImpl live = null;
 
 	ThreadIterator iterator;
-	
-	Vector records = new Vector(); 
+
+	Vector<TraceRecord> records = new Vector<>();
 
 	/* if a user discards records we can rely on lost record trace points so we record it here.
 	 * True means that data immediately after the current contents of the threads stream has been
 	 * discarded and that there are no records in the store in which to record the fact.
 	 */
 	boolean userDiscardedData = false;
-	
+
 	/* To aid in debugging, this holds the record number and offset of the preprocessed length from
 	 * appendToStream for the current record.
 	 */
-	List debugOffsets = new Vector();
-	
-	class ThreadIterator implements Iterator {
-		MissingDataException lostBytes;
-		TraceThread thread;
+	List<TracePointDebugInfo> debugOffsets = new Vector<>();
 
-		private ThreadIterator(TraceThread thread) {
-			this.thread = thread;
-		}
+	final class ThreadIterator implements Iterator<Object> {
+		MissingDataException lostBytes;
 
 		public boolean hasNext() {
 			refresh();
@@ -83,12 +75,12 @@ public class TraceThread implements Comparable {
 		 * where there's no more tracepoints available as it's possible
 		 * more will become available on this iterator in the future.
 		 * Instead null is returned.
-		 * 
+		 *
 		 * MissingDataException (that extends NoSuchElementException) is
 		 * thrown if there was data missing where the next tracepoint
 		 * was expected. The iterator remains valid and will continue to
 		 * return tracepoints after the missing data.
-		 * 
+		 *
 		 * @see java.util.Iterator#next()
 		 */
 		public Object next() throws MissingDataException {
@@ -120,10 +112,10 @@ public class TraceThread implements Comparable {
 				 */
 				context.debug(this, 2, "End of data for thread " + threadIdentifier);
 				// We have called refresh so next should be primed.
-				if( next == null ) {
+				if (next == null) {
 					stream = null;
 				}
-				context.threadTerminated(thread, next != null);
+				context.threadTerminated(TraceThread.this, next != null);
 			}
 			return live;
 		}
@@ -145,7 +137,7 @@ public class TraceThread implements Comparable {
 
 	public Iterator getIterator() {
 		if (iterator == null) {
-			iterator = new ThreadIterator(this);
+			iterator = new ThreadIterator();
 		}
 
 		return iterator;
@@ -164,9 +156,9 @@ public class TraceThread implements Comparable {
 				tracepoint = new TracePointImpl(context, stream, this);
 				if (context.debugLevel > 0) {
 					if (debugOffsets.size() > 0) {
-						tracepoint.debugInfo = (TracePointDebugInfo)debugOffsets.remove(0);
+						tracepoint.debugInfo = debugOffsets.remove(0);
 					} else {
-						tracepoint.debugInfo = new TracePointDebugInfo(-1,-1);
+						tracepoint.debugInfo = new TracePointDebugInfo(-1, -1);
 					}
 				}
 			}
@@ -182,7 +174,7 @@ public class TraceThread implements Comparable {
 				return null;
 			}
 
-			record = (TraceRecord)records.firstElement();
+			record = records.firstElement();
 			records.remove(record);
 
 			record.appendToStream(stream, threadRecordCount == 0);
@@ -192,16 +184,16 @@ public class TraceThread implements Comparable {
 			if (context.debugLevel > 0) {
 				/* the record's debug offsets were populated in reverse order */
 				Collections.reverse(record.debugOffsets);
-				Iterator itr = record.debugOffsets.iterator();
+				Iterator<Integer> itr = record.debugOffsets.iterator();
 				while (itr.hasNext()) {
-					Integer offset = (Integer)itr.next();
-					debugOffsets.add(new TracePointDebugInfo((int)context.totalRecords - 1, offset.intValue()));
+					Integer offset = itr.next();
+					debugOffsets.add(new TracePointDebugInfo((int) context.totalRecords - 1, offset.intValue()));
 				}
 			}
 
 			/* record the time of the most recent record that's been appended. While in the records store
 			 * the order of addition doesn't matter, but once appended the ordering is fixed for records
-			 * earlier than this time stamp. 
+			 * earlier than this time stamp.
 			 */
 			newestWrapTime = record.wrapTime;
 
@@ -253,13 +245,7 @@ public class TraceThread implements Comparable {
 		 * there's a new one
 		 */
 		if (upperWord != 0) {
-			BigInteger oldUpper = timerUpperWord;
 			timerUpperWord = BigInteger.valueOf(upperWord).shiftLeft(32);
-			// timerUpperWord = upperWord << 31;
-//			if (timerUpperWord.compareTo(oldUpper) < 0) {
-//				context.error(this, "new upper word for timer is older than current, reverting");
-//				timerUpperWord = oldUpper;
-//			}
 		}
 
 		return getNextRegularTracepoint();
@@ -270,7 +256,7 @@ public class TraceThread implements Comparable {
 	 * when we run out of data in the current record we append another from the store rather than reporting
 	 * an underflow. This allows the adding of all records from trace files before processing starts.
 	 * This method maintains ordering in the list
-	 * 
+	 *
 	 * @param record
 	 */
 	synchronized protected void addRecord(TraceRecord record) throws IllegalArgumentException {
@@ -278,8 +264,6 @@ public class TraceThread implements Comparable {
 		 * have to check that this record is newer than any previous
 		 * ones we've had on this thread
 		 */
-		int i = 1;
-		
 		/* if it's been noted that there was user discarded data then propagate that to the record */
 		if (userDiscardedData) {
 			record.userDiscardedData = true;
@@ -288,19 +272,18 @@ public class TraceThread implements Comparable {
 
 		records.add(record);
 	}
-	
+
 	/**
 	 * This records the fact that we've been told that the user discarded data at this point in the series of records.
 	 * This fact will be tagged onto the next record to be added to the thread and will cause a lost record trace point
-	 * to be injected 
+	 * to be injected
 	 */
 	synchronized void userDiscardedData() {
 		userDiscardedData = true;
 	}
-	
-	public int compareTo(Object obj) {
-		TraceThread thread = (TraceThread)obj;
 
+	@Override
+	public int compareTo(TraceThread thread) {
 		if (next != null && thread.next != null) {
 			/* we actually have a tracepoint for both so can compare */
 			return next.time_merged.compareTo(thread.next.time_merged);
@@ -361,6 +344,7 @@ public class TraceThread implements Comparable {
 		return this.threadIdentifier.equals(id);
 	}
 
+	@Override
 	public String toString() {
 		return ("[" + Long.toHexString(threadIdentifier) + "] " + threadName).intern();
 	}
