@@ -46,7 +46,7 @@
 
 /* The vm version which must match the JCL.
  * It has the format 0xAABBCCCC
- *	AA - vm version, BB - jcl version, CCCC - master version
+ *   AA - vm version, BB - jcl version, CCCC - master version
  * CCCC must match exactly with the JCL
  * Up the vm version (AA) when adding natives
  * BB is the required level of JCL to run the vm
@@ -55,23 +55,20 @@
 
 extern void *jclConfig;
 
-static UDATA
-doJCLCheck(J9JavaVM *vm, J9Class *j9VMInternalsClass);
-
+static UDATA doJCLCheck(J9JavaVM *vm, J9Class *j9VMInternalsClass);
 
 /*
-	Calculate the value for java.vm.info (and java.fullversion) system/vm properties.
-	Currently allocates into a fixed-size buffer. This really should be fixed.
-*/
-jint computeFullVersionString(J9JavaVM* vm)
+ * Calculate the value for java.vm.info (and java.fullversion) system/vm properties.
+ * Currently allocates into a fixed-size buffer. This really should be fixed.
+ */
+jint
+computeFullVersionString(J9JavaVM* vm)
 {
 	VMI_ACCESS_FROM_JAVAVM((JavaVM*)vm);
 	PORT_ACCESS_FROM_JAVAVM(vm);
 	const char *osarch = NULL;
 	const char *osname = NULL;
 	const char *j2se_version_info = NULL;
-	const char *jitEnabled = "";
-	const char *aotEnabled = "";
 	const char *memInfo = NULL;
 #define BUFFER_SIZE 512
 
@@ -80,8 +77,8 @@ jint computeFullVersionString(J9JavaVM* vm)
 
 #if defined(J9VM_INTERP_NATIVE_SUPPORT)
 	J9JITConfig *jitConfig = vm->jitConfig;
-	jitEnabled = "dis";
-	aotEnabled = "dis";
+	const char *jitEnabled = "dis";
+	const char *aotEnabled = "dis";
 
 	if (NULL != jitConfig) {
 		if (J9_ARE_ALL_BITS_SET(jitConfig->runtimeFlags, J9JIT_JIT_ATTACHED)) {
@@ -91,9 +88,11 @@ jint computeFullVersionString(J9JavaVM* vm)
 			aotEnabled = "en";
 		}
 	}
-	#define JIT_INFO " (JIT %sabled, AOT %sabled)\nOpenJ9   - "
+	#define JIT_INFO " (JIT %sabled, AOT %sabled)"
+	#define JIT_ARGS , jitEnabled, aotEnabled
 #else
-	#define JIT_INFO "%s%s"
+	#define JIT_INFO
+	#define JIT_ARGS
 #endif /* J9VM_INTERP_NATIVE_SUPPORT */
 
 #if JAVA_SPEC_VERSION == 8
@@ -115,58 +114,73 @@ jint computeFullVersionString(J9JavaVM* vm)
 
 #ifdef J9VM_ENV_DATA64
 	memInfo = J9JAVAVM_COMPRESS_OBJECT_REFERENCES(vm) ? "64-Bit Compressed References": "64-Bit";
+#elif defined(J9ZOS390) || defined(S390)
+	memInfo = "31-Bit";
 #else
-	#if defined(J9ZOS390) || defined(S390)
-		memInfo = "31-Bit";
-	#else
-		memInfo = "32-Bit";
-	#endif
+	memInfo = "32-Bit";
 #endif
 
+#define COMPONENT_INFO "\n%-8s - %s"
+
+#define OPENJ9_INFO COMPONENT_INFO
+#define OPENJ9_ARGS , "OpenJ9", J9VM_VERSION_STRING
+
 #if defined(J9VM_GC_MODRON_GC)
-	#define OMR_INFO "\nOMR      - " OMR_VERSION_STRING
+	#define OMR_INFO COMPONENT_INFO
+	#define OMR_ARGS , "OMR", OMR_VERSION_STRING
 #else
-	#define OMR_INFO ""
+	#define OMR_INFO
+	#define OMR_ARGS
 #endif /* J9VM_GC_MODRON_GC */
 
 #if defined(OPENJDK_TAG) && defined(OPENJDK_SHA)
-	#define OPENJDK_INFO "\nJCL      - " OPENJDK_SHA " based on " OPENJDK_TAG
+	#define OPENJDK_INFO COMPONENT_INFO " based on %s"
+	#define OPENJDK_ARGS , "JCL", OPENJDK_SHA, OPENJDK_TAG
 #else
-	#define OPENJDK_INFO ""
+	#define OPENJDK_INFO
+	#define OPENJDK_ARGS
 #endif /* OPENJDK_TAG && OPENJDK_SHA */
 
 #if defined(VENDOR_SHORT_NAME) && defined(VENDOR_SHA)
-	#define VENDOR_INFO "\n" VENDOR_SHORT_NAME "      - " VENDOR_SHA
+	#define VENDOR_INFO COMPONENT_INFO
+	#define VENDOR_ARGS , VENDOR_SHORT_NAME, VENDOR_SHA
 #else
-	#define VENDOR_INFO ""
+	#define VENDOR_INFO
+	#define VENDOR_ARGS
 #endif /* VENDOR_SHORT_NAME && VENDOR_SHA */
 
 	if (BUFFER_SIZE <= j9str_printf(PORTLIB, vminfo, BUFFER_SIZE + 1,
-			"JRE %s %s %s-%s %s" JIT_INFO J9VM_VERSION_STRING OMR_INFO VENDOR_INFO OPENJDK_INFO,
+			"JRE %s %s %s-%s %s" JIT_INFO OPENJ9_INFO OMR_INFO VENDOR_INFO OPENJDK_INFO,
 			j2se_version_info,
 			(NULL != osname ? osname : " "),
 			osarch,
 			memInfo,
-			EsBuildVersionString,
-			jitEnabled,
-			aotEnabled)) {
+			EsBuildVersionString JIT_ARGS OPENJ9_ARGS OMR_ARGS VENDOR_ARGS OPENJDK_ARGS)
+	) {
 		j9tty_err_printf(PORTLIB, "\n%s - %d: %s: Error: Java VM info string exceeds buffer size\n", __FILE__, __LINE__, __FUNCTION__);
 		return JNI_ERR;
 	}
 
 #undef BUFFER_SIZE
+#undef COMPONENT_INFO
 #undef JIT_INFO
-#undef MEM_INFO
+#undef JIT_ARGS
+#undef OPENJ9_INFO
+#undef OPENJ9_ARGS
 #undef OMR_INFO
+#undef OMR_ARGS
+#undef OPENJDK_INFO
+#undef OPENJDK_ARGS
 #undef VENDOR_INFO
+#undef VENDOR_ARGS
 
 	(*VMI)->SetSystemProperty(VMI, "java.vm.info", vminfo);
 	(*VMI)->SetSystemProperty(VMI, "java.fullversion", vminfo);
 	return JNI_OK;
 }
 
-
-static jint initializeStaticMethod(J9JavaVM* vm, UDATA offset)
+static jint
+initializeStaticMethod(J9JavaVM* vm, UDATA offset)
 {
 	J9ConstantPool * jclConstantPool = (J9ConstantPool *) vm->jclConstantPool;
 	J9RAMStaticMethodRef * staticMethodConstantPool = (J9RAMStaticMethodRef *) vm->jclConstantPool;
@@ -243,7 +257,8 @@ initializeStaticField(J9JavaVM* vm, UDATA offset, UDATA resolveFlags)
 	return JNI_EINVAL;
 }
 
-jint initializeKnownClasses(J9JavaVM* vm, U_32 runtimeFlags)
+jint
+initializeKnownClasses(J9JavaVM* vm, U_32 runtimeFlags)
 {
 	J9InternalVMFunctions *vmFuncs = vm->internalVMFunctions;
 	J9ConstantPool * jclConstantPool = (J9ConstantPool *) vm->jclConstantPool;
@@ -352,7 +367,6 @@ jint initializeKnownClasses(J9JavaVM* vm, U_32 runtimeFlags)
 
 	return JNI_OK;
 }
-
 
 static UDATA
 doJCLCheck(J9JavaVM *vm, J9Class *j9VMInternalsClass)
@@ -499,7 +513,7 @@ intializeVMConstants(J9VMThread *currentThread)
 	if (JNI_OK != rc) {
 		goto done;
 	}
-	
+
 	rc = initializeStaticIntField(currentThread, vmClass, J9VMCONSTANTPOOL_COMIBMOTIVMVM_J9_STRING_COMPRESSION_ENABLED, (I_32)IS_STRING_COMPRESSION_ENABLED_VM(vm));
 	if (JNI_OK != rc) {
 		goto done;
@@ -555,6 +569,7 @@ done:
 
 #define ADDMODS_PROPERTY_BASE "jdk.module.addmods."
 #define AGENT_MODULE_NAME "jdk.management.agent"
+
 UDATA
 initializeRequiredClasses(J9VMThread *vmThread, char* dllName)
 {
@@ -585,12 +600,12 @@ initializeRequiredClasses(J9VMThread *vmThread, char* dllName)
 
 	/* Determine java/lang/String.value signature before any required class is initialized */
 	if (J2SE_VERSION(vm) >= J2SE_V11) {
-	   vm->runtimeFlags |= J9_RUNTIME_STRING_BYTE_ARRAY;
+		vm->runtimeFlags |= J9_RUNTIME_STRING_BYTE_ARRAY;
 	}
 
 	/* CANNOT hold VM Access while calling registerBootstrapLibrary */
 	vmFuncs->internalReleaseVMAccess(vmThread);
-	
+
 	if (vmFuncs->registerBootstrapLibrary(vmThread, dllName, &nativeLibrary, FALSE) != J9NATIVELIB_LOAD_OK) {
 		return 1;
 	}
@@ -598,7 +613,7 @@ initializeRequiredClasses(J9VMThread *vmThread, char* dllName)
 	/* If we have a JitConfig, add the JIT dll to the bootstrap loader so we can add JNI natives in the JIT */
 	if (NULL != vm->jitConfig) {
 		J9NativeLibrary* jitLibrary = NULL;
-	
+
 		if (vmFuncs->registerBootstrapLibrary(vmThread, J9_JIT_DLL_NAME, &jitLibrary, FALSE) != J9NATIVELIB_LOAD_OK) {
 			return 1;
 		}
@@ -678,7 +693,7 @@ initializeRequiredClasses(J9VMThread *vmThread, char* dllName)
 		return 1;
 	}
 
-	/* Initialize early since sendInitialize() uses this */ 
+	/* Initialize early since sendInitialize() uses this */
 	if (initializeStaticMethod(vm, J9VMCONSTANTPOOL_JAVALANGJ9VMINTERNALS_INITIALIZATIONALREADYFAILED)) {
 		return 1;
 	}
@@ -692,7 +707,7 @@ initializeRequiredClasses(J9VMThread *vmThread, char* dllName)
 	if ((NULL == stringClass) || (NULL != vmThread->currentException)) {
 		return 1;
 	}
-	
+
 	/* Initialize the java.lang.String.compressionFlag static field early enough so that we have
 	 * access to it during the resolution of other classes in which Strings may need to be created
 	 * in StringTable.cpp
@@ -776,6 +791,6 @@ initializeRequiredClasses(J9VMThread *vmThread, char* dllName)
 
 	return 0;
 }
+
 #undef ADDMODS_PROPERTY_BASE
 #undef AGENT_MODULE_NAME
-
