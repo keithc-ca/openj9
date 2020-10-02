@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2018 IBM Corp. and others
+ * Copyright (c) 2001, 2020 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -19,21 +19,18 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-
 package org.openj9.test.management;
 
-import org.testng.Assert;
-import org.testng.annotations.Test;
-import org.testng.log4testng.Logger;
-import org.openj9.test.management.util.ChildWatchdog;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.stream.Collectors;
 
 import javax.management.JMX;
 import javax.management.MBeanServer;
@@ -44,14 +41,19 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import java.lang.management.ManagementFactory;
+import org.openj9.test.management.util.ChildWatchdog;
+import org.testng.Assert;
+import org.testng.annotations.Test;
+import org.testng.log4testng.Logger;
 
-import com.ibm.virtualization.management.*;
-
+import com.ibm.virtualization.management.GuestOSInfoRetrievalException;
+import com.ibm.virtualization.management.GuestOSMXBean;
+import com.ibm.virtualization.management.GuestOSMemoryUsage;
+import com.ibm.virtualization.management.GuestOSProcessorUsage;
+import com.ibm.virtualization.management.HypervisorMXBean;
 
 /**
- * Class for testing the API that are provided as part of the GuestOSMXBean
- *
+ * Class for testing the API that are provided as part of the GuestOSMXBean.
  */
 @Test(groups = { "level.extended" })
 public class GuestOSMXBeanTest {
@@ -78,8 +80,6 @@ public class GuestOSMXBeanTest {
 	/**
 	 * Starting point for the test program. Invokes the memory and processor test routines and
 	 * indicates success or failure accordingly.
-	 *
-	 * @param args
 	 */
 	@Test
 	public static void runGuestOSMXBeanTest() {
@@ -96,15 +96,16 @@ public class GuestOSMXBeanTest {
 		GuestOSMXBean mxbeanProxy = null;
 
 		logger.info(" ---------------------------------------");
-		logger.info(" Starting the GuestOSMXBean API tests....");
+		logger.info("Starting the GuestOSMXBean API tests....");
 		logger.info(" ---------------------------------------");
 
 		/* Check and set flag 'localTest'. If the user specified 'local' or nothing, select local testing,
 		 * while under explicit specification of the option 'remote' do we platform remote testing.
 		 */
-		if (System.getProperty("RUNLOCAL").equalsIgnoreCase("false")) {
+		String runlocalProperty = System.getProperty("RUNLOCAL");
+		if ("false".equalsIgnoreCase(runlocalProperty)) {
 			localTest = false;
-		} else if (!System.getProperty("RUNLOCAL").equalsIgnoreCase("true")) {
+		} else if (!"true".equalsIgnoreCase(runlocalProperty)) {
 			/* Failed parsing a sensible option specified by the user. */
 			logger.error("GuestOSMXBeanTest usage:");
 			logger.error(" -DRUNLOCAL=[false, true]  $GuestOSMXBeanTest");
@@ -121,7 +122,7 @@ public class GuestOSMXBeanTest {
 		}
 
 		/* Perform the appropriate test as instructed through the command line. */
-		if (false == localTest) {
+		if (!localTest) {
 			/* A remote test needs to be performed. Start the remote server if it is not running yet.
 			 * Also, attach a watch dog to this, to bail out, in case it hangs.
 			 */
@@ -146,13 +147,12 @@ public class GuestOSMXBeanTest {
 					 *  object name for the class GuestOSMXBean.
 					 */
 					mxbeanProxy = JMX.newMXBeanProxy(mbeanConnection, mxbeanName, GuestOSMXBean.class);
-					if (true != mbeanConnection.isRegistered(mxbeanName)) {
+					if (!mbeanConnection.isRegistered(mxbeanName)) {
 						Assert.fail("GuestOSMXBean is not registered. Cannot Proceed with the test. !!!Test Failed !!!");
 					}
 
 					/* If we reached here, it means we are connected (no connection failure exception thrown). */
 					isConnected = true;
-
 				} catch (MalformedURLException e) {
 					Assert.fail("Please check the url supplied to JMXServiceURL!", e);
 				} catch (IOException e) {
@@ -164,9 +164,8 @@ public class GuestOSMXBeanTest {
 					} catch (InterruptedException ie) {
 						logger.warn("Exception occurred while sleeping thread: " + ie.getMessage(), e);
 					}
-
-				} catch (Exception e){
-					Assert.fail("Exception occurred in setting up remote test environment.");
+				} catch (Exception e) {
+					Assert.fail("Exception occurred in setting up remote test environment.", e);
 				}
 				if (!isConnected) {
 					Assert.fail("Unable to connect to Remote Server. !!!Test Failed !!!");
@@ -178,12 +177,12 @@ public class GuestOSMXBeanTest {
 			 */
 			try {
 				mbeanServer = ManagementFactory.getPlatformMBeanServer();
-				if(true != mbeanServer.isRegistered(mxbeanName)) {
+				if (!mbeanServer.isRegistered(mxbeanName)) {
 					Assert.fail("GuestOSMXBean is not registered. Cannot Proceed with the test.");
 				}
-				mxbeanProxy =  JMX.newMXBeanProxy(mbeanServer, mxbeanName, GuestOSMXBean.class);
-			} catch(Exception e){
-				Assert.fail("Exception occurred in setting up local test environment." + e.getMessage(), e);
+				mxbeanProxy = JMX.newMXBeanProxy(mbeanServer, mxbeanName, GuestOSMXBean.class);
+			} catch (Exception e) {
+				Assert.fail("Exception occurred in setting up local test environment: " + e.getMessage(), e);
 			}
 		}
 
@@ -191,11 +190,11 @@ public class GuestOSMXBeanTest {
 			MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
 			HypervisorMXBean bean = ManagementFactory.getPlatformMXBean(mbs, HypervisorMXBean.class);
 			HypervisorName = bean.getVendor();
-			if(null == HypervisorName) {
+			if (null == HypervisorName) {
 				HypervisorName = "none";
 			}
 		} catch (Exception e) {
-			Assert.fail("Unexpected exception occured" + e.getMessage(), e);
+			Assert.fail("Unexpected exception occured: " + e.getMessage(), e);
 		}
 
 		try {
@@ -203,19 +202,18 @@ public class GuestOSMXBeanTest {
 			error |= test_processorInfo(mxbeanProxy);
 		} finally {
 			/* Do all clean up here. */
-			if (false == localTest) {
+			if (!localTest) {
 				/* Close the connection and Stop the remote Server */
 				try {
 					connector.close();
 					stopRemoteServer();
-				} catch ( Exception e) {
-					Assert.fail("Unexpected exception occured when close connector" + e.getMessage(), e);
+				} catch (Exception e) {
+					Assert.fail("Unexpected exception occured when close connector: " + e.getMessage(), e);
 				}
-
 			}
 		}
 
-		if (false != error) {
+		if (error) {
 			Assert.fail(" !!!Test Failed !!!");
 		}
 	}
@@ -274,25 +272,23 @@ public class GuestOSMXBeanTest {
 			 */
 			if (((memUsed > 0) && (maxMemLimit > 0)) && (memUsed > maxMemLimit)) {
 				Assert.fail("Invalid memory usage statistics retrieved.");
-			} else if ((memUsed != -1) && (memUsed < 0)){
+			} else if ((memUsed != -1) && (memUsed < 0)) {
 				Assert.fail("Invalid Current Used Memory by the Guest reported, Memory Used cannot be less than 0!!");
 			}
 
 			if (timeStamp <= 0) {
 				Assert.fail("Invalid timestamp received, timeStamp cannot be 0!!");
 			}
-		} catch(GuestOSInfoRetrievalException mu) {
-
+		} catch (GuestOSInfoRetrievalException mu) {
 			logger.warn("Exception occurred while retrieving Guest memory usage: " + mu.getMessage());
 
 			if (mu.getMessage().contains(VMWARE_ERROR)) {
 				/*
 				 * Ignore the error for now until the hypervisor:NoGuestSDK tag
-				 * is added
+				 * is added.
 				 */
 				logger.warn("Cannot Proceed with the test, check for the VMWare Guest SDK");
 				return false;
-
 			} else if (mu.getMessage().contains(LPARCFG_MEM_UNSUPPORTED_ERROR)) {
 				/*
 				 * Validate the error condition i.e if the lparcfg version is
@@ -311,17 +307,17 @@ public class GuestOSMXBeanTest {
 						Float version = Float.valueOf(line.substring(str.length(), line.length()));
 						logger.warn("Version of lparcfg: " + version);
 
+						scanner.close();
 						if (version < 1.8) {
 							logger.warn("Cannot proceed with the test, the lparcfg version must be 1.8 or greater");
 							return false;
-
 						} else {
 							Assert.fail("Invalid Guest Memory Usage statistics recieved!!");
 						}
 					}
 					scanner.close();
 				} catch (FileNotFoundException e) {
-					Assert.fail("/proc/ppc64/lparcfg file not found.. Exiting.");
+					Assert.fail("/proc/ppc64/lparcfg file not found. Exiting.");
 				}
 			} else if (mu.getMessage().contains(NO_HYPERVISOR_ERROR)) {
 				logger.warn("Not running on a Hypervisor, Guest Statistics cannot be retrieved!");
@@ -334,10 +330,10 @@ public class GuestOSMXBeanTest {
 				return false;
 			} else {
 				/* Received a valid exception, test failed */
-				Assert.fail("Received a valid exception, test failed");
+				Assert.fail("Received a valid exception, test failed: " + mu.getMessage(), mu);
 			}
-		} catch(Exception e) {
-			Assert.fail("Unknown exception occurred:" + e.getMessage(), e);
+		} catch (Exception e) {
+			Assert.fail("Unknown exception occurred: " + e.getMessage(), e);
 		}
 		return false; /* No error */
 	}
@@ -367,35 +363,35 @@ public class GuestOSMXBeanTest {
 			hostSpeed = procUsage.getHostCpuClockSpeed();
 			cpuEnt = procUsage.getCpuEntitlement();
 
-			logger.debug("Guest Processor statistics received....");
-			if (osname.equals("z/OS") == true) {
-				logger.debug("The Host CPU Clock Speed	:" + hostSpeed + "MSU");
+			logger.debug("Guest Processor statistics received...");
+			if ("z/OS".equals(osname)) {
+				logger.debug("The Host CPU Clock Speed: " + hostSpeed + "MSU");
 			} else {
-				logger.debug("The Host CPU Clock Speed	:" + hostSpeed + "MHz");
+				logger.debug("The Host CPU Clock Speed: " + hostSpeed + "MHz");
 			}
 
 			/* CPU entitlement is expected to be -1 on PowerKVM hypervisor. */
-			if ((-1 == cpuEnt) && (true == HypervisorName.contentEquals("PowerKVM"))) {
-				logger.warn("The CPU Entitlement assigned for this Guest : <unsupported>");
+			if ((-1 == cpuEnt) && "PowerKVM".equals(HypervisorName)) {
+				logger.warn("The CPU Entitlement assigned for this Guest: <unsupported>");
 			} else {
-				logger.debug("The CPU Entitlement assigned for this Guest : " + cpuEnt);
+				logger.debug("The CPU Entitlement assigned for this Guest: " + cpuEnt);
 			}
-			logger.debug("The total CPU Time Used by this Guest		: " + cpuTime + " microseconds");
-			logger.debug("Sampled at timeStamp						: " + timeStamp + " microseconds");
+			logger.debug("The total CPU Time Used by this Guest: " + cpuTime + " microseconds");
+			logger.debug("Sampled at timeStamp: " + timeStamp + " microseconds");
 
 			/*
 			 * Validate the statistics received
 			 * - hostCpuClockSpeed of Guest OS is not 0
-	 		 * - timeStamp is not 0
-	 		 * - cpuTime is not 0
-	 		 * - cpuEntitlement is not 0
+			 * - timeStamp is not 0
+			 * - cpuTime is not 0
+			 * - cpuEntitlement is not 0
 			 */
 			if (cpuTime > 0 && timeStamp > 0) {
 				return false;
 			} else {
 				Assert.fail("Invalid Guest Processor statistics received");
 			}
-		} catch(GuestOSInfoRetrievalException pu) {
+		} catch (GuestOSInfoRetrievalException pu) {
 			logger.warn("Exception occurred retrieving processor usage: " + pu.getMessage());
 			if (pu.getMessage().contains(VMWARE_ERROR)) {
 				/*
@@ -411,13 +407,12 @@ public class GuestOSMXBeanTest {
 			} else if (pu.getMessage().contains(NOT_SUPPORTED_ERROR)) {
 				logger.warn("GuestOSMXBean not supported on this Hypervisor!");
 				return false;
-
 			} else {
 				/* Received a valid exception, test failed */
-				Assert.fail("Received a valid exception, test failed" + pu.getMessage());
+				Assert.fail("Received a valid exception, test failed: " + pu.getMessage(), pu);
 			}
-		} catch(Exception e) {
-			Assert.fail("Unknown exception occurred:" + e.getMessage(), e);
+		} catch (Exception e) {
+			Assert.fail("Unknown exception occurred: " + e.getMessage(), e);
 		}
 		return false;
 	}
@@ -429,27 +424,22 @@ public class GuestOSMXBeanTest {
 	{
 		logger.info("Starting Remote Server!");
 
-		ArrayList<String> argBuffer = new ArrayList<String>();
+		ArrayList<String> argBuffer = new ArrayList<>();
 		char fs = File.separatorChar;
 
-		String javaExec = System.getProperty("java.home") + fs + "bin" + fs	+ "java";
+		String javaExec = System.getProperty("java.home") + fs + "bin" + fs + "java";
 		argBuffer.add(javaExec);
 		argBuffer.add("-classpath");
 		argBuffer.add(System.getProperty("java.class.path"));
 		argBuffer.add(System.getProperty("remote.server.option"));
 		argBuffer.add(RemoteServer.class.getName());
 
-		String cmdLine[] = new String[argBuffer.size()];
-		argBuffer.toArray(cmdLine);
-
-		String cmds = "";
-		for (int i = 0; i < cmdLine.length; i++) {
-			cmds = cmds + cmdLine[i] + " ";
-		}
+		String cmdLine[] = argBuffer.toArray(new String[argBuffer.size()]);
+		String cmds = argBuffer.stream().collect(Collectors.joining(" "));
 
 		logger.info(cmds);
 		try {
-			remoteServer = Runtime.getRuntime().exec(cmds);
+			remoteServer = Runtime.getRuntime().exec(cmdLine);
 		} catch (IOException e) {
 			Assert.fail("Failed to launch child process " + remoteServer, e);
 		}
@@ -459,20 +449,20 @@ public class GuestOSMXBeanTest {
 		 * process by blocking on its stdout and waiting for it to write something
 		 * to it.
 		 */
-		BufferedReader in = new BufferedReader( new InputStreamReader(remoteServer.getInputStream()));
+		BufferedReader in = new BufferedReader(new InputStreamReader(remoteServer.getInputStream()));
 		String rSrvStdout;
 		try {
 			if ((rSrvStdout = in.readLine()) != null) {
 				logger.info("Remote Server stdout: " + rSrvStdout);
 			}
 		} catch (IOException e) {
-			Assert.fail("Exception occurred while waiting for server.", e);
+			Assert.fail("Exception occurred while waiting for server: ", e);
 		}
 
 		try {
 			Thread.sleep(10);
 		} catch (InterruptedException e) {
-			logger.error("InterruptedException occured",e);
+			logger.error("InterruptedException occured", e);
 		}
 	}
 
