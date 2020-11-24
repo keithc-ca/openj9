@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2020 IBM Corp. and others
+ * Copyright (c) 2004, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -47,9 +47,7 @@ import com.ibm.j9ddr.corereaders.memory.Symbol;
 
 /**
  * File in ELF format.
- */
-
-/**
+ *
  * @author matthew
  */
 public abstract class ELFFileReader {
@@ -102,6 +100,7 @@ public abstract class ELFFileReader {
 	public static final int NT_AUXV = 6; // Contains copy of auxv array
 	// private static final int NT_PRXFPREG = 0x46e62b7f; // User_xfpregs
 	public static final int NT_HGPRS = 0x300; // High word registers
+	public static final int NT_FILE = 0x46494c45; // file map
 
 	public static final int AT_NULL = 0; // End of vector
 	public static final int AT_ENTRY = 9; // Entry point of program
@@ -163,6 +162,7 @@ public abstract class ELFFileReader {
 	public void close() throws IOException {
 		if (is != null) {
 			is.close();
+			is = null;
 		}
 	}
 
@@ -283,12 +283,12 @@ public abstract class ELFFileReader {
 
 	public static boolean isELF(byte[] signature) {
 		// 0x7F, 'E', 'L', 'F'
-		return (0x7F == signature[0] && 0x45 == signature[1] && 0x4C == signature[2] && 0x46 == signature[3]);
+		return (0x7F == signature[0]) && (0x45 == signature[1]) && (0x4C == signature[2]) && (0x46 == signature[3]);
 	}
 
 	private static String _nameForFileType(short type) {
 		String fileType = "Unknown";
-		int typeAsInt = 0xFFFF & type;
+		int typeAsInt = Short.toUnsignedInt(type);
 
 		if (ET_NONE == type) {
 			fileType = "No file type";
@@ -421,19 +421,13 @@ public abstract class ELFFileReader {
 	 * @throws IOException
 	 */
 	void seekToAddress(long address) throws IOException {
-		ProgramHeaderEntry matchedEntry = null;
-
 		for (ProgramHeaderEntry element : _programHeaderEntries) {
 			if (element.contains(address)) {
-				matchedEntry = element;
-				break;
+				seek(element.fileOffset + (address - element.virtualAddress));
+				return;
 			}
 		}
-		if (null == matchedEntry) {
-			throw new IOException("No ProgramHeaderEntry found for address");
-		} else {
-			seek(matchedEntry.fileOffset + (address - matchedEntry.virtualAddress));
-		}
+		throw new IOException("No ProgramHeaderEntry found for address");
 	}
 
 	/**
@@ -518,14 +512,13 @@ public abstract class ELFFileReader {
 	}
 
 	public boolean sectionHeaderMapsToProgramHeader(SectionHeaderEntry section) {
-		// To check if a section loaded you need to find out if it's in a range
+		// To check if a section is loaded you need to find out if it's in a range
 		// covered by a program header.
 		// (The readelf output for section to segment mappings only lists the
 		// sections that fall in a header. The others aren't actually loaded.)
+		long offset = section.offset;
 		for (ProgramHeaderEntry phe : _programHeaderEntries) {
-			long headerBase = phe.fileOffset;
-			long headerTop = phe.fileOffset + phe.fileSize;
-			if (section.offset >= headerBase && section.offset < headerTop) {
+			if (phe.validInFile(offset)) {
 				return true;
 			}
 		}
@@ -763,25 +756,27 @@ public abstract class ELFFileReader {
 	 * @return base address for the executable or library
 	 */
 	public long getBaseAddress() {
-		long lowestVirtualAddressSoFar = Long.MAX_VALUE;
-		for (ProgramHeaderEntry entry : getProgramHeaderEntries()) {
+		boolean found = false;
+		long lowestVirtualAddress = Long.MAX_VALUE;
+		for (ProgramHeaderEntry entry : _programHeaderEntries) {
 			if (entry.isLoadable()) {
-				if (entry.virtualAddress < lowestVirtualAddressSoFar) {
-					lowestVirtualAddressSoFar = entry.virtualAddress;
+				if (!found || (Long.compareUnsigned(entry.virtualAddress, lowestVirtualAddress) < 0)) {
+					found = true;
+					lowestVirtualAddress = entry.virtualAddress;
 				}
 			}
 		}
-		return lowestVirtualAddressSoFar;
+		return lowestVirtualAddress;
 	}
 
 	/**
-	 * Search the program header table for the dynamic entry. There should be only one of these
-	 * Typically it is within the first few entries, often the third, so this is not expensive
+	 * Search the program header table for the dynamic entry. There should be only one of these.
+	 * Typically it is within the first few entries, often the third, so this is not expensive.
 	 *
 	 * @return the program header table entry for the dynamic table
 	 */
 	public ProgramHeaderEntry getDynamicTableEntry() {
-		for (ProgramHeaderEntry entry : getProgramHeaderEntries()) {
+		for (ProgramHeaderEntry entry : _programHeaderEntries) {
 			if (entry.isDynamic()) {
 				// We only expect to find one per module.
 				return entry;
@@ -791,13 +786,12 @@ public abstract class ELFFileReader {
 	}
 
 	/**
-	 * Examine the ELF header to determine if this file is an executable or not.
-	 * Often it will instead be a shared library.
+	 * Examine the ELF header to determine if this file is executable.
 	 *
-	 * @return true if the file is an executable
+	 * @return true if the file is executable
 	 */
 	public boolean isExecutable() {
-		return (_objectType == ET_EXEC);
+		return (_objectType == ET_EXEC) || (_objectType == ET_DYN);
 	}
 
 	/**
@@ -951,6 +945,14 @@ public abstract class ELFFileReader {
 			return false;
 		}
 
+		if (this._sectionHeaderCount != otherReader._sectionHeaderCount) {
+			return false;
+		}
+
+		if (this._version != otherReader._version) {
+			return false;
+		}
+
 		/*
 		 * The prelink process means it's common for libc.so.6 (and probably
 		 * other system libraries) to be exactly the same size but to load
@@ -959,22 +961,14 @@ public abstract class ELFFileReader {
 		 * problems with resolving addresses so we check that for any headers
 		 * that exist in both sources they have the same addresses.
 		 */
-		Iterator<? extends ProgramHeaderEntry> primaryHeaders = this.getProgramHeaderEntries().iterator();
-		Iterator<? extends ProgramHeaderEntry> secondaryHeaders = otherReader.getProgramHeaderEntries().iterator();
+		Iterator<? extends ProgramHeaderEntry> primaryHeaders = this._programHeaderEntries.iterator();
+		Iterator<? extends ProgramHeaderEntry> secondaryHeaders = otherReader._programHeaderEntries.iterator();
 		while (primaryHeaders.hasNext() && secondaryHeaders.hasNext()) {
 			ProgramHeaderEntry primaryEntry = primaryHeaders.next();
 			ProgramHeaderEntry secondaryEntry = secondaryHeaders.next();
 			if (primaryEntry.virtualAddress != secondaryEntry.virtualAddress) {
 				return false;
 			}
-		}
-
-		if (this._sectionHeaderCount != otherReader._sectionHeaderCount) {
-			return false;
-		}
-
-		if (this._version != otherReader._version) {
-			return false;
 		}
 
 		return true;

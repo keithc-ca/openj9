@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2020 IBM Corp. and others
+ * Copyright (c) 2004, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -70,7 +70,6 @@ package com.ibm.j9ddr.corereaders.elf;
  *  [28] .symtab           SYMTAB          00000000 62d120 04b800 10     29 19209  4
  *  [29] .strtab           STRTAB          00000000 678920 0d7504 00      0   0  1
  */
-
 final class SectionHeaderEntry {
 	static final int SHT_SYMTAB = 2; // Symbol table in this section
 	static final int SHT_STRTAB = 3; // String table in this section
@@ -88,8 +87,6 @@ final class SectionHeaderEntry {
 	final long size;
 	final long link;
 
-	// private long _info;
-
 	SectionHeaderEntry(long name, long type, long flags, long address, long offset, long size, long link, long info) {
 		this._name = name;
 		this._type = type;
@@ -98,11 +95,10 @@ final class SectionHeaderEntry {
 		this.offset = offset;
 		this.size = size;
 		this.link = link;
-		// _info = info;
 	}
 
 	boolean isSymbolTable() {
-		return SHT_SYMTAB == _type || SHT_DYNSYM == _type;
+		return (SHT_SYMTAB == _type) || (SHT_DYNSYM == _type);
 	}
 
 	public boolean isStringTable() {
@@ -117,6 +113,7 @@ final class SectionHeaderEntry {
 		return (_flags & SHF_ALLOC) == SHF_ALLOC;
 	}
 
+	@Override
 	public String toString() {
 		return String.format("Name %d, Type %d, Flags 0x%x, Address 0x%x, Offset 0x%x, Size 0x%x",
 				_name, _type, _flags, address, offset, size);

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2020 IBM Corp. and others
+ * Copyright (c) 2009, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -21,14 +21,14 @@
  *******************************************************************************/
 package com.ibm.j9ddr.corereaders.elf;
 
+import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ARCH_AARCH64;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ARCH_AMD64;
+import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ARCH_ARM;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ARCH_IA32;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ARCH_PPC32;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ARCH_PPC64;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ARCH_RISCV64;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ARCH_S390;
-import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ARCH_ARM;
-import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ARCH_AARCH64;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.AT_ENTRY;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.AT_HWCAP;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.AT_NULL;
@@ -38,16 +38,15 @@ import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.DT_NULL;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ELF_NOTE_HEADER_SIZE;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.ELF_PRARGSZ;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.NT_AUXV;
+import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.NT_FILE;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.NT_HGPRS;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.NT_PRPSINFO;
 import static com.ibm.j9ddr.corereaders.elf.ELFFileReader.NT_PRSTATUS;
 import static java.util.logging.Level.FINER;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -141,6 +140,7 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	private final List<DataEntry> _threadEntries = new ArrayList<>();
 	private final List<DataEntry> _auxiliaryVectorEntries = new ArrayList<>();
 	private final List<DataEntry> _highwordRegisterEntries = new ArrayList<>();
+	private final List<FileNote> _fileNotes = new ArrayList<>();
 	private int _pid;
 	private String _executableFileName;
 	private String _commandLine;
@@ -155,7 +155,7 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	private boolean useLoadedLibraries;
 
 	// list to keep track of all the files that have been opened by this dump reader
-	private ArrayList<ELFFileReader> openFileTracker = new ArrayList<>();
+	private List<ELFFileReader> openFileTracker = new ArrayList<>();
 
 	private Unwind unwinder;
 
@@ -163,10 +163,11 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 		_reader = reader;
 		_process = new LinuxProcessAddressSpace(_reader.addressSizeBits() / 8, _reader.getByteOrder(), this);
 		unwinder = new Unwind(_process);
-		if (reader.getFile() == null) {
-			_resolver = LibraryResolverFactory.getResolverForCoreFile(reader.getStream());
+		File file = reader.getFile();
+		if (file != null) {
+			_resolver = LibraryResolverFactory.getResolverForCoreFile(file);
 		} else {
-			_resolver = LibraryResolverFactory.getResolverForCoreFile(reader.getFile());
+			_resolver = LibraryResolverFactory.getResolverForCoreFile(reader.getStream());
 		}
 
 		useLoadedLibraries = (System.getProperty(USELOADEDLIBRARIES) != null);
@@ -285,7 +286,7 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 
 	private void readProcessData() throws IOException {
 		if (_processEntries.size() == 0) {
-			throw new IOException("No process entries found in Elf file.");
+			throw new IOException("No process entries found in ELF file.");
 		} else if (_processEntries.size() != 1) {
 			throw new IOException("Unexpected number of process entries found in ELF file. Expected 1, found "
 					+ _processEntries.size());
@@ -308,8 +309,7 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 		_reader.readInt(); // Ignore pgrp
 		_reader.readInt(); // Ignore sid
 
-		// Ignore filler. Command-line is last 80 bytes (defined by ELF_PRARGSZ
-		// in elfcore.h).
+		// Ignore filler. Command-line is last 80 bytes (defined by ELF_PRARGSZ in elfcore.h).
 		// Command-name is 16 bytes before command-line.
 		_reader.seek(entry.offset + entry.size - 96);
 		_executableFileName = new String(_reader.readBytes(16), StandardCharsets.US_ASCII).trim(); // Ignore command
@@ -334,7 +334,6 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	 *
 	 * @throws IOException
 	 */
-
 	/* In a second comment to avoid it appearing in hovertext
 	 *
 	 * This method is called under at least two completely different circumstances:
@@ -351,7 +350,7 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	 * each module - as for example when called from jdmpview. In this case the collected libraries
 	 * may or may not be appended to the core file but if they are then the section header information
 	 * is always better when taken from the collected library so the modules should be constructed
-	 * from the them.
+	 * from them.
 	 *
 	 * The reason it is important to keep an eye on both circumstances is that they affect one another.
 	 * In circumstance 1, some of the constructed modules are of poor quality because the original library is not
@@ -362,26 +361,25 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	 * two functions of gathering the list of names of which libraries exist, needed for both circumstances, and constructing
 	 * the best possible image of each library, using core and collected library, only needed for the second circumstance.
 	 *
-	 * There are three sorts of module, too.
+	 * There are three sorts of modules, too:
 	 * 1. Those found only via the program header table of the core file. This includes most of the system
 	 * libraries e.g. ld-linux.so.2. These only have the library name, no path, because they are found from
 	 * the SOname within the module.
 	 * 2. Those found only via the debug data in the executable. This can include several of the j9 libraries.
-	 * They are present within the core file but the route to the SOname is broken somehow
+	 * They are present within the core file but the route to the SOname is broken somehow.
 	 * 3. Those found both ways - most of the j9 libraries are in this case. However note that the
 	 * names will be different because the names found via the debug data are full pathnames and the
 	 * names found via the SOname is just the library name. However they can be matched up via the load
 	 * address which is available on both routes.
 	 *
 	 * There are a some oddities too:
-	 * 1. the executable always appears in the core file with a SOname of "lib.so"
+	 * 1. the executable always appears in the core file with a SOname of "lib.so".
 	 * 2. The core file always contains a library called linux-gate.so which does not correspond to
-	 * a file on disk
+	 * a file on disk.
 	 * 3. Sometimes the same file - e.g. libvmi.so, and the executable itself - will be mapped into memory
 	 * twice or more at different addresses so the same name will appear more than once in the
 	 * list from the core file.
 	 */
-
 	private void readModules() throws IOException {
 		if (_executable == null || _executable instanceof MissingFileModule) {
 			_modulesException = null;
@@ -411,12 +409,10 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 				if (null != executableELF) {
 					createAllModules(executableELF, _executablePathOverride);
 				} else {
-					_executable = new MissingFileModule(_process, _executableFileName,
-							Collections.<IMemoryRange>emptyList());
+					_executable = new MissingFileModule(_process, _executableFileName, Collections.emptyList());
 				}
 			} else {
-				_executable = new MissingFileModule(_process, _executableFileName,
-						Collections.<IMemoryRange>emptyList());
+				_executable = new MissingFileModule(_process, _executableFileName, Collections.emptyList());
 			}
 		}
 	}
@@ -452,34 +448,35 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	 */
 	private void createAllModules(ELFFileReader executableELF, String executableName) throws IOException {
 		/* Load modules from the core file. Modules in the core file may not have a section header table as
-		 * the program header table describes what is loaded into memory. The section header table is used
+		 * the program header table describes only what is loaded into memory. The section header table is used
 		 * while loading but not once loaded. If we have a disk version of the library we can pull in the
 		 * section header table from that (as well as the symbols as those sections may not be loaded either).
 		 */
 		List<IModule> allModules = new LinkedList<>();
-		long executableBaseAddress = executableELF.getBaseAddress();
-
-		Map<Long, ELFFileReader> inCoreReaders = getElfReadersForModulesWithinCoreFile(executableELF, executableName);
-		Map<Long, String> libraryNamesFromDebugData = readLibraryNamesFromDebugData(executableELF, inCoreReaders,
-				executableELF);
+		Map<Long, ELFFileReader> inCoreReaders = getElfReadersForModulesWithinCoreFile();
+		/* NT_FILE notes reliably describe what was loaded into the address space of the process,
+		 * and where. Older core files do not have that table and so, in those cases, we must resort
+		 * to using the dynamic table from the executable.
+		 */
+		Map<Long, String> libraryNamesFromDebugData = readLibraryNamesFromDebugData(executableELF, inCoreReaders, executableELF);
 
 		for (Map.Entry<Long, ELFFileReader> entry : inCoreReaders.entrySet()) {
 			long coreFileAddress = entry.getKey();
 			ELFFileReader inCoreReader = entry.getValue();
-			String moduleName = inCoreReader.readSONAME(_reader);
+			FileNote fileNote = findFileNoteForAddress(coreFileAddress);
+			String moduleName;
+
+			if (fileNote != null) {
+				moduleName = fileNote.fileName;
+			} else {
+				moduleName = libraryNamesFromDebugData.get(coreFileAddress);
+			}
 			/* A module name of lib.so apparently really means the executable. */
 			if ("lib.so".equals(moduleName)) {
 				moduleName = executableName;
 			}
-			String debugName = libraryNamesFromDebugData.get(coreFileAddress);
-			ELFFileReader readerForModuleOnDiskOrAppended = null;
-			/* Is there an entry in the debug data for this module? */
-			if (debugName != null) {
-				moduleName = debugName;
-				readerForModuleOnDiskOrAppended = getReaderForModuleOnDiskOrAppended(debugName);
-			} else {
-				readerForModuleOnDiskOrAppended = getReaderForModuleOnDiskOrAppended(moduleName);
-			}
+
+			ELFFileReader readerForModuleOnDiskOrAppended = getReaderForModuleOnDiskOrAppended(moduleName);
 			/* Patch up this modules section header table with the one from the disk version before we
 			 * create the module.
 			 */
@@ -496,9 +493,26 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 
 		// TODO - Sort modules. For the sake of tidiness.
 		_modules.addAll(allModules);
+
+		long executableBaseAddress = _reader.getBaseAddress(); // based on program headers from the core file
 		ELFFileReader readerForExectuableOnDiskOrAppended = getReaderForModuleOnDiskOrAppended(executableName);
+
 		_executable = createModuleFromElfReader(executableBaseAddress, executableName, executableELF,
 				readerForExectuableOnDiskOrAppended);
+	}
+
+	private FileNote findFileNoteForAddress(long coreFileAddress) {
+		for (FileNote entry : _fileNotes) {
+			if (Long.compareUnsigned(entry.virtualAddress, coreFileAddress) > 0) {
+				// entries are sorted by virtualAddress: we're done
+				break;
+			}
+
+			if (Long.compareUnsigned(coreFileAddress - entry.virtualAddress, entry.memorySize) < 0) {
+				return entry;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -531,8 +545,7 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	 *
 	 * @return map BaseAddress -> ELFFileReader
 	 */
-	private TreeMap<Long, ELFFileReader> getElfReadersForModulesWithinCoreFile(ELFFileReader executableELF,
-			String executableName) {
+	private TreeMap<Long, ELFFileReader> getElfReadersForModulesWithinCoreFile() {
 		TreeMap<Long, ELFFileReader> moduleReadersByBaseAddress = new TreeMap<>();
 		// System.out.println("dumping program header table");
 		// for (ProgramHeaderEntry entry : _reader.getProgramHeaderEntries()) {
@@ -586,18 +599,14 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	 */
 	private Map<Long, String> readLibraryNamesFromDebugData(ELFFileReader executableELF,
 			Map<Long, ELFFileReader> coreModulesMap, ELFFileReader coreFileReader) throws IOException {
-
-		// Create the method return value
-		TreeMap<Long, String> libraryNamesByBaseAddress = new TreeMap<>();
-
 		ProgramHeaderEntry dynamic = executableELF.getDynamicTableEntry();
 		if (dynamic == null) {
-			return libraryNamesByBaseAddress;
+			return Collections.emptyMap();
 		}
 
 		long dynamicTableAddress = dynamic.virtualAddress;
 		if (!isReadableAddress(dynamicTableAddress)) {
-			return libraryNamesByBaseAddress;
+			return Collections.emptyMap();
 		}
 
 		// Seek to the start of the dynamic section
@@ -651,11 +660,14 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 
 		// If there is no debug section, there is nothing to do
 		if (tag != DT_DEBUG) {
-			return libraryNamesByBaseAddress;
+			return Collections.emptyMap();
 		}
 
 		// Seek to the start of the debug data
 		_reader.seekToAddress(address);
+
+		// Create the method return value
+		TreeMap<Long, String> libraryNamesByBaseAddress = new TreeMap<>();
 
 		// NOTE the rendezvous structure is described in /usr/include/link.h
 		// struct r_debug
@@ -741,7 +753,7 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 			return null;
 		}
 		if (inCoreReader == null) {
-			return new MissingFileModule(_process, name, Collections.<IMemoryRange>emptyList());
+			return new MissingFileModule(_process, name, Collections.emptyList());
 		}
 		List<? extends ISymbol> symbols = null;
 		Map<Long, String> sectionHeaderStringTable = null;
@@ -839,7 +851,6 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 			 * See CMVC 185753
 			 *
 			 * So, don't add sections that originally had address 0.
-			 *
 			 */
 			if (source.getBaseAddress() == loadedBaseAddress) { // must have originally had address 0 in the section header table
 				continue;
@@ -864,10 +875,9 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 			ranges.add(source);
 		}
 		return new Module(_process, name, symbols, ranges, loadedBaseAddress, properties);
-
 	}
 
-	private boolean isValidAddress(long address) {
+	boolean isValidAddress(long address) {
 		IMemoryRange range = _process.getRangeForAddress(address);
 		if (range != null) {
 			return true;
@@ -957,31 +967,20 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	protected String getProcessorSubType() {
 		try {
 			String proc = readStringAt(_platformIdAddress);
-			if (proc == null) {
-				return "unknown";
-			} else {
+			if (proc != null) {
 				return proc;
 			}
 		} catch (Exception e) {
-			return "unknown";
+			// ignore
 		}
+		return "unknown";
 	}
 
 	public String readStringAt(long address) throws IOException {
 		if (isReadableAddress(address)) {
 			_reader.seekToAddress(address);
-
-			for (ByteArrayOutputStream buffer = new ByteArrayOutputStream();;) {
-				byte ascii = _reader.readByte();
-
-				if (ascii != 0) {
-					buffer.write(ascii);
-				} else {
-					return new String(buffer.toByteArray(), StandardCharsets.US_ASCII);
-				}
-			}
+			return _reader.readString();
 		}
-
 		return null;
 	}
 
@@ -1008,8 +1007,7 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 
 	private void readNotes(ProgramHeaderEntry entry) throws IOException {
 		long offset = entry.fileOffset;
-		long limit = offset + entry.fileSize;
-		while (offset >= entry.fileOffset && offset < limit) {
+		while (entry.validInFile(offset)) {
 			offset = readNote(offset);
 		}
 	}
@@ -1030,9 +1028,79 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 			_auxiliaryVectorEntries.add(new DataEntry(dataOffset, dataSize));
 		} else if (NT_HGPRS == type) {
 			_highwordRegisterEntries.add(new DataEntry(dataOffset, dataSize));
+		} else if (NT_FILE == type) {
+			readFileNotes(dataOffset);
 		}
 
 		return dataOffset + padToIntBoundary(dataSize);
+	}
+
+	private static final class FileNote implements Comparable<FileNote> {
+
+		final long virtualAddress;
+
+		final long memorySize;
+
+		final String fileName;
+
+		FileNote(long virtualAddress, long memorySize, String fileName) {
+			super();
+			this.virtualAddress = virtualAddress;
+			this.memorySize = memorySize;
+			this.fileName = fileName;
+		}
+
+		@Override
+		public int compareTo(FileNote that) {
+			return Long.compareUnsigned(this.virtualAddress, that.virtualAddress);
+		}
+
+	}
+
+	private void readFileNotes(long offset) throws IOException {
+		/*
+		 * Format of NT_FILE note:
+		 *
+		 * long count    -- how many files are mapped
+		 * long pageSize -- units for file_offset_in_pages
+		 * array of [COUNT] elements of
+		 *   long start
+		 *   long end
+		 *   long file_offset_in_pages
+		 * followed by COUNT filenames in ASCII: "FILE1" NUL "FILE2" NUL...
+		 */
+
+		long wordSizeBytes = _reader.addressSizeBits() / 8;
+
+		_reader.seek(offset);
+
+		long count = _reader.readElfWord();
+		_reader.readElfWord(); // ignore page size
+
+		long fixedOffset = offset + (2 * wordSizeBytes);
+		long stringsOffset = fixedOffset + (count * 3 * wordSizeBytes);
+		List<String> fileNames = new ArrayList<>();
+
+		_reader.seek(stringsOffset);
+
+		for (int index = 0; index < count; ++index) {
+			String file = _reader.readString();
+
+			fileNames.add(file);
+		}
+
+		_reader.seek(fixedOffset);
+
+		for (int index = 0; index < count; ++index) {
+			String fileName = fileNames.get(index);
+			long start = _reader.readElfWord();
+			long end = _reader.readElfWord();
+			_reader.readElfWord(); // ignore page offset
+
+			_fileNotes.add(new FileNote(start, end - start, fileName));
+		}
+
+		Collections.sort(_fileNotes);
 	}
 
 	/* The ELF NOTES section is padded to 4 byte boundaries.
@@ -1150,7 +1218,7 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 
 		private boolean stackWalked = false;
 
-		private LinuxThread(long tid, Map<String, Number> registers, Properties properties) {
+		LinuxThread(long tid, Map<String, Number> registers, Properties properties) {
 			this.registers = registers;
 			this.properties = properties;
 			this.tid = tid;
@@ -1368,7 +1436,7 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	 * @return reader to the module or null if not possible
 	 * @throws IOException
 	 */
-	private ELFFileReader getReaderForSegment(ImageInputStream in, ProgramHeaderEntry entry) throws IOException {
+	private static ELFFileReader getReaderForSegment(ImageInputStream in, ProgramHeaderEntry entry) throws IOException {
 		try {
 			return ELFFileReader.getELFFileReaderWithOffset(in, entry.fileOffset, entry.fileSize);
 		} catch (InvalidDumpFormatException e) {
@@ -1436,8 +1504,9 @@ public abstract class ELFDumpReader implements ILibraryDependentCore {
 	}
 
 	public static class RegisterComparator implements Comparator<String> {
+		@Override
 		public int compare(String s1, String s2) {
-			// Pad trailing single digit register names, eg gpr1 to gpr01 to sort nicely
+			// pad trailing single digit register names, e.g. gpr1 to gpr01 to sort nicely
 			int last = s1.length() - 1;
 			if (last >= 1) {
 				if (Character.isDigit(s1.charAt(last)) && Character.isLetter(s1.charAt(last - 1))) {

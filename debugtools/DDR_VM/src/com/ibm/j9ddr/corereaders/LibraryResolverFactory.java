@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2019 IBM Corp. and others
+ * Copyright (c) 2009, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -21,6 +21,11 @@
  *******************************************************************************/
 package com.ibm.j9ddr.corereaders;
 
+import static java.util.logging.Level.FINE;
+import static java.util.logging.Level.FINER;
+import static java.util.logging.Level.FINEST;
+import static java.util.logging.Level.SEVERE;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -38,8 +43,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -47,41 +54,38 @@ import javax.imageio.stream.ImageInputStream;
 
 import com.ibm.j9ddr.libraries.CoreFileResolver;
 
-import static java.util.logging.Level.*;
-
 /**
  * Static factory for ILibraryResolvers.
- * 
- * Encapsulates the knowledge of where to look for libraries.
- * 
- * @author andhall
  *
+ * Encapsulates the knowledge of where to look for libraries.
+ *
+ * @author andhall
  */
-public class LibraryResolverFactory
-{
+public class LibraryResolverFactory {
+
 	private static final Logger logger = Logger.getLogger(com.ibm.j9ddr.corereaders.ICoreFileReader.J9DDR_CORE_READERS_LOGGER_NAME);
 
 	// This sets the library path to search for the LibraryPathResolver.
 	public static final String LIBRARY_PATH_SYSTEM_PROPERTY = "com.ibm.j9ddr.library.path";
-	
+
 	/**
 	 * This property sets a path that can be used to re-map library paths on the system
 	 * the core was generated to paths on the local machine. For example allowing you to
 	 * use a core generated on AIX with the the same build downloaded to a Windows machine
 	 * from Espresso. You can get the exact build id from core files in jdmpview
 	 * by running "info system"
-	 *  
+	 *
 	 * The output of "info system" should contain a line like:
 	 * Java(TM) SE Runtime Environment(build JRE 1.6.0 AIX ppc64-64 build 20101125_69326 (pap6460_26-20101129_04))
 	 * where pap6460_26-20101129_04 is the build id identifying the build on Espresso or JIM.
-	 * 
+	 *
 	 * Paths can be substituted as:
 	 * -Dcom.ibm.j9ddr.path.mapping=original/path/1=new/path/1:original/path/2=new/path/2
 	 * (Note that : or ; is used to separate paths according to the platforms setting of
 	 * of File.pathSeparator. = is used to separate multiple pairs of mappings.)
 	 */
 	public static final String PATH_MAPPING_SYSTEM_PROPERTY = "com.ibm.j9ddr.path.mapping";
-	private static final String MAPPING_SEPERATOR = "=";
+	private static final String MAPPING_SEPARATOR = "=";
 
 	//This list determines library resolver search order
 	public static final String RESOLVER_LIST_PROPERTY = "com.ibm.j9ddr.library.resolvers";
@@ -95,93 +99,125 @@ public class LibraryResolverFactory
 			+ InPlaceResolver.class.getName()
 			+ ","
 			+ ZipFileResolver.class.getName();
-	
+
 	private static final List<File> libraryPath;
 	private static final Map<String, String> pathMap;
 	private static final List<Class<? extends ILibraryResolver>> resolverClasses;
-	
+
+	private static final Map<String, Pattern> patternCache = new HashMap<>();
+
+	/*
+	 * String.split("\\") will throw java.util.regex.PatternSyntaxException.
+	 */
+	static String[] literalSplit(String string, String separator) {
+		Pattern pattern = patternCache.computeIfAbsent(separator, key -> Pattern.compile(key, Pattern.LITERAL));
+
+		return pattern.split(string);
+	}
+
+	private static final class SystemProperty implements PrivilegedAction<String> {
+
+		static String get(String propertyName) {
+			return get(propertyName, null);
+		}
+
+		static String get(String propertyName, String defaultValue) {
+			return AccessController.doPrivileged(new SystemProperty(propertyName, defaultValue));
+		}
+
+		private final String propertyName;
+
+		private final String defaultValue;
+
+		private SystemProperty(String propertyName, String defaultValue) {
+			super();
+			this.propertyName = propertyName;
+			this.defaultValue = defaultValue;
+		}
+
+		@Override
+		public String run() {
+			return System.getProperty(propertyName, defaultValue);
+		}
+
+	}
+
 	static {
-		String specifiedPath = AccessController.doPrivileged(new PrivilegedAction<String>() {
+		String specifiedPath = SystemProperty.get(LIBRARY_PATH_SYSTEM_PROPERTY);
+		String mappingPath = SystemProperty.get(PATH_MAPPING_SYSTEM_PROPERTY);
+		String resolvers = SystemProperty.get(RESOLVER_LIST_PROPERTY, RESOLVER_DEFAULT_ORDER);
+		String pathSeparator = File.pathSeparator;
+		List<File> localPath = new LinkedList<>();
 
-			public String run()
-			{
-				return System.getProperty(LIBRARY_PATH_SYSTEM_PROPERTY);
-			}
-		});
-		
-		String mappingPath = AccessController.doPrivileged(new PrivilegedAction<String>() {
+		if (specifiedPath == null) {
+			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "No library search path set. Falling back on defaults");
+		} else {
+			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Library search path set as: {0} by property {1}", new Object[] { specifiedPath, LIBRARY_PATH_SYSTEM_PROPERTY });
+			String pathSections[] = literalSplit(specifiedPath, pathSeparator);
 
-			public String run()
-			{
-				return System.getProperty(PATH_MAPPING_SYSTEM_PROPERTY);
-			}
-		});
-
-		String resolvers = AccessController.doPrivileged(new PrivilegedAction<String>() {
-
-			public String run()
-			{
-				return System.getProperty(RESOLVER_LIST_PROPERTY, RESOLVER_DEFAULT_ORDER);
-			}
-		});
-		
-		final String pathSeperator = File.pathSeparator;
-		
-		List<File> localPath = new LinkedList<File>();
-		
-		if (specifiedPath != null) {
-			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Library search path set as: {0} by property {1}",new Object[]{specifiedPath,LIBRARY_PATH_SYSTEM_PROPERTY});
-			String pathSections[] = specifiedPath.split(pathSeperator);
-			
 			for (String path : pathSections) {
 				localPath.add(new File(path));
 			}
-		} else {
-			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "No library search path set. Falling back on defaults");
 		}
-		
-		Map<String, String> mPaths = new HashMap<String, String>();
-		
-		if (mappingPath != null) {
-			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Library path mappings paths set as: {0} by property {1}",new Object[]{specifiedPath,PATH_MAPPING_SYSTEM_PROPERTY});
-			String pathSections[] = mappingPath.split(pathSeperator);
-			
-			for (String replacePath : pathSections) {
-				String[] target_subst = replacePath.split(MAPPING_SEPERATOR); 
-				mPaths.put(target_subst[0], target_subst[1]);
-				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Mapping libraries paths containing {0} to {1}",target_subst);
-			}
-		} else {
+
+		Map<String, String> mPaths = new HashMap<>();
+
+		if (mappingPath == null) {
 			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "No library path mappings set. Falling back on defaults");
-		}
-		
-		List<Class<? extends ILibraryResolver>> classes = new LinkedList<Class<? extends ILibraryResolver>>();
-		logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Library resolver search order: {0}",new Object[]{resolvers});
-		for( String resolver: resolvers.split(",") ) {
-			try {
-				classes.add( Class.forName(resolver).asSubclass(ILibraryResolver.class));
-			} catch (ClassNotFoundException e) {
-				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Failed to find Library resolver class: {0}",new Object[]{resolver});
+		} else {
+			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Library path mappings paths set as: {0} by property {1}", new Object[] { specifiedPath, PATH_MAPPING_SYSTEM_PROPERTY });
+			String pathSections[] = literalSplit(mappingPath, pathSeparator);
+
+			for (String replacePath : pathSections) {
+				int separatorIndex = replacePath.indexOf(MAPPING_SEPARATOR);
+
+				if (separatorIndex < 0) {
+					logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Missing mapping separator({0}) in {1}",
+							new Object[] { MAPPING_SEPARATOR, replacePath });
+					continue;
+				}
+
+				String target = replacePath.substring(0, separatorIndex);
+				String replacement = replacePath.substring(separatorIndex + MAPPING_SEPARATOR.length());
+
+				mPaths.put(target, replacement);
+				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Mapping libraries paths containing {0} to {1}",
+						new Object[] { target, replacement });
 			}
 		}
-		
+
+		List<Class<? extends ILibraryResolver>> classes = new LinkedList<>();
+
+		logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Library resolver search order: {0}",
+				new Object[] { resolvers });
+
+		for (String resolver : literalSplit(resolvers, ",")) {
+			try {
+				classes.add(Class.forName(resolver).asSubclass(ILibraryResolver.class));
+			} catch (ClassCastException e) {
+				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Library resolver class {0} does not implement {1}",
+						new Object[] { resolver, ILibraryResolver.class.getName() });
+			} catch (ClassNotFoundException e) {
+				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Failed to find Library resolver class: {0}",
+						new Object[] { resolver });
+			}
+		}
+
 		libraryPath = Collections.unmodifiableList(localPath);
 		pathMap = Collections.unmodifiableMap(mPaths);
 		resolverClasses = Collections.unmodifiableList(classes);
 	}
-	
+
 	/**
 	 * Static factory for ILibraryResolvers.
 	 * @param stream Core file whose libraries need resolving
 	 * @return ILibraryResolver
 	 */
-	public static ILibraryResolver getResolverForCoreFile(ImageInputStream stream)
-	{
-		List<ILibraryResolver> resolvers = new LinkedList<ILibraryResolver>();
-		
-		//This list determines library path search order
-		for( Class<? extends ILibraryResolver> resolverClass : resolverClasses ) {
+	public static ILibraryResolver getResolverForCoreFile(ImageInputStream stream) {
+		List<ILibraryResolver> resolvers = new LinkedList<>();
 
+		// This list determines library path search order
+		for (Class<? extends ILibraryResolver> resolverClass : resolverClasses) {
 			try {
 				// We only have one argument we can pass, the coreFile we were passed.
 				// If the LibraryResolver can take that as an argument to it's constructor
@@ -189,27 +225,24 @@ public class LibraryResolverFactory
 				Constructor<? extends ILibraryResolver> constructor = resolverClass.getConstructor(ImageInputStream.class);
 				resolvers.add(constructor.newInstance(stream));
 			} catch (NoSuchMethodException e) {
-				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Skipping Library resolver class: {0} as it does not support an ImageInputStream constructor",new Object[]{resolverClass.getName()});
+				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Skipping Library resolver class: {0} as it does not support an ImageInputStream constructor", new Object[] { resolverClass.getName() });
 			} catch (Exception e) {
-				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Failed to create instance of Library resolver class: {0}",new Object[]{resolverClass.getName()});
+				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Failed to create instance of Library resolver class: {0}", new Object[] { resolverClass.getName() });
 			}
-
 		}
 		return new DelegatingLibraryPathResolver(resolvers);
 	}
-	
+
 	/**
 	 * Static factory for ILibraryResolvers.
 	 * @param stream Core file whose libraries need resolving
 	 * @return ILibraryResolver
 	 */
-	public static ILibraryResolver getResolverForCoreFile(File file)
-	{
-		List<ILibraryResolver> resolvers = new LinkedList<ILibraryResolver>();
-		
-		//This list determines library path search order
-		for( Class<? extends ILibraryResolver> resolverClass : resolverClasses ) {
+	public static ILibraryResolver getResolverForCoreFile(File file) {
+		List<ILibraryResolver> resolvers = new LinkedList<>();
 
+		// This list determines library path search order
+		for (Class<? extends ILibraryResolver> resolverClass : resolverClasses) {
 			try {
 				// We only have one argument we can pass, the coreFile we were passed.
 				// If the LibraryResolver can take that as an argument to it's constructor
@@ -217,58 +250,54 @@ public class LibraryResolverFactory
 				Constructor<? extends ILibraryResolver> constructor = resolverClass.getConstructor(File.class);
 				resolvers.add(constructor.newInstance(file));
 			} catch (NoSuchMethodException e) {
-				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Skipping Library resolver class: {0} as it does not support a File constructor",new Object[]{resolverClass.getName()});
+				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Skipping Library resolver class: {0} as it does not support a File constructor", new Object[] { resolverClass.getName() });
 			} catch (Exception e) {
-				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Failed to create instance of Library resolver class: {0}",new Object[]{resolverClass.getName()});
+				logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Failed to create instance of Library resolver class: {0}", new Object[] { resolverClass.getName() });
 			}
-
 		}
 		return new DelegatingLibraryPathResolver(resolvers);
 	}
-	
-	private static String stripPath(String moduleName)
-	{
+
+	private static String stripPath(String moduleName) {
 		File file = new File(moduleName);
-		
+
 		return file.getName();
 	}
-	
-	private static String mapPath(String moduleName)
-	{
-		if( pathMap.isEmpty() ) {
-			return moduleName;			
+
+	private static String mapPath(String moduleName) {
+		if (pathMap.isEmpty()) {
+			return moduleName;
 		}
-		for( Entry<String, String> entry: pathMap.entrySet()) {
+		for (Entry<String, String> entry : pathMap.entrySet()) {
 			moduleName = moduleName.replace(entry.getKey(), entry.getValue());
 		}
 		return moduleName;
 	}
 
-	private final static class DelegatingLibraryPathResolver extends BaseResolver implements ILibraryResolver
-	{
-		private final List<ILibraryResolver> resolvers;
-		
-		public DelegatingLibraryPathResolver(List<ILibraryResolver> resolvers)
-		{
-			this.resolvers = resolvers;
+	private final static class DelegatingLibraryPathResolver extends BaseResolver {
+
+		private final ILibraryResolver[] resolvers;
+
+		public DelegatingLibraryPathResolver(List<ILibraryResolver> resolvers) {
+			this.resolvers = resolvers.toArray(new ILibraryResolver[resolvers.size()]);
 		}
-		
-		public LibraryDataSource getLibrary(String fileName, boolean silent)
-				throws FileNotFoundException
-		{
+
+		@Override
+		public LibraryDataSource getLibrary(String fileName, boolean silent) throws FileNotFoundException {
 			for (ILibraryResolver resolver : resolvers) {
 				try {
 					return resolver.getLibrary(fileName);
 				} catch (FileNotFoundException e) {
-					//Do nothing
+					// Do nothing
 				}
 			}
-			
-			if (! silent) {
-				logger.logp(FINER,"LibraryResolverFactory","getLibrary","Couldn't find shared library " + fileName + ". Some data may be unavailable.");
+
+			if (!silent) {
+				logger.logp(FINER, "LibraryResolverFactory", "getLibrary",
+						"Couldn't find shared library {0}. Some data may be unavailable.", fileName);
 			}
-			
-			throw new FileNotFoundException();
+
+			throw new FileNotFoundException(fileName);
 		}
 
 		@Override
@@ -277,138 +306,110 @@ public class LibraryResolverFactory
 				resolver.dispose();
 			}
 		}
-		
-		
+
 	}
-	
+
 	/**
-	 * Searches through the library path. If any entry is a file, we try to open it as a zipfile and 
+	 * Searches through the library path. If any entry is a file, we try to open it as a zipfile and
 	 * look through the contents.
-	 * 
+	 *
 	 * @author andhall
 	 */
-	private final static class LibraryPathResolver extends BaseResolver implements ILibraryResolver
-	{
+	private final static class LibraryPathResolver extends BaseResolver {
 
 		@SuppressWarnings("unused")
-		public LibraryPathResolver(File coreFile) {}
-		
-		public LibraryDataSource getLibrary(String fileName, boolean resolver)
-				throws FileNotFoundException
-		{
-			if( libraryPath.isEmpty() ) {
+		public LibraryPathResolver(File coreFile) {
+			super();
+		}
+
+		@Override
+		public LibraryDataSource getLibrary(String fileName, boolean resolver) throws FileNotFoundException {
+			if (libraryPath.isEmpty()) {
 				throw new FileNotFoundException("No library paths set.");
 			}
-			
+
 			String strippedModuleName = stripPath(fileName);
-			
+
 			logger.logp(FINER,"LibraryResolverFactory$LibraryPathResolver","getLibrary","Looking for {0} in library path.", strippedModuleName);
-			
+
 			for (File path : libraryPath) {
 				if (path.isDirectory()) {
-					logger.logp(FINEST,"LibraryResolverFactory$LibraryPathResolver","getLibrary","Looking in directory {0}.", path);
+					logger.logp(FINEST, "LibraryResolverFactory$LibraryPathResolver","getLibrary","Looking in directory {0}.", path);
 					File withDirectories = new File(path, fileName);
 					File withoutDirectories = new File(path, strippedModuleName);
-					
+
 					if (withDirectories.isFile()) {
-						logger.logp(FINER,"LibraryResolverFactory$LibraryPathResolver","getLibrary","Found {0} in directory {1}.", new Object[]{strippedModuleName,path});
+						logger.logp(FINER, "LibraryResolverFactory$LibraryPathResolver", "getLibrary", "Found {0} in directory {1}.", new Object[] { strippedModuleName, path });
 						return new LibraryDataSource(withDirectories);
 					}
-					
+
 					if (withoutDirectories.isFile()) {
-						logger.logp(FINER,"LibraryResolverFactory$LibraryPathResolver","getLibrary","Found {0} in directory {1}.", new Object[]{strippedModuleName,path});
+						logger.logp(FINER, "LibraryResolverFactory$LibraryPathResolver", "getLibrary", "Found {0} in directory {1}.", new Object[] { strippedModuleName, path });
 						return new LibraryDataSource(withoutDirectories);
 					}
 				} else {
-					logger.logp(FINEST,"LibraryResolverFactory$LibraryPathResolver","getLibrary","Looking in file {0}.", path);
+					logger.logp(FINEST, "LibraryResolverFactory$LibraryPathResolver", "getLibrary", "Looking in file {0}.", path);
 					File libraryFile = readArchive(path, fileName, strippedModuleName);
-					
+
 					if (libraryFile != null) {
-						logger.logp(FINER,"LibraryResolverFactory$LibraryPathResolver","getLibrary","Found {0} in zip file {1}.", new Object[]{strippedModuleName,path});
+						logger.logp(FINER, "LibraryResolverFactory$LibraryPathResolver", "getLibrary", "Found {0} in zip file {1}.", new Object[] { strippedModuleName, path });
 						return new LibraryDataSource(libraryFile);
 					}
 				}
 			}
-			
-			logger.logp(FINER,"LibraryResolverFactory$LibraryPathResolver","getLibrary","{0} not found in library path.", strippedModuleName);
-			
-			throw new FileNotFoundException();
+
+			logger.logp(FINER, "LibraryResolverFactory$LibraryPathResolver", "getLibrary", "{0} not found in library path.", strippedModuleName);
+
+			throw new FileNotFoundException(fileName);
 		}
 
-		private File readArchive(File path, String filePath, String strippedModuleName)
-		{
-			try {
-				ZipFile file = new ZipFile(path);
-				
-				try {
-					Enumeration<? extends ZipEntry> entries = file.entries();
-					
-					ZipEntry bestMatch = null;
-					
-					while (entries.hasMoreElements()) {
-						ZipEntry thisEntry = entries.nextElement();
-						
-						if (thisEntry.getName().equals(filePath)) {
-							bestMatch = thisEntry;
-							break;
-						}
-						
-						if (stripPath(thisEntry.getName()).equals(strippedModuleName)) {
-							bestMatch = thisEntry;
-							//Not an exact match - keep looking
-						}
-						
+		private static File readArchive(File path, String filePath, String strippedModuleName) {
+			try (ZipFile file = new ZipFile(path)) {
+				Enumeration<? extends ZipEntry> entries = file.entries();
+				ZipEntry bestMatch = null;
+
+				while (entries.hasMoreElements()) {
+					ZipEntry thisEntry = entries.nextElement();
+
+					if (thisEntry.getName().equals(filePath)) {
+						bestMatch = thisEntry;
+						break;
 					}
-					
-					if (bestMatch != null) {
-						return extractEntry(bestMatch, strippedModuleName, file);
+
+					if (stripPath(thisEntry.getName()).equals(strippedModuleName)) {
+						bestMatch = thisEntry;
+						// Not an exact match - keep looking
 					}
-					
-					return null;
-				} finally {
-					file.close();
 				}
+
+				if (bestMatch != null) {
+					return extractEntry(bestMatch, strippedModuleName, file);
+				}
+
+				return null;
 			} catch (Exception e) {
-				logger.logp(Level.WARNING,"LibraryResolverFactory$LibraryPathResolver", "readArchive", "Problems reading " + path + " as a zip file", e);				
+				logger.logp(Level.WARNING,"LibraryResolverFactory$LibraryPathResolver", "readArchive", "Problems reading " + path + " as a zip file", e);
 				return null;
 			}
 		}
 
-		private File extractEntry(ZipEntry thisEntry, String moduleName, ZipFile file) throws FileNotFoundException
-		{
+		private static File extractEntry(ZipEntry thisEntry, String moduleName, ZipFile file) {
 			try {
 				File libraryFile = File.createTempFile(moduleName, ".j9ddrlib");
-				
-				InputStream in = file.getInputStream(thisEntry);
-				
-				try {
-					OutputStream out = new FileOutputStream(libraryFile);
-					
-					try {
-						//Set ShutdownHook to clean up.
-						libraryFile.deleteOnExit();
-					
+
+				// Set ShutdownHook to clean up.
+				libraryFile.deleteOnExit();
+
+				try (InputStream in = file.getInputStream(thisEntry)) {
+					try (OutputStream out = new FileOutputStream(libraryFile)) {
 						byte[] buffer = new byte[4096];
 						int read;
-						
+
 						while ((read = in.read(buffer)) != -1) {
-							out.write(buffer,0,read);
+							out.write(buffer, 0, read);
 						}
-						
+
 						return libraryFile;
-					} finally {
-						try {
-							out.close();
-						} catch (IOException e) {
-							//Do nothing
-						}
-					}
-					
-				} finally {
-					try {
-						in.close();
-					} catch (IOException e) {
-						//Do nothing
 					}
 				}
 			} catch (IOException e) {
@@ -416,191 +417,195 @@ public class LibraryResolverFactory
 				return null;
 			}
 		}
-		
 	}
-	
+
 	/**
 	 * Looks for the library next to the core file.
-	 *
 	 */
-	private final static class NextToCoreResolver extends BaseResolver implements ILibraryResolver
-	{
+	private final static class NextToCoreResolver extends BaseResolver {
 		private final File coreDirectory;
-		
+
 		@SuppressWarnings("unused")
-		public NextToCoreResolver(File coreFile)
-		{
+		public NextToCoreResolver(File coreFile) {
 			coreDirectory = coreFile.getAbsoluteFile().getParentFile();
 		}
-		
-		private boolean isAbsolutePath(String name) {
-			if((null == name) || (name.length() == 0)) {
-				return false;
-			}
-			if(name.length() == 1) {
-				return (name.charAt(0) == '/');
-			} else {
-				return (name.charAt(0) == '/') || (name.charAt(1) == ':');
-			}
-		}
-		
-		//recursively searches the directory tree for a relative path
-		private File findFile(File dir, String[] parts, int matchDepth) {
-			File[] files = dir.listFiles();
-			File current = null;
-			for(int i = 0; files != null && i < files.length && (null == current); i++) {
-				File file = files[i];
-				if(file.getName().equals(parts[matchDepth])) {
-					if(++matchDepth == parts.length) {
-						return file;
-					} else {
-						if(file.isDirectory()) {
-							current = findFile(file, parts, matchDepth);
-						}
-					}
-				} else {
-					if(file.isDirectory()) {
-						current = findFile(file, parts, 0);
-					}
+
+		private static boolean isAbsolutePath(String name) {
+			if (null != name) {
+				if (name.startsWith("/")) {
+					return true;
+				} else if (name.length() > 1 && (name.charAt(1) == ':')) {
+					return Character.isLetter(name.charAt(0));
 				}
 			}
-			return current;		//couldn't find it
+			return false;
 		}
-		
-		public LibraryDataSource getLibrary(String fileName, boolean silent)
-				throws FileNotFoundException
-		{
+
+		/*
+		 * Recursively search a directory tree for a relative path.
+		 * This returns the entry that is least-deeply nested.
+		 * For example, if relativePath is "bin/java", and both "jdk/bin/java"
+		 * and "jdk/jre/bin/java" exist, the result will represent the former.
+		 */
+		private static File findFile(File root, String relativePath) {
+			Queue<File> todo = new LinkedList<>();
+
+			todo.add(root);
+
+			// do a breadth-first search
+			while (!todo.isEmpty()) {
+				File next = todo.remove();
+				File file = new File(next, relativePath);
+
+				if (file.exists()) {
+					return file;
+				}
+
+				for (File subdir : next.listFiles(child -> child.isDirectory())) {
+					todo.add(subdir);
+				}
+			}
+
+			return null;
+		}
+
+		@Override
+		public LibraryDataSource getLibrary(String fileName, boolean silent) throws FileNotFoundException {
 			String strippedModuleName = stripPath(fileName);
 			String separator = null;
-			if(fileName.indexOf('/') == -1) {
-				if(fileName.indexOf('\\') != -1) {
-					separator = "\\\\";
-				}
-			} else {
+			if (fileName.indexOf('/') != -1) {
 				separator = "/";
+			} else if (fileName.indexOf('\\') != -1) {
+				separator = "\\";
 			}
 			String canonicalName = (separator == null) ? fileName : normalise(fileName, separator);
-			if(!isAbsolutePath(canonicalName)) {
-				//if a relative path is passed then need to find it below the directory for the core file
-				if(separator != null) {
-					String[] parts = canonicalName.split(separator);
-					File file = findFile(coreDirectory, parts, 0);
-					if(file != null) {
+			if (!isAbsolutePath(canonicalName)) {
+				// if a relative path is passed then need to find it below the directory for the core file
+				if (separator != null) {
+					File file = findFile(coreDirectory, canonicalName);
+					if (file != null) {
 						String abspath = file.getAbsolutePath();
 						canonicalName = abspath.substring(coreDirectory.getAbsolutePath().length() + 1, abspath.length());
 					}
 				}
 			}
-			//Try with and without the extra directories in between
-			File withoutDirectories = new File(coreDirectory,strippedModuleName);
-			File withDirectories = new File(coreDirectory,canonicalName);
+			// Try with and without the extra directories in between
+			File withoutDirectories = new File(coreDirectory, strippedModuleName);
+			File withDirectories = new File(coreDirectory, canonicalName);
 			final String fileNameWithCase = withDirectories.getName();
 
-			File[] pathsToCheck = new File[] {withDirectories, withoutDirectories};
-			for( final File checkPath : pathsToCheck) {
-				if (checkPath.getParentFile() != null && checkPath.getParentFile().isDirectory())  {
-					logger.logp(FINER,"LibraryResolverFactory$NextToCoreResolver","getLibrary","Trying {0}.", withoutDirectories);
+			File[] pathsToCheck = new File[] { withDirectories, withoutDirectories };
+			for (final File checkPath : pathsToCheck) {
+				File parentFile = checkPath.getParentFile();
+				if (parentFile != null && parentFile.isDirectory()) {
+					logger.logp(FINER, "LibraryResolverFactory$NextToCoreResolver", "getLibrary", "Trying {0}.", checkPath);
 					// Make this case sensitive. This should return the original name which will
 					// still possess mixed case on Windows.
-					File[] matches = checkPath.getParentFile().listFiles(new FilenameFilter() {
-
+					File[] matches = parentFile.listFiles(new FilenameFilter() {
+						@Override
 						public boolean accept(File dir, String name) {
-							if( name.equals( fileNameWithCase ) ) {
-								File f = new File(dir, name);
-								if( f.isFile() ) {
-								return true;
+							if (name.equals(fileNameWithCase)) {
+								File file = new File(dir, name);
+								if (file.isFile()) {
+									return true;
+								}
 							}
-							}
-							if( name.equalsIgnoreCase( fileNameWithCase ) ) {
-								logger.logp(SEVERE,"LibraryResolverFactory$NextToCoreResolver","getLibrary","Found {0} but not {1} in {2}. Case sensitive files may been copied to a case insensitive file system causing {1} to be lost or overwritten by {0}.", new String[] {name, fileNameWithCase, checkPath.getParent()});
+							if (name.equalsIgnoreCase(fileNameWithCase)) {
+								logger.logp(SEVERE, "LibraryResolverFactory$NextToCoreResolver", "getLibrary",
+										"Found {0} but not {1} in {2}. Case sensitive files may been copied to a case insensitive file system causing {1} to be lost or overwritten by {0}.",
+										new String[] { name, fileNameWithCase, checkPath.getParent() });
 							}
 							return false;
 						}
 					});
-					if( matches.length == 1 ) {
+					if (matches.length == 1) {
 						// Matches should only have one element if successful.
-						logger.logp(FINER,"LibraryResolverFactory$NextToCoreResolver","getLibrary","Found {0}.", checkPath);
+						logger.logp(FINER, "LibraryResolverFactory$NextToCoreResolver", "getLibrary", "Found {0}.", checkPath);
 						return new LibraryDataSource(matches[0]);
 					}
-				} 
+				}
 			}
 			throw new FileNotFoundException("Can't find " + strippedModuleName + " in directory " + coreDirectory.getAbsolutePath());
 		}
 	}
-	
+
 	/**
 	 * Looks for the library on disk where the core file says it is. Will only work on the machine
 	 * that took the dump unless a mapping path has been set to map the paths correctly.
-	 *
 	 */
-	private final static class InPlaceResolver extends BaseResolver implements ILibraryResolver
-	{
-	
+	private final static class InPlaceResolver extends BaseResolver {
+
 		@SuppressWarnings("unused")
-		public InPlaceResolver(File coreFile) {}
-		
-		public LibraryDataSource getLibrary(String fileName, boolean silent)
-				throws FileNotFoundException
-		{
+		public InPlaceResolver(File coreFile) {
+			super();
+		}
+
+		@Override
+		public LibraryDataSource getLibrary(String fileName, boolean silent) throws FileNotFoundException {
 			File library = new File(mapPath(fileName));
-		
+
 			logger.logp(FINER,"LibraryResolverFactory$InPlaceResolver","getLibrary","Looking for {0}.", library);
-			
+
 			if (library.isFile()) {
-				logger.logp(FINER,"LibraryResolverFactory$InPlaceResolver","getLibrary","Found {0}.", library);
+				logger.logp(FINER, "LibraryResolverFactory$InPlaceResolver", "getLibrary", "Found {0}.", library);
 				return new LibraryDataSource(library);
 			} else {
-				logger.logp(FINER,"LibraryResolverFactory$InPlaceResolver","getLibrary","Can't find " +  fileName + " on disk");
-				throw new FileNotFoundException("Can't find " + fileName + " on disk");
+				String message = String.format("Can't find %s on disk", fileName);
+				logger.logp(FINER, "LibraryResolverFactory$InPlaceResolver", "getLibrary", message);
+				throw new FileNotFoundException(message);
 			}
 		}
-		
+
 	}
-	
-	private static abstract class BaseResolver implements ILibraryResolver 
-	{
+
+	private static abstract class BaseResolver implements ILibraryResolver {
+
+		BaseResolver() {
+			super();
+		}
+
 		/*
-		 * File names are normalised because on Windows if the file name is created with a .. in it then that is 
+		 * File names are normalised because on Windows if the file name is created with a .. in it then that is
 		 * persisted in a subsequently created File object. File.equals will then fail if comparisons are made
 		 * with files created from names with and without .. even if they point to the same file. The normalisation
 		 * resolves any relative sections of the path.
 		 */
-		protected static String normalise(String name, String separator) {
-			//escape Windows separator for regex
-			String[] parts = name.split(separator);
-			if(1 >= parts.length) {
+		static String normalise(String name, String separator) {
+			String[] parts = literalSplit(name, separator);
+			if (1 >= parts.length) {
 				// cannot split so return originally passed name
 				return name;
 			}
 			int reader = parts.length - 1;
 			int marker = reader;
 			String output = new String();
-			for(; reader >= 0; marker--, reader--) {
-				if(parts[marker].equals("..")) {
-					//parent reference, skip to next path section
+			for (; reader >= 0; marker--, reader--) {
+				if (parts[marker].equals("..")) {
+					// parent reference, skip to next path section
 					reader--;
 					continue;
 				}
-				if(parts[marker].equals(".")) {
-					//self reference, ignore
+				if (parts[marker].equals(".")) {
+					// self reference, ignore
 					continue;
 				}
 				output = separator + parts[reader] + output;
 			}
-			if(output.startsWith(separator)) {
+			if (output.startsWith(separator)) {
 				output = output.substring(separator.length());
 			}
 			return output;
 		}
-		
-		
-		public LibraryDataSource getLibrary(String fileName) throws FileNotFoundException
-		{
+
+		@Override
+		public LibraryDataSource getLibrary(String fileName) throws FileNotFoundException {
 			return getLibrary(fileName, false);
 		}
-		
+
+		@Override
 		public void dispose() {
 			// default of a no-op
 		}
 	}
+
 }

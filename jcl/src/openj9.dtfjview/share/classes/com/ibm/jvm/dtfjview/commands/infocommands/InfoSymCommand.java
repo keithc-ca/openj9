@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2004, 2020 IBM Corp. and others
+ * Copyright (c) 2004, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -79,14 +79,12 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 
 		try {
 			Object e = ip.getExecutable();
-			if( e instanceof ImageModule ) {
+			if (e instanceof ImageModule) {
 				ImageModule exe = (ImageModule) e;
-				if (moduleName != null ) {
-					if ( checkModuleName(exe.getName(), moduleName)) {
-						printModule(exe, true);
-					}
-				} else {
+				if (moduleName == null) {
 					printModule(exe, false);
+				} else if (checkModuleName(exe.getName(), moduleName)) {
+					printModule(exe, true);
 				}
 			} else if (e instanceof CorruptData) {
 				CorruptData corruptObj = (CorruptData) e;
@@ -99,17 +97,15 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 		} catch (CorruptDataException e) {
 			out.println(Exceptions.getCorruptDataExceptionString());
 		}
-		Iterator<?> iLibs;
+		Iterator<?> iLibs = null;
 		try {
 			iLibs = ip.getLibraries();
 		} catch (DataUnavailable du) {
-			iLibs = null;
 			out.println(Exceptions.getDataUnavailableString());
 		} catch (CorruptDataException cde) {
-			iLibs = null;
 			out.println(Exceptions.getCorruptDataExceptionString());
 		}
-				
+
 		// iterate through the libraries
 		while (null != iLibs && iLibs.hasNext()) {
 			Object next = iLibs.next();
@@ -119,21 +115,17 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 				try {
 					currentName = mod.getName();
 				} catch (CorruptDataException e) {
-					out.print("\t  <corrupt library name: "
-							+ mod.toString() + ">\n\n");
+					out.print("\t  <corrupt library name: " + mod.toString() + ">\n\n");
 				}
-				if (moduleName != null ) {
-					if ( checkModuleName(currentName, moduleName)) {
-						printModule(mod, true);
-					}
-				} else {
+				if (moduleName == null) {
 					printModule(mod, false);
+				} else if (checkModuleName(currentName, moduleName)) {
+					printModule(mod, true);
 				}
 			} else if (next instanceof CorruptData) {
 				CorruptData corruptObj = (CorruptData) next;
 				// warn the user that this image library is corrupt
-				out.print("\t  <corrupt library encountered: "
-						+ corruptObj.toString() + ">\n\n");
+				out.print("\t  <corrupt library encountered: " + corruptObj.toString() + ">\n\n");
 			} else {
 				// unexpected type in iterator
 				out.print("\t  <corrupt library encountered>\n\n");
@@ -180,9 +172,6 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 				out.print("\", size: 0x");
 				out.print(Long.toHexString(is.getSize()));
 				out.print("\n");
-			} else if (next instanceof CorruptData) {
-				// warn the user that this image section is corrupt
-				out.print("\t   <corrupt section encountered>\n");
 			} else {
 				// unexpected type in iterator
 				out.print("\t   <corrupt section encountered>\n");
@@ -201,11 +190,8 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 					out.print(", name: \"");
 					out.print(is.getName());
 					out.print("\"\n");
-				} else if (next instanceof CorruptData) {
-					// warn the user that this image section is corrupt
-					out.print("\t   <corrupt symbol encountered>\n");
 				} else {
-					// unexpected type in iterator
+					// warn the user that this image section is corrupt
 					out.print("\t   <corrupt symbol encountered>\n");
 				}
 			}
@@ -213,8 +199,7 @@ public class InfoSymCommand extends BaseJdmpviewCommand {
 		out.print("\n");
 	}
 
-	private boolean checkModuleName(final String name,
-			String moduleName) {
+	private static boolean checkModuleName(final String name, String moduleName) {
 		boolean wildCardStart = false;
 		boolean wildCardEnd = false;
 		

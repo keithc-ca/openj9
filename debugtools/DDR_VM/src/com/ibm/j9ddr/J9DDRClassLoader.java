@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 1991, 2019 IBM Corp. and others
+ * Copyright (c) 1991, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -109,7 +109,7 @@ public class J9DDRClassLoader extends SecureClassLoader {
 
 	public J9DDRClassLoader(StructureReader reader, ClassLoader parent) {
 		super(parent);
-		this.cache = new HashMap<String, Class<?>>();
+		this.cache = new HashMap<>();
 		this.reader = Objects.requireNonNull(reader);
 		this.generatePointers = shouldGeneratePointerClasses(reader);
 		this.pointerPackageDotName = withTrailingDot(reader.getPackageName(PackageNameType.POINTER_PACKAGE_DOT_NAME));

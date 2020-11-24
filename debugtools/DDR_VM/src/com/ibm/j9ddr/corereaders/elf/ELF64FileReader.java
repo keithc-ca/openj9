@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2009, 2020 IBM Corp. and others
+ * Copyright (c) 2009, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -67,7 +67,8 @@ public class ELF64FileReader extends ELFFileReader {
 	}
 
 	public boolean validDump(byte[] data, long filesize) {
-		return (0x7F == data[0] && 0x45 == data[1] && 0x4C == data[2] && 0x46 == data[3] && ELFCLASS64 == data[4]);
+		return (0x7F == data[0]) && (0x45 == data[1]) && (0x4C == data[2]) && (0x46 == data[3])
+				&& (ELFCLASS64 == data[4]);
 	}
 
 	@Override
@@ -85,8 +86,8 @@ public class ELF64FileReader extends ELFFileReader {
 	}
 
 	@Override
-	protected long padToWordBoundary(long l) {
-		return (l + 7) & ~7;
+	protected long padToWordBoundary(long address) {
+		return (address + 7) & ~7;
 	}
 
 	@Override
@@ -107,7 +108,7 @@ public class ELF64FileReader extends ELFFileReader {
 	protected List<ELFSymbol> readSymbolsAt(SectionHeaderEntry entry) throws IOException {
 		// The size of an entry is 24 bytes, entry.size must be a multiple of that
 		// or we know this SectionHeaderEntry is corrupt.
-		if (0 != entry.size % 24L) {
+		if (0 != (entry.size % 24L)) {
 			return Collections.emptyList();
 		}
 		seek(entry.offset);
@@ -115,7 +116,7 @@ public class ELF64FileReader extends ELFFileReader {
 		// loops in corrupt dumps, catch corrupt negative counts with abs.
 		int count = (int) Math.min(Math.abs(entry.size / 24L), 8096);
 		List<ELFSymbol> symbols = new ArrayList<>(count);
-		for (long i = 0; i < count; i++) {
+		for (int i = 0; i < count; i++) {
 			long name = is.readInt() & 0xffffffffL;
 			byte info = is.readByte();
 			byte other = is.readByte();

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2004, 2020 IBM Corp. and others
+ * Copyright (c) 2004, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -46,26 +46,26 @@ public class ProgramHeaderEntry {
 	// PHE structure definitions:
 	private int _type;
 	public final long fileOffset;
-	public final long fileSize; // if fileSize == 0 then we have to map memory from external lib file.
+	public final long fileSize; // if fileSize == 0 then we have to map memory from an external file
 	public final long virtualAddress;
 	public final long physicalAddress;
 	public final long memorySize;
-	private int _flags;
+	private final int _flags;
 	private final ELFFileReader reader;
 
-	// private long _alignment;
+	// private final long _alignment;
 
 	ProgramHeaderEntry(int type, long fileOffset, long fileSize, long virtualAddress, long physicalAddress,
 			long memorySize, int flags, long alignment, ELFFileReader reader) {
-		_type = type;
+		this._type = type;
 		this.fileOffset = fileOffset;
 		this.fileSize = fileSize;
 		this.virtualAddress = virtualAddress;
 		this.physicalAddress = physicalAddress;
 		this.memorySize = memorySize;
-		_flags = flags;
+		this._flags = flags;
 		this.reader = reader;
-		// _alignment = alignment;
+		// this._alignment = alignment;
 	}
 
 	boolean isEmpty() {
@@ -94,7 +94,7 @@ public class ProgramHeaderEntry {
 	}
 
 	IMemorySource asMemorySource() {
-		IMemorySource source = null;
+		IMemorySource source;
 		if (!isEmpty()) {
 			source = new ELFMemorySource(virtualAddress, memorySize, fileOffset, reader);
 		} else {
@@ -102,7 +102,7 @@ public class ProgramHeaderEntry {
 					"ELF ProgramHeaderEntry storage declared but data not included");
 		}
 		Properties memoryProps = ((IDetailedMemoryRange) source).getProperties();
-		memoryProps.setProperty("IN_CORE", "" + (!isEmpty()));
+		memoryProps.setProperty("IN_CORE", Boolean.toString(!isEmpty()));
 		if ((_flags & PF_W) != 0) {
 			memoryProps.setProperty(IDetailedMemoryRange.WRITABLE, Boolean.TRUE.toString());
 		}
@@ -115,8 +115,14 @@ public class ProgramHeaderEntry {
 		return source;
 	}
 
+	boolean validInFile(long offset) {
+		return (Long.compareUnsigned(offset, fileOffset) >= 0)
+			&& (Long.compareUnsigned(offset - fileOffset, fileSize) < 0);
+	}
+
 	boolean validInProcess(long address) {
-		return virtualAddress <= address && address < virtualAddress + memorySize;
+		return (Long.compareUnsigned(address, virtualAddress) >= 0)
+			&& (Long.compareUnsigned(address - virtualAddress, memorySize) < 0);
 	}
 
 	boolean contains(long address) {
