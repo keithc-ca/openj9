@@ -197,3 +197,52 @@ typeoverride.J9SimplePool.freeList=J9SRP(J9SimplePoolFreeList)
 
 # Type override for SharedClassCache (SH_CacheMap).
 typeoverride.J9SharedClassConfig.sharedClassCache=SH_CacheMap*
+
+# S|J9ROMClass|J9ROMClassPointer|
+# F|nestHost|nestHost|J9SRP|J9SRP
+# F|nestMembers|nestMembers|J9SRP|J9SRP
+# F|callSiteData|callSiteData|J9SRP|J9SRP
+# F|varHandleMethodTypeLookupTable|varHandleMethodTypeLookupTable|J9SRP|J9SRP
+#
+# S|J9ROMImageHeader|J9ROMImageHeaderPointer|
+# F|aotPointer|aotPointer|J9SRP|J9SRP
+#
+# S|J9PoolPuddle|J9PoolPuddlePointer|
+# F|firstElementAddress|firstElementAddress|J9SRP|J9SRP
+#
+# S|J9ROMArrayClass|J9ROMArrayClassPointer|
+# F|nestHost|nestHost|J9SRP|J9SRP
+# F|nestMembers|nestMembers|J9SRP|J9SRP
+# F|callSiteData|callSiteData|J9SRP|J9SRP
+# F|staticSplitMethodRefIndexes|staticSplitMethodRefIndexes|J9SRP|J9SRP
+# F|specialSplitMethodRefIndexes|specialSplitMethodRefIndexes|J9SRP|J9SRP
+# F|varHandleMethodTypeLookupTable|varHandleMethodTypeLookupTable|J9SRP|J9SRP
+#
+# S|J9MethodParameter|J9MethodParameterPointer|
+# F|name|name|J9SRP|J9SRP
+#
+# S|OSCache_header1|OSCache_header1Pointer|
+# F|dataStart|dataStart|J9SRP|J9SRP
+#
+# S|OSCache_header2|OSCache_header2Pointer|
+# F|dataStart|dataStart|J9SRP|J9SRP
+#
+# S|J9ROMReflectClass|J9ROMReflectClassPointer|
+# F|className|className|J9SRP|J9SRP
+# F|superclassName|superclassName|J9SRP|J9SRP
+# F|interfaces|interfaces|J9SRP|J9SRP
+# F|intermediateClassData|intermediateClassData|J9WSRP|J9WSRP
+# F|cpShapeDescription|cpShapeDescription|J9SRP|J9SRP
+# F|outerClassName|outerClassName|J9SRP|J9SRP
+# F|innerClasses|innerClasses|J9SRP|J9SRP
+# F|nestHost|nestHost|J9SRP|J9SRP
+# F|nestMembers|nestMembers|J9SRP|J9SRP
+# F|optionalInfo|optionalInfo|J9SRP|J9SRP
+# F|callSiteData|callSiteData|J9SRP|J9SRP
+# F|staticSplitMethodRefIndexes|staticSplitMethodRefIndexes|J9SRP|J9SRP
+# F|specialSplitMethodRefIndexes|specialSplitMethodRefIndexes|J9SRP|J9SRP
+# F|varHandleMethodTypeLookupTable|varHandleMethodTypeLookupTable|J9SRP|J9SRP
+#
+# S|J9ArrayROMClasses|J9ArrayROMClassesPointer|
+# F|interfaceClasses$cloneable|interfaceClasses.cloneable|J9SRP|J9SRP
+# F|interfaceClasses$serializeable|interfaceClasses.serializeable|J9SRP|J9SRP
