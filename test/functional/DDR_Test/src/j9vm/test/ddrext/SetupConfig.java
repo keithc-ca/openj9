@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2001, 2018 IBM Corp. and others
+ * Copyright (c) 2001, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -68,6 +68,12 @@ public class SetupConfig {
 		if (ddrInstance == null) {
 			if (coreFile != null) {
 				try {
+					/*
+					 * In modular VMs, the static initializer of ImageFactory
+					 * exports the packages to which we need access.
+					 */
+					Class.forName("com.ibm.dtfj.image.j9.ImageFactory");
+
 					DDROutputStream ps = getPrintStream();
 					ddrInstance = new DDRInteractive(coreFile, ps);
 					log.info("Created new DDR Interactive instance using core file : "
