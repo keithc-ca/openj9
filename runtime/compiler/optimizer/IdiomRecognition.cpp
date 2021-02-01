@@ -4507,8 +4507,8 @@ TR_CISCTransformer::analyzeConnectionOnePair(TR_CISCNode *const p, TR_CISCNode *
             int32_t thisCount;
             if (commutative && num == 2)
                {
-               if ((thisCount = analyzeConnectionOnePairChild(p, t, pn, t->getChild(i))) ||
-                   (thisCount = analyzeConnectionOnePairChild(p, t, pn, t->getChild(1-i))))
+               if ((0 != (thisCount = analyzeConnectionOnePairChild(p, t, pn, t->getChild(i)))) ||
+                   (0 != (thisCount = analyzeConnectionOnePairChild(p, t, pn, t->getChild(1 - i)))))
                   {
                   successCount += thisCount;
                   break;
@@ -4516,7 +4516,7 @@ TR_CISCTransformer::analyzeConnectionOnePair(TR_CISCNode *const p, TR_CISCNode *
                }
             else
                {
-               if (thisCount = analyzeConnectionOnePairChild(p, t, pn, t->getChild(i)))
+               if (0 != (thisCount = analyzeConnectionOnePairChild(p, t, pn, t->getChild(i))))
                   {
                   successCount += thisCount;
                   break;
@@ -5502,7 +5502,7 @@ TR_CISCTransformer::getP2TInLoopAllowOptionalIfSingle(TR_CISCNode *p)
    TR_CISCNode *t;
    while(true)
       {
-      if (t = getP2TInLoopIfSingle(p)) return t;
+      if (NULL != (t = getP2TInLoopIfSingle(p))) return t;
       if (!p->isOptionalNode()) return 0;
       p = p->getChild(0);
       if (!p) return 0;
@@ -7207,7 +7207,7 @@ TR_CISCTransformer::simpleOptimization()
                      switch(ch->getOpcode())
                         {
                         case TR::iload:
-                           if (def = ch->getNodeIfSingleChain())
+                           if (NULL != (def = ch->getNodeIfSingleChain()))
                               {
                               if ((def->getNumChildren() > 0) && def->getChild(0))  // There is a bug where def is a TR_entrynode, so getChild(0) is null.
                                  {

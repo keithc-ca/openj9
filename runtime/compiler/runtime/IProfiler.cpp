@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -359,7 +359,7 @@ TR_IProfiler::elgibleForPersistIprofileInfo(TR::Compilation *comp) const
 void
 TR_IProfiler::persistIprofileInfo(TR::ResolvedMethodSymbol *resolvedMethodSymbol, TR_ResolvedMethod *resolvedMethod, TR::Compilation *comp)
    {
-   static bool traceIProfiling = (debug("traceIProfiling") != NULL);
+   static bool traceIProfiling = debug("traceIProfiling") != 0;
    static bool SCfull = false;
 
    if (resolvedMethod->isNative())
@@ -1997,7 +1997,7 @@ TR_IProfiler::getProfilingEntry(TR_OpaqueMethodBlock *method, uint32_t byteCodeI
    {
    TR_IPBytecodeHashTableEntry *entry = profilingSample (method, byteCodeIndex, comp);
 
-   static bool traceIProfiling = ((debug("traceIProfiling") != NULL));
+   static bool traceIProfiling = debug("traceIProfiling") != 0;
 
    if (traceIProfiling)
       traceMsg(comp, "Asked for profiling data on PC=%p, ", getSearchPC (method, byteCodeIndex, comp));
@@ -2025,7 +2025,7 @@ TR_IProfiler::getProfilingData(TR_OpaqueMethodBlock *method, uint32_t byteCodeIn
    {
    TR_IPBytecodeHashTableEntry *entry = getProfilingEntry(method, byteCodeIndex, comp);
 
-   static bool traceIProfiling = ((debug("traceIProfiling") != NULL));
+   static bool traceIProfiling = debug("traceIProfiling") != 0;
 
    if (entry)
       {
@@ -2148,7 +2148,7 @@ int16_t next2BytesSigned(uintptr_t pc)       { return *(int16_t *)(pc); }
 void
 TR_IProfiler::getBranchCounters (TR::Node *node, TR::TreeTop *fallThroughTree, int32_t *taken, int32_t *notTaken, TR::Compilation *comp)
    {
-   static bool traceIProfiling = ((debug("traceIProfiling") != NULL));
+   static bool traceIProfiling = debug("traceIProfiling") != 0;
    uintptr_t data = getProfilingData (node, comp);
 
    if (data)
@@ -2283,7 +2283,7 @@ TR_IProfiler::setBlockAndEdgeFrequencies(TR::CFG *cfg, TR::Compilation *comp)
 
    cfg->propagateFrequencyInfoFromExternalProfiler(this);
 
-   static bool traceIProfiling = ((debug("traceIProfiling") != NULL));
+   static bool traceIProfiling = debug("traceIProfiling") != 0;
    if (traceIProfiling)
       {
       traceMsg(comp, "\nBlock frequency info set by Interpreter profiling\n");
@@ -2305,7 +2305,7 @@ TR_IProfiler::createIProfilingValueInfo (TR_ByteCodeInfo &bcInfo, TR::Compilatio
    if (!isIProfilingEnabled())
       return NULL;
 
-   static bool traceIProfiling = ((debug("traceIProfiling") != NULL));
+   static bool traceIProfiling = debug("traceIProfiling") != 0;
 
    TR_OpaqueMethodBlock *method = getMethodFromBCInfo(bcInfo, comp);
    TR_ExternalValueProfileInfo *valueProfileInfo = TR_ExternalValueProfileInfo::getInfo(method, comp);
@@ -2487,7 +2487,7 @@ TR_AbstractInfo *
 TR_IProfiler::createIProfilingValueInfo (TR::Node *node, TR::Compilation *comp)
    {
 
-   static bool traceIProfiling = ((debug("traceIProfiling") != NULL));
+   static bool traceIProfiling = debug("traceIProfiling") != 0;
    if (traceIProfiling)
       {
       traceMsg(comp, "\nCreating iprofiling value info for node %p\n", node);
@@ -2508,7 +2508,7 @@ TR_IProfiler::getValueProfileInfo(TR_ByteCodeInfo &bcInfo, TR::Compilation *comp
    if (!isIProfilingEnabled())
       return NULL;
 
-   static bool traceIProfiling = ((debug("traceIProfiling") != NULL));
+   static bool traceIProfiling = debug("traceIProfiling") != 0;
 
    if (traceIProfiling)
       {
@@ -2836,7 +2836,7 @@ TR_IPBCDataCallGraph::getData(TR::Compilation *comp)
    int32_t maxWeight;
    uintptr_t data = _csInfo.getDominantClass(sumWeight, maxWeight);
 
-   static bool traceIProfiling = ((debug("traceIProfiling") != NULL));
+   static bool traceIProfiling = debug("traceIProfiling") != 0;
    if (traceIProfiling && comp)
       {
       traceMsg(comp, "\nMax weight %d, current sum weight %d\n", maxWeight, sumWeight);
@@ -3217,7 +3217,7 @@ TR_IProfiler::getCGProfilingData(TR_OpaqueMethodBlock *method, uint32_t byteCode
    {
    TR_IPBytecodeHashTableEntry *entry = profilingSample(method, byteCodeIndex, comp);
 
-   static bool traceIProfiling = ((debug("traceIProfiling") != NULL));
+   static bool traceIProfiling = debug("traceIProfiling") != 0;
    if (entry)
       {
       if (invalidateEntryIfInconsistent(entry))

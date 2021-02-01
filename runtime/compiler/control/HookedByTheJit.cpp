@@ -865,7 +865,7 @@ void DLTLogic(J9VMThread* vmThread, TR::CompilationInfo *compInfo)
       dltBlock->methods[idx] = 0;
       return;
       }
-   else if (extra = TR::CompilationInfo::getPCIfCompiled(walkState.method))
+   else if (NULL != (extra = TR::CompilationInfo::getPCIfCompiled(walkState.method)))
       {
       TR_PersistentJittedBodyInfo *bodyInfo = TR::Recompilation::getJittedBodyInfoFromPC(extra);
       if (bodyInfo && bodyInfo->getMethodInfo()->hasFailedDLTCompRetrials())

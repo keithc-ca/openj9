@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -2209,6 +2209,7 @@ bool TR_J9ByteCodeIlGenerator::replaceMethods(TR::TreeTop *tt, TR::Node *node)
    for (int i = 0; i < _numDecFormatRenames; i++)
       {
       if (!strcmp(nodeName, _decFormatRenames[i].srcMethodSignature))
+         {
          if (performTransformation(comp(), "%sreplaced %s by %s in [%p]\n",
                                      OPT_DETAILS, _decFormatRenames[i].srcMethodSignature, _decFormatRenames[i].dstMethodSignature, node))
             {
@@ -2219,6 +2220,7 @@ bool TR_J9ByteCodeIlGenerator::replaceMethods(TR::TreeTop *tt, TR::Node *node)
             }
          else
             return false;
+         }
       }
    return true;
    }

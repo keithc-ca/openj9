@@ -214,7 +214,7 @@ static UDATA logStackIterator(J9VMThread *currentThread, J9StackWalkState *walkS
 
       // add the method to our list ONLY if level can be determined; it can be determined
       // either from body info (if it exists), or from fixed level (if it was set)
-      if (bodyInfo || (globalOptLevel != (-1)))
+      if (bodyInfo || (globalOptLevel != (TR_Hotness) (-1)))
          {
          // set the method
          jittedMethodsOnStack[*currentMethodIndex]._method = walkState->method;

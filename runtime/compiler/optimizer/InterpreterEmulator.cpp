@@ -55,6 +55,8 @@ InterpreterEmulator::maintainStackForIf(TR_J9ByteCode bc)
             canBranch = second->intValue != first->intValue;
             debugTrace(tracer(), "maintainStackForIf ifcmpne %d != %d\n", second->intValue, first->intValue);
             break;
+         default:
+            break;
          }
       canFallThru = !canBranch;
       }
@@ -347,6 +349,8 @@ InterpreterEmulator::getReturnValueForInvokestatic(TR_ResolvedMethod *callee)
       case TR::java_lang_invoke_ILGenMacros_isShareableThunk:
          result = new (trStackMemory()) IconstOperand(0);
          break;
+      default:
+         break;
       }
    return result;
    }
@@ -505,6 +509,8 @@ InterpreterEmulator::refineResolvedCalleeForInvokestatic(TR_ResolvedMethod *&cal
          callee = fej9->createResolvedMethod(this->trMemory(), j9method);
          return;
          }
+      default:
+         break;
       }
    }
 
@@ -541,6 +547,7 @@ InterpreterEmulator::findAndCreateCallsitesFromBytecodes(bool wasPeekingSuccessf
          case J9BCinvokestatic:
          case J9BCinvokestaticsplit: visitInvokestatic(); break;
          case J9BCinvokeinterface: visitInvokeinterface(); break;
+         default: break;
          }
 
       if (_iteratorWithState)
@@ -731,6 +738,8 @@ InterpreterEmulator::debugUnresolvedOrCold(TR_ResolvedMethod *resolvedMethod)
                break;
             case J9BCinvokestaticsplit:
                cpIndex |= J9_STATIC_SPLIT_TABLE_INDEX_FLAG;
+               break;
+            default:
                break;
             }
          TR::Method *meth = comp()->fej9()->createMethod(this->trMemory(), _calltarget->_calleeMethod->containingClass(), cpIndex);

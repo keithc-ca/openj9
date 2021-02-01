@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -4144,6 +4144,8 @@ int TR_SPMDKernelParallelizer::symbolicEvaluateTree(TR::Node *node)
       case TR::isub:
       case TR::lsub:
          return (c1-c2);
+      default:
+         break;
       }
 
    return 0;

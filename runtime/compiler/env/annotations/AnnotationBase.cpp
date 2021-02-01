@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -514,7 +514,7 @@ bool TR_AnnotationBase::extractValue(J9AnnotationInfoEntry * annotationInfoEntry
      ++dataPtr;// point at data
      *(int32_t* *)ptr = dataPtr;
      return true;
-   } while(namePtr = intFunc->annotationElementIteratorNext(&state,&data));
+   } while (NULL != (namePtr = intFunc->annotationElementIteratorNext(&state, &data)));
     if(trace) printf("Search failed\n");
     return false;
   }
@@ -553,6 +553,3 @@ TR_AnnotationBase::AnnotationTable TR_AnnotationBase::recognizedAnnotations[] = 
 #include "env/annotations/AnnotationTable.inc"
   {"kUnknown",0}
 };
-
-
-

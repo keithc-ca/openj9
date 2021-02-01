@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -160,7 +160,7 @@ J9::Node::copyValidProperties(TR::Node *fromNode, TR::Node *toNode)
    UnionPropertyB_Type fromUnionPropertyB_Type = fromNode->getUnionPropertyB_Type();
    UnionPropertyB_Type toUnionPropertyB_Type = toNode->getUnionPropertyB_Type();
 
-   if ((fromUnionPropertyB_Type == toUnionPropertyB_Type))
+   if (fromUnionPropertyB_Type == toUnionPropertyB_Type)
       {
       switch (fromUnionPropertyB_Type)
          {

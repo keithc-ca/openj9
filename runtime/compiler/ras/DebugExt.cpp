@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -1147,7 +1147,7 @@ TR_DebugExt::dxTrPrint(const char* name1, void* addr2, uintptr_t argCount, const
    int32_t argc = 0;
    const char *argp1 = args;
    char *argp2 = myArgs;
-   while (*argp2++ = *argp1++);
+   while ('\0' != (*argp2++ = *argp1++));
    for (argp2 = myArgs; *argp2; )
       {
       argv[argc++] = argp2;
@@ -2126,7 +2126,7 @@ TR_DebugExt::dxPrintPersistentJittedBodyInfo(TR_PersistentJittedBodyInfo *bodyIn
       _dbgPrintf("\tflags16_t                 _flags = 0x%04x\n", localBodyInfo->_flags.getValue());
       _dbgPrintf("\tint8_t                    _sampleIntervalCount = %d\n", localBodyInfo->_sampleIntervalCount);
       _dbgPrintf("\tuint8_t                   _aggressiveRecompilationChances = %d\n", localBodyInfo->_aggressiveRecompilationChances);
-      _dbgPrintf("\tTR_Hotness                _hotness = %d (%s)\n", localBodyInfo->_hotness, localBodyInfo->_hotness == -1 ? "unknown" : comp()->getHotnessName(localBodyInfo->_hotness));
+      _dbgPrintf("\tTR_Hotness                _hotness = %d (%s)\n", localBodyInfo->_hotness, localBodyInfo->_hotness == (TR_Hotness) -1 ? "unknown" : comp()->getHotnessName(localBodyInfo->_hotness));
       _dbgPrintf("\tuint8_t                   _numScorchingIntervals = %d\n", localBodyInfo->_numScorchingIntervals);
       _dbgPrintf("\tbool                      _isInvalidated = %d\n", localBodyInfo->_isInvalidated);
       _dbgPrintf("\tDetails of flags:\n");

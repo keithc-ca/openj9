@@ -2132,6 +2132,8 @@ TR_J9InlinerPolicy::isInlineableJNI(TR_ResolvedMethod *method,TR::Node *callNode
          return false; // todo
       case TR::sun_misc_Unsafe_objectFieldOffset:
          return false; // todo
+      default:
+         break;
       }
 
    return false;
@@ -4705,13 +4707,17 @@ TR_J9InlinerPolicy::supressInliningRecognizedInitialCallee(TR_CallSite* callsite
          case TR::java_lang_invoke_DirectHandle_nullCheckIfRequired:
          case TR::java_lang_invoke_PrimitiveHandle_initializeClassIfRequired:
          case TR::java_lang_invoke_MethodHandle_invokeExactTargetAddress:
+            {
             TR::IlGeneratorMethodDetails & details = comp->ilGenRequest().details();
             if (details.isMethodHandleThunk())
                {
                J9::MethodHandleThunkDetails & thunkDetails = static_cast<J9::MethodHandleThunkDetails &>(details);
-                  return thunkDetails.isCustom();
+               return thunkDetails.isCustom();
                }
             return true;
+            }
+         default:
+            break;
          }
       }
    return (callsite->_callNode && comp->fej9()->supressInliningRecognizedInitialCallee(callsite, comp));
@@ -5041,6 +5047,8 @@ bool TR_J9InlinerPolicy::isJSR292SmallHelperMethod(TR_ResolvedMethod *resolvedMe
       case TR::java_lang_invoke_MethodHandle_doCustomizationLogic:
       case TR::java_lang_invoke_MethodHandle_undoCustomizationLogic:
          return true;
+      default:
+         break;
       }
    return false;
    }
@@ -5054,6 +5062,8 @@ bool TR_J9InlinerPolicy::isJSR292SmallGetterMethod(TR_ResolvedMethod *resolvedMe
       case TR::java_lang_invoke_MutableCallSite_getTarget:
       case TR::java_lang_invoke_MethodHandle_type:
          return true;
+      default:
+         break;
       }
    return false;
    }
@@ -6595,6 +6605,8 @@ bool TR_J9InlinerPolicy::dontPrivatizeArgumentsForRecognizedMethod(TR::Recognize
          {
          case TR::java_lang_invoke_MethodHandle_invokeExactTargetAddress:
             return true;
+         default:
+            break;
          }
       }
    return false;

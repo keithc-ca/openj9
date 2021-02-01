@@ -474,7 +474,7 @@ TR::Node *pd2udSimplifier(TR::Node * node, TR::Block * block, TR::Simplifier * s
       }
 
    TR::Node * result = NULL;
-   if (result = s->unaryCancelOutWithChild(node, node->getFirstChild(), s->_curTree, TR::ud2pd))
+   if (NULL != (result = s->unaryCancelOutWithChild(node, node->getFirstChild(), s->_curTree, TR::ud2pd)))
       return result;
 
    child = node->setChild(0,removeOperandWidening(child, node, block, s));
@@ -647,7 +647,7 @@ TR::Node *ud2pdSimplifier(TR::Node * node, TR::Block * block, TR::Simplifier * s
       }
 
    TR::Node * result = NULL;
-   if (result = s->unaryCancelOutWithChild(node, node->getFirstChild(), s->_curTree, TR::pd2ud))
+   if (NULL != (result = s->unaryCancelOutWithChild(node, node->getFirstChild(), s->_curTree, TR::pd2ud)))
       return result;
    return node;
    }
@@ -666,7 +666,7 @@ TR::Node *udsx2pdSimplifier(TR::Node * node, TR::Block * block, TR::Simplifier *
       TR::ILOpCodes inverseOp = TR::ILOpCode::getProperConversion(targetDataType, sourceDataType, false /* !wantZeroExtension */); // inverse conversion to what we are given
 
       TR::Node * result = NULL;
-      if (result = s->unaryCancelOutWithChild(node, node->getFirstChild(), s->_curTree, inverseOp))
+      if (NULL != (result = s->unaryCancelOutWithChild(node, node->getFirstChild(), s->_curTree, inverseOp)))
          return result;
       }
    return node;
@@ -875,7 +875,7 @@ TR::Node *zd2pdSimplifier(TR::Node * node, TR::Block * block, TR::Simplifier * s
    propagateSignStateUnaryConversion(node, block, s);
 
    TR::Node * result = NULL;
-   if (result = s->unaryCancelOutWithChild(node, firstChild, s->_curTree, TR::pd2zd))
+   if (NULL != (result = s->unaryCancelOutWithChild(node, firstChild, s->_curTree, TR::pd2zd)))
       return result;
 
    if (firstChild->getOpCodeValue() == TR::zdsle2zd &&
@@ -908,7 +908,7 @@ TR::Node *pd2zdSimplifier(TR::Node * node, TR::Block * block, TR::Simplifier * s
    propagateSignStateUnaryConversion(node, block, s);
 
    TR::Node * result = NULL;
-   if (result = s->unaryCancelOutWithChild(node, firstChild, s->_curTree, TR::zd2pd))
+   if (NULL != (result = s->unaryCancelOutWithChild(node, firstChild, s->_curTree, TR::zd2pd)))
       return result;
 
    TR::Node *child = node->setChild(0, flipCleanAndShift(node->getFirstChild(), block, s));

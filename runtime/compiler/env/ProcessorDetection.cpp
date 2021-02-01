@@ -301,7 +301,6 @@ portLibCall_getARM64ProcessorType()
 // For Verbose Log
 int32_t TR_J9VM::getCompInfo(char *processorName, int32_t stringLength)
    {
-   _jitConfig->jitLevelName;
    int32_t returnValue = -1;
    char *sourceString = NULL;
 
@@ -436,6 +435,9 @@ int32_t TR_J9VM::getCompInfo(char *processorName, int32_t stringLength)
 
          case OMR_PROCESSOR_S390_ZNEXT:
             sourceString = "zNext";
+            break;
+
+         default:
             break;
          }
       returnValue = strlen(sourceString);

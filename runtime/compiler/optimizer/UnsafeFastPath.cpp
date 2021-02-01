@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -312,6 +312,8 @@ static bool needUnsignedConversion(TR::RecognizedMethod methodToReduce)
       case TR::com_ibm_jit_JITHelpers_getCharFromArrayVolatile:
       case TR::java_lang_StringUTF16_getChar:
          return true;
+      default:
+         break;
       }
 
    return false;
@@ -487,6 +489,8 @@ int32_t TR_UnsafeFastPath::perform()
             case TR::java_lang_StringUTF16_getChar:
                objectChild = 0;
                offsetChild = 1;
+               break;
+            default:
                break;
             }
 
@@ -733,6 +737,8 @@ int32_t TR_UnsafeFastPath::perform()
                {
                case TR::java_lang_StringUTF16_getChar:
                   unsafeSymRef = comp()->getSymRefTab()->findOrCreateArrayShadowSymbolRef(TR::Int8);
+                  break;
+               default:
                   break;
                }
 

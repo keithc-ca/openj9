@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -5638,7 +5638,7 @@ bool TR_EscapeAnalysis::fixupNode(TR::Node *node, TR::Node *parent, TR::NodeChec
                   // Uh, why are we re-calculating the fieldOffset?  Didn't we just do that above?
                   //
                   int32_t fieldOffset = node->getSymbolReference()->getOffset();
-                  if ((candidate->_origKind == TR::New))
+                  if (candidate->_origKind == TR::New)
                      {
                      TR::SymbolReference *symRef = node->getSymbolReference();
                      fieldOffset = symRef->getOffset();
@@ -6150,7 +6150,7 @@ bool TR_EscapeAnalysis::fixupFieldAccessForContiguousAllocation(TR::Node *node, 
        !candidate->escapesInColdBlocks() &&
        _valueNumberInfo->getValueNumber(node->getFirstChild()) == _valueNumberInfo->getValueNumber(candidate->_node))
       {
-        if ((candidate->_origKind == TR::New))
+        if (candidate->_origKind == TR::New)
          {
          TR::Node::recreate(node, TR::astorei);
          node->getChild(2)->recursivelyDecReferenceCount();
@@ -6170,7 +6170,7 @@ bool TR_EscapeAnalysis::fixupFieldAccessForContiguousAllocation(TR::Node *node, 
       }
 
    int32_t fieldOffset = node->getSymbolReference()->getOffset();
-   if ((candidate->_origKind == TR::New))
+   if (candidate->_origKind == TR::New)
       {
       TR::SymbolReference *symRef = node->getSymbolReference();
       fieldOffset = symRef->getOffset();
@@ -6290,7 +6290,7 @@ bool TR_EscapeAnalysis::fixupFieldAccessForNonContiguousAllocation(TR::Node *nod
       return true;
       }
 
-   if ((candidate->_origKind == TR::New))
+   if (candidate->_origKind == TR::New)
       {
       TR::SymbolReference *symRef = node->getSymbolReference();
       fieldOffset = symRef->getOffset();

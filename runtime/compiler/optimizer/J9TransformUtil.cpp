@@ -2298,6 +2298,8 @@ void J9::TransformUtil::separateNullCheck(TR::Compilation* comp, TR::TreeTop* tr
             comp->getSymRefTab()->findOrCreateResolveCheckSymbolRef(comp->getMethodSymbol()));
          TR::Node::recreate(nullCheck, TR::ResolveCHK);
          break;
+      default:
+         break;
       }
    }
 
