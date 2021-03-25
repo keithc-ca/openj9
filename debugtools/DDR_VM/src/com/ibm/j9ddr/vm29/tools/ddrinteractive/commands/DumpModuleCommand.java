@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018, 2019 IBM Corp. and others
+ * Copyright (c) 2018, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -36,7 +36,6 @@ import com.ibm.j9ddr.vm29.j9.ModuleHashTable;
 import com.ibm.j9ddr.vm29.j9.PackageHashTable;
 import com.ibm.j9ddr.vm29.j9.SlotIterator;
 import com.ibm.j9ddr.vm29.j9.gc.GCClassLoaderIterator;
-import com.ibm.j9ddr.vm29.j9.walkers.ClassIterator;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ClassLoaderPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ClassPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9HashTablePointer;
@@ -55,7 +54,7 @@ import com.ibm.j9ddr.vm29.tools.ddrinteractive.ModularityHelper.ModuleOutput;
 import com.ibm.j9ddr.vm29.tools.ddrinteractive.ModularityHelper.PackageIteratorFilter;
 import com.ibm.j9ddr.vm29.tools.ddrinteractive.ModularityHelper.PackageOutput;
 
-public class DumpModuleCommand extends Command 
+public class DumpModuleCommand extends Command
 {
 	enum Subcommand {
 		CLASS, MODULE, PACKAGE, ALL, HELP, INVALID
@@ -65,8 +64,8 @@ public class DumpModuleCommand extends Command
 	{
 		addCommand("dumpmodule", "[all|requires|exports|classes|packages] <moduleAddress>|help", "List details about a module");
 	}
-	
-	public void run(String command, String[] args, Context context, PrintStream out) throws DDRInteractiveCommandException 
+
+	public void run(String command, String[] args, Context context, PrintStream out) throws DDRInteractiveCommandException
 	{
 		final Subcommand subcommand;
 		ClassIteratorFilter classFilter = null;
@@ -207,7 +206,7 @@ public class DumpModuleCommand extends Command
 	 * Check whether a given package is exported. Both
 	 * `export <package>` and `export <package> to
 	 * <module>` are matched.
-	 * 
+	 *
 	 * @param    packagePtr The package that is to be filtered.
 	 * @param    arg        Unused.
 	 * @return   true if the package is globally exported or exported to a
@@ -234,7 +233,7 @@ public class DumpModuleCommand extends Command
 
 	/**
 	 * Run both filterPackageModule and filterPackageExported
-	 * 
+	 *
 	 * @param    packagePtr             The package to be passed to both filters.
 	 * @param    targetModuleAddress    The module address to be passed to both filters.
 	 * @return   (filterPackageModule result && filterPackageExported result)

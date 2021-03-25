@@ -27,21 +27,20 @@ import com.ibm.j9ddr.CorruptDataException;
 import com.ibm.j9ddr.logging.LoggerNames;
 import com.ibm.j9ddr.vm29.pointer.generated.J9PoolPointer;
 
-
-public abstract class Pool<StructType extends DataType> 
+public abstract class Pool<StructType extends DataType>
 {
-	protected J9PoolPointer pool;	
-	protected Class<StructType> structType;
+
+	protected J9PoolPointer pool;
+	protected Class<? extends StructType> structType;
 	protected long elementSize;
 	protected static final Logger logger = Logger.getLogger(LoggerNames.LOGGER_WALKERS_POOL);
-	
+
 	/* Do not instantiate. Use the factory */
-	@SuppressWarnings("unchecked")
-	protected <T extends DataType> Pool(J9PoolPointer structure, Class<T> structType) throws CorruptDataException 
+	protected Pool(J9PoolPointer structure, Class<? extends StructType> structType) throws CorruptDataException
 	{
 		pool = structure;
-		this.structType = (Class<StructType>)structType;
-		if(pool.notNull()) {
+		this.structType = structType;
+		if (pool.notNull()) {
 			elementSize = structure.elementSize().longValue();
 		}
 	}
@@ -49,28 +48,28 @@ public abstract class Pool<StructType extends DataType>
 	/**
 	 * Factory method to construct an appropriate pool handler.
 	 * @param <T>
-	 * 
+	 *
 	 * @param structure the J9Pool structure to use
-	 * 
-	 * @return an instance of Pool 
-	 * @throws CorruptDataException 
+	 *
+	 * @return an instance of Pool
+	 * @throws CorruptDataException
 	 */
 	public static <T extends DataType> Pool<T> fromJ9Pool(J9PoolPointer structure, Class<T> structType) throws CorruptDataException
 	{
 		return fromJ9Pool(structure, structType, true);
 	}
-	
+
 	public static <T extends DataType> Pool<T> fromJ9Pool(J9PoolPointer structure, Class<T> structType, boolean isInline) throws CorruptDataException
 	{
-		switch(AlgorithmVersion.getVMMinorVersion()) {
-			default :
-				logger.fine("Creating version 2.6.0 pool walker");
-				return new Pool_29_V0<T>(structure, structType, isInline);
+		switch (AlgorithmVersion.getVMMinorVersion()) {
+		default:
+			logger.fine("Creating version 2.6.0 pool walker");
+			return new Pool_29_V0<>(structure, structType, isInline);
 		}
 	}
-	
+
 	/**
-	 *	Returns the number of elements in a given pool.
+	 * Returns the number of elements in a given pool.
 	 *
 	 * @return the number of elements in the pool
 	 */
@@ -82,7 +81,7 @@ public abstract class Pool<StructType extends DataType>
 	 * @return the capacity of the pool
 	 */
 	public abstract long capacity();
-	
+
 	/**
 	 * See if an element is currently allocated from a pool.
 	 *
@@ -95,8 +94,8 @@ public abstract class Pool<StructType extends DataType>
 
 	/**
 	 * Returns an iterator over the elements in the pool
-	 * @return an Iterator 
+	 * @return an Iterator
 	 */
 	public abstract SlotIterator<StructType> iterator();
-		
+
 }
