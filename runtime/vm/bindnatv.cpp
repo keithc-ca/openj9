@@ -200,7 +200,9 @@ static inlMapping mappings[] = {
 	{ "Java_java_lang_Object_wait__JI", J9_BCLOOP_SEND_TARGET_INL_OBJECT_WAIT },
 	{ "Java_java_lang_ClassLoader_loadLibraryWithPath___3BLjava_lang_ClassLoader_2_3B", J9_BCLOOP_SEND_TARGET_INL_CLASSLOADER_LOADLIBRARYWITHPATH },
 	{ "Java_java_lang_Thread_isInterruptedImpl__", J9_BCLOOP_SEND_TARGET_INL_THREAD_ISINTERRUPTEDIMPL },
+#if JAVA_SPEC_VERSION < 17
 	{ "Java_java_lang_ClassLoader_initAnonClassLoader__Ljava_lang_InternalAnonymousClassLoader_2", J9_BCLOOP_SEND_TARGET_INL_CLASSLOADER_INITIALIZEANONCLASSLOADER },
+#endif /* JAVA_SPEC_VERSION < 17 */
 	{ "Java_jdk_internal_misc_Unsafe_getByte__J", J9_BCLOOP_SEND_TARGET_INL_UNSAFE_GETBYTE_NATIVE },
 	{ "Java_jdk_internal_misc_Unsafe_getByte__Ljava_lang_Object_2J", J9_BCLOOP_SEND_TARGET_INL_UNSAFE_GETBYTE },
 	{ "Java_jdk_internal_misc_Unsafe_getByteVolatile__Ljava_lang_Object_2J", J9_BCLOOP_SEND_TARGET_INL_UNSAFE_GETBYTE_VOLATILE },

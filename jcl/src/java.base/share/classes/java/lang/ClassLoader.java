@@ -147,12 +147,16 @@ public abstract class ClassLoader {
 	private static boolean lazyClassLoaderInit = false;
 /*[ENDIF]*/	
 	private static boolean specialLoaderInited = false;
+/*[IF JAVA_SPEC_VERSION < 17]*/
 	private static InternalAnonymousClassLoader internalAnonClassLoader;
+/*[ENDIF] JAVA_SPEC_VERSION < 17 */
 /*[IF JAVA_SPEC_VERSION >= 15]*/
 	private NativeLibraries nativelibs = null;
 /*[ENDIF] JAVA_SPEC_VERSION >= 15 */
+/*[IF JAVA_SPEC_VERSION < 17]*/
 	private static native void initAnonClassLoader(InternalAnonymousClassLoader anonClassLoader);
-	
+/*[ENDIF] JAVA_SPEC_VERSION < 17 */
+
 	/*[PR JAZZ 73143]: ClassLoader incorrectly discards class loading locks*/
 	static final class ClassNameLockRef extends WeakReference<Object> implements Runnable {
 		private static final ReferenceQueue<Object> queue = new ReferenceQueue<>();
@@ -243,13 +247,15 @@ public abstract class ClassLoader {
 		applicationClassLoader = bootstrapClassLoader;
 		/*[ENDIF] JAVA_SPEC_VERSION >= 11 */
 
+		/*[IF JAVA_SPEC_VERSION < 17]*/
 		/* [PR 78889] The creation of this classLoader requires lazy initialization. The internal classLoader struct
 		 * is created in the initAnonClassLoader call. The "new InternalAnonymousClassLoader()" call must be 
 		 * done exactly after lazyClassLoaderInit is set and before the "java.lang.ClassLoader.lazyInitialization" 
 		 * is read in. This is the only way to guarantee that ClassLoader will be created with lazy initialization. */
 		internalAnonClassLoader = new InternalAnonymousClassLoader();
 		initAnonClassLoader(internalAnonClassLoader);
-		
+		/*[ENDIF] JAVA_SPEC_VERSION < 17 */
+
 		String lazyValue = System.internalGetProperties().getProperty("java.lang.ClassLoader.lazyInitialization"); //$NON-NLS-1$
 		if (null != lazyValue) {
 			lazyValue = lazyValue.toLowerCase();
