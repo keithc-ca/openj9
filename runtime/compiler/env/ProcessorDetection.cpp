@@ -200,19 +200,20 @@ portLibCall_getX86ProcessorType(const char *vendor, uint32_t processorSignature)
    return TR_DefaultX86Processor;
    }
 
+#if defined(LINUX)
 // -----------------------------------------------------------------------------
 /**
-   This routine is currently parsing the "model name" line of /proc/cpuinfo
+   This routine parses the "model name" line of /proc/cpuinfo
 
-   It returns TR_DefaultARMProcessor for any case where it fails to parse the file
-   It only looks at the first processor entry
+   It returns TR_DefaultARMProcessor for any case where it fails to parse the file.
+   It only looks at the first processor entry.
 
    Example data:
      model name      : ARMv7 Processor rev 4 (v7l)
 
-  The current implementation finds the line by searching for "Processor", then finds the ':'
-  to define the start of the target string, and finally searches for ARMvx to determine the
-  type.
+  The current implementation finds the line by searching for "Processor", then finds
+  the preceding ':' to define the start of the target string, and finally searches for
+  ARMvx to determine the type.
 
   Maybe we could just use the architecture line:
     CPU architecture: 7
@@ -222,63 +223,54 @@ portLibCall_getX86ProcessorType(const char *vendor, uint32_t processorSignature)
 static TR_Processor
 portLib_getARMLinuxProcessor()
    {
-   FILE * fp ;
-   char buffer[120];
-   char *line_p;
-   char *cpu_name = NULL;
-   char *position_l, *position_r;
-   size_t n=120;
-   int i=0;
+   TR_Processor processor = TR_DefaultARMProcessor;
+   FILE *fp = fopen("/proc/cpuinfo","r");
 
-   fp = fopen("/proc/cpuinfo","r");
-
-   if ( fp == NULL )
-      return TR_DefaultARMProcessor;
-
-   line_p = buffer;
-
-   while (!feof(fp))
+   if (NULL != fp)
       {
-      if (NULL == fgets(line_p, n, fp))
+      while (!feof(fp))
          {
-         break;
+         char buffer[120];
+
+         if (NULL == fgets(buffer, sizeof(buffer), fp))
+            {
+            break;
+            }
+         // note the capital P, this isn't searching for the processor: line,
+         // it's searching for part of the model name value
+         if (NULL != strstr(buffer, "Processor"))
+            {
+            // found the model name line
+            char *cpu_name = strchr(buffer, ':');
+            if (NULL == cpu_name)
+               {
+               break;
+               }
+            do
+               {
+               cpu_name += 1;
+               }
+            while (' ' == *cpu_name);
+
+            /* localize the cpu name */
+            if (NULL != strstr(cpu_name, "ARMv7"))
+               {
+               processor = TR_ARMv7;
+               }
+            else if (NULL != strstr(cpu_name, "ARMv6"))
+               {
+               processor = TR_ARMv6;
+               }
+            break;
+            }
          }
-      // note the capital P, this isn't searching for the processor: line, it's
-      // searching for part of the model name value
-      position_l = strstr(line_p, "Processor");
-      // found the model name line, position_l is to the right of the target data
-      if (position_l)
-         {
-         position_l = strchr(line_p, ':');
-         if (position_l==NULL) return TR_DefaultARMProcessor;
-         position_l++;
-         while (*(position_l) == ' ') position_l++;
 
-         position_r = strchr(line_p, '\n');
-         if (position_r==NULL) return TR_DefaultARMProcessor;
-         while (*(position_r-1) == ' ') position_r--;
-
-         if (position_l>=position_r) return TR_DefaultARMProcessor;
-
-         /* localize the cpu name */
-         cpu_name = position_l;
-         *position_r = '\000';
-
-         break;
-         }
+      fclose(fp);
       }
-   if (cpu_name==NULL) return TR_DefaultARMProcessor;
 
-   fclose(fp);
-
-   if (strstr(cpu_name, "ARMv7"))
-      return TR_ARMv7;
-   else if (strstr(cpu_name, "ARMv6"))
-      return TR_ARMv6;
-   else
-      return TR_DefaultARMProcessor;
+   return processor;
    }
-
+#endif /* defined(LINUX) */
 
 static TR_Processor
 portLibCall_getARMProcessorType()
@@ -296,7 +288,7 @@ void
 TR_J9VM::initializeProcessorType()
    {
    TR_ASSERT(_compInfo,"compInfo not defined");
-   
+
    if (TR::Compiler->target.cpu.isZ())
       {
       OMRProcessorDesc processorDescription = TR::Compiler->target.cpu.getProcessorDescription();
@@ -335,7 +327,7 @@ TR_J9VM::initializeProcessorType()
          {
          omrsysinfo_processor_set_feature(&processorDescription, OMR_FEATURE_X86_OSXSAVE, FALSE);
          }
-      
+
       TR::Compiler->target.cpu = TR::CPU::customize(processorDescription);
 
       const char *vendor = TR::Compiler->target.cpu.getProcessorVendorId();

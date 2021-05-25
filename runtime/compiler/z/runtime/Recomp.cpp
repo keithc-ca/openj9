@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -29,6 +29,7 @@
 #include "env/VMJ9.h"
 #include "z/codegen/SystemLinkage.hpp"
 #include "control/CompilationRuntime.hpp"
+#include "omrformatconsts.h"
 
 // Recompilation Support Runtime methods
 //
@@ -101,15 +102,15 @@ J9::Recompilation::getJittedBodyInfoFromPC(void * startPC)
 
    if (false && DEBUGIT)
       {
-      printf("calling getmethodinfo %x, jitEntryOffset %d jitEntry %x linkageInfo %x\n", startPC, jitEntryOffset, jitEntry,
-         linkageInfo);
+      printf("calling getmethodinfo %" OMR_PRIxPTR ", jitEntryOffset %" OMR_PRId32 " jitEntry %" OMR_PRIxPTR " linkageInfo %" OMR_PRIxPTR "\n",
+         (uintptr_t) startPC, jitEntryOffset, (uintptr_t) jitEntry, (uintptr_t) linkageInfo);
       }
 
    info = (*(TR_PersistentJittedBodyInfo * *) ((int8_t *) startPC + -(sizeof(uint32_t) + sizeof(intptr_t))));
 
    if (false && DEBUGIT)
       {
-      printf("info is %x\n", info);
+      printf("info is %" OMR_PRIxPTR "\n", (uintptr_t) info);
       }
 
    return info;
@@ -128,7 +129,7 @@ J9::Recompilation::isAlreadyPreparedForRecompile(void * startPC)
    uint32_t jumpBackInsn = (0x0000ffff & (jumpSize / 2)) | FOUR_BYTE_JUMP_INSTRUCTION;
    if (DEBUGIT)
       {
-      printf("MethodPC 0x%x is %sprepared for recompile\n", startPC, startInsn == jumpBackInsn ? "" : "not ");
+      printf("MethodPC 0x%" OMR_PRIxPTR " is %sprepared for recompile\n", (uintptr_t) startPC, startInsn == jumpBackInsn ? "" : "not ");
       }
    return startInsn == jumpBackInsn;
    }
@@ -196,7 +197,8 @@ J9::Recompilation::fixUpMethodCode(void * startPC)
 
       if (DEBUGIT)
          {
-         printf("%p: modified %p from %p to %p, will jump to %p(%x)\n", startPC, jitEntry, preserved, jumpBackInsn,
+         printf("%p: modified %p from %" OMR_PRIx32 " to %" OMR_PRIx32 ", will jump to %p(%x)\n",
+            startPC, jitEntry, preserved, jumpBackInsn,
             (char *) jitEntry + jumpSize, *(int *) ((char *) jitEntry + jumpSize));
          }
 
@@ -218,7 +220,7 @@ J9::Recompilation::methodHasBeenRecompiled(void * oldStartPC, void * newStartPC,
 
    if (DEBUGIT)
       {
-      printf("Method successfully recompiled: %x -> %x\n", oldStartPC, newStartPC);
+      printf("Method successfully recompiled: %" OMR_PRIxPTR " -> %" OMR_PRIxPTR "\n", (uintptr_t) oldStartPC, (uintptr_t) newStartPC);
       }
 #if defined(TR_HOST_64BIT)
    const bool is64Bit = true;
@@ -298,14 +300,10 @@ J9::Recompilation::methodHasBeenRecompiled(void * oldStartPC, void * newStartPC,
 
       if (DEBUGIT)
          {
-         printf("Attempting to patch %p from %p to %p...\n", patchAddr, oldAsmAddr, newAsmAddr);
+         printf("Attempting to patch %p from %" OMR_PRIxPTR " to %" OMR_PRIxPTR "...\n", patchAddr, oldAsmAddr, newAsmAddr);
          }
 
-#if defined(TR_HOST_64BIT)
-      TR_ASSERT(0 == ((uint64_t) patchAddr % sizeof(intptr_t)), "Address %p is not word aligned\n", patchAddr);
-#else
-      TR_ASSERT(0 == ((uint32_t) patchAddr % sizeof(intptr_t)), "Address %p is not word aligned\n", patchAddr);
-#endif
+      TR_ASSERT(0 == ((uintptr_t) patchAddr % sizeof(intptr_t)), "Address %" OMR_PRIxPTR " is not word aligned\n", patchAddr);
       *patchAddr = newAsmAddr;
 
       // save jump at beginning
@@ -441,7 +439,7 @@ J9::Recompilation::methodCannotBeRecompiled(void * oldStartPC, TR_FrontEnd * fe)
       {
       if (DEBUGIT)
          {
-         printf("Zeroed out method info for 0x%x\n", oldStartPC);
+         printf("Zeroed out method info for 0x%" OMR_PRIxPTR "\n", (uintptr_t) oldStartPC);
          }
       // For async compilation, the old method is not fixed up anyway
       if (!fej9->isAsyncCompilation())

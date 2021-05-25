@@ -56,6 +56,9 @@
 #include "runtime/J9Profiler.hpp"
 #include "runtime/J9ValueProfiler.hpp"
 
+#if defined(MIN_PROFILED_CALL_FREQUENCY)
+#undef MIN_PROFILED_CALL_FREQUENCY
+#endif
 #define MIN_PROFILED_CALL_FREQUENCY (.075f)
 #define MAX_PROFILED_CALL_FREQUENCY (.90f)
 

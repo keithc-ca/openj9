@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -183,13 +183,14 @@ uint8_t *J9::Power::UnresolvedDataSnippet::emitSnippetBody()
    cursor += 4;
 
    *(intptr_t *)cursor = (intptr_t)getDataSymbolReference()->getOwningMethod(comp)->constantPool();
-   cg()->addExternalRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,*(uint8_t **)cursor,
-                                                                          getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
-                                                                          TR_ConstantPool,
-                                                                          cg()),
-                          __FILE__,
-                          __LINE__,
-                          getNode());
+   cg()->addExternalRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor,
+               *(uint8_t **)cursor,
+               (uint8_t *)(uintptr_t)(getNode() ? getNode()->getInlinedSiteIndex() : -1),
+               TR_ConstantPool,
+               cg()),
+         __FILE__,
+         __LINE__,
+         getNode());
    cursor += TR::Compiler->om.sizeofReferenceAddress();
 
    if (getMemoryReference()->isTOCAccess())
@@ -201,11 +202,13 @@ uint8_t *J9::Power::UnresolvedDataSnippet::emitSnippetBody()
       *(int32_t *)cursor = getMemoryReference()->getOffset(*(comp)); // offset
       if (getDataSymbol()->isConstObjectRef() || getDataSymbol()->isConstantDynamic())
          {
-         cg()->addProjectSpecializedRelocation(cursor, *(uint8_t **)(cursor-4),
-               getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1, TR_ConstantPool,
-                                __FILE__,
-                                __LINE__,
-                                getNode());
+         cg()->addProjectSpecializedRelocation(cursor,
+               *(uint8_t **)(cursor - 4),
+               (uint8_t *)(uintptr_t)(getNode() ? getNode()->getInlinedSiteIndex() : -1),
+               TR_ConstantPool,
+               __FILE__,
+               __LINE__,
+               getNode());
          }
       }
    cursor += 4;
