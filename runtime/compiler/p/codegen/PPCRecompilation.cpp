@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -135,9 +135,9 @@ TR::Instruction *TR_PPCRecompilation::generatePrologue(TR::Instruction *cursor)
          {
          intptr_t adjustedAddr = HI_VALUE(addr);
          // lis gr11, upper 16-bits
-         cursor = generateTrg1ImmInstruction(cg(), TR::InstOpCode::lis, firstNode, gr11, (int16_t)adjustedAddr>>32, cursor );
+         cursor = generateTrg1ImmInstruction(cg(), TR::InstOpCode::lis, firstNode, gr11, (adjustedAddr >> 32) & 0x0000FFFF, cursor);
          // ori gr11, gr11, next 16-bit
-         cursor = generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::ori, firstNode, gr11, gr11, ((adjustedAddr>>16) & 0x0000FFFF), cursor);
+         cursor = generateTrg1Src1ImmInstruction(cg(), TR::InstOpCode::ori, firstNode, gr11, gr11, (adjustedAddr >> 16) & 0x0000FFFF, cursor);
          // rldicr gr11, gr11, 32, 31
          cursor = generateTrg1Src1Imm2Instruction(cg(), TR::InstOpCode::rldicr, firstNode, gr11, gr11, 32, CONSTANT64(0xFFFFFFFF00000000), cursor);
          // oris  gr11, gr11, next 16-bits

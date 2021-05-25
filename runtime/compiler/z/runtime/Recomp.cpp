@@ -29,6 +29,7 @@
 #include "env/VMJ9.h"
 #include "z/codegen/SystemLinkage.hpp"
 #include "control/CompilationRuntime.hpp"
+#include "omrformatconsts.h"
 
 // Recompilation Support Runtime methods
 //
@@ -95,9 +96,7 @@ J9::Recompilation::getJittedBodyInfoFromPC(void * startPC)
 
    int32_t jitEntryOffset = getJitEntryOffset(linkageInfo);
    int32_t * jitEntry = (int32_t *) ((int8_t *) startPC + jitEntryOffset);
-   TR_PersistentJittedBodyInfo * info = NULL;
-
-   info = (*(TR_PersistentJittedBodyInfo * *) ((int8_t *) startPC + -(sizeof(uint32_t) + sizeof(intptr_t))));
+   TR_PersistentJittedBodyInfo * info = *(TR_PersistentJittedBodyInfo **) ((int8_t *) startPC - (sizeof(uint32_t) + sizeof(intptr_t)));
 
    return info;
    }
@@ -254,11 +253,7 @@ J9::Recompilation::methodHasBeenRecompiled(void * oldStartPC, void * newStartPC,
          ;//diagnostic("RC>>Attempted to patch %p from %p to %p...\n", patchAddr, oldAsmAddr, newAsmAddr);
          }
 
-#if defined(TR_HOST_64BIT)
-      TR_ASSERT(0 == ((uint64_t) patchAddr % sizeof(intptr_t)), "Address %p is not word aligned\n", patchAddr);
-#else
-      TR_ASSERT(0 == ((uint32_t) patchAddr % sizeof(intptr_t)), "Address %p is not word aligned\n", patchAddr);
-#endif
+      TR_ASSERT(0 == ((uintptr_t) patchAddr % sizeof(intptr_t)), "Address %" OMR_PRIxPTR " is not word aligned\n", patchAddr);
       *patchAddr = newAsmAddr;
 
       // save jump at beginning

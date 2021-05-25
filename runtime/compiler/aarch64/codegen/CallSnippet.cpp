@@ -235,7 +235,7 @@ TR_RuntimeHelper TR::ARM64CallSnippet::getHelper()
 
 uint8_t *TR::ARM64CallSnippet::emitSnippetBody()
    {
-    uint8_t            *cursor = cg()->getBinaryBufferCursor();
+   uint8_t             *cursor = cg()->getBinaryBufferCursor();
    TR::Node            *callNode = getNode();
    TR::SymbolReference *methodSymRef = callNode->getSymbolReference();
    TR::MethodSymbol    *methodSymbol = methodSymRef->getSymbol()->castToMethodSymbol();
@@ -275,9 +275,10 @@ uint8_t *TR::ARM64CallSnippet::emitSnippetBody()
          if (comp->getOption(TR_EnableHCR))
             {
             cg()->jitAddPicToPatchOnClassRedefinition((void*)-1, (void *)cursor, true);
-            cg()->addExternalRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation((uint8_t *)cursor, NULL,(uint8_t *)needsFullSizeRuntimeAssumption,
-                                    TR_HCR, cg()),
-                                       __FILE__, __LINE__, getNode());
+            cg()->addExternalRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation((uint8_t *)cursor, NULL,
+                        (uint8_t *)(intptr_t)needsFullSizeRuntimeAssumption,
+                        TR_HCR, cg()),
+                  __FILE__, __LINE__, getNode());
             }
          }
       else
@@ -287,9 +288,9 @@ uint8_t *TR::ARM64CallSnippet::emitSnippetBody()
             {
             cg()->jitAddPicToPatchOnClassRedefinition((void *)methodSymbol->getMethodAddress(), (void *)cursor);
             cg()->addExternalRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(cursor, (uint8_t *)methodSymRef,
-                                                                                    getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
-                                                                                    TR_MethodObject, cg()),
-                                       __FILE__, __LINE__, callNode);
+                        (uint8_t *)(intptr_t)(getNode() ? getNode()->getInlinedSiteIndex() : -1),
+                        TR_MethodObject, cg()),
+                  __FILE__, __LINE__, callNode);
             }
          }
       }
@@ -485,11 +486,11 @@ uint8_t *TR::ARM64UnresolvedCallSnippet::emitSnippetBody()
       }
 
    cg()->addExternalRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(
-                               cursor,
-                               *(uint8_t **)cursor,
-                               getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
-                               TR_Trampolines, cg()),
-                               __FILE__, __LINE__, getNode());
+               cursor,
+               *(uint8_t **)cursor,
+               (uint8_t *)(intptr_t)(getNode() ? getNode()->getInlinedSiteIndex() : -1),
+               TR_Trampolines, cg()),
+         __FILE__, __LINE__, getNode());
    cursor += 8;
 
    switch (getNode()->getDataType())
@@ -603,11 +604,11 @@ uint8_t *TR::ARM64VirtualUnresolvedSnippet::emitSnippetBody()
    *(intptr_t *)cursor = cpAddr;
    uint8_t *j2iThunkRelocationPoint = cursor;
    cg()->addExternalRelocation(new (cg()->trHeapMemory()) TR::ExternalRelocation(
-                               cursor,
-                               *(uint8_t **)cursor,
-                               getNode() ? (uint8_t *)getNode()->getInlinedSiteIndex() : (uint8_t *)-1,
-                               TR_Thunks, cg()),
-                               __FILE__, __LINE__, getNode());
+               cursor,
+               *(uint8_t **)cursor,
+               (uint8_t *)(intptr_t)(getNode() ? getNode()->getInlinedSiteIndex() : -1),
+               TR_Thunks, cg()),
+         __FILE__, __LINE__, getNode());
    cursor += sizeof(intptr_t);
 
    // CP index

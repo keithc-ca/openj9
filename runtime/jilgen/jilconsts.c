@@ -321,9 +321,13 @@ writeConstants(OMRPortLibrary *OMRPORTLIB, IDATA fd)
 			writeConstant(OMRPORTLIB, fd, "J9TR_ELS_machineSPSaveSlot", offsetof(J9VMEntryLocalStorage, machineSPSaveSlot)) |
 #endif /* J9VM_PORT_ZOS_CEEHDLRSUPPORT */
 
-#if defined(OMR_GC_CONCURRENT_SCAVENGER)
+/*
+ * omrcfg.h defines OMR_GC_CONCURRENT_SCAVENGER when appropriate;
+ * don't redefine it on platforms that use '#define'.
+ */
+#if defined(OMR_GC_CONCURRENT_SCAVENGER) && !(defined(J9VM_ARCH_POWER) || defined(J9VM_ARCH_ARM) || defined(J9VM_ARCH_AARCH64))
 			writeConstant(OMRPORTLIB, fd, "OMR_GC_CONCURRENT_SCAVENGER", 1) |
-#endif /* OMR_GC_CONCURRENT_SCAVENGER */
+#endif /* defined(OMR_GC_CONCURRENT_SCAVENGER) && !(defined(J9VM_ARCH_POWER) || defined(J9VM_ARCH_ARM) || defined(J9VM_ARCH_AARCH64)) */
 
 			/* C stack frame */
 			writeConstant(OMRPORTLIB, fd, "J9TR_cframe_sizeof", sizeof(J9CInterpreterStackFrame)) |

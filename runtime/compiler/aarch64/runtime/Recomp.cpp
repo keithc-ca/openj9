@@ -26,6 +26,7 @@
 #include "codegen/PrivateLinkage.hpp"
 #include "control/Recompilation.hpp"
 #include "env/VMJ9.h"
+#include "omrformatconsts.h"
 #include "runtime/CodeCacheManager.hpp"
 #include "runtime/J9Runtime.hpp"
 
@@ -109,8 +110,9 @@ void J9::Recompilation::fixUpMethodCode(void *startPC)
 
       if (DEBUG_ARM64_RECOMP)
          {
-         printf("fixUpMethodCode for sampling, newInstr encoding is 0x%x from jitEntry %p and encoding is 0x%x\n",
-                newInstr, jitEntry, *jitEntry); fflush(stdout);
+         printf("fixUpMethodCode for sampling, newInstr encoding is 0x%" OMR_PRIx32 " from jitEntry %p and encoding is 0x%" OMR_PRIx32 "\n",
+                newInstr, jitEntry, *jitEntry);
+         fflush(stdout);
          }
 
       // Other thread might try to do the same thing at the same time.
@@ -123,16 +125,18 @@ void J9::Recompilation::fixUpMethodCode(void *startPC)
             *((int32_t *)((int8_t *)startPC + OFFSET_SAMPLING_PRESERVED_FROM_STARTPC)) = preserved;
             if (DEBUG_ARM64_RECOMP)
                {
-               printf("\tCmpAndSwap passes: jitEntry address = %p oldInstr = 0x%x, newInstr = 0x%x\n",
-                      jitEntry, preserved, newInstr); fflush(stdout);
+               printf("\tCmpAndSwap passes: jitEntry address = %p oldInstr = 0x%" OMR_PRIx32 ", newInstr = 0x%" OMR_PRIx32 "\n",
+                      jitEntry, preserved, newInstr);
+               fflush(stdout);
                }
             }
          else
             {
             if (DEBUG_ARM64_RECOMP)
                {
-               printf("\tCmpAndSwap fails: jitEntry address = %p oldInstr = 0x%x, newInstr = 0x%x\n",
-                      jitEntry, preserved, newInstr); fflush(stdout);
+               printf("\tCmpAndSwap fails: jitEntry address = %p oldInstr = 0x%" OMR_PRIx32 ", newInstr = 0x%" OMR_PRIx32 "\n",
+                      jitEntry, preserved, newInstr);
+               fflush(stdout);
                }
             }
 #else
@@ -152,7 +156,8 @@ void J9::Recompilation::methodHasBeenRecompiled(void *oldStartPC, void *newStart
 
    if (DEBUG_ARM64_RECOMP)
       {
-      printf("\nmethodHasBeenRecompiled: oldStartPC (%p) -> newStartPC (%p)\n", oldStartPC, newStartPC); fflush(stdout);
+      printf("\nmethodHasBeenRecompiled: oldStartPC (%p) -> newStartPC (%p)\n", oldStartPC, newStartPC);
+      fflush(stdout);
       }
 
    if (linkageInfo->isCountingMethodBody())
@@ -174,8 +179,9 @@ void J9::Recompilation::methodHasBeenRecompiled(void *oldStartPC, void *newStart
       newInstr = encodeDistanceInBranchInstruction(TR::InstOpCode::bl, helperAddress - (intptr_t)patchAddr);
       if (DEBUG_ARM64_RECOMP)
          {
-         printf("\tsampling recomp, change instruction location (%p) of sampling branch to branch encoding 0x%x (to TR_ARM64samplingPatchCallSite)\n",
-                  patchAddr, newInstr); fflush(stdout);
+         printf("\tsampling recomp, change instruction location (%p) of sampling branch to branch encoding 0x%" OMR_PRIx32 " (to TR_ARM64samplingPatchCallSite)\n",
+                  patchAddr, newInstr);
+         fflush(stdout);
          }
       *patchAddr = newInstr;
       arm64CodeSync((uint8_t *)patchAddr, ARM64_INSTRUCTION_LENGTH);
@@ -192,7 +198,9 @@ void J9::Recompilation::methodHasBeenRecompiled(void *oldStartPC, void *newStart
       {
       if (DEBUG_ARM64_RECOMP)
          {
-         printf("\tsampling recomp, releasing code memory oldStartPC = %p, bytesToSaveAtStart = 0x%x\n", oldStartPC, bytesToSaveAtStart); fflush(stdout);
+         printf("\tsampling recomp, releasing code memory oldStartPC = %p, bytesToSaveAtStart = 0x%" OMR_PRIx32 "\n",
+                  oldStartPC, bytesToSaveAtStart);
+         fflush(stdout);
          }
       TR_J9VMBase *fej9 = (TR_J9VMBase *)fe;
       fej9->releaseCodeMemory(oldStartPC, bytesToSaveAtStart);
@@ -226,7 +234,9 @@ void J9::Recompilation::methodCannotBeRecompiled(void *oldStartPC, TR_FrontEnd *
       if (DEBUG_ARM64_RECOMP)
          {
          uintptr_t target = (uintptr_t)patchAddr + distance;
-         printf("oldStartPC %p, patchAddr %p, target %lx\n", oldStartPC, patchAddr, target); fflush(stdout);
+         printf("oldStartPC %p, patchAddr %p, target %" OMR_PRIxPTR "\n",
+               oldStartPC, patchAddr, target);
+         fflush(stdout);
          }
 
       *patchAddr = encodeDistanceInBranchInstruction(TR::InstOpCode::b, distance);
@@ -249,8 +259,9 @@ void J9::Recompilation::methodCannotBeRecompiled(void *oldStartPC, TR_FrontEnd *
          int32_t *startByte = (int32_t *)((uint8_t *)oldStartPC + getJitEntryOffset(linkageInfo));
          if (DEBUG_ARM64_RECOMP)
             {
-            printf("MethodCannotBeRecompiled sampling recomp sync compilation restoring preserved jitEntry of 0x%x at location %p\n",
-                   *((int32_t *)((uint8_t *)oldStartPC + OFFSET_SAMPLING_PRESERVED_FROM_STARTPC)), startByte); fflush(stdout);
+            printf("MethodCannotBeRecompiled sampling recomp sync compilation restoring preserved jitEntry of 0x%" OMR_PRIx32 " at location %p\n",
+                   *((int32_t *)((uint8_t *)oldStartPC + OFFSET_SAMPLING_PRESERVED_FROM_STARTPC)), startByte);
+            fflush(stdout);
             }
          *startByte = *((int32_t *)((uint8_t *)oldStartPC + OFFSET_SAMPLING_PRESERVED_FROM_STARTPC));
          arm64CodeSync((uint8_t *)startByte, 4);
