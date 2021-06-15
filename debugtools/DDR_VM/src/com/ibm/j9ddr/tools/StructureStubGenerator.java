@@ -135,9 +135,12 @@ public class StructureStubGenerator {
 				return;
 			}
 
+			boolean allExist = true;
+
 			for (StructureDescriptor structure : structureReader.getStructures()) {
+				String structureName = structure.getName();
+				StructureDescriptor limit = limitMap.get(structureName);
 				Set<String> allowedConstants;
-				StructureDescriptor limit = limitMap.get(structure.getName());
 
 				if (limit == null) {
 					allowedConstants = Collections.emptySet();
@@ -150,10 +153,28 @@ public class StructureStubGenerator {
 				}
 
 				for (Iterator<ConstantDescriptor> iter = structure.getConstants().iterator(); iter.hasNext();) {
-					if (!allowedConstants.contains(iter.next().getName())) {
+					if (!allowedConstants.remove(iter.next().getName())) {
 						iter.remove();
 					}
 				}
+
+				if (allowedConstants.isEmpty()) {
+					continue;
+				}
+
+				if (allExist) {
+					allExist = false;
+					System.err.format("Non-existent compatibility constants in %s:%n", compatibilityLimitFileName);
+				}
+
+				for (String constantName : allowedConstants) {
+					System.err.format("  %s.%s%n", structureName, constantName);
+				}
+			}
+
+			if (!allExist) {
+				// TODO Should this be an error?
+				// errorCount += 1;
 			}
 		}
 
