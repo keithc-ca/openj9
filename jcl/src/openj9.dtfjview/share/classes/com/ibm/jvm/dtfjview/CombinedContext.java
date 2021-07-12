@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2011, 2020 IBM Corp. and others
+ * Copyright (c) 2011, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -308,7 +308,7 @@ public class CombinedContext extends DTFJContext implements ICombinedContext {
 		StringBuilder builder = new StringBuilder();
 		try {
 			if (getRuntime() == null) {
-				builder.append("No JRE");
+				builder.append("No runtime");
 			} else {
 				try {
 					String version = getRuntime().getVersion();
@@ -317,7 +317,7 @@ public class CombinedContext extends DTFJContext implements ICombinedContext {
 						String firstLine = null;
 						if (index == -1) {
 							if (version.length() == 0) {
-								firstLine = "[cannot determine JRE level]";
+								firstLine = "[cannot determine runtime level]";
 							} else {
 								firstLine = version;
 							}
@@ -335,7 +335,7 @@ public class CombinedContext extends DTFJContext implements ICombinedContext {
 					// Check if the Runtime was broken or we just have no version string.
 					// Will throw another CDE if there is no runtime.
 					if (getRuntime().getJavaVM() != null) {
-						builder.append("JRE level unknown");
+						builder.append("runtime level unknown");
 					}
 				}
 			}

@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2004, 2018 IBM Corp. and others
+ * Copyright (c) 2004, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -129,7 +129,7 @@ public class InfoSystemCommand extends BaseJdmpviewCommand {
 		final JavaRuntime runtime = ctx.getRuntime();
 		out.println("\nJava version:");
 		if (runtime == null) {
-			out.println("\tmissing, unknown or unsupported JRE");
+			out.println("\tmissing, unknown or unsupported runtime");
 		} else {
 			try {
 				out.println(runtime.getVersion());

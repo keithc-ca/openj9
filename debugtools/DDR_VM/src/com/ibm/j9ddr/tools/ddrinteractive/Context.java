@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 1991, 2014 IBM Corp. and others
+ * Copyright (c) 1991, 2021 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -114,7 +114,7 @@ public class Context
 		}
 		if (this.process.getPlatform() == Platform.ZOS) {
 			if(pid == -1) {
-				return "ASID: " + Long.toHexString(this.process.getAddressSpace().getAddressSpaceId()) + " : No JRE";
+				return "ASID: " + Long.toHexString(this.process.getAddressSpace().getAddressSpaceId()) + " : No runtime";
 			} 
 			return "ASID: " + Long.toHexString(this.process.getAddressSpace().getAddressSpaceId()) + " EDB: " + Long.toHexString(pid) + " " + vmString();
 		} else {
@@ -135,7 +135,7 @@ public class Context
 		if (this.process.getPlatform() == Platform.ZOS) {
 			data.append("ASID: 0x" + Long.toHexString(this.process.getAddressSpace().getAddressSpaceId()));
 			if(pid == -1) {
-				data.append(" : No JRE");
+				data.append(" : No runtime");
 			} else {
 				data.append(" EDB: 0x" + Long.toHexString(pid));
 				if(!shortFormat) {
