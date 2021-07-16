@@ -22,6 +22,21 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-excepti
 
 # Writing Java code for DDR
 
+## Summary
+
+To start using a field in DDR code, an entry must be added to `AuxFieldInfo29.dat`. If the field
+has always been present, then it may be marked as `required`; otherwise, specify its type and
+handle the possibility of `NoSuchFieldException` where it is used.
+
+If a field required by DDR code is removed, the word `required` (in `AuxFieldInfo29.dat`)
+must be replaced by the type of the field (as previously recorded in `j9ddr.dat`) and DDR code
+must be updated to deal appropriately with `NoSuchFieldException`.
+
+To start using a constant in DDR code, an line must be added to `CompatibilityConstants29.dat`
+unless it is listed in `superset-constants.dat` (because it has always been defined).
+
+## Details
+
 Data structures used by an active OpenJ9 JVM are described in C/C++ header files. Information
 about the fields of those data structures, their names, types and offsets are used by compilers
 to produce native code.
@@ -146,14 +161,6 @@ or this when the field is absent:
 
 Code that accesses optional fields must handle `NoSuchFieldException` because it is a checked
 exception.
-
-To start using a field in DDR code, an entry must be added to `AuxFieldInfo29.dat`. If the field
-has always been present, then it may be marked as `required`; otherwise, specify its type and
-handle the possibility of `NoSuchFieldException` where it is used.
-
-If a field required by DDR code is removed, the word `required` (in `AuxFieldInfo29.dat`)
-must be replaced by the type of the field (as previously recorded in `j9ddr.dat`) and DDR code
-must be updated to deal appropriately with `NoSuchFieldException`.
 
 A similar problem arises with the use of constants. The value of a constant may change over
 time without issue: its value will be captured in the DDR blob found within core files (a
