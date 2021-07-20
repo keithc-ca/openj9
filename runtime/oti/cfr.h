@@ -363,6 +363,8 @@ typedef struct J9CfrAttributeRuntimeInvisibleAnnotations {
 	U_8 *rawAttributeData; /* hold the original attribute data in case of error  */
 } J9CfrAttributeRuntimeInvisibleAnnotations;
 
+/* @ddr_namespace: map_to_type=J9CfrAttributeRuntimeInvisibleParameterAnnotations */
+
 typedef struct J9CfrAttributeRuntimeInvisibleParameterAnnotations {
     U_8 tag;
     U_16 nameIndex;
@@ -397,7 +399,6 @@ typedef struct J9CfrAttributeRuntimeInvisibleParameterAnnotations {
 #define CFR_TARGET_TYPE_TypeForGenericConstructorInMethodRef 0x4A
 #define CFR_TARGET_TYPE_TypeForGenericMethodInvocationInMethodRef 0x4B
 #define CFR_TARGET_TYPE_ErrorInAttribute 0xff
-
 
 typedef struct J9CfrAttributeRuntimeInvisibleTypeAnnotations {
 	U_8 tag;
@@ -567,7 +568,6 @@ typedef struct J9CfrConstantPoolInfo {
 #define CFR_FLAGS1_VerifiedMemberName  1
 #define CFR_FLAGS1_VerifiedFieldSignature  2
 #define CFR_ShouldConvertInvokevirtualToSpecial  2
-
 
 typedef struct J9CfrMember {
     U_16 accessFlags;
