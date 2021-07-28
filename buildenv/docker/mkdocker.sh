@@ -235,6 +235,7 @@ if [ $version = 6 ] ; then
   echo "           /etc/yum.repos.d/CentOS-Base.repo"
   echo ""
 fi
+  # criu
   echo "RUN yum -y update \\"
   echo " && yum install -y epel-release \\"
   echo " && yum -y install \\"
@@ -422,6 +423,7 @@ fi
   echo "    ca-certificates \\"
   echo "    cmake \\"
   echo "    cpio \\"
+  echo "    criu \\"
   echo "    curl \\"
   echo "    file \\"
 if [ $arch != s390x ] ; then
@@ -693,7 +695,7 @@ fi
   configure_ssh
 
   install_bootjdks
-  create_git_cache
+# create_git_cache
   adjust_user_directory_perms
 }
 
