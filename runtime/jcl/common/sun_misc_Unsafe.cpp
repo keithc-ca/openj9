@@ -189,14 +189,11 @@ exit:
 void JNICALL
 Java_sun_misc_Unsafe_registerNatives(JNIEnv *env, jclass clazz)
 {
-	jfieldID fid;
-
 	Trc_JCL_sun_misc_Unsafe_registerNatives_Entry(env);
 
 	/* If Unsafe has a static int field called INVALID_FIELD_OFFSET, set it to -1 */
-
-	fid = env->GetStaticFieldID(clazz, "INVALID_FIELD_OFFSET", "I");
-	if (fid == NULL) {
+	jfieldID fid = env->GetStaticFieldID(clazz, "INVALID_FIELD_OFFSET", "I");
+	if (NULL == fid) {
 		env->ExceptionClear();
 	} else {
 		env->SetStaticIntField(clazz, fid, -1);
@@ -936,173 +933,141 @@ Java_jdk_internal_misc_Unsafe_isWritebackEnabled(JNIEnv *env, jclass clazz)
 	return result;
 }
 
-/* register jdk.internal.misc.Unsafe natives common to Java 9, 10 and beyond */
-static void
-registerJdkInternalMiscUnsafeNativesCommon(JNIEnv *env, jclass clazz) {
+/* class jdk.internal.misc.Unsafe is only present in Java 9 and beyond */
+#if JAVA_SPEC_VERSION >= 9
+void JNICALL
+Java_jdk_internal_misc_Unsafe_registerNatives(JNIEnv *env, jclass clazz)
+{
 	/* clazz can't be null */
-	JNINativeMethod natives[] = {
+	Java_sun_misc_Unsafe_registerNatives(env, clazz);
+	static JNINativeMethod natives[] = {
 		{
 			(char*)"defineClass0",
 			(char*)"(Ljava/lang/String;[BIILjava/lang/ClassLoader;Ljava/security/ProtectionDomain;)Ljava/lang/Class;",
-			(void*)&Java_sun_misc_Unsafe_defineClass__Ljava_lang_String_2_3BIILjava_lang_ClassLoader_2Ljava_security_ProtectionDomain_2
+			(void*)Java_sun_misc_Unsafe_defineClass__Ljava_lang_String_2_3BIILjava_lang_ClassLoader_2Ljava_security_ProtectionDomain_2
 		},
 		{
 			(char*)"defineAnonymousClass0",
 			(char*)"(Ljava/lang/Class;[B[Ljava/lang/Object;)Ljava/lang/Class;",
-			(void*)&Java_sun_misc_Unsafe_defineAnonymousClass
+			(void*)Java_sun_misc_Unsafe_defineAnonymousClass
 		},
 		{
 			(char*)"pageSize",
 			(char*)"()I",
-			(void*)&Java_sun_misc_Unsafe_pageSize
+			(void*)Java_sun_misc_Unsafe_pageSize
 		},
 		{
 			(char*)"getLoadAverage0",
 			(char*)"([DI)I",
-			(void*)&Java_sun_misc_Unsafe_getLoadAverage
+			(void*)Java_sun_misc_Unsafe_getLoadAverage
 		},
 		{
 			(char*)"shouldBeInitialized0",
 			(char*)"(Ljava/lang/Class;)Z",
-			(void*)&Java_sun_misc_Unsafe_shouldBeInitialized
+			(void*)Java_sun_misc_Unsafe_shouldBeInitialized
 		},
 		{
 			(char*)"allocateMemory0",
 			(char*)"(J)J",
-			(void*)&Java_sun_misc_Unsafe_allocateMemory
+			(void*)Java_sun_misc_Unsafe_allocateMemory
 		},
 		{
 			(char*)"freeMemory0",
 			(char*)"(J)V",
-			(void*)&Java_sun_misc_Unsafe_freeMemory
+			(void*)Java_sun_misc_Unsafe_freeMemory
 		},
 		{
 			(char*)"reallocateMemory0",
 			(char*)"(JJ)J",
-			(void*)&Java_sun_misc_Unsafe_reallocateMemory
+			(void*)Java_sun_misc_Unsafe_reallocateMemory
 		},
 		{
 			(char*)"ensureClassInitialized0",
 			(char*)"(Ljava/lang/Class;)V",
-			(void*)&Java_sun_misc_Unsafe_ensureClassInitialized
+			(void*)Java_sun_misc_Unsafe_ensureClassInitialized
 		},
 		{
 			(char*)"park",
 			(char*)"(ZJ)V",
-			(void*)&Java_sun_misc_Unsafe_park
+			(void*)Java_sun_misc_Unsafe_park
 		},
 		{
 			(char*)"unpark",
 			(char*)"(Ljava/lang/Object;)V",
-			(void*)&Java_sun_misc_Unsafe_unpark
+			(void*)Java_sun_misc_Unsafe_unpark
 		},
 		{
 			(char*)"throwException",
 			(char*)"(Ljava/lang/Throwable;)V",
-			(void*)&Java_sun_misc_Unsafe_throwException
+			(void*)Java_sun_misc_Unsafe_throwException
 		},
 		{
 			(char*)"copyMemory0",
 			(char*)"(Ljava/lang/Object;JLjava/lang/Object;JJ)V",
-			(void*)&Java_sun_misc_Unsafe_copyMemory__Ljava_lang_Object_2JLjava_lang_Object_2JJ
+			(void*)Java_sun_misc_Unsafe_copyMemory__Ljava_lang_Object_2JLjava_lang_Object_2JJ
 		},
 		{
 			(char*)"objectFieldOffset0",
 			(char*)"(Ljava/lang/reflect/Field;)J",
-			(void*)&Java_sun_misc_Unsafe_objectFieldOffset
+			(void*)Java_sun_misc_Unsafe_objectFieldOffset
 		},
 		{
 			(char*)"setMemory0",
 			(char*)"(Ljava/lang/Object;JJB)V",
-			(void*)&Java_sun_misc_Unsafe_setMemory__Ljava_lang_Object_2JJB
+			(void*)Java_sun_misc_Unsafe_setMemory__Ljava_lang_Object_2JJB
 		},
 		{
 			(char*)"staticFieldBase0",
 			(char*)"(Ljava/lang/reflect/Field;)Ljava/lang/Object;",
-			(void*)&Java_sun_misc_Unsafe_staticFieldBase__Ljava_lang_reflect_Field_2
+			(void*)Java_sun_misc_Unsafe_staticFieldBase__Ljava_lang_reflect_Field_2
 		},
 		{
 			(char*)"staticFieldOffset0",
 			(char*)"(Ljava/lang/reflect/Field;)J",
-			(void*)&Java_sun_misc_Unsafe_staticFieldOffset
+			(void*)Java_sun_misc_Unsafe_staticFieldOffset
 		},
 		{
 			(char*)"unalignedAccess0",
 			(char*)"()Z",
-			(void*)&Java_sun_misc_Unsafe_unalignedAccess0
+			(void*)Java_sun_misc_Unsafe_unalignedAccess0
 		},
 		{
 			(char*)"isBigEndian0",
 			(char*)"()Z",
-			(void*)&Java_sun_misc_Unsafe_isBigEndian0
+			(void*)Java_sun_misc_Unsafe_isBigEndian0
 		},
 		{
 			(char*)"getUncompressedObject",
 			(char*)"(J)Ljava/lang/Object;",
-			(void*)&Java_sun_misc_Unsafe_getUncompressedObject
+			(void*)Java_sun_misc_Unsafe_getUncompressedObject
 		},
-	};
-	jint numNatives = sizeof(natives)/sizeof(JNINativeMethod);
-	env->RegisterNatives(clazz, natives, numNatives);
-#if defined(J9VM_OPT_JAVA_OFFLOAD_SUPPORT)
-	clearNonZAAPEligibleBit(env, clazz, natives, numNatives);
-#endif /* J9VM_OPT_JAVA_OFFLOAD_SUPPORT */
-}
-
-/* register jdk.internal.misc.Unsafe natives for Java 10 */
-static void
-registerJdkInternalMiscUnsafeNativesJava10(JNIEnv *env, jclass clazz) {
-	/* clazz can't be null */
-	JNINativeMethod natives[] = {
+#if JAVA_SPEC_VERSION >= 10
 		{
 			(char*)"objectFieldOffset1",
 			(char*)"(Ljava/lang/Class;Ljava/lang/String;)J",
-			(void*)&Java_jdk_internal_misc_Unsafe_objectFieldOffset1
-		}
-	};
-	jint numNatives = sizeof(natives)/sizeof(JNINativeMethod);
-	env->RegisterNatives(clazz, natives, numNatives);
-#if defined(J9VM_OPT_JAVA_OFFLOAD_SUPPORT)
-	clearNonZAAPEligibleBit(env, clazz, natives, numNatives);
-#endif /* J9VM_OPT_JAVA_OFFLOAD_SUPPORT */
-}
-
-/* register jdk.internal.misc.Unsafe natives for Java 14 */
-static void
-registerJdkInternalMiscUnsafeNativesJava14(JNIEnv *env, jclass clazz) {
-	/* clazz can't be null */
-	JNINativeMethod natives[] = {
+			(void*)Java_jdk_internal_misc_Unsafe_objectFieldOffset1
+		},
+#endif /* JAVA_SPEC_VERSION >= 10 */
+#if JAVA_SPEC_VERSION >= 14
 		{
 			(char*)"writebackMemory",
 			(char*)"(JJ)V",
-			(void*)&Java_jdk_internal_misc_Unsafe_writebackMemory
+			(void*)Java_jdk_internal_misc_Unsafe_writebackMemory
 		},
 		{
 			(char*)"isWritebackEnabled",
 			(char*)"()Z",
-			(void*)&Java_jdk_internal_misc_Unsafe_isWritebackEnabled
-		}
+			(void*)Java_jdk_internal_misc_Unsafe_isWritebackEnabled
+		},
+#endif /* JAVA_SPEC_VERSION >= 14 */
 	};
-	jint numNatives = sizeof(natives)/sizeof(JNINativeMethod);
+	jint numNatives = sizeof(natives) / sizeof(natives[0]);
 	env->RegisterNatives(clazz, natives, numNatives);
 #if defined(J9VM_OPT_JAVA_OFFLOAD_SUPPORT)
 	clearNonZAAPEligibleBit(env, clazz, natives, numNatives);
 #endif /* J9VM_OPT_JAVA_OFFLOAD_SUPPORT */
 }
-
-/* class jdk.internal.misc.Unsafe only presents in Java 9 and beyond */
-void JNICALL
-Java_jdk_internal_misc_Unsafe_registerNatives(JNIEnv *env, jclass clazz)
-{
-	Java_sun_misc_Unsafe_registerNatives(env, clazz);
-	registerJdkInternalMiscUnsafeNativesCommon(env, clazz);
-	if (JAVA_SPEC_VERSION >= 10) {
-		registerJdkInternalMiscUnsafeNativesJava10(env, clazz);
-	}
-	if (JAVA_SPEC_VERSION >= 14) {
-		registerJdkInternalMiscUnsafeNativesJava14(env, clazz);
-	}
-}
+#endif /* JAVA_SPEC_VERSION >= 9 */
 
 /*
  * Determine if memory addresses overlap.
@@ -1116,7 +1081,8 @@ Java_jdk_internal_misc_Unsafe_registerNatives(JNIEnv *env, jclass clazz)
  * @return true for no memory overlap, otherwise false
  */
 jboolean
- memOverlapIsNone(j9object_t sourceObject, UDATA sourceOffset, j9object_t destObject, UDATA destOffset, UDATA actualCopySize) {
+memOverlapIsNone(j9object_t sourceObject, UDATA sourceOffset, j9object_t destObject, UDATA destOffset, UDATA actualCopySize)
+{
 	jboolean result = JNI_FALSE;
 	if (sourceObject != destObject) {
 		result = JNI_TRUE;
@@ -1140,7 +1106,8 @@ jboolean
  * @return true for no memory overlap, otherwise false
  */
 jboolean
- memOverlapIsUnaligned(UDATA sourceOffset, UDATA destOffset) {
+memOverlapIsUnaligned(UDATA sourceOffset, UDATA destOffset)
+{
 	return (sourceOffset != destOffset);
 }
 
