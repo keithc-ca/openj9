@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -135,7 +135,7 @@ final public class Util {
     /** determines if a particular component and type is to be formatted
      *
      * @param   comp     a string representation of a component in the jvm
-     * @param   types    a string for the type of trace entry to format (ie, Entry, Exit, Exception, etc)
+     * @param   type     a string for the type of trace entry to format (ie, Entry, Exit, Exception, etc)
      * @return  a boolean that is true if this component and type was added to the table or if the table is null
      */
     final protected static boolean findComponentAndType(String comp, String type)
@@ -219,7 +219,6 @@ final public class Util {
         return((((int) data[offset] << 16) & 0xff0000) | (((int) data[offset+1] << 8)  & 0xff00) | ((int) data[offset+2]  & 0xff));
     }
 
-
     final protected static long constructUnsignedInt(byte[] data, int offset)
     {
         return( bigendian == false )
@@ -235,7 +234,7 @@ final public class Util {
 
     final protected static int constructUnsignedByte(byte[] data, int offset)
     {
-        return(int) data[offset] & 0xff;
+        return (int) data[offset] & 0xff;
     }
 
     final static private int findNull(byte[] data, int index)
@@ -277,7 +276,7 @@ final public class Util {
         return constructString(data, offset, count, getProperty("ENCODING", "ASCII"));
     }
 
-    static boolean charIsOneOfControlCharactersToRemove(char c){
+    static boolean charIsOneOfControlCharactersToRemove(char c) {
         if (c < 9) {
             /* ignore 0 - NUL
              * ignore 1 - SOH
@@ -488,7 +487,6 @@ final public class Util {
         buf.append(hexChars[low]);
     }
 
-
     final static String getFormattedTime(BigInteger time)
     {
         //Util.Debug.println("formatting time    " + time);
@@ -519,14 +517,14 @@ final public class Util {
                 hoursMinutes = minutesSeconds[0].divideAndRemainder(MINUTES2HOURS);
                 daysHours = hoursMinutes[0].divideAndRemainder(HOURS2DAYS);
 
-                daysHours[1] = daysHours[1].add(TraceArgs.timeZoneOffset); /* allow user to modify timezone */
-                try{
-                    return "00".substring(daysHours[1].toString().length()) + daysHours[1].toString() + ":" +
+				daysHours[1] = daysHours[1].add(TraceArgs.timeZoneOffset); /* allow user to modify timezone */
+				try {
+					return "00".substring(daysHours[1].toString().length()) + daysHours[1].toString() + ":" +
                            "00".substring(hoursMinutes[1].toString().length()) + hoursMinutes[1].toString() + ":" +
                            "00".substring(minutesSeconds[1].toString().length()) + minutesSeconds[1].toString() + "." +
                            "000000000".substring(nanos.toString().length()) + nanos.toString();
-                } catch(Exception e) {
-                    Debug.println(daysHours[1].toString() + ":" +
+				} catch (Exception e) {
+					Debug.println(daysHours[1].toString() + ":" +
                                   hoursMinutes[1].toString() + ":" +
                                   minutesSeconds[1].toString() + "." +
                                   nanos.toString());
