@@ -469,18 +469,15 @@ static void
 updatePercentLastToken(J9JavaVM *vm, char *label)
 {
 	PORT_ACCESS_FROM_JAVAVM(vm);
-
-	struct J9StringTokens* stringTokens;
+	RasDumpGlobalStorage *dump_storage = (RasDumpGlobalStorage *)vm->j9rasdumpGlobalStorage;
 
 	/* write the label into the %last token */
-	if (NULL != vm->j9rasdumpGlobalStorage) {
-		RasDumpGlobalStorage* dump_storage = (RasDumpGlobalStorage*)vm->j9rasdumpGlobalStorage;
-
+	if (NULL != dump_storage) {
 		/* lock access to the tokens */
 		omrthread_monitor_enter(dump_storage->dumpLabelTokensMutex);
 		stringTokens = dump_storage->dumpLabelTokens;
 
-		j9str_set_token(stringTokens, "last", "%s", label);
+		j9str_set_token(dump_storage->dumpLabelTokens, "last", "%s", label);
 
 		/* release access to the tokens */
 		omrthread_monitor_exit(dump_storage->dumpLabelTokensMutex);
@@ -1271,13 +1268,12 @@ static char *
 scanFilter(J9JavaVM *vm, const J9RASdumpSettings *settings, const char **cursor, UDATA *actionPtr)
 {
 	UDATA eventMask = settings->eventMask;
-	char *filter = NULL;
-
-	filter = scanString(vm, cursor);
+	char *filter = scanString(vm, cursor);
 
 	if (eventMask & J9RAS_DUMP_ON_OBJECT_ALLOCATION) {
 		RasDumpGlobalStorage *dumpGlobal = vm->j9rasdumpGlobalStorage;
-		UDATA min, max;
+		UDATA min = 0;
+		UDATA max = 0;
 
 		if (!filter) {
 			/* Filter must be supplied for this event */
@@ -1604,22 +1600,23 @@ findAgent(J9JavaVM *vm, IDATA kind, const J9RASdumpSettings *settings)
 
 		/* Event mask can always be merged UNLESS there is no overlap and agent has a limited range, otherwise */
 		/*   -Xdump:java:events=load,range=1..4  and  -Xdump:java:events=thrstart,range=1..4  would get merged */
-		if ( (agent->eventMask != settings->eventMask) &&
-			(agent->startOnCount <= agent->stopOnCount) ) {
+		if ((agent->eventMask != settings->eventMask) && (agent->startOnCount <= agent->stopOnCount)) {
 			continue;
 		}
 
 		/* Can't merge different detail filters */
-		if ( ((agent->detailFilter != NULL) && (settings->detailFilter == NULL)                                                              ) ||
-			((agent->detailFilter == NULL) && (settings->detailFilter != NULL)                                                              ) ||
-			((agent->detailFilter != NULL) && (settings->detailFilter != NULL) && (strcmp(agent->detailFilter, settings->detailFilter) != 0))    ) {
+		if (((agent->detailFilter != NULL) && (settings->detailFilter == NULL))
+		||  ((agent->detailFilter == NULL) && (settings->detailFilter != NULL))
+		||  ((agent->detailFilter != NULL) && (settings->detailFilter != NULL) && (strcmp(agent->detailFilter, settings->detailFilter) != 0))
+		) {
 			continue;
 		}
 
 		/* Can't merge different sub filters */
-		if ( ((agent->subFilter != NULL) && (settings->subFilter == NULL)) ||
-			((agent->subFilter == NULL) && (settings->subFilter != NULL)) ||
-			((agent->subFilter != NULL) && (settings->subFilter != NULL) && (strcmp(agent->subFilter, settings->subFilter) != 0))) {
+		if (((agent->subFilter != NULL) && (settings->subFilter == NULL))
+		||  ((agent->subFilter == NULL) && (settings->subFilter != NULL))
+		||  ((agent->subFilter != NULL) && (settings->subFilter != NULL) && (strcmp(agent->subFilter, settings->subFilter) != 0))
+		) {
 			continue;
 		}
 
@@ -1634,16 +1631,18 @@ findAgent(J9JavaVM *vm, IDATA kind, const J9RASdumpSettings *settings)
 		}
 
 		/* Can't merge different labels */
-		if ( ((agent->labelTemplate != NULL) && (settings->labelTemplate == NULL)                                                                ) ||
-			((agent->labelTemplate == NULL) && (settings->labelTemplate != NULL)                                                                ) ||
-			((agent->labelTemplate != NULL) && (settings->labelTemplate != NULL) && (strcmp(agent->labelTemplate, settings->labelTemplate) != 0))    ) {
+		if (((agent->labelTemplate != NULL) && (settings->labelTemplate == NULL))
+		||  ((agent->labelTemplate == NULL) && (settings->labelTemplate != NULL))
+		||  ((agent->labelTemplate != NULL) && (settings->labelTemplate != NULL) && (strcmp(agent->labelTemplate, settings->labelTemplate) != 0))
+		) {
 			continue;
 		}
 
 		/* Can't merge different dump options */
-		if ( ((agent->dumpOptions != NULL) && (settings->dumpOptions == NULL)                                                            ) ||
-			((agent->dumpOptions == NULL) && (settings->dumpOptions != NULL)                                                            ) ||
-			((agent->dumpOptions != NULL) && (settings->dumpOptions != NULL) && (strcmp(agent->dumpOptions, settings->dumpOptions) != 0))    ) {
+		if (((agent->dumpOptions != NULL) && (settings->dumpOptions == NULL))
+		||  ((agent->dumpOptions == NULL) && (settings->dumpOptions != NULL))
+		||  ((agent->dumpOptions != NULL) && (settings->dumpOptions != NULL) && (strcmp(agent->dumpOptions, settings->dumpOptions) != 0))
+		) {
 			continue;
 		}
 
@@ -1744,13 +1743,10 @@ findAgentToDelete(J9JavaVM *vm, IDATA kind, J9RASdumpAgent *agent, const J9RASdu
 static J9RASdumpAgent*
 createAgent(J9JavaVM *vm, IDATA kind, const J9RASdumpSettings *settings)
 {
-	J9RASdumpAgent *node;
-
 	PORT_ACCESS_FROM_JAVAVM(vm);
+	J9RASdumpAgent *node = (J9RASdumpAgent *)j9mem_allocate_memory(sizeof(J9RASdumpAgent), OMRMEM_CATEGORY_VM);
 
-	node = (J9RASdumpAgent *)j9mem_allocate_memory(sizeof(J9RASdumpAgent), OMRMEM_CATEGORY_VM);
-
-	if (node) {
+	if (NULL != node) {
 		memset(node, 0, sizeof(*node));
 
 		/* Hook up functions */
@@ -2198,7 +2194,7 @@ printDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent)
 	j9tty_err_printf(",");
 
 	if (agent->detailFilter != NULL) {
-		j9tty_err_printf("\n    filter=%s,",	agent->detailFilter);
+		j9tty_err_printf("\n    filter=%s,", agent->detailFilter);
 	}
 
 	if (agent->subFilter != NULL) {
@@ -2483,9 +2479,9 @@ copyDumpAgent(struct J9JavaVM *vm, J9RASdumpAgent *src, J9RASdumpAgent *dst)
 
 	dst->dumpFn = src->dumpFn;
 
-	if (src->dumpOptions != NULL){
+	if (src->dumpOptions != NULL) {
 		dst->dumpOptions = allocString(vm, strlen(src->dumpOptions) + 1);
-		if (dst->dumpOptions == NULL){
+		if (dst->dumpOptions == NULL) {
 			/* previous strings alloc'ed in this func are stored in the dump string
 			 * table and so will be freed automatically at shutdown */
 			return OMR_ERROR_OUT_OF_NATIVE_MEMORY;
@@ -2963,9 +2959,7 @@ static char *
 scanSubFilter(J9JavaVM *vm, const J9RASdumpSettings *settings, const char **cursor, UDATA *actionPtr)
 {
 	UDATA eventMask = settings->eventMask;
-	char *subFilter = NULL;
-
-	subFilter = scanString(vm, cursor);
+	char *subFilter = scanString(vm, cursor);
 
 	if (0 == (eventMask & J9RAS_DUMP_EXCEPTION_EVENT_GROUP)) {
 		*actionPtr = BOGUS_DUMP_OPTION;
