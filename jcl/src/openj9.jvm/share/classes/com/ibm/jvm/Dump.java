@@ -20,8 +20,9 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
-
 package com.ibm.jvm;
+
+import java.util.Objects;
 
 import openj9.management.internal.DumpConfigurationUnavailableExceptionBase;
 import openj9.management.internal.InvalidDumpOptionExceptionBase;
@@ -102,8 +103,9 @@ import openj9.management.internal.InvalidDumpOptionExceptionBase;
  * configuration.
  */
 public class Dump {
+
 	@SuppressWarnings("nls")
-	private static final String SystemRequestPrefix = "z/OS".equalsIgnoreCase(System.getProperty("os.name")) ? "system:dsn=" : "system:file=";
+	private static final String SystemLabelKey = "z/OS".equalsIgnoreCase(System.getProperty("os.name")) ? "dsn" : "file";
 
 	/**
 	 * Trigger a java dump. A java dump is in a human-readable format, and
@@ -187,6 +189,7 @@ public class Dump {
 			super();
 		}
 	}
+
 	private static final DumpOptionsLock dumpLock = new DumpOptionsLock();
 
 	/**
@@ -220,22 +223,18 @@ public class Dump {
 	 * @throws InvalidDumpOptionException if the filename was invalid
 	 * @throws SecurityException if there is a security manager and it doesn't allow the checks required to trigger this dump
 	 */
-	public static String javaDumpToFile(String fileNamePattern ) throws InvalidDumpOptionException {
-		String request = null;
-		if( "".equals(fileNamePattern) ) { //$NON-NLS-1$
-			fileNamePattern = null;
-		}
-		if( fileNamePattern != null ) {
+	public static String javaDumpToFile(String fileNamePattern) throws InvalidDumpOptionException {
+		String request;
+		if ((fileNamePattern == null) || fileNamePattern.isEmpty()) {
+			// This is equivalent to the JavaDump() call.
+			request = "java"; //$NON-NLS-1$
+		} else {
 			// Check no-one has tried to sneak options onto the end.
 			checkForExtraOptions(fileNamePattern);
 			request = "java:file=" + fileNamePattern; //$NON-NLS-1$
-		} else {
-			// This is equivalent to the JavaDump() call.
-			request = "java"; //$NON-NLS-1$
 		}
-		String dump = null;
-		dump = triggerDump(request, "javaDumpToFile"); //$NON-NLS-1$
-		return dump;
+
+		return triggerDump(request, "javaDumpToFile"); //$NON-NLS-1$
 	}
 
 	/**
@@ -293,23 +292,18 @@ public class Dump {
 	 * @throws InvalidDumpOptionException if the filename was invalid
 	 * @throws SecurityException if there is a security manager and it doesn't allow the checks required to trigger this dump
 	 */
-	public static String heapDumpToFile(String fileNamePattern ) throws InvalidDumpOptionException {
-		String request = null;
-		if( "".equals(fileNamePattern) ) { //$NON-NLS-1$
-			fileNamePattern = null;
-		}
-		if( fileNamePattern != null ) {
+	public static String heapDumpToFile(String fileNamePattern) throws InvalidDumpOptionException {
+		String request;
+		if ((fileNamePattern == null) || fileNamePattern.isEmpty()) {
+			// This is equivalent to the HeapDump() call.
+			request = "heap:"; //$NON-NLS-1$
+		} else {
 			// Check no-one has tried to sneak options onto the end.
 			checkForExtraOptions(fileNamePattern);
 			request = "heap:file=" + fileNamePattern + ","; //$NON-NLS-1$ //$NON-NLS-2$
-		} else {
-			// This is equivalent to the HeapDump() call.
-			request = "heap:"; //$NON-NLS-1$
 		}
 		request += "opts=PHD"; //$NON-NLS-1$
-		String dump = null;
-		dump = triggerDump(request, "heapDumpToFile"); //$NON-NLS-1$
-		return dump;
+		return triggerDump(request, "heapDumpToFile"); //$NON-NLS-1$
 	}
 
 	/**
@@ -369,21 +363,17 @@ public class Dump {
 	 * @throws SecurityException if there is a security manager and it doesn't allow the checks required to trigger this dump
 	 */
 	public static String systemDumpToFile(String fileNamePattern) throws InvalidDumpOptionException {
-		String request = null;
-		if( "".equals(fileNamePattern) ) { //$NON-NLS-1$
-			fileNamePattern = null;
-		}
-		if( fileNamePattern != null ) {
-			// Check no-one has tried to sneak options onto the end.
-			checkForExtraOptions(fileNamePattern);
-			request = SystemRequestPrefix + fileNamePattern;
-		} else {
+		String request;
+		if ((fileNamePattern == null) || fileNamePattern.isEmpty()) {
 			// This is equivalent the to SystemDump() call.
 			request = "system"; //$NON-NLS-1$
+		} else {
+			// Check no-one has tried to sneak options onto the end.
+			checkForExtraOptions(fileNamePattern);
+
+			request = "system:" + SystemLabelKey + "=" + fileNamePattern; //$NON-NLS-1$  //$NON-NLS-2$
 		}
-		String dump = null;
-		dump = triggerDump(request, "systemDumpToFile"); //$NON-NLS-1$
-		return dump;
+		return triggerDump(request, "systemDumpToFile"); //$NON-NLS-1$
 	}
 
 	/**
@@ -444,21 +434,16 @@ public class Dump {
 	 * @throws SecurityException if there is a security manager and it doesn't allow the checks required to trigger this dump
 	 */
 	public static String snapDumpToFile(String fileNamePattern) throws InvalidDumpOptionException {
-		String request = null;
-		if( "".equals(fileNamePattern) ) { //$NON-NLS-1$
-			fileNamePattern = null;
-		}
-		if( fileNamePattern != null ) {
+		String request;
+		if ((fileNamePattern == null) || fileNamePattern.isEmpty()) {
+			// This is equivalent to the SnapDump() call.
+			request = "snap"; //$NON-NLS-1$
+		} else {
 			// Check no-one has tried to sneak options onto the end.
 			checkForExtraOptions(fileNamePattern);
 			request = "snap:file=" + fileNamePattern; //$NON-NLS-1$
-		} else {
-			// This is equivalent to the SnapDump() call.
-			request = "snap"; //$NON-NLS-1$
 		}
-		String dump = null;
-		dump = triggerDump(request, "snapDumpToFile"); //$NON-NLS-1$
-		return dump;
+		return triggerDump(request, "snapDumpToFile"); //$NON-NLS-1$
 	}
 
 	/**
@@ -498,7 +483,7 @@ public class Dump {
 		/* Check the caller has DumpPermission. */
 		@SuppressWarnings("removal")
 		SecurityManager manager = System.getSecurityManager();
-		if( manager != null ) {
+		if (manager != null) {
 			manager.checkPermission(DUMP_PERMISSION);
 		}
 	}
@@ -507,14 +492,14 @@ public class Dump {
 		/* Check the caller has DumpPermission. */
 		@SuppressWarnings("removal")
 		SecurityManager manager = System.getSecurityManager();
-		if( manager != null ) {
+		if (manager != null) {
 			manager.checkPermission(TOOL_DUMP_PERMISSION);
 		}
 	}
 
 	private static void checkLegacySecurityPermssion() throws SecurityException {
-		if (!("false".equalsIgnoreCase(com.ibm.oti.vm.VM.getVMLangAccess()	//$NON-NLS-1$
-			.internalGetProperties().getProperty(LEGACY_DUMP_PERMISSION_PROPERTY)))) {
+		if (!("false".equalsIgnoreCase(com.ibm.oti.vm.VM.getVMLangAccess() //$NON-NLS-1$
+				.internalGetProperties().getProperty(LEGACY_DUMP_PERMISSION_PROPERTY)))) {
 			checkDumpSecurityPermssion();
 		}
 	}
@@ -554,9 +539,7 @@ public class Dump {
 	 * @throws NullPointerException if dumpSettings is null
 	 */
 	public static String triggerDump(String dumpOptions) throws InvalidDumpOptionException {
-		if( dumpOptions == null ) {
-			throw new NullPointerException();
-		}
+		Objects.requireNonNull(dumpOptions);
 		// All the other permissions will be checked in triggerDump(dumpSettings, event);
 		if (isToolDump(dumpOptions)) {
 			checkToolSecurityPermssion();
@@ -565,7 +548,6 @@ public class Dump {
 	}
 
 	private static String triggerDump(String dumpSettings, String event) throws InvalidDumpOptionException {
-
 		/* Check the caller is allowed to trigger a dump. */
 		checkDumpSecurityPermssion();
 
@@ -600,19 +582,16 @@ public class Dump {
 	 * @throws NullPointerException if options is null
 	 */
 	public static void setDumpOptions(String dumpOptions) throws InvalidDumpOptionException, DumpConfigurationUnavailableException {
-
 		/* Check the caller is allowed to trigger a dump. */
 		checkDumpSecurityPermssion();
+
+		Objects.requireNonNull(dumpOptions);
 
 		if (isToolDump(dumpOptions)) {
 			checkToolSecurityPermssion();
 		}
 
-		if( dumpOptions == null ) {
-			throw new NullPointerException();
-		}
-
-		/* Synchronised to prevent two Java threads trying to set/reset dump settings at once.
+		/* Synchronized to prevent two Java threads trying to set/reset dump settings at once.
 		 * resetDumpOptionsImpl is also synchronised in this way.
 		 * A DumpConfigurationUnavailableException can still be thrown if a dump was in
 		 * progress and the dump configuration could not be updated.
@@ -645,8 +624,8 @@ public class Dump {
 		checkDumpSecurityPermssion();
 
 		String options = queryDumpOptionsImpl();
-		if( options != null ) {
-			if( "".equals(options) ) { //$NON-NLS-1$
+		if (options != null) {
+			if (options.isEmpty()) {
 				String[] empty = {};
 				return empty;
 			} else {
@@ -673,7 +652,6 @@ public class Dump {
 	 * @throws SecurityException if there is a security manager and it doesn't allow the checks required to change the dump settings
 	 */
 	public static void resetDumpOptions() throws DumpConfigurationUnavailableException {
-
 		/* Check the caller is allowed to reset dump settings. */
 		checkDumpSecurityPermssion();
 

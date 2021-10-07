@@ -35,7 +35,7 @@ static void raiseExceptionFor(JNIEnv *env, omr_error_t result);
  *
  * Returns the return value of the creation - 0 on success.
  */
-jint JNICALL 
+jint JNICALL
 Java_com_ibm_jvm_Dump_HeapDumpImpl(JNIEnv *env, jclass clazz)
 {
 	J9VMThread *thr = (J9VMThread *)env;
@@ -50,7 +50,7 @@ Java_com_ibm_jvm_Dump_HeapDumpImpl(JNIEnv *env, jclass clazz)
  *
  * Returns the return value of the creation - 0 on success.
  */
-jint JNICALL 
+jint JNICALL
 Java_com_ibm_jvm_Dump_JavaDumpImpl(JNIEnv *env, jclass clazz)
 {
 	J9VMThread *thr = (J9VMThread *)env;
@@ -65,13 +65,13 @@ Java_com_ibm_jvm_Dump_JavaDumpImpl(JNIEnv *env, jclass clazz)
  *
  * Returns the return value of the creation - 0 on success.
  */
-jint JNICALL 
+jint JNICALL
 Java_com_ibm_jvm_Dump_SystemDumpImpl(JNIEnv *env, jclass clazz)
 {
 	J9VMThread *thr = (J9VMThread *)env;
 	J9JavaVM *vm = thr->javaVM;
 	omr_error_t rc = vm->j9rasDumpFunctions->triggerOneOffDump(vm, "system", "com.ibm.jvm.Dump.SystemDump", NULL, 0);
-	
+
 	return omrErrorCodeToJniErrorCode(rc);
 }
 
@@ -81,11 +81,12 @@ Java_com_ibm_jvm_Dump_SystemDumpImpl(JNIEnv *env, jclass clazz)
  * Returns the return value of the creation - 0 on success.
  */
 jint JNICALL
-Java_com_ibm_jvm_Dump_SnapDumpImpl(JNIEnv *env, jclass clazz) {
+Java_com_ibm_jvm_Dump_SnapDumpImpl(JNIEnv *env, jclass clazz)
+{
 	J9VMThread *thr = (J9VMThread *)env;
 	J9JavaVM *vm = thr->javaVM;
 	omr_error_t rc = vm->j9rasDumpFunctions->triggerOneOffDump(vm, "Snap", "com.ibm.jvm.Dump.SnapDump", NULL, 0);
-	
+
 	return omrErrorCodeToJniErrorCode(rc);
 }
 
@@ -94,56 +95,59 @@ Java_com_ibm_jvm_Dump_SnapDumpImpl(JNIEnv *env, jclass clazz) {
  * anything clever like finding multiple UTF-8 characters that map
  * to the ascii letters for "tool".
  */
-static jboolean scanDumpTypeForToolDump(char **typeString)
+static jboolean
+scanDumpTypeForToolDump(char **typeString)
 {
-	/* Check for the string "tool" as a dump type. (Appears before + or :) */
-	char *endPtr = *typeString + strlen(*typeString);
+	/* Check for the string "tool" as a dump type (appears before + or :). */
+	char *endPtr = strchr(*typeString, ':');
 
-	if( strchr(*typeString, ':') != NULL ) {
-		endPtr = strchr(*typeString, ':');
+	if (NULL == endPtr) {
+		endPtr = *typeString + strlen(*typeString);
 	}
 
 	do {
 		/* Check for a tool dump option. */
-		if( try_scan(typeString, "tool") ) {
-
+		if (try_scan(typeString, "tool")) {
 			/* Check for a well-formed dump option */
-			if ( *typeString[0] == '+' ||
-				*typeString[0] == ':' ||
-				*typeString[0] == '\0' ) {
+			if (('+' == *typeString[0])
+			|| ( ':' == *typeString[0])
+			|| ('\0' == *typeString[0])
+			) {
 				return JNI_TRUE;
 			}
 		} else {
 			/* Any more dump types? */
-			if( strchr(*typeString, '+') != NULL ) {
-				*typeString = strchr(*typeString, '+') + 1;
+			char *plus = strchr(*typeString, '+');
+			if (NULL != plus) {
+				*typeString = plus + 1;
 			} else {
 				break; /* No more dump types. */
 			}
 		}
-	} while ( *typeString < endPtr);
+	} while (*typeString < endPtr);
 
 	return JNI_FALSE;
 }
 
 jboolean JNICALL
-Java_com_ibm_jvm_Dump_isToolDump(JNIEnv *env, jclass clazz, jstring jopts) {
+Java_com_ibm_jvm_Dump_isToolDump(JNIEnv *env, jclass clazz, jstring jopts)
+{
 	char *optsBuffer = NULL;
 	int optsLength = 0;
 	jboolean retVal = JNI_FALSE;
 
 	PORT_ACCESS_FROM_ENV(env);
 
-	if( jopts == NULL ) {
+	if (NULL == jopts) {
 		return FALSE;
 	}
 
 	optsLength = (*env)->GetStringUTFLength(env, jopts);
-	optsBuffer = j9mem_allocate_memory(optsLength+1, J9MEM_CATEGORY_VM_JCL);
+	optsBuffer = j9mem_allocate_memory(optsLength + 1, J9MEM_CATEGORY_VM_JCL);
 
-	if( optsBuffer != NULL ) {
-		char * optsBufferPtr = optsBuffer;
-		memset(optsBuffer, 0, optsLength+1);
+	if (NULL != optsBuffer) {
+		char *optsBufferPtr = optsBuffer;
+		memset(optsBuffer, 0, optsLength + 1);
 		(*env)->GetStringUTFRegion(env, jopts, 0, optsLength, optsBuffer);
 
 		retVal = scanDumpTypeForToolDump(&optsBufferPtr);
@@ -151,23 +155,23 @@ Java_com_ibm_jvm_Dump_isToolDump(JNIEnv *env, jclass clazz, jstring jopts) {
 		j9mem_free_memory(optsBuffer);
 	} else {
 		jclass exceptionClass = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
-		 if (exceptionClass != NULL) {
-			 (*env)->ThrowNew(env, exceptionClass, "Out of memory triggering dump");
-		 }
-		 /* Just return if we can't load the exception class. */
-		 retVal = JNI_FALSE;
+		if (NULL != exceptionClass) {
+			(*env)->ThrowNew(env, exceptionClass, "Out of memory triggering dump");
+		}
+		/* Just return if we can't load the exception class as an exception will be pending. */
+		retVal = JNI_FALSE;
 	}
 	return retVal;
 }
 
 jstring JNICALL
-Java_com_ibm_jvm_Dump_triggerDumpsImpl (JNIEnv *env, jclass clazz, jstring jopts, jstring jevent)
+Java_com_ibm_jvm_Dump_triggerDumpsImpl(JNIEnv *env, jclass clazz, jstring jopts, jstring jevent)
 {
 	J9VMThread *thr = (J9VMThread *)env;
 	J9JavaVM *vm = thr->javaVM;
 	char *optsBuffer = NULL;
 	char *eventBuffer = NULL;
-	char fileName[EsMaxPath+1];
+	char fileName[EsMaxPath + 1];
 	int optsLength = 0;
 	int eventLength = 0;
 	omr_error_t result = OMR_ERROR_NONE;
@@ -179,18 +183,16 @@ Java_com_ibm_jvm_Dump_triggerDumpsImpl (JNIEnv *env, jclass clazz, jstring jopts
 	optsLength = (*env)->GetStringUTFLength(env, jopts);
 	eventLength = (*env)->GetStringUTFLength(env, jevent);
 
-	optsBuffer = j9mem_allocate_memory(optsLength+1, J9MEM_CATEGORY_VM_JCL);
+	optsBuffer = j9mem_allocate_memory(optsLength + 1, J9MEM_CATEGORY_VM_JCL);
 	eventBuffer = j9mem_allocate_memory(strlen(COM_IBM_JVM_DUMP) + eventLength + 1, J9MEM_CATEGORY_VM_JCL);
 
-
 	/* Copy the file name string, avoid holding locks on things. */
-	if( optsBuffer != NULL && eventBuffer != NULL) {
-
-		memset(optsBuffer, 0, optsLength+1);
+	if ((NULL != optsBuffer) && (NULL != eventBuffer)) {
+		memset(optsBuffer, 0, optsLength + 1);
 		memset(eventBuffer, 0, strlen(COM_IBM_JVM_DUMP) + eventLength + 1);
-		/* Prefix the dump detail with com.ibm.jvm.Dump so createOneOffDumpAgent can
-		 * be sure of the source and prevent tool dumps from being run. (Avoiding
-		 * a back door to Runtime.exec() )
+		/* Prefix the dump detail with com.ibm.jvm.Dump so createOneOffDumpAgent
+		 * can be sure of the source and prevent tool dumps from being run
+		 * (avoiding a back door to Runtime.exec()).
 		 */
 		strcpy(eventBuffer, COM_IBM_JVM_DUMP);
 		memset(fileName, 0, sizeof(fileName));
@@ -200,24 +202,24 @@ Java_com_ibm_jvm_Dump_triggerDumpsImpl (JNIEnv *env, jclass clazz, jstring jopts
 
 		result = vm->j9rasDumpFunctions->triggerOneOffDump(vm, optsBuffer, eventBuffer, fileName, sizeof(fileName));
 
-     	if (OMR_ERROR_NONE == result) {
-    		jstring actualFile = NULL;
-    		actualFile = (*env)->NewStringUTF(env, fileName);
-    		toReturn = actualFile;
-    	} else {
-    		raiseExceptionFor(env, result);
-    	}
+		if (OMR_ERROR_NONE == result) {
+			jstring actualFile = NULL;
+			actualFile = (*env)->NewStringUTF(env, fileName);
+			toReturn = actualFile;
+		} else {
+			raiseExceptionFor(env, result);
+		}
 	} else {
 		jclass exceptionClass = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
-		 if (exceptionClass != NULL) {
-			 (*env)->ThrowNew(env, exceptionClass, "Out of memory triggering dump");
-		 }
-		 /* Just return if we can't load the exception class. */
+		if (NULL != exceptionClass) {
+			(*env)->ThrowNew(env, exceptionClass, "Out of memory triggering dump");
+		}
+		/* Just return if we can't load the exception class as an exception will be pending. */
 	}
-	if( optsBuffer != NULL ) {
+	if (NULL != optsBuffer) {
 		j9mem_free_memory(optsBuffer);
 	}
-	if( eventBuffer != NULL ) {
+	if (NULL != eventBuffer) {
 		j9mem_free_memory(eventBuffer);
 	}
 	return toReturn;
@@ -230,7 +232,7 @@ Java_openj9_internal_tools_attach_target_DiagnosticUtils_triggerDumpsImpl(JNIEnv
 }
 
 void JNICALL
-Java_com_ibm_jvm_Dump_setDumpOptionsImpl (JNIEnv *env, jclass clazz, jstring jopts)
+Java_com_ibm_jvm_Dump_setDumpOptionsImpl(JNIEnv *env, jclass clazz, jstring jopts)
 {
 	J9VMThread *thr = (J9VMThread *)env;
 	J9JavaVM *vm = thr->javaVM;
@@ -243,14 +245,13 @@ Java_com_ibm_jvm_Dump_setDumpOptionsImpl (JNIEnv *env, jclass clazz, jstring jop
 	/* Java code will have checked jopts is not null. */
 	optsLength = (*env)->GetStringUTFLength(env, jopts);
 
-	optsBuffer = j9mem_allocate_memory(optsLength+1, J9MEM_CATEGORY_VM_JCL);
+	optsBuffer = j9mem_allocate_memory(optsLength + 1, J9MEM_CATEGORY_VM_JCL);
 
-	if( optsBuffer != NULL ) {
-		memset(optsBuffer, 0, optsLength+1);
+	if (NULL != optsBuffer) {
+		memset(optsBuffer, 0, optsLength + 1);
 
 		(*env)->GetStringUTFRegion(env, jopts, 0, optsLength, optsBuffer);
 		if (!(*env)->ExceptionCheck(env)) {
-
 			/* Pass option to the dump facade */
 			result = vm->j9rasDumpFunctions->setDumpOption(vm, optsBuffer);
 
@@ -261,64 +262,57 @@ Java_com_ibm_jvm_Dump_setDumpOptionsImpl (JNIEnv *env, jclass clazz, jstring jop
 		}
 	} else {
 		jclass exceptionClass = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
-		 if (exceptionClass != NULL) {
-			 (*env)->ThrowNew(env, exceptionClass, "Out of memory setting dump options");
-		 }
-		 /* Just return if we can't load the exception class as an exception will be pending. */
+		if (NULL != exceptionClass) {
+			(*env)->ThrowNew(env, exceptionClass, "Out of memory setting dump options");
+		}
+		/* Just return if we can't load the exception class as an exception will be pending. */
 	}
 
-	if( optsBuffer != NULL ) {
+	if (NULL != optsBuffer) {
 		j9mem_free_memory(optsBuffer);
 	}
 }
 
 jstring JNICALL
-Java_com_ibm_jvm_Dump_queryDumpOptionsImpl (JNIEnv *env, jclass clazz) {
-
-#define BUFFER_SIZE 10240
-
+Java_com_ibm_jvm_Dump_queryDumpOptionsImpl(JNIEnv *env, jclass clazz)
+{
 	J9VMThread *thr = (J9VMThread *)env;
 	J9JavaVM *vm = thr->javaVM;
-	jint buffer_size = BUFFER_SIZE;
-	char options_buffer[BUFFER_SIZE];
-	char* options_ptr = NULL;
-	jint data_size;
-	jint* data_size_ptr = &data_size;
+	char options_buffer[10240];
+	jint buffer_size = sizeof(options_buffer);
+	char *options_ptr = NULL;
+	jint data_size = 0;
 	jstring toReturn = NULL;
 	omr_error_t result = OMR_ERROR_NONE;
 	PORT_ACCESS_FROM_ENV(env);
 
 	memset(options_buffer, 0, buffer_size);
-	result = vm->j9rasDumpFunctions->queryVmDump(vm, buffer_size, options_buffer, data_size_ptr);
+	result = vm->j9rasDumpFunctions->queryVmDump(vm, buffer_size, options_buffer, &data_size);
 
 	/* Insufficient buffer space, malloc. */
 	/* Retry in case someone is updating the agents while we run. */
-	while( data_size > buffer_size) {
+	while (data_size > buffer_size) {
 		buffer_size = data_size;
-		if( options_ptr != NULL ) {
+		if (NULL != options_ptr) {
 			j9mem_free_memory(options_ptr);
 			options_ptr = NULL;
 		}
 		options_ptr = j9mem_allocate_memory(buffer_size, J9MEM_CATEGORY_VM_JCL);
-		if( options_ptr != NULL ) {
+		if (NULL != options_ptr) {
 			memset(options_ptr, 0, buffer_size);
-			result = vm->j9rasDumpFunctions->queryVmDump(vm, buffer_size, options_ptr, data_size_ptr);
+			result = vm->j9rasDumpFunctions->queryVmDump(vm, buffer_size, options_ptr, &data_size);
 		} else {
 			result = OMR_ERROR_OUT_OF_NATIVE_MEMORY;
 			break; /* malloc failed */
 		}
 	}
 	if (OMR_ERROR_NONE == result) {
-		if( options_ptr == NULL ) {
-			toReturn = (*env)->NewStringUTF(env, options_buffer);
-		} else {
-			toReturn = (*env)->NewStringUTF(env, options_ptr);
-		}
+		toReturn = (*env)->NewStringUTF(env, (NULL != options_ptr) ? options_ptr : options_buffer);
 	} else {
 		/* Map back to exception */
 		raiseExceptionFor(env, result);
 	}
-	if( options_ptr != NULL ) {
+	if (NULL != options_ptr) {
 		j9mem_free_memory(options_ptr);
 	}
 
@@ -326,17 +320,17 @@ Java_com_ibm_jvm_Dump_queryDumpOptionsImpl (JNIEnv *env, jclass clazz) {
 }
 
 void JNICALL
-Java_com_ibm_jvm_Dump_resetDumpOptionsImpl (JNIEnv *env, jclass clazz)
+Java_com_ibm_jvm_Dump_resetDumpOptionsImpl(JNIEnv *env, jclass clazz)
 {
-	omr_error_t result = OMR_ERROR_NONE;
 	J9VMThread *thr = (J9VMThread *)env;
 	J9JavaVM *vm = thr->javaVM;
 
 	/* request dump reset from dump module */
-	result = vm->j9rasDumpFunctions->resetDumpOptions(vm);
+	omr_error_t result = vm->j9rasDumpFunctions->resetDumpOptions(vm);
 
 	/* Not much error handling we can do but this can fail if the dump configuration
-	 * is locked while a dump is in progress. */
+	 * is locked while a dump is in progress.
+	 */
 
 	/* Map back to exception */
 	if (OMR_ERROR_NONE != result) {
@@ -346,7 +340,7 @@ Java_com_ibm_jvm_Dump_resetDumpOptionsImpl (JNIEnv *env, jclass clazz)
 
 /**
  * Raise exception for OMR error code that is passed in.
- * 
+ *
  * Dump.queryDumpOptions() will never return DumpConfigurationUnavailableException according to the published API.
  * Java_com_ibm_jvm_Dump_queryDumpOptionsImpl() calls raiseExceptionFor() only when queryVmDump() returns
  * OMR_ERROR_OUT_OF_NATIVE_MEMORY, the return case of OMR_ERROR_ILLEGAL_ARGUMENT will never happen for raiseException().
@@ -357,32 +351,33 @@ Java_com_ibm_jvm_Dump_resetDumpOptionsImpl (JNIEnv *env, jclass clazz)
 static void
 raiseExceptionFor(JNIEnv *env, omr_error_t result)
 {
-	jclass exceptionClass = NULL;
+	const char *exceptionClassName = NULL;
+	const char *exceptionMessage = NULL;
 
 	switch (result) {
 	case OMR_ERROR_INTERNAL:
-		exceptionClass = (*env)->FindClass(env, "openj9/management/internal/InvalidDumpOptionExceptionBase");
-		if (exceptionClass != NULL) {
-			(*env)->ThrowNew(env, exceptionClass, "Error in dump options.");
-		}
-		/* Just return if we can't load the exception class. */
+		exceptionClassName = "openj9/management/internal/InvalidDumpOptionExceptionBase";
+		exceptionMessage = "Error in dump options.";
 		break;
 	case OMR_ERROR_OUT_OF_NATIVE_MEMORY:
-		exceptionClass = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
-		if (exceptionClass != NULL) {
-			(*env)->ThrowNew(env, exceptionClass, "Out of memory setting dump option");
-		}
-		/* Just return if we can't load the exception class. */
+		exceptionClassName = "java/lang/OutOfMemoryError";
+		exceptionMessage = "Out of memory setting dump option.";
 		break;
 	case OMR_ERROR_NOT_AVAILABLE:
-		exceptionClass = (*env)->FindClass(env, "openj9/management/internal/DumpConfigurationUnavailableExceptionBase");
-		if (exceptionClass != NULL) {
-			(*env)->ThrowNew(env, exceptionClass, "Dump configuration cannot be changed while a dump is in progress.");
-		}
-		/* Just return if we can't load the exception class. */
+		exceptionClassName = "openj9/management/internal/DumpConfigurationUnavailableExceptionBase";
+		exceptionMessage = "Dump configuration cannot be changed while a dump is in progress.";
 		break;
 	default:
 		Assert_JCL_unreachable();
 		break;
+	}
+
+	if (NULL != exceptionClassName) {
+		jclass exceptionClass = (*env)->FindClass(env, exceptionClassName);
+		if (NULL != exceptionClass) {
+			(*env)->ThrowNew(env, exceptionClass, exceptionMessage);
+		} else {
+			/* Just return if we can't load the exception class as an exception will be pending. */
+		}
 	}
 }
