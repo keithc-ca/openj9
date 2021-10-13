@@ -265,7 +265,6 @@ public class Dump {
 			checkForExtraOptions(fileNamePattern);
 			request = "java:file=" + fileNamePattern; //$NON-NLS-1$
 		}
-
 		return triggerDump(request, "javaDumpToFile"); //$NON-NLS-1$
 	}
 
@@ -418,8 +417,7 @@ public class Dump {
 		} else {
 			// Check no-one has tried to sneak options onto the end.
 			checkForExtraOptions(fileNamePattern);
-
-			request = "system:" + SystemLabelKey + "=" + fileNamePattern; //$NON-NLS-1$  //$NON-NLS-2$
+			request = "system:" + SystemRequestPrefix + fileNamePattern; //$NON-NLS-1$
 		}
 		return triggerDump(request, "systemDumpToFile"); //$NON-NLS-1$
 	}
@@ -661,12 +659,12 @@ public class Dump {
 		/* Check the caller is allowed to trigger a dump. */
 		checkDumpSecurityPermssion();
 
-		Objects.requireNonNull(dumpOptions);
-
 		if (isToolDump(dumpOptions)) {
 			checkToolSecurityPermssion();
 		}
 		/*[ENDIF] JAVA_SPEC_VERSION < 24 */
+
+		Objects.requireNonNull(dumpOptions);
 
 		/* Synchronized to prevent two Java threads trying to set/reset dump settings at once.
 		 * resetDumpOptionsImpl is also synchronised in this way.

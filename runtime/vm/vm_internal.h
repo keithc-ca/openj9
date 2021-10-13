@@ -26,13 +26,12 @@
 /* @ddr_namespace: map_to_type=VmInternalConstants */
 
 /**
-* @file vm_internal.h
-* @brief Internal prototypes used within the VM module.
-*
-* This file contains implementation-private function prototypes and
-* type definitions for the VM module.
-*
-*/
+ * @file vm_internal.h
+ * @brief Internal prototypes used within the VM module.
+ *
+ * This file contains implementation-private function prototypes and
+ * type definitions for the VM module.
+ */
 
 #include "j9.h"
 #include "j9comp.h"
@@ -70,7 +69,7 @@ extern "C" {
 #define	TAG_ROM_CLASS			1
 #define MASK_PACKED				3
 #define	TAG_PACKED_YES			3
-#define TAG_GENERATED_PACKAGE		2
+#define TAG_GENERATED_PACKAGE	2
 #define MASK_QUERY 				31
 #define TAG_UTF_QUERY			4
 #define TAG_PACKAGE_UTF_QUERY	28
@@ -80,160 +79,152 @@ extern "C" {
 /* ---------------- resolvefield.c ---------------- */
 
 /**
-* @brief
-* @param *vm
-* @param *portLibrary
-* @return J9HashTable *
-*/
+ * @brief
+ * @param *vm
+ * @param *portLibrary
+ * @return J9HashTable *
+ */
 J9HashTable *
-fieldIndexTableNew(J9JavaVM* vm, J9PortLibrary *portLib);
-
+fieldIndexTableNew(J9JavaVM *vm, J9PortLibrary *portLib);
 
 /**
-* @brief
-* @param *vm
-* @return void
-*/
+ * @brief
+ * @param *vm
+ */
 void
-fieldIndexTableFree(J9JavaVM* vm);
+fieldIndexTableFree(J9JavaVM *vm);
 
 /* ---------------- jniinv.c ---------------- */
 
 /**
-* @brief
-* @param p_vm
-* @param p_env
-* @param *vm_args
-* @return jint
-*/
+ * @brief
+ * @param p_vm
+ * @param p_env
+ * @param *vm_args
+ * @return jint
+ */
 jint JNICALL
-JNI_CreateJavaVM(JavaVM ** p_vm, void ** p_env, void *vm_args);
-
+JNI_CreateJavaVM(JavaVM **p_vm, void **p_env, void *vm_args);
 
 /**
-* @brief
-* @param vm_buf
-* @param bufLen
-* @param nVMs
-* @return jint
-*/
+ * @brief
+ * @param vm_buf
+ * @param bufLen
+ * @param nVMs
+ * @return jint
+ */
 jint JNICALL
-JNI_GetCreatedJavaVMs(JavaVM ** vm_buf, jsize bufLen, jsize * nVMs);
-
+JNI_GetCreatedJavaVMs(JavaVM **vm_buf, jsize bufLen, jsize *nVMs);
 
 /**
-* @brief
-* @param vm_args
-* @return jint
-*/
+ * @brief
+ * @param vm_args
+ * @return jint
+ */
 jint JNICALL
-JNI_GetDefaultJavaVMInitArgs(void * vm_args);
-
+JNI_GetDefaultJavaVMInitArgs(void *vm_args);
 
 #if (defined(J9VM_OPT_SIDECAR))
 /**
-* @brief
-* @param shutdownThread
-* @return void
-*/
+ * @brief
+ * @param shutdownThread
+ */
 void
-sidecarShutdown(J9VMThread* shutdownThread);
+sidecarShutdown(J9VMThread *shutdownThread);
 #endif /* J9VM_OPT_SIDECAR */
 
 #if defined(J9VM_ZOS_3164_INTEROPERABILITY)
 /**
-* Helper function to invoke 31-bit target vm->exitHook via CEL4RO31.
-* @param vm J9JavaVM instance
-* @param rc The return code passed to exitHook
-* @return void
-*/
+ * Helper function to invoke 31-bit target vm->exitHook via CEL4RO31.
+ * @param vm J9JavaVM instance
+ * @param rc The return code passed to exitHook
+ * @return void
+ */
 void
-execute31BitExitHook(J9JavaVM * vm, jint rc);
+execute31BitExitHook(J9JavaVM *vm, jint rc);
 #endif /* defined(J9VM_ZOS_3164_INTEROPERABILITY) */
 
 /* ---------------- jnimem.c ----------------- */
 
 /**
-* @brief
-* @param vmThread
-* @param sizeInBytes
-* @return void*
-*/
-void*
-jniArrayAllocateMemory32FromThread(J9VMThread* vmThread, UDATA sizeInBytes);
+ * @brief
+ * @param vmThread
+ * @param sizeInBytes
+ * @return void *
+ */
+void *
+jniArrayAllocateMemory32FromThread(J9VMThread *vmThread, UDATA sizeInBytes);
 
 /**
-* @brief
-* @param vmThread
-* @param location
-* @return void
-*/
+ * @brief
+ * @param vmThread
+ * @param location
+ * @return void
+ */
 void
-jniArrayFreeMemory32FromThread(J9VMThread* vmThread, void* location);
+jniArrayFreeMemory32FromThread(J9VMThread *vmThread, void *location);
 
 /* ---------------- jnimisc.cpp -------------- */
 
 #if defined(J9VM_ZOS_3164_INTEROPERABILITY)
 /**
-* @brief
-* @param env
-* @param array
-* @param isCopy
-* @return void*
-*/
-void* JNICALL
+ * @brief
+ * @param env
+ * @param array
+ * @param isCopy
+ * @return void *
+ */
+void * JNICALL
 getArrayElements31(JNIEnv *env, jarray array, jboolean *isCopy);
 
 /**
-* @brief
-* @param env
-* @param array
-* @param elems
-* @param mode
-* @return void
-*/
+ * @brief
+ * @param env
+ * @param array
+ * @param elems
+ * @param mode
+ */
 void JNICALL
 releaseArrayElements31(JNIEnv *env, jarray array, void * elems, jint mode);
 
 /**
-* @brief
-* @param env
-* @param string
-* @param isCopy
-* @return const jchar*
-*/
-const jchar* JNICALL
+ * @brief
+ * @param env
+ * @param string
+ * @param isCopy
+ * @return const jchar *
+ */
+const jchar * JNICALL
 getStringChars31(JNIEnv *env, jstring string, jboolean *isCopy);
 
 /**
-* @brief
-* @param env
-* @param string
-* @param chars
-* @return void
-*/
+ * @brief
+ * @param env
+ * @param string
+ * @param chars
+ */
 void JNICALL
-releaseStringChars31(JNIEnv *env, jstring string, const jchar * chars);
+releaseStringChars31(JNIEnv *env, jstring string, const jchar *chars);
 
 /**
-* @brief
-* @param env
-* @param string
-* @param isCopy
-* @return const char*
-*/
-const char* JNICALL
+ * @brief
+ * @param env
+ * @param string
+ * @param isCopy
+ * @return const char *
+ */
+const char * JNICALL
 getStringUTFChars31(JNIEnv *env, jstring string, jboolean *isCopy);
 
 /**
-* @brief
-* @param env
-* @param string
-* @param chars
-* @return void
-*/
+ * @brief
+ * @param env
+ * @param string
+ * @param chars
+ * @return void
+ */
 void JNICALL
-releaseStringCharsUTF31(JNIEnv *env, jstring string, const char * chars);
+releaseStringCharsUTF31(JNIEnv *env, jstring string, const char *chars);
 
 /**
  * Helper function to query the matching 31-bit JNIEnv* for the given J9VMThread
@@ -244,7 +235,7 @@ releaseStringCharsUTF31(JNIEnv *env, jstring string, const char * chars);
  * @param[in]  vmThread The J9VMThread to query
  */
 void
-queryJNIEnv31(J9VMThread* vmThread);
+queryJNIEnv31(J9VMThread *vmThread);
 
 /**
  * Helper function to query the matching 31-bit JavaVM* for the given J9JavaVM
@@ -255,51 +246,49 @@ queryJNIEnv31(J9VMThread* vmThread);
  * @param[in]  vm The J9JavaVM to query
  */
 void
-queryJavaVM31(J9JavaVM* vm);
+queryJavaVM31(J9JavaVM *vm);
 #endif /* defined(J9VM_ZOS_3164_INTEROPERABILITY) */
 
 /* ---------------- vmifunc.c ---------------- */
 /**
-* @brief
-* @param vm
-* @return vmiError
-*/
+ * @brief
+ * @param vm
+ * @return vmiError
+ */
 vmiError
-J9VMI_Initialize(J9JavaVM* vm);
+J9VMI_Initialize(J9JavaVM *vm);
 
 /* ---------------- xcheck.c ---------------- */
 /**
-* @brief
-* Modify the DLL load table for shared libraries used by -Xcheck: options.
-* @param vm
-* @param loadTable
-* @param j9vm_args
-* @return void
-*/
+ * @brief
+ * Modify the DLL load table for shared libraries used by -Xcheck: options.
+ * @param vm
+ * @param loadTable
+ * @param j9vm_args
+ * @return 0 on success, non-zero if options prevent the JVM from continuing
+ */
 jint
-processXCheckOptions(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args);
+processXCheckOptions(J9JavaVM *vm, J9Pool *loadTable, J9VMInitArgs *j9vm_args);
 
 /* ---------------- statistics.c ---------------- */
 /**
-* @brief
-* @param *javaVM
-* @return void
-*/
+ * @brief
+ * @param *javaVM
+ * @return void
+ */
 void
-deleteStatistics (J9JavaVM* javaVM);
-
+deleteStatistics(J9JavaVM *javaVM);
 
 /* ---------------- jnicsup.c ---------------- */
 /**
-* @brief
-* parse -Xjni: options
-* @param vm
-* @param optArg
-* @return IDATA
-*/
+ * @brief
+ * parse -Xjni: options
+ * @param vm
+ * @param optArg
+ * @return IDATA
+ */
 IDATA
 jniParseArguments(J9JavaVM *vm, char *optArg);
-
 
 /**
  * Look up a JNI native in the specified \c nativeLibrary, if found then
@@ -313,18 +302,17 @@ jniParseArguments(J9JavaVM *vm, char *optArg);
  * \return 0 on success, any other value on failure.
  */
 UDATA
-lookupJNINative(J9VMThread *currentThread, J9NativeLibrary *nativeLibrary, J9Method *nativeMethod, char * symbolName, char* argSignature);
+lookupJNINative(J9VMThread *currentThread, J9NativeLibrary *nativeLibrary, J9Method *nativeMethod, char *symbolName, char *argSignature);
 
 /* ---------------- logsupport.c ---------------- */
 /**
-* @brief
-* Process the -Xsyslog: options.
-* @param vm
-* @return JNI_ERR on error, JNI_OK on success.
-*/
+ * @brief
+ * Process the -Xsyslog: options.
+ * @param vm
+ * @return JNI_ERR on error, JNI_OK on success.
+ */
 jint
-processXLogOptions(J9JavaVM * vm);
-
+processXLogOptions(J9JavaVM *vm);
 
 /* ---------------- lockwordconfig.c ---------------- */
 /**
@@ -333,7 +321,7 @@ processXLogOptions(J9JavaVM * vm);
  * @param jvm pointer to J9JavaVM that can be used by the method
  */
 void
-cleanupLockwordConfig(J9JavaVM* jvm);
+cleanupLockwordConfig(J9JavaVM *jvm);
 
 /**
  * This method parses a string containing lockword options
@@ -341,10 +329,10 @@ cleanupLockwordConfig(J9JavaVM* jvm);
  * @param options string containing the options specified on the command line
  * @param what pointer to boolean set if the what option is specified
  *
- * @returns JNI_OK on success
+ * @return JNI_OK on success
  */
 UDATA
-parseLockwordConfig(J9JavaVM* jvm, char* options, BOOLEAN* what);
+parseLockwordConfig(J9JavaVM *jvm, char *options, BOOLEAN *what);
 
 /**
  * This method is called to output the -Xlockword:what info
@@ -352,9 +340,7 @@ parseLockwordConfig(J9JavaVM* jvm, char* options, BOOLEAN* what);
  * @param jvm pointer to J9JavaVM that can be used by the method
  */
 void
-printLockwordWhat(J9JavaVM* jvm);
-
-
+printLockwordWhat(J9JavaVM *jvm);
 
 /* ------------------- stringhelpers.c ----------------- */
 /**
@@ -363,9 +349,8 @@ printLockwordWhat(J9JavaVM* jvm);
  * @param length number of bytes in the string, not including the terminating '\0'
  * @return 1 if utf8Data points to valid UTF8, 0 otherwise
  */
-
 UDATA
-isValidUtf8(const U_8 * utf8Data, size_t length);
+isValidUtf8(const U_8 *utf8Data, size_t length);
 
 /**
  *  copies original to corrected, replacing bad characters with '?'.  Also add a terminating null byte.
@@ -373,9 +358,8 @@ isValidUtf8(const U_8 * utf8Data, size_t length);
  * @param original pointer to a null-terminated sequence of bytes.
  * @param corrected pointer to a buffer to receive the corrected string.
  */
-
 void
-fixBadUtf8(const U_8 * original, U_8 *corrected, size_t length);
+fixBadUtf8(const U_8 *original, U_8 *corrected, size_t length);
 
 /* ------------------- NativeHelpers.cpp ----------------- */
 /**
@@ -387,7 +371,7 @@ fixBadUtf8(const U_8 * original, U_8 *corrected, size_t length);
  * @param currentThread[in] the current J9VMThread
  * @param clazz[in] the Class object to query (NullPointerException is thrown if this is NULL)
  *
- * @returns the array of interfaces, or NULL on failure (in which case an exception will be pending)
+ * @return the array of interfaces, or NULL on failure (in which case an exception will be pending)
  */
 j9object_t
 getInterfacesHelper(J9VMThread *currentThread, j9object_t clazz);
@@ -402,10 +386,10 @@ getInterfacesHelper(J9VMThread *currentThread, j9object_t clazz);
  * @param currentThread[in] the current J9VMThread
  * @param walkState[in] the current J9StackWalkState pointer
  *
- * @returns J9_STACKWALK_KEEP_ITERATING with depth greater than 0, or J9_STACKWALK_STOP_ITERATING once the caller is detected at depth 0
+ * @return J9_STACKWALK_KEEP_ITERATING with depth greater than 0, or J9_STACKWALK_STOP_ITERATING once the caller is detected at depth 0
  */
 UDATA
-cInterpGetStackClassJEP176Iterator(J9VMThread * currentThread, J9StackWalkState * walkState);
+cInterpGetStackClassJEP176Iterator(J9VMThread *currentThread, J9StackWalkState *walkState);
 
 /**
  * Allocate native memory and copy the bytearray to it.
@@ -413,9 +397,9 @@ cInterpGetStackClassJEP176Iterator(J9VMThread * currentThread, J9StackWalkState 
  * @param currentThread[in] the current J9VMThread
  * @param byteArray[in] the ByteArray instance (must not be NULL)
  *
- * @returns the newly-allocated memory, or NULL on failure (no exception is set pending)
+ * @return the newly-allocated memory, or NULL on failure (no exception is set pending)
  */
-char*
+char *
 convertByteArrayToCString(J9VMThread *currentThread, j9object_t byteArray);
 
 /**
@@ -426,7 +410,7 @@ convertByteArrayToCString(J9VMThread *currentThread, j9object_t byteArray);
  * @param currentThread[in] the current J9VMThread
  * @param cString[in] the char * to copy from (must not be NULL)
  *
- * @returns the newly-allocated object, or NULL on failure (no exception is set pending)
+ * @return the newly-allocated object, or NULL on failure (no exception is set pending)
  */
 j9object_t
 convertCStringToByteArray(J9VMThread *currentThread, const char *byteArray);
@@ -438,7 +422,7 @@ convertCStringToByteArray(J9VMThread *currentThread, const char *byteArray);
  * @param argArray[in] the specified argument array (must not be NULL)
  * @param javaArgs[in] the specified native memory to store the arguments (must not be NULL)
  *
- * @returns the newly-allocated memory, or NULL on failure (no exception is set pending)
+ * @return the newly-allocated memory, or NULL on failure (no exception is set pending)
  */
 U_64 *
 convertToNativeArgArray(J9VMThread *currentThread, j9object_t argArray, U_64 *javaArgs);
@@ -485,9 +469,8 @@ initializeROMClasses(J9JavaVM *vm);
  * 			J9_VISIBILITY_MODULE_READ_ACCESS_ERROR if module read access error occurred,
  * 			J9_VISIBILITY_MODULE_PACKAGE_EXPORT_ERROR if module package access error
  */
-
 IDATA
-checkModuleAccess(J9VMThread *currentThread, J9JavaVM* vm, J9ROMClass* srcRomClass, J9Module* srcModule, J9ROMClass* destRomClass, J9Module* destModule, UDATA destPackageID, UDATA lookupOptions);
+checkModuleAccess(J9VMThread *currentThread, J9JavaVM *vm, J9ROMClass *srcRomClass, J9Module *srcModule, J9ROMClass *destRomClass, J9Module *destModule, UDATA destPackageID, UDATA lookupOptions);
 #endif /* JAVA_SPEC_VERSION >= 11 */
 
 /* ------------------- guardedstorage.c ----------------- */
@@ -517,7 +500,7 @@ invokeJ9ReadBarrier(struct J9VMThread *currentThread);
  *
  * @param currentThread[in] the current J9VMThread
  *
- * @returns 1 if successful, 0 otherwise
+ * @return 1 if successful, 0 otherwise
  */
 int32_t
 j9gs_initializeThread(struct J9VMThread *vmThread);
@@ -529,7 +512,7 @@ j9gs_initializeThread(struct J9VMThread *vmThread);
  *
  * @param currentThread[in] the current J9VMThread
  *
- * @returns 1 if successful, 0 otherwise
+ * @return 1 if successful, 0 otherwise
  */
 int32_t
 j9gs_deinitializeThread(struct J9VMThread *vmThread);
@@ -661,9 +644,9 @@ javaOffloadSwitchOffWithReason(J9VMThread *currentThread, UDATA reason);
  * @param buffer[in] pointer to the buffer
  * @param walkState[in] pointer to the walk state
  *
- * @returns pointer to the first event in the buffer or NULL if the buffer is empty
+ * @return pointer to the first event in the buffer or NULL if the buffer is empty
  */
-J9JFREvent*
+J9JFREvent *
 jfrBufferStartDo(J9JFRBuffer *buffer, J9JFRBufferWalkState *walkState);
 
 /**
@@ -671,9 +654,9 @@ jfrBufferStartDo(J9JFRBuffer *buffer, J9JFRBufferWalkState *walkState);
  *
  * @param walkState[in] pointer to the walk state
  *
- * @returns pointer to the next event in the buffer or NULL if there are no more
+ * @return pointer to the next event in the buffer or NULL if there are no more
  */
-J9JFREvent*
+J9JFREvent *
 jfrBufferNextDo(J9JFRBufferWalkState *walkState);
 
 #endif /* defined(J9VM_OPT_JFR) */
@@ -701,7 +684,7 @@ memcpyFromHeapArray(J9VMThread *currentThread, j9object_t arrayObject, jboolean 
  * @param elems the native memory to copy from
  * @param mode a code denoting whether to copy/release the native memory
  * @param ensureMem32 a flag specific to 31-bit z/OS
-*/
+ */
 void
 memcpyToHeapArray(J9VMThread *currentThread, j9object_t arrayObject, void *elems, jint mode, jboolean ensureMem32);
 
@@ -719,7 +702,7 @@ cleanupEnsureHashedConfig(J9JavaVM *jvm);
  * @brief This function parses a string containing utf8String options.
  *
  * @param options string containing the options specified on the command line
- * @returns JNI_OK on success
+ * @return JNI_OK on success
  */
 UDATA
 parseEnsureHashedConfig(J9JavaVM *jvm, char *options, BOOLEAN isAdd);

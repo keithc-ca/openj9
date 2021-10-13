@@ -107,6 +107,13 @@ endif()
 # we also want to set the RPATH properly
 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
 
+if(# OMR_OS_ZOS AND # FIXME
+		(NOT JAVA_SPEC_VERSION LESS 11))
+	# Enable OMR support for IEATDUMP filename validation.
+	# Note: This requires a build system running z/OS 2.4 or newer.
+	set(OMR_TDUMP_VALIDATION ON CACHE BOOL "Recognize dump type 'IEATDUMP_VALIDATE'")
+endif()
+
 if(OPENJ9_BUILD)
 	add_definitions(-DOPENJ9_BUILD)
 endif()
