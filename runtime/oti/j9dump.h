@@ -28,7 +28,7 @@
 
 /* Rasdump Global storage block */
 typedef struct RasDumpGlobalStorage {
-	void* dumpLabelTokens;
+	void *dumpLabelTokens;
 	omrthread_monitor_t dumpLabelTokensMutex;
 
 	UDATA allocationRangeMin;
@@ -46,30 +46,29 @@ typedef struct RasDumpGlobalStorage {
 /* Flag to show unmounted Thread stacktrace in java dump. */
 #define J9RAS_JAVADUMP_SHOW_UNMOUNTED_THREAD_STACKS    0x4
 
-struct J9RASdumpAgent; /* Forward struct declaration */
-struct J9RASdumpContext; /* Forward struct declaration */
+struct J9RASdumpContext; /* forward declaration */
 
 /* @ddr_namespace: map_to_type=J9RASdumpAgent */
 
 typedef struct J9RASdumpAgent {
-	struct J9RASdumpAgent* nextPtr;
-	omr_error_t  (*shutdownFn)(struct J9JavaVM *vm, struct J9RASdumpAgent **agentPtr) ;
+	struct J9RASdumpAgent *nextPtr;
+	omr_error_t  (*shutdownFn)(struct J9JavaVM *vm, struct J9RASdumpAgent **agentPtr);
 	UDATA eventMask;
-	char* detailFilter;
+	char *detailFilter;
 	UDATA startOnCount;
 	UDATA stopOnCount;
 	UDATA count;
-	char* labelTemplate;
-	omr_error_t  (*dumpFn)(struct J9RASdumpAgent *agent, char *label, struct J9RASdumpContext *context) ;
-	char* dumpOptions;
-	void* userData;
+	char *labelTemplate;
+	omr_error_t  (*dumpFn)(struct J9RASdumpAgent *agent, char *label, struct J9RASdumpContext *context);
+	char *dumpOptions;
+	void *userData;
 	UDATA priority;
 	UDATA requestMask;
 	UDATA prepState;
-	char* subFilter;
+	char *subFilter;
 } J9RASdumpAgent;
 
-/* Dump flags. Definitions must be simple so that DDR can process them. */
+/* Dump flag definitions must be simple so that DDR can process them. */
 #define J9RAS_DUMP_ON_VM_STARTUP  1
 #define J9RAS_DUMP_ON_VM_SHUTDOWN  2
 #define J9RAS_DUMP_ON_CLASS_LOAD  4
@@ -109,11 +108,11 @@ typedef struct J9RASdumpAgent {
 #define J9RAS_DUMP_DO_PREEMPT_THREADS  0x40
 
 typedef struct J9RASdumpContext {
-	struct J9JavaVM* javaVM;
-	struct J9VMThread* onThread;
+	struct J9JavaVM *javaVM;
+	struct J9VMThread *onThread;
 	UDATA eventFlags;
-	struct J9RASdumpEventData* eventData;
-	char* dumpList;
+	struct J9RASdumpEventData *eventData;
+	char *dumpList;
 	UDATA dumpListSize;
 	UDATA dumpListIndex;
 } J9RASdumpContext;
@@ -134,17 +133,21 @@ typedef struct J9RASAsyncPidInfo {
 typedef omr_error_t (*J9RASdumpFn)(struct J9RASdumpAgent *agent, char *label, struct J9RASdumpContext *context);
 
 typedef struct J9RASdumpFunctions {
-	void* reserved;
-	omr_error_t  (*triggerOneOffDump)(struct J9JavaVM *vm, char *optionString, char *caller, char *fileName, size_t fileNameLength) ;
-	omr_error_t  (*insertDumpAgent)(struct J9JavaVM *vm, struct J9RASdumpAgent *agent) ;
-	omr_error_t  (*removeDumpAgent)(struct J9JavaVM *vm, struct J9RASdumpAgent *agent) ;
-	omr_error_t  (*seekDumpAgent)(struct J9JavaVM *vm, struct J9RASdumpAgent **agentPtr, J9RASdumpFn dumpFn) ;
-	omr_error_t  (*triggerDumpAgents)(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags, struct J9RASdumpEventData *eventData) ;
-	omr_error_t  (*setDumpOption)(struct J9JavaVM *vm, char *optionString) ;
-	omr_error_t  (*resetDumpOptions)(struct J9JavaVM *vm) ;
-	omr_error_t  (*queryVmDump)(struct J9JavaVM *vm, int buffer_size, void* options_buffer, int* data_size) ;
+	void *reserved;
+	omr_error_t (*triggerOneOffDump)(struct J9JavaVM *vm, char *optionString, char *caller, char *fileName, size_t fileNameLength);
+	omr_error_t (*insertDumpAgent)(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+	omr_error_t (*removeDumpAgent)(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+	omr_error_t (*seekDumpAgent)(struct J9JavaVM *vm, struct J9RASdumpAgent **agentPtr, J9RASdumpFn dumpFn);
+	omr_error_t (*triggerDumpAgents)(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags, struct J9RASdumpEventData *eventData);
+	omr_error_t (*setDumpOption)(struct J9JavaVM *vm, char *optionString);
+	omr_error_t (*resetDumpOptions)(struct J9JavaVM *vm);
+	omr_error_t (*queryVmDump)(struct J9JavaVM *vm, int buffer_size, void *options_buffer, int *data_size);
+	omr_error_t (*printDumpAgent)(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+#if defined(OMR_TDUMP_VALIDATION)
+	omr_error_t (*validateDumpAgent)(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+#endif /* defined(OMR_TDUMP_VALIDATION) */
 #if defined(J9VM_OPT_CRIU_SUPPORT)
-	IDATA  (*criuReloadXDumpAgents)(struct J9JavaVM *vm, struct J9VMInitArgs *j9vm_args) ;
+	IDATA (*criuReloadXDumpAgents)(struct J9JavaVM *vm, struct J9VMInitArgs *j9vm_args);
 #endif /* defined(J9VM_OPT_CRIU_SUPPORT) */
 } J9RASdumpFunctions;
 

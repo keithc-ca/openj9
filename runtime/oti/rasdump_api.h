@@ -43,7 +43,6 @@ extern "C" {
 /* Forward declarations */
 struct J9JavaVM;
 struct J9RASdumpSettings;
-struct J9RASdumpAgent;
 struct J9PortLibrary;
 struct J9RASdumpEventData;
 struct J9VMThread;
@@ -51,229 +50,210 @@ struct J9VMThread;
 /* ---------------- dmpagent.c ---------------- */
 
 /**
-* @brief
-* @param *vm
-* @param *settings
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param *settings
+ * @return omr_error_t
+ */
 omr_error_t
 freeDumpSettings(struct J9JavaVM *vm, struct J9RASdumpSettings *settings);
 
-
 /**
-* @brief
-* @param *vm
-* @param *src
-* @param *dst
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param *src
+ * @param *dst
+ * @return omr_error_t
+ */
 omr_error_t
 copyDumpSettings(struct J9JavaVM *vm, struct J9RASdumpSettings *src, struct J9RASdumpSettings *dst);
 
-
 /**
-* @brief
-* @param *vm
-* @param *src
-* @param *dst
-* @return IDATA
-*/
+ * @brief
+ * @param *vm
+ * @param *src
+ * @param *dst
+ * @return IDATA
+ */
 struct J9RASdumpSettings *
 copyDumpSettingsQueue(struct J9JavaVM *vm, struct J9RASdumpSettings *toCopy);
 
-
 /**
-* @brief
-* @param *vm
-* @return struct J9RASdumpSettings *
-*/
+ * @brief
+ * @param *vm
+ * @return struct J9RASdumpSettings *
+ */
 struct J9RASdumpSettings *
 initDumpSettings(struct J9JavaVM *vm);
 
-
 /**
-* @brief
-* @param *vm
-* @param kind
-* @param *optionString
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param kind
+ * @param *optionString
+ * @return omr_error_t
+ */
 omr_error_t
 loadDumpAgent(struct J9JavaVM *vm, IDATA kind, char *optionString);
 
-
 /**
-* @brief
-* @param *vm
-* @param kind
-* @param *optionString
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param kind
+ * @param *optionString
+ * @return omr_error_t
+ */
 omr_error_t
 deleteMatchingAgents(struct J9JavaVM *vm, IDATA kind, char *optionString);
 
-
 /**
-* @brief
-* @param *vm
-* @param kind
-* @param *optionString
-* @return IDATA
-*/
+ * @brief
+ * @param *vm
+ * @param kind
+ * @param *optionString
+ * @return IDATA
+ */
 J9RASdumpAgent *
 copyDumpAgentsQueue(J9JavaVM *vm, J9RASdumpAgent *toCopy);
 
-
 /**
-* @brief
-* @param *vm
-* @param *src
-* @param *dst
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param *src
+ * @param *dst
+ * @return omr_error_t
+ */
 omr_error_t
 copyDumpAgent(struct J9JavaVM *vm, J9RASdumpAgent *src, J9RASdumpAgent *dst);
 
-
 /**
-* @brief
-* @param eventFlag
-* @return const char*
-*/
-const char*
+ * @brief
+ * @param eventFlag
+ * @return const char *
+ */
+const char *
 mapDumpEvent(UDATA eventFlag);
 
-
 /**
-* @brief
-* @param *vm
-* @param *agent
-* @return IDATA
-*/
+ * @brief
+ * @param *vm
+ * @param *agent
+ * @return IDATA
+ */
 omr_error_t
 printDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
 
-
 /**
-* @brief
-* @param *vm
-* @param *agent
-* @param buffer_size
-* @param *options_buffer
-* @param *index
-* @return IDATA
-*/
+ * @brief
+ * @param *vm
+ * @param *agent
+ * @param buffer_size
+ * @param *options_buffer
+ * @param *index
+ * @return IDATA
+ */
 IDATA
-queryAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent, IDATA buffer_size, void* options_buffer, IDATA* index);
-
+queryAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent, IDATA buffer_size, void *options_buffer, IDATA *index);
 
 /**
-* @brief
-* @param *vm
-* @param bits
-* @param verbose
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param bits
+ * @param verbose
+ * @return omr_error_t
+ */
 omr_error_t
 printDumpEvents(struct J9JavaVM *vm, UDATA bits, IDATA verbose);
 
-
 /**
-* @brief
-* @param *vm
-* @param bits
-* @param verbose
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param bits
+ * @param verbose
+ * @return omr_error_t
+ */
 omr_error_t
 printDumpRequests(struct J9JavaVM *vm, UDATA bits, IDATA verbose);
 
-
 /**
-* @brief
-* @param *vm
-* @param kind
-* @param verboseLevel
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param kind
+ * @param verboseLevel
+ * @return omr_error_t
+ */
 omr_error_t
 printDumpSpec(struct J9JavaVM *vm, IDATA kind, IDATA verboseLevel);
 
-
 /**
  * runDumpAgent - executes a single dump agent
- * 
+ *
  * Takes care of acquiring exclusive, performing prepwalk & compact and some final validation and warning
- * messages. 
- * 
+ * messages.
+ *
  * @param vm [in] VM pointer
  * @param agent [in] Agent the be executed
  * @param context [in] Dump context (what triggered the dump)
- * @param state [inout] State bit flags. Used to maintain state between multiple calls of runDumpAgent. 
- *                 When you've performed all runDumpAgent calls you must call unwindAfterDump to make 
- *                 sure all locks are cleaned up. The first time runDumpAgent is called, state should 
+ * @param state [inout] State bit flags. Used to maintain state between multiple calls of runDumpAgent.
+ *                 When you've performed all runDumpAgent calls you must call unwindAfterDump to make
+ *                 sure all locks are cleaned up. The first time runDumpAgent is called, state should
  *                 be initialized to 0.
  * @param detail [in] Detail string for dump cause
  * @param timeNow [in] Time value as returned from j9time_current_time_millis. Used to timestamp the dumps.
  *
- * @return OMR_ERROR_NONE on success, OMR_ERROR_INTERNAL if there was a problem. 
+ * @return OMR_ERROR_NONE on success, OMR_ERROR_INTERNAL if there was a problem.
  */
 omr_error_t
-runDumpAgent(struct J9JavaVM *vm, J9RASdumpAgent * agent, J9RASdumpContext * context, UDATA * state, char * detail, U_64 timeNow);
-
+runDumpAgent(struct J9JavaVM *vm, J9RASdumpAgent *agent, J9RASdumpContext *context, UDATA *state, char *detail, U_64 timeNow);
 
 /**
  * createAndRunOneOffDumpAgent - creates a temporary dump agent and runs it
- * 
- * A wrapper around runDumpAgent used for triggering one-off dumps. 
- * 
+ *
+ * A wrapper around runDumpAgent used for triggering one-off dumps.
+ *
  * Parameters:
- * 
+ *
  * @param vm [in] VM pointer
  * @param context [in] dump context
  * @param kind [in] type code for dump being produced
- * 
+ *
  * Returns: OMR_ERROR_NONE on success, OMR_ERROR_INTERNAL or OMR_ERROR_OUT_OF_NATIVE_MEMORY if there was a problem.
  */
 omr_error_t
-createAndRunOneOffDumpAgent(struct J9JavaVM *vm,J9RASdumpContext * context,IDATA kind,char * optionString);
-
+createAndRunOneOffDumpAgent(struct J9JavaVM *vm,J9RASdumpContext *context, IDATA kind, char *optionString);
 
 /**
-* @brief
-* @param *agent
-* @param *label
-* @param *context
-* @return omr_error_t
-*/
+ * @brief
+ * @param *agent
+ * @param *label
+ * @param *context
+ * @return omr_error_t
+ */
 omr_error_t
 runDumpFunction(J9RASdumpAgent *agent, char *label, J9RASdumpContext *context);
 
-
 /**
-* @brief
-* @param *vm
-* @param **optionStringPtr
-* @return IDATA
-*/
+ * @brief
+ * @param *vm
+ * @param **optionStringPtr
+ * @return IDATA
+ */
 IDATA
 scanDumpType(char **optionStringPtr);
 
-
 /**
-* @brief
-* @param *vm
-* @param kind
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param kind
+ * @return omr_error_t
+ */
 omr_error_t
 unloadDumpAgent(struct J9JavaVM *vm, IDATA kind);
-
 
 /**
  * Writes the appropriate "we're about to write a dump" message to the console depending on whether the
  * dump was event driven or user requested.
- * 
+ *
  * @param *portLibrary Port library to use to write dump
  * @param *context Context that dump was taken in
  * @param *dumpType Type of dump being written - e.g. "Java"
@@ -285,117 +265,107 @@ reportDumpRequest(struct J9PortLibrary *portLibrary, J9RASdumpContext *context, 
 /* ---------------- dmpqueue.c ---------------- */
 
 /**
-* @brief
-* @param *vm
-* @param *agent
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param *agent
+ * @return omr_error_t
+ */
 omr_error_t
 insertDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
 
-
 /**
-* @brief
-* @param *vm
-* @param *agent
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param *agent
+ * @return omr_error_t
+ */
 omr_error_t
 removeDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
 
-
 /**
-* @brief
-* @param *vm
-* @param **agentPtr
-* @param dumpFn
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param **agentPtr
+ * @param dumpFn
+ * @return omr_error_t
+ */
 omr_error_t
 seekDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent **agentPtr, J9RASdumpFn dumpFn);
-
 
 /* ---------------- dmpsup.c ---------------- */
 
 /**
-* @brief
-* @param *vm
-* @param stage
-* @param *reserved
-* @return IDATA
-*/
-IDATA 
+ * @brief
+ * @param *vm
+ * @param stage
+ * @param *reserved
+ * @return IDATA
+ */
+IDATA
 J9VMDllMain(J9JavaVM *vm, IDATA stage, void *reserved);
 
-
 /**
-* @brief
-* @param *vm
-* @param *options
-* @param *reserved
-* @return jint
-*/
-jint JNICALL 
+ * @brief
+ * @param *vm
+ * @param *options
+ * @param *reserved
+ * @return jint
+ */
+jint JNICALL
 JVM_OnLoad(JavaVM *vm, char *options, void *reserved);
 
-
 /**
-* @brief
-* @param *vm
-* @param *reserved
-* @return jint
-*/
-jint JNICALL 
+ * @brief
+ * @param *vm
+ * @param *reserved
+ * @return jint
+ */
+jint JNICALL
 JVM_OnUnload(JavaVM *vm, void *reserved);
 
-
 /**
-* @brief
-* @param *vm
-* @param *optionString
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param *optionString
+ * @return omr_error_t
+ */
 omr_error_t
 setDumpOption(struct J9JavaVM *vm, char *optionString);
 
-
 /**
-* @brief
-* @param *vm
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @return omr_error_t
+ */
 omr_error_t
 resetDumpOptions(struct J9JavaVM *vm);
-
 
 /* ---------------- trigger.c ---------------- */
 
 /**
-* @brief
-* @param *vm
-* @param *agent
-* @param *context
-* @param state
-* @return UDATA
-*/
+ * @brief
+ * @param *vm
+ * @param *agent
+ * @param *context
+ * @param state
+ * @return UDATA
+ */
 UDATA
 prepareForDump(struct J9JavaVM *vm, struct J9RASdumpAgent *agent, struct J9RASdumpContext *context, UDATA state);
 
-
 /**
-* @brief
-* @param *vm
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @return omr_error_t
+ */
 omr_error_t
 printLabelSpec(struct J9JavaVM *vm);
 
-
 /**
  * Triggers a single dump. This is the path for all dumps NOT triggered by events.
- * 
+ *
  * Function used to be called runNamedDump
- * 
+ *
  * @param *vm VM pointer
  * @param *optionString Name of the dump to take. E.g. "heap"
  * @param *caller String describing how the user triggered the dump. E.g. "-Xtrace:trigger"
@@ -403,54 +373,73 @@ printLabelSpec(struct J9JavaVM *vm);
 omr_error_t
 triggerOneOffDump(struct J9JavaVM *vm, char *optionString, char *caller, char *fileName, size_t fileNameLength);
 
-
 /**
  * Query the settings of the dump agents.
- * 
+ *
  * @param *vm VM pointer
  * @param buffer_size Size of the buffer passed in
  * @param *options_buffer pointer to the buffer to be populated with data
  * @param *data_size pointer to integer to receive the required size of buffer.
  */
 omr_error_t
-queryVmDump(struct J9JavaVM *vm, int buffer_size, void* options_buffer, int* data_size);
-
+queryVmDump(struct J9JavaVM *vm, int buffer_size, void *options_buffer, int *data_size);
 
 /**
-* @brief
-* @param *vm
-* @param *agent
-* @param *context
-* @param *buf
-* @param len
-* @param *reqLen
-* @param now
-* @return omr_error_t
-*/
+ * Print the specified dump agent.
+ *
+ * @param *vm VM pointer
+ * @param *agent the agent to be printed
+ * @return omr_error_t
+ */
 omr_error_t
-dumpLabel(struct J9JavaVM *vm, J9RASdumpAgent *agent, J9RASdumpContext *context, char *buf, size_t len, UDATA *reqLen, I_64 now);
+printDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
 
+#if defined(OMR_TDUMP_VALIDATION)
+/**
+ * Validate a dump agent.
+ *
+ * @param *vm VM pointer
+ * @param *agent the agent to be validated
+ * @return omr_error_t
+ */
+omr_error_t
+validateDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+#endif /* defined(OMR_TDUMP_VALIDATION) */
 
 /**
-* @brief
-* @param *vm
-* @param *self
-* @param eventFlags
-* @param *eventData
-* @return omr_error_t
-*/
+ * @brief
+ * @param *vm
+ * @param *agent
+ * @param *context
+ * @param *buf
+ * @param len
+ * @param *reqLen
+ * @param now
+ * @param incrSeqNum
+ * @return omr_error_t
+ */
+omr_error_t
+dumpLabel(struct J9JavaVM *vm, J9RASdumpAgent *agent, J9RASdumpContext *context, char *buf, size_t len, UDATA *reqLen, I_64 now, BOOLEAN incrSeqNum);
+
+/**
+ * @brief
+ * @param *vm
+ * @param *self
+ * @param eventFlags
+ * @param *eventData
+ * @return omr_error_t
+ */
 omr_error_t
 triggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags, struct J9RASdumpEventData *eventData);
 
-
 /**
-* @brief
-* @param *vm
-* @param *agent
-* @param *context
-* @param state
-* @return UDATA
-*/
+ * @brief
+ * @param *vm
+ * @param *agent
+ * @param *context
+ * @param state
+ * @return UDATA
+ */
 UDATA
 unwindAfterDump(struct J9JavaVM *vm, struct J9RASdumpContext *context, UDATA state);
 
@@ -468,7 +457,7 @@ void
 j9rasSetServiceLevel(J9JavaVM *vm, const char *runtimeVersion);
 
 #ifdef __cplusplus
-}
+} /* extern "C" */
 #endif
 
 #endif /* rasdump_api_h */

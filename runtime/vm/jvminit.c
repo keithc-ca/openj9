@@ -3417,9 +3417,8 @@ consumeVMArgs(J9JavaVM* vm, J9VMInitArgs* j9vm_args)
 static jint
 modifyDllLoadTable(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 {
-	jint rc = 0;
-	J9VMDllLoadInfo* entry = NULL;
-	JavaVMInitArgs* vm_args = j9vm_args->actualVMArgs;
+	J9VMDllLoadInfo *entry = NULL;
+	JavaVMInitArgs *vm_args = j9vm_args->actualVMArgs;
 	BOOLEAN xsnw = FALSE;
 	BOOLEAN xint = FALSE;
 	BOOLEAN xjit = FALSE;
@@ -3435,7 +3434,7 @@ modifyDllLoadTable(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 	BOOLEAN xaot = FALSE;
 	BOOLEAN xxverifyerrordetails = TRUE;
 
-	char* optionValue, *testString;
+	char *optionValue, *testString;
 	IDATA xsnwIndex, xverifyIndex, verboseIndex, xshareclassesIndex, xdumpnoneIndex, xdumpIndex, xverbosegclogIndex, i;
 	IDATA xxverboseverificationIndex = -1;
 	IDATA xxnoverboseverificationIndex = -1;
@@ -3464,12 +3463,11 @@ modifyDllLoadTable(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 	xnolinenumbers = (findArgInVMArgs( PORTLIB, j9vm_args, EXACT_MATCH, VMOPT_XNOLINENUMBERS, NULL, FALSE) >= 0);
 	xshareclasses = ((xshareclassesIndex = findArgInVMArgs( PORTLIB, j9vm_args, OPTIONAL_LIST_MATCH, VMOPT_XSHARECLASSES, NULL, FALSE))>=0);
 
-
 	xdumpIndex = findArgInVMArgs( PORTLIB, j9vm_args, OPTIONAL_LIST_MATCH, VMOPT_XDUMP, NULL, FALSE);
 	xdumpnoneIndex = findArgInVMArgs( PORTLIB, j9vm_args, EXACT_MATCH, VMOPT_XDUMP_NONE, NULL, FALSE);
 
-	/* Dump support is on by default, disabled by -Xdump:none as last (rightmost) -Xdump parameter */
-	if (xdumpnoneIndex == -1 || (xdumpIndex > xdumpnoneIndex)) {
+	/* Dump support is on by default, disabled by -Xdump:none as last (rightmost) -Xdump parameter. */
+	if ((-1 == xdumpnoneIndex) || (xdumpIndex > xdumpnoneIndex)) {
 		xdump = TRUE;
 	} else {
 		xdump = FALSE;
@@ -3490,8 +3488,8 @@ modifyDllLoadTable(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 	 * -Xint overrides everything.
 	 */
 	xint = xjit = xnojit = xnoaot = xaot = FALSE;
-	for (i=(vm_args->nOptions - 1); i>=0 ; i--) {
-		testString = getOptionString(j9vm_args, i);				/* may return mapped value */
+	for (i = (vm_args->nOptions - 1); i >= 0 ; i--) {
+		testString = getOptionString(j9vm_args, i); /* may return mapped value */
 
 #if defined(J9VM_OPT_JVMTI)
 		if ((strstr(testString, VMOPT_AGENTLIB_COLON)==testString) || (strstr(testString, VMOPT_AGENTPATH_COLON)==testString)) {
@@ -3757,11 +3755,11 @@ modifyDllLoadTable(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 #if defined(J9VM_OPT_SHARED_CLASSES)
 	if (xshareclasses) {
 		char optionsBuffer[256];
-		char* optionsBufferPtr = (char*)optionsBuffer;
-		char* walkPtr;
+		char *optionsBufferPtr = optionsBuffer;
+		char *walkPtr = NULL;
 		UDATA noneFound = 0;
 		UDATA buflen = 256;
-		IDATA option_rc;
+		IDATA option_rc = 0;
 
 		do {
 			option_rc = optionValueOperations(PORTLIB, j9vm_args, xshareclassesIndex, GET_OPTIONS, &optionsBufferPtr, buflen, ':', ',', NULL);
@@ -3787,10 +3785,10 @@ modifyDllLoadTable(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 				noneFound = 1;
 				break;
 			}
-			walkPtr += strlen(walkPtr)+1;
+			walkPtr += strlen(walkPtr) + 1;
 		}
 
-		if (optionsBufferPtr != (char*)optionsBuffer) {
+		if (optionsBuffer != optionsBufferPtr) {
 			j9mem_free_memory(optionsBufferPtr);
 		}
 
@@ -3819,9 +3817,8 @@ modifyDllLoadTable(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 	JVMINIT_VERBOSE_INIT_VM_TRACE(vm, "IFA support required... whacking table\n");
 #endif /* defined(J9VM_OPT_JAVA_OFFLOAD_SUPPORT) */
 
-	rc = processXCheckOptions(vm, loadTable, j9vm_args);
 	JVMINIT_VERBOSE_INIT_TRACE_WORKING_SET(vm);
-	return rc;
+	return JNI_OK;
 }
 
 
@@ -7517,11 +7514,11 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 	extern struct JNINativeInterface_ EsJNIFunctions;
 	J9VMThread *env = NULL;
 	UDATA parseError = FALSE;
-	jint stageRC = 0;
-	UDATA requiredDebugAttributes;
+	jint stageRC = JNI_OK;
+	UDATA requiredDebugAttributes = 0;
 	UDATA localVerboseLevel = 0;
 	BOOLEAN doParseXlogForCompatibility = FALSE;
-	U_32 * stat;
+	U_32 *stat = NULL;
 #if defined(LINUX)
 	int filter = -1;
 #endif
@@ -7728,11 +7725,11 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 		goto error;
 	}
 
-	/* Handle -Xsyslog and legacy -Xlog early, so that any future init failures can be reported to the system log */
+	/* Handle -Xsyslog and legacy -Xlog early, so that any future init failures can be reported to the system log. */
 	{
 		IDATA enabled = FIND_AND_CONSUME_VMARG(EXACT_MATCH, VMOPT_XXLEGACYXLOGOPTION, NULL);
 		IDATA disabled = FIND_AND_CONSUME_VMARG(EXACT_MATCH, VMOPT_XXNOLEGACYXLOGOPTION, NULL);
-		/* Default to -XX:-LegacyXlogOption */
+		/* Default to -XX:-LegacyXlogOption. */
 		if (enabled > disabled) {
 			if (RC_FAILED == registerCmdLineMapping(vm, MAPOPT_XLOG_OPT, VMOPT_XSYSLOG_OPT, EXACT_MAP_NO_OPTIONS)) {
 				goto error;
@@ -7810,7 +7807,7 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 	}
 #endif
 
-	/* Setup primordial dump facade as early as possible */
+	/* Setup primordial dump facade as early as possible. */
 	if (JNI_OK != configureRasDump(vm)) {
 		goto error;
 	}
@@ -7823,7 +7820,7 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 
 #ifdef J9VM_OPT_SIDECAR
 #if JAVA_SPEC_VERSION < 21
-	/* Whine about -Djava.compiler after extra VM options are added, but before mappings are set */
+	/* Whine about -Djava.compiler after extra VM options are added, but before mappings are set. */
 	if (RC_FAILED == checkDjavacompiler(portLibrary, vm->vmArgsArray)) {
 		goto error;
 	}
@@ -7845,7 +7842,7 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 	}
 #endif /* JAVA_SPEC_VERSION > 8 */
 
-	/* Registers any unrecognised arguments that need to be mapped to J9 options */
+	/* Registers any unrecognised arguments that need to be mapped to J9 options. */
 	if (RC_FAILED == registerVMCmdLineMappings(vm)) {
 		goto error;
 	}
@@ -7857,7 +7854,7 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 	}
 	JVMINIT_VERBOSE_INIT_TRACE_WORKING_SET(vm);
 
-	/* Scans cmd-line and whacks the table for entries like -Xint */
+	/* Scans cmd-line and whacks the table for entries like -Xint. */
 	if (JNI_OK != modifyDllLoadTable(vm, vm->dllLoadTable, vm->vmArgsArray)) {
 		goto error;
 	}
@@ -7868,19 +7865,19 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 	}
 #endif
 
-	if ( J9_ARE_ALL_BITS_SET(vm->extendedRuntimeFlags, J9_EXTENDED_RUNTIME_ENABLE_CPU_MONITOR)) {
+	if (J9_ARE_ALL_BITS_SET(vm->extendedRuntimeFlags, J9_EXTENDED_RUNTIME_ENABLE_CPU_MONITOR)) {
 		omrthread_lib_set_flags(J9THREAD_LIB_FLAG_ENABLE_CPU_MONITOR);
 	} else {
 		omrthread_lib_clear_flags(J9THREAD_LIB_FLAG_ENABLE_CPU_MONITOR);
 	}
 
-	registerIgnoredOptions(PORTLIB, vm->vmArgsArray);				/* Tags -D java options and options in ignoredOptionTable as not consumable */
+	registerIgnoredOptions(PORTLIB, vm->vmArgsArray); /* Tags -D java options and options in ignoredOptionTable as not consumable. */
 
 #if !defined(J9VM_INTERP_MINIMAL_JNI)
 	vm->EsJNIFunctions = GLOBAL_TABLE(EsJNIFunctions);
 #endif
 
-	configureRasTrace( vm, vm->vmArgsArray );
+	configureRasTrace(vm, vm->vmArgsArray);
 
 #ifdef JVMINIT_UNIT_TEST
 	testFindArgs(vm);
@@ -7892,12 +7889,16 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 		goto error;
 	}
 
-	/* Use this stage to load libraries which need to set up hooks as early as possible */
+	/* Use this stage to load libraries which need to set up hooks as early as possible. */
 	if (JNI_OK != runLoadStage(vm, EARLY_LOAD)) {
 		goto error;
 	}
 
 	if (JNI_OK != (stageRC = runInitializationStage(vm, PORT_LIBRARY_GUARANTEED))) {
+		goto error;
+	}
+
+	if (JNI_OK != processXCheckOptions(vm, vm->dllLoadTable, vm->vmArgsArray)) {
 		goto error;
 	}
 
@@ -8215,7 +8216,7 @@ error:
 		 */
 		return stageRC;
 	}
-	return ((TRUE == parseError) ? JNI_EINVAL : JNI_ENOMEM);
+	return parseError ? JNI_EINVAL : JNI_ENOMEM;
 }
 
 #if !defined(WIN32)

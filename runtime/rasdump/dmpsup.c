@@ -464,7 +464,7 @@ criuReloadXDumpAgents(J9JavaVM *vm, J9VMInitArgs *vmArgs)
  *    IBM_JAVADUMP_OUTOFMEMORY, IBM_HEAPDUMP_OUTOFMEMORY
  *    JAVA_DUMP_OPTS environment variable (including dump count parameter)
  *    -Xdump command-line options
-
+ *
  * @param[in] vm pointer to the J9JavaVM
  * @param[in] vmArgs a J9VMInitArgs
  * @param[in] isBootup if this is bootup or CRIUR restore
@@ -475,8 +475,6 @@ static IDATA
 configureDumpAgents(J9JavaVM *vm, J9VMInitArgs *j9vm_args, BOOLEAN isBootup)
 {
 	PORT_ACCESS_FROM_JAVAVM(vm);
-
-	J9VMInitArgs *j9vm_args = vm->vmArgsArray;
 	IDATA i = 0;
 	IDATA xdumpIndex = 0;
 	IDATA showAgents = 0;
@@ -509,9 +507,9 @@ configureDumpAgents(J9JavaVM *vm, J9VMInitArgs *j9vm_args, BOOLEAN isBootup)
 	}
 
 	/* -Xdump:request */
-	if (FIND_AND_CONSUME_ARG(EXACT_MATCH, VMOPT_XDUMP ":request", NULL) >= 0) {
+	if (FIND_AND_CONSUME_ARG(j9vm_args, EXACT_MATCH, VMOPT_XDUMP ":request", NULL) >= 0) {
 		j9tty_err_printf("\nAdditional VM requests:\n\n");
-		printDumpRequests(vm, (UDATA) - 1, 1);
+		printDumpRequests(vm, ~(UDATA)0, 1);
 		return J9VMDLLMAIN_SILENT_EXIT_VM;
 	}
 
@@ -645,7 +643,7 @@ configureDumpAgents(J9JavaVM *vm, J9VMInitArgs *j9vm_args, BOOLEAN isBootup)
 	 * Treat -XX:[+-]HeapDumpOnOutOfMemoryError as an alias of -Xdump.
 	 */
 
-	xdumpIndex = FIND_ARG_IN_VMARGS_FORWARD(j9vm_args, OPTIONAL_LIST_MATCH, VMOPT_XDUMP, NULL);
+	xdumpIndex = FIND_ARG_IN_ARGS_FORWARD(j9vm_args, OPTIONAL_LIST_MATCH, VMOPT_XDUMP, NULL);
 	while (xdumpIndex >= 0) {
 		if (agentNum >= MAX_DUMP_OPTS) {
 			j9nls_printf(PORTLIB, J9NLS_ERROR | J9NLS_STDERR, J9NLS_DMP_TOO_MANY_DUMP_OPTIONS, MAX_DUMP_OPTS);
@@ -702,9 +700,9 @@ configureDumpAgents(J9JavaVM *vm, J9VMInitArgs *j9vm_args, BOOLEAN isBootup)
 			}
 			if (NULL == optionString) {
 				/* ... silent option ... */
-			} else if (strncmp(optionString, "none", strlen("none")) == 0) {
+			} else if (0 == strncmp(optionString, "none", strlen("none"))) {
 				/* "none" found without any agent type, pretend we found all agents. */
-				for (kind = 0; kind < ((IDATA)j9RasDumpKnownSpecs); kind++) {
+				for (kind = 0; kind < (IDATA)j9RasDumpKnownSpecs; kind++) {
 					agentOpts[agentNum].kind = kind;
 					agentOpts[agentNum].flags = J9RAS_DUMP_OPT_ARGS_STATIC;
 					agentOpts[agentNum].args = optionString;
@@ -729,7 +727,7 @@ configureDumpAgents(J9JavaVM *vm, J9VMInitArgs *j9vm_args, BOOLEAN isBootup)
 
 				/* Handle multiple dump types */
 				while ((typeString < optionString) && (kind = scanDumpType(&typeString)) >= 0) {
-					if (strcmp(optionString, "help") == 0) {
+					if (0 == strcmp(optionString, "help")) {
 						printDumpSpec(vm, kind, 2);
 						return J9VMDLLMAIN_SILENT_EXIT_VM;
 					}
@@ -1151,6 +1149,10 @@ pushDumpFacade(J9JavaVM *vm)
 		queue->facade.setDumpOption = setDumpOption;
 		queue->facade.resetDumpOptions = resetDumpOptions;
 		queue->facade.queryVmDump = queryVmDump;
+		queue->facade.printDumpAgent = printDumpAgent;
+#if defined(OMR_TDUMP_VALIDATION)
+		queue->facade.validateDumpAgent = validateDumpAgent;
+#endif /* defined(OMR_TDUMP_VALIDATION) */
 #if defined(J9VM_OPT_CRIU_SUPPORT)
 		queue->facade.criuReloadXDumpAgents = criuReloadXDumpAgents;
 #endif /* defined(J9VM_OPT_CRIU_SUPPORT) */
@@ -1460,7 +1462,7 @@ initDumpDirectory(J9JavaVM *vm)
 	PORT_ACCESS_FROM_JAVAVM(vm);
 
 	/* -Xdump:directory */
-	xdumpIndex = FIND_AND_CONSUME_ARG(STARTSWITH_MATCH, VMOPT_XDUMP ":directory", NULL);
+	xdumpIndex = FIND_AND_CONSUME_VMARG(STARTSWITH_MATCH, VMOPT_XDUMP ":directory", NULL);
 	if (xdumpIndex >= 0) {
 		char *optionString = NULL;
 		GET_OPTION_VALUE(xdumpIndex, '=', &optionString);
