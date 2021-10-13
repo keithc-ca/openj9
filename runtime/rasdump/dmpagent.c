@@ -1544,9 +1544,9 @@ processSettings(J9JavaVM *vm, IDATA kind, char *optionString, J9RASdumpSettings 
 	}
 
 	if ( action != REMOVE_DUMP_AGENTS && (0 == (settings->eventMask & J9RAS_DUMP_EXCEPTION_EVENT_GROUP)) && (settings->subFilter != NULL)) {
-        j9nls_printf(PORTLIB, J9NLS_INFO | J9NLS_STDERR, J9NLS_DMP_INCORRECT_USE_MSG_FILTER);
-        action = BOGUS_DUMP_OPTION;
-    }
+		j9nls_printf(PORTLIB, J9NLS_INFO | J9NLS_STDERR, J9NLS_DMP_INCORRECT_USE_MSG_FILTER);
+		action = BOGUS_DUMP_OPTION;
+	}
 
 	/* verify start..stop range (allow n..n-1 to indicate open-ended range) */
 	if ( settings->stopOnCount < settings->startOnCount ) {
@@ -1580,7 +1580,6 @@ findAgent(J9JavaVM *vm, IDATA kind, const J9RASdumpSettings *settings)
 
 	/* Search for compatible agent */
 	while (seekDumpAgent(vm, &agent, dumpFn) == OMR_ERROR_NONE) {
-
 		/* Event mask can always be merged UNLESS there is no overlap and agent has a limited range, otherwise */
 		/*   -Xdump:java:events=load,range=1..4  and  -Xdump:java:events=thrstart,range=1..4  would get merged */
 		if ((agent->eventMask != settings->eventMask) && (agent->startOnCount <= agent->stopOnCount)) {
@@ -1604,12 +1603,12 @@ findAgent(J9JavaVM *vm, IDATA kind, const J9RASdumpSettings *settings)
 		}
 
 		/* Can't merge different ranges */
-		if ( agent->startOnCount != settings->startOnCount ) {
+		if (agent->startOnCount != settings->startOnCount) {
 			continue;
 		}
 
 		/* Can't merge different ranges */
-		if ( agent->stopOnCount != settings->stopOnCount ) {
+		if (agent->stopOnCount != settings->stopOnCount) {
 			continue;
 		}
 
@@ -1630,7 +1629,7 @@ findAgent(J9JavaVM *vm, IDATA kind, const J9RASdumpSettings *settings)
 		}
 
 		/* Can't merge different priorities */
-		if ( agent->priority != settings->priority ) {
+		if (agent->priority != settings->priority) {
 			continue;
 		}
 
@@ -1694,22 +1693,22 @@ findAgentToDelete(J9JavaVM *vm, IDATA kind, J9RASdumpAgent *agent, const J9RASdu
 		}
 
 		/* Check the event mask contains the same bits. */
-		if( settings->requestMask != 0 && (settings->requestMask != agent->requestMask) ) {
+		if (settings->requestMask != 0 && (settings->requestMask != agent->requestMask)) {
 			continue;
 		}
 
 		/* Check the ranges are set and match */
-		if ( settings->startOnCount != 0 && agent->startOnCount != settings->startOnCount ) {
+		if (settings->startOnCount != 0 && agent->startOnCount != settings->startOnCount) {
 			continue;
 		}
 
 		/* Check the ranges are set and match */
-		if ( settings->startOnCount != 0 && agent->stopOnCount != settings->stopOnCount ) {
+		if (settings->startOnCount != 0 && agent->stopOnCount != settings->stopOnCount) {
 			continue;
 		}
 
 		/* Check the priority is set and matches */
-		if ( settings->priority != 0 && agent->priority != settings->priority ) {
+		if (settings->priority != 0 && agent->priority != settings->priority) {
 			continue;
 		}
 
@@ -1723,7 +1722,7 @@ findAgentToDelete(J9JavaVM *vm, IDATA kind, J9RASdumpAgent *agent, const J9RASdu
 	return matchingAgent;
 }
 
-static J9RASdumpAgent*
+static J9RASdumpAgent *
 createAgent(J9JavaVM *vm, IDATA kind, const J9RASdumpSettings *settings)
 {
 	PORT_ACCESS_FROM_JAVAVM(vm);
@@ -1733,19 +1732,19 @@ createAgent(J9JavaVM *vm, IDATA kind, const J9RASdumpSettings *settings)
 		memset(node, 0, sizeof(*node));
 
 		/* Hook up functions */
-		node->dumpFn			= rasDumpSpecs[kind].dumpFn;
-		node->shutdownFn		= freeAgent;
+		node->dumpFn = rasDumpSpecs[kind].dumpFn;
+		node->shutdownFn = freeAgent;
 
 		/* Apply given settings */
-		node->eventMask		= settings->eventMask;
-		node->detailFilter		= settings->detailFilter;
-		node->startOnCount	= settings->startOnCount;
-		node->stopOnCount		= settings->stopOnCount;
-		node->labelTemplate	= settings->labelTemplate;
-		node->dumpOptions	= settings->dumpOptions;
-		node->priority				= settings->priority;
-		node->requestMask	= settings->requestMask;
-		node->subFilter         = settings->subFilter;
+		node->eventMask = settings->eventMask;
+		node->detailFilter = settings->detailFilter;
+		node->startOnCount = settings->startOnCount;
+		node->stopOnCount = settings->stopOnCount;
+		node->labelTemplate = settings->labelTemplate;
+		node->dumpOptions = settings->dumpOptions;
+		node->priority = settings->priority;
+		node->requestMask = settings->requestMask;
+		node->subFilter = settings->subFilter;
 	}
 
 	return node;
@@ -1774,8 +1773,8 @@ mergeAgent(J9JavaVM *vm, J9RASdumpAgent *agent, const J9RASdumpSettings *setting
 		agent->dumpOptions = settings->dumpOptions;
 	}
 	if (settings->subFilter) {
-        agent->subFilter = settings->subFilter;
-    }
+		agent->subFilter = settings->subFilter;
+	}
 
 	/* Merge request bitmask */
 	agent->requestMask |= settings->requestMask;
@@ -2697,13 +2696,13 @@ runDumpAgent(struct J9JavaVM *vm, J9RASdumpAgent * agent, J9RASdumpContext * con
 	omr_error_t retVal = OMR_ERROR_INTERNAL;
 
 	/* Convert the dump label template into an actual label, by expanding any tokens */
-	retVal = dumpLabel(vm, agent, context, label, J9_MAX_DUMP_PATH, &reqLen, timeNow);
+	retVal = dumpLabel(vm, agent, context, label, J9_MAX_DUMP_PATH, &reqLen, timeNow, FALSE);
 	if ((OMR_ERROR_OUT_OF_NATIVE_MEMORY == retVal) && (agent->dumpFn == doToolDump)) {
 		/* For tool agent only, support longer labels, as it's actually a complete tool command line */
 		label = j9mem_allocate_memory(reqLen, OMRMEM_CATEGORY_VM);
 		if (label) {
 			/* retry label template expansion with increased (allocated) memory */
-			retVal = dumpLabel(vm, agent, context, label, reqLen, &reqLen, timeNow);
+			retVal = dumpLabel(vm, agent, context, label, reqLen, &reqLen, timeNow, FALSE);
 		} else {
 			return OMR_ERROR_OUT_OF_NATIVE_MEMORY;
 		}
@@ -2896,6 +2895,39 @@ reportDumpRequest(struct J9PortLibrary* portLibrary, J9RASdumpContext * context,
 			Trc_dump_reportDumpStart_FromEvent_NoFile(dumpType);
 		}
 	}
+}
+
+omr_error_t
+validateDumpAgent(struct J9JavaVM *vm, struct J9VMThread *self, struct J9RASdumpAgent *agent, char **diagnostic)
+{
+	omr_error_t retVal = OMR_ERROR_NONE;
+
+	/* optimistically assume all will go well */
+	*diagnostic = NULL;
+
+	/* validation currently only applies to the "system" dump agent */
+	if (doSystemDump == agent->dumpFn) {
+		PORT_ACCESS_FROM_JAVAVM(vm);
+		UDATA reqLen = 0;
+		U_64 timeNow = j9time_current_time_millis();
+		J9RASdumpContext context;
+		char label[J9_MAX_DUMP_PATH];
+
+		memset(&context, 0, sizeof(context));
+		context.javaVM = vm;
+		context.onThread = self;
+
+		/* convert the dump label template into an actual label, by expanding any tokens */
+		retVal = dumpLabel(vm, agent, &context, label, J9_MAX_DUMP_PATH, &reqLen, timeNow, TRUE);
+
+		if (OMR_ERROR_NONE == retVal) {
+			retVal = j9dump_create(label, "IEATDUMP_VALIDATE", NULL);
+
+			// FIXME
+		}
+	}
+
+	return retVal;
 }
 
 static char *

@@ -156,6 +156,18 @@ public class Dump {
 		SystemDumpImpl();
 	}
 
+	/**
+	 * Validate configured dataset names for IEAT dumps.
+	 *
+	 * @return an array of problematic dataset name patterns (empty if there are no problems)
+	 * @throws UnsupportedOperationException if the system does not support IEAT dumps
+	 * or does not support validating dataset names for IEAT dumps
+	 * @throws RuntimeException if the VM does not contain RAS dump support
+	 */
+	public static String[] validateIEATDumpNames() {
+		return validateIEATDumpNamesImpl();
+	}
+
 	/*
 	 * Dump should not be instantiated.
 	 */
@@ -677,4 +689,5 @@ public class Dump {
 	private static native void resetDumpOptionsImpl() throws DumpConfigurationUnavailableExceptionBase;
 	private static native String triggerDumpsImpl(String dumpOptions, String event) throws InvalidDumpOptionExceptionBase;
 	private static native boolean isToolDump(String dumpOptions);
+	private static native String[] validateIEATDumpNamesImpl();
 }

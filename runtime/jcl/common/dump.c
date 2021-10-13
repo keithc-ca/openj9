@@ -381,3 +381,42 @@ raiseExceptionFor(JNIEnv *env, omr_error_t result)
 		}
 	}
 }
+
+jobjectArray JNICALL
+Java_com_ibm_jvm_Dump_validateIEATDumpNamesImpl(JNIEnv *env, jclass clazz)
+{
+	jobjectArray result = NULL;
+	const char *exceptionClassName = NULL;
+	const char *exceptionMessage = NULL;
+
+#if 0 && !defined(J9ZOS390) /* !defined(J9ZOS390) */
+	exceptionClassName = "java/lang/UnsupportedOperationException";
+	exceptionMessage = "IEAT dumps are not supported in this configuration";
+#else /* !defined(J9ZOS390) */
+	J9VMThread *vmThread = (J9VMThread *)env;
+	J9JavaVM *vm = vmThread->javaVM;
+	J9RASdumpFunctions *dumpFunctions = vm->j9rasDumpFunctions;
+	// PORT_ACCESS_FROM_JAVAVM(vm);
+	J9RASdumpAgent *agent = NULL;
+
+	while (OMR_ERROR_NONE == dumpFunctions->seekDumpAgent(vm, &agent, NULL)) {
+		char *diagnostic = NULL;
+		omr_error_t error = dumpFunctions->validateDumpAgent(vm, vmThread, agent, &diagnostic);
+
+		if (OMR_ERROR_NONE != error) {
+			// TODO
+		}
+	}
+
+#endif /* !defined(J9ZOS390) */
+
+	if (NULL != exceptionClassName) {
+		jclass exceptionClass = (*env)->FindClass(env, exceptionClassName);
+		if (NULL != exceptionClass) {
+			(*env)->ThrowNew(env, exceptionClass, exceptionMessage);
+		}
+		/* Just return if we can't load the exception class as an exception will be pending. */
+	}
+
+	return result;
+}

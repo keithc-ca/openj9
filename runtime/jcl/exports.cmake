@@ -151,6 +151,7 @@ omr_add_exports(jclse
 	Java_com_ibm_jvm_Dump_resetDumpOptionsImpl
 	Java_com_ibm_jvm_Dump_setDumpOptionsImpl
 	Java_com_ibm_jvm_Dump_triggerDumpsImpl
+	Java_com_ibm_jvm_Dump_validateIEATDumpNamesImpl
 	Java_com_ibm_jvm_Log_QueryOptionsImpl
 	Java_com_ibm_jvm_Log_SetOptionsImpl
 	Java_com_ibm_jvm_Stats_getStats

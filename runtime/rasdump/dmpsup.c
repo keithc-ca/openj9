@@ -1052,6 +1052,7 @@ pushDumpFacade(J9JavaVM *vm)
 		queue->facade.setDumpOption = setDumpOption;
 		queue->facade.resetDumpOptions = resetDumpOptions;
 		queue->facade.queryVmDump = queryVmDump;
+		queue->facade.validateDumpAgent = validateDumpAgent;
 
 		/* Initialize default settings */
 		queue->settings = initDumpSettings(vm);
