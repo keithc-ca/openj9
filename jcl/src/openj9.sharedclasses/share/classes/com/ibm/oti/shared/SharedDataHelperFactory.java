@@ -1,6 +1,4 @@
 /*[INCLUDE-IF SharedClasses]*/
-package com.ibm.oti.shared;
-
 /*******************************************************************************
  * Copyright (c) 1998, 2021 IBM Corp. and others
  *
@@ -22,6 +20,7 @@ package com.ibm.oti.shared;
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package com.ibm.oti.shared;
 
 /**
  * SharedDataHelperFactory provides an interface used to create SharedDataHelpers.
@@ -35,7 +34,7 @@ public interface SharedDataHelperFactory {
 	 * Creates a new SharedDataHelper if one cannot be found,
 	 *   otherwise if a SharedDataHelper already exists for the ClassLoader, the existing Helper is returned. <br>
 	 * Returns null if a SecurityManager is installed and there is no SharedClassPermission for the ClassLoader specified.
-	 * <p>
+	 *
 	 * @see SharedDataHelper
 	 *
 	 * @param 		owner ClassLoader.

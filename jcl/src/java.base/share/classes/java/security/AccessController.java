@@ -41,6 +41,7 @@ import sun.reflect.CallerSensitive;
  */
 /*[IF JAVA_SPEC_VERSION >= 17]*/
 @Deprecated(since="17", forRemoval=true)
+@SuppressWarnings("removal")
 /*[ENDIF] JAVA_SPEC_VERSION >= 17 */
 public final class AccessController {
 	static {
@@ -392,7 +393,7 @@ public static void checkPermission(Permission perm) throws AccessControlExceptio
 		 */
 		activeDC = topACC.domainCombiner;
 	}
-	
+
 	if (isPreJEP140Format) {
 		if ((debug != AccessControlContext.DEBUG_DISABLED) && !debugHelperPreJEP140(objects, perm)) {
 			debug = AccessControlContext.DEBUG_ACCESS_DENIED; // Disable DEBUG_ENABLED
@@ -563,7 +564,7 @@ private static ProtectionDomain[] generatePDarray(DomainCombiner activeDC, Acces
 			actDC = acc.domainCombiner;
 		}
 	}
-	
+
 	if (actDC != null) {
 		if (debug) {
 			DebugRecursionDetection.getTlDebug().set(""); //$NON-NLS-1$

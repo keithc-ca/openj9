@@ -1,6 +1,4 @@
 /*[INCLUDE-IF SharedClasses]*/
-package com.ibm.oti.shared;
-
 /*******************************************************************************
  * Copyright (c) 1998, 2021 IBM Corp. and others
  *
@@ -22,6 +20,7 @@ package com.ibm.oti.shared;
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package com.ibm.oti.shared;
 
 /**
  * Exception thrown if an attempt is made to modify confirmed elements of a
@@ -29,10 +28,10 @@ package com.ibm.oti.shared;
  */
 public class CannotSetClasspathException extends Exception {
 	private static final long serialVersionUID = 608627979560424852L;
-	
+
 	/**
 	 * Creates a new CannotSetClasspathException
-	 * <p>
+	 *
 	 * @param 		msg String.
 	 * 					Message to report
 	 */

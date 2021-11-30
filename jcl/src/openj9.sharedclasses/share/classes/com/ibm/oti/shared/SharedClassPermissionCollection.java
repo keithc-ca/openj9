@@ -1,11 +1,4 @@
 /*[INCLUDE-IF SharedClasses]*/
-package com.ibm.oti.shared;
-
-import java.security.Permission;
-import java.security.PermissionCollection;
-import java.util.Enumeration;
-import java.util.Hashtable;
-
 /*******************************************************************************
  * Copyright (c) 1998, 2021 IBM Corp. and others
  *
@@ -27,6 +20,12 @@ import java.util.Hashtable;
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package com.ibm.oti.shared;
+
+import java.security.Permission;
+import java.security.PermissionCollection;
+import java.util.Enumeration;
+import java.util.Hashtable;
 
 /**
  * SharedClassPermissionCollection provides permission collection to support SharedClassPermission
@@ -39,9 +38,14 @@ public class SharedClassPermissionCollection extends PermissionCollection {
 
 	private Hashtable<String, Permission> permissions = new Hashtable<>(10);
 
+	@Deprecated
+	public SharedClassPermissionCollection() {
+		super();
+	}
+
 	/**
 	 * Adds a permission to this collection
-	 * <p>
+	 *
 	 * @param		perm java.security.Permission.
 	 *					The Permission object to add
 	 */
@@ -50,14 +54,17 @@ public class SharedClassPermissionCollection extends PermissionCollection {
 		if (!isReadOnly()) {
 			Permission previous = permissions.put(perm.getName(), perm);
 			// if the permission already existed but with only "read" or "write" set, then replace with both set
-			if (previous != null && !previous.getActions().equals(perm.getActions()))
+			if (previous != null && !previous.getActions().equals(perm.getActions())) {
 				permissions.put(perm.getName(), new SharedClassPermission(perm.getName(), "read,write")); //$NON-NLS-1$
-		} else throw new IllegalStateException();
+			}
+		} else {
+			throw new IllegalStateException();
+		}
 	}
 
 	/**
 	 * Returns permissions as an enumeration
-	 * <p>
+	 *
 	 * @return		java.util.Enumeration.
 	 * 					The Permissions as an enumeration
 	 */
@@ -69,7 +76,7 @@ public class SharedClassPermissionCollection extends PermissionCollection {
 	/**
 	 * Returns <code>true</code> if the permission given is implied by any of the
 	 * permissions in the collection
-	 * <p>
+	 *
 	 * @param		perm java.security.Permission.
 	 * 					The permission to check
 	 * @return		java.util.Enumeration.
@@ -78,9 +85,11 @@ public class SharedClassPermissionCollection extends PermissionCollection {
 	@Override
 	public boolean implies(Permission perm) {
 		Enumeration<Permission> elemEnum = elements();
-		while (elemEnum.hasMoreElements())
-			if (elemEnum.nextElement().implies(perm))
+		while (elemEnum.hasMoreElements()) {
+			if (elemEnum.nextElement().implies(perm)) {
 				return true;
+			}
+		}
 		return false;
 	}
 

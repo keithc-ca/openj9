@@ -1,11 +1,4 @@
 /*[INCLUDE-IF SharedClasses]*/
-package com.ibm.oti.shared;
-
-import java.security.BasicPermission;
-import java.security.Permission;
-import java.security.PermissionCollection;
-import java.util.StringTokenizer;
-
 /*******************************************************************************
  * Copyright (c) 1998, 2021 IBM Corp. and others
  *
@@ -27,13 +20,19 @@ import java.util.StringTokenizer;
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package com.ibm.oti.shared;
+
+import java.security.BasicPermission;
+import java.security.Permission;
+import java.security.PermissionCollection;
+import java.util.StringTokenizer;
 
 /**
  * SharedClassPermission provides security permission to govern ClassLoader access to the shared class cache.
- * <p>
- * <b>Usage:</b> To grant permission to a ClassLoader, add permission in the java.policy file.<br> 
+ *
+ * <b>Usage:</b> To grant permission to a ClassLoader, add permission in the java.policy file.<br>
  * For example, com.ibm.oti.shared.SharedClassPermission "classloaders.myClassLoader", "read,write";
- * <p>
+ *
  * "read" allows a ClassLoader to load classes from the shared cache.<br>
  * "write" allows a ClassLoader to add classes to the shared cache.
  */
@@ -42,10 +41,10 @@ public class SharedClassPermission extends BasicPermission {
 	private static final long serialVersionUID = -3867544018716468265L;
 
 	transient private boolean read, write;
-	
+
 	/**
 	 * Constructs a new instance of this class.
-	 * <p>
+	 *
 	 * @param		loader java.lang.ClassLoader.
 	 *					The ClassLoader requiring the permission.
 	 * @param		actions java.lang.String.
@@ -57,7 +56,7 @@ public class SharedClassPermission extends BasicPermission {
 
 	/**
 	 * Constructs a new instance of this class.
-	 * <p>
+	 *
 	 * @param		classLoaderClassName java.lang.String.
 	 *					The className of the ClassLoader requiring the permission.
 	 * @param		actions java.lang.String.
@@ -89,7 +88,7 @@ public class SharedClassPermission extends BasicPermission {
 	 * specific comparison. In this case, the receiver must be
 	 * for the same property as the argument, and must have the
 	 * same actions.
-	 * <p>
+	 *
 	 * @param		o		The object to compare with this object
 	 * @return		<code>true</code>
 	 *					If the object is the same as this object
@@ -110,22 +109,23 @@ public class SharedClassPermission extends BasicPermission {
 	 * Answers a new PermissionCollection for holding permissions
 	 * of this class. Answer null if any permission collection can
 	 * be used.
-	 * <p>
+	 *
 	 * @return		A new PermissionCollection or null
 	 *
 	 * @see			java.security.PermissionCollection
 	 */
 	@Override
+	@SuppressWarnings("deprecation")
 	public PermissionCollection newPermissionCollection() {
 		return new SharedClassPermissionCollection();
 	}
 
 	/**
-	 * Answers an integer hash code for the receiver. Any two 
-	 * objects which answer <code>true</code> when passed to 
+	 * Answers an integer hash code for the receiver. Any two
+	 * objects which answer <code>true</code> when passed to
 	 * <code>equals</code> must answer the same value for this
 	 * method.
-	 * <p>
+	 *
 	 * @return		The receiver's hash
 	 *
 	 * @see			#equals
@@ -137,9 +137,9 @@ public class SharedClassPermission extends BasicPermission {
 
 	/**
 	 * Answers the actions associated with the receiver.
-	 * The result will be either "read", "write", or 
+	 * The result will be either "read", "write", or
 	 * "read,write".
-	 * <p>
+	 *
 	 * @return		String.
 	 *					The actions associated with the receiver.
 	 */
@@ -148,31 +148,31 @@ public class SharedClassPermission extends BasicPermission {
 		return read ? (write ? "read,write" : "read") : "write"; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 	}
 
-/*  Truth table for implies method:
- * 
- * 	property				implies
- *	p1 read		p1 write 	p2 read		p2 write	result
- *	0			0			0			0			0
- *	0			0			0			1			0
- *	0			0			1			0			0
- *	0			0			1			1			0
- *	0			1			0			0			1
- *	0			1			0			1			1
- *	0			1			1			0			0
- *	0			1			1			1			0
- *	1			0			0			0			1
- *	1			0			0			1			0
- *	1			0			1			0			1
- *	1			0			1			1			0
- *	1			1			0			0			1
- *	1			1			0			1			1
- *	1			1			1			0			1
- *	1			1			1			1			1
- */	
+	/*  Truth table for implies method:
+	 *
+	 * 	property				implies
+	 *	p1 read		p1 write 	p2 read		p2 write	result
+	 *	0			0			0			0			0
+	 *	0			0			0			1			0
+	 *	0			0			1			0			0
+	 *	0			0			1			1			0
+	 *	0			1			0			0			1
+	 *	0			1			0			1			1
+	 *	0			1			1			0			0
+	 *	0			1			1			1			0
+	 *	1			0			0			0			1
+	 *	1			0			0			1			0
+	 *	1			0			1			0			1
+	 *	1			0			1			1			0
+	 *	1			1			0			0			1
+	 *	1			1			0			1			1
+	 *	1			1			1			0			1
+	 *	1			1			1			1			1
+	 */
 	/**
 	 * Indicates whether the argument permission is implied
 	 * by the receiver.
-	 * <p>
+	 *
 	 * @return		boolean
 	 *					<code>true</code> if the argument permission
 	 *					is implied by the receiver,
@@ -184,11 +184,12 @@ public class SharedClassPermission extends BasicPermission {
 	public boolean implies(Permission permission) {
 		if (super.implies(permission)) {
 			SharedClassPermission pp = (SharedClassPermission) permission;
-			boolean result = (read && write) || 
-							(write && !pp.read) || 
+			boolean result = (read && write) ||
+							(write && !pp.read) ||
 							(read && !pp.write);
 			return result;
 		}
 		return false;
 	}
+
 }

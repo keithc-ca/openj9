@@ -1,8 +1,4 @@
 /*[INCLUDE-IF SharedClasses]*/
-package com.ibm.oti.shared;
-
-import java.security.AccessControlException;
-
 /*******************************************************************************
  * Copyright (c) 1998, 2021 IBM Corp. and others
  *
@@ -24,30 +20,35 @@ import java.security.AccessControlException;
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package com.ibm.oti.shared;
+
+import java.security.AccessControlException;
 
 /**
  * SharedAbstractHelperFactory is an abstract superclass for helper factory subclasses.
  */
 public abstract class SharedAbstractHelperFactory {
 
-	private static int idCount;		/* Single id count shared by all factories */
-	static Object monitor;
+	private static int idCount; /* Single id count shared by all factories */
+	private static final Object monitor;
 
 	/*[PR 122459] LIR646 - Remove use of generic object for synchronization */
 	private static final class Monitor {
-		Monitor() { super(); }
+		Monitor() {
+			super();
+		}
 	}
-	
+
 	static {
-		idCount = 1;			/* bootstrap loader is 0 */
-		monitor = new Monitor();		/* anything which changes idCount must synchronize on the monitor */ 
+		idCount = 1; /* bootstrap loader is 0 */
+		monitor = new Monitor(); /* anything which changes idCount must synchronize on the monitor */
 	}
-	
+
+	@SuppressWarnings("removal")
 	static boolean checkPermission(ClassLoader loader, String type) {
 		boolean result = true;
-		@SuppressWarnings("removal")
 		SecurityManager sm = System.getSecurityManager();
-		if (sm!=null) {
+		if (sm != null) {
 			try {
 				sm.checkPermission(new SharedClassPermission(loader, type));
 			} catch (AccessControlException e) {
@@ -64,10 +65,14 @@ public abstract class SharedAbstractHelperFactory {
 	static boolean canStore(ClassLoader loader) {
 		return checkPermission(loader, "write"); //$NON-NLS-1$
 	}
-	
+
 	static int getNewID() {
-		synchronized(monitor) {
+		synchronized (monitor) {
 			return idCount++;
 		}
+	}
+
+	public SharedAbstractHelperFactory() {
+		super();
 	}
 }

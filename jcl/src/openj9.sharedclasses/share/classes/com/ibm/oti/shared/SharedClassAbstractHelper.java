@@ -1,16 +1,4 @@
 /*[INCLUDE-IF SharedClasses]*/
-package com.ibm.oti.shared;
-
-import com.ibm.oti.util.Msg;
-import com.ibm.oti.util.Util;
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URI;
-import java.security.AccessController;
-import java.security.PrivilegedAction;
-
 /*******************************************************************************
  * Copyright (c) 1998, 2021 IBM Corp. and others
  *
@@ -32,6 +20,18 @@ import java.security.PrivilegedAction;
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package com.ibm.oti.shared;
+
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.security.AccessController;
+import java.security.PrivilegedAction;
+
+import com.ibm.oti.util.Msg;
+import com.ibm.oti.util.Util;
 
 /**
  * SharedClassAbstractHelper provides common functions and data to class helper subclasses.
@@ -45,19 +45,23 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 	private static final int URI_EXCEPTION = 1;
 	private static final int FILE_EXIST = 2;
 	private static final int FILE_NOT_EXIST = 3;
-	private SharedClassFilter sharedClassFilter; 
+	private SharedClassFilter sharedClassFilter;
 
 	static byte[] nativeFlags = new byte[1];
 	static final int CACHE_FULL_FLAG = 0;
-	
+
 	static {
 		nativeFlags[CACHE_FULL_FLAG] = 0;
 	}
-	 
+
+	public SharedClassAbstractHelper() {
+		super();
+	}
+
 	/**
 	 * Utility function. Determines whether a byte array being passed to defineClass is a class found
 	 * in the shared class cache, or a class found locally.
-	 * <p>
+	 *
 	 * @param 		classBytes A potential shared class cookie
 	 * @return 		true if bytes are a cookie.
 	 */
@@ -68,14 +72,14 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 	private native int initializeShareableClassloaderImpl(ClassLoader loader);
 
 	void initializeShareableClassloader(ClassLoader loader) {
-		/* Allow ClassLoader to be Garbage Collected by keeping a WeakReference. 
-		 * This is important as any live references to the ClassLoader will 
+		/* Allow ClassLoader to be Garbage Collected by keeping a WeakReference.
+		 * This is important as any live references to the ClassLoader will
 		 * prevent it being collected. CMVC 98943. */
 		ROMCLASS_COOKIE_SIZE = initializeShareableClassloaderImpl(loader);
 	}
 
 	URL convertJarURL(URL url) {
-		if (url==null)
+		if (url == null)
 			return null;
 
 		if (!url.getProtocol().equals("jar")) { //$NON-NLS-1$
@@ -91,7 +95,7 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 	}
 
 	private String recursiveJarTrim(String jarName) {
-		if (jarName==null)
+		if (jarName == null)
 			return null;
 
 		boolean startsWithJar = jarName.startsWith("jar:"); //$NON-NLS-1$
@@ -99,14 +103,14 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 		int subStringStart = startsWithJar ? 4 : 0;
 		int len = jarName.length();
 		/*
-		 * The possible separator "!/" at the end of the URL path is useless for us. Throw it away. 
+		 * The possible separator "!/" at the end of the URL path is useless for us. Throw it away.
 		 * We only care about the actual path string before "!/" .
-		 * 
-		 * We do not trim "!/" in the middle of the URL path. We need the string after "!/" to distinguish 
+		 *
+		 * We do not trim "!/" in the middle of the URL path. We need the string after "!/" to distinguish
 		 * between different entries from the same nested jar.
 		 * e.g. /path/A.jar!/lib/B.jar, /path/A.jar!/lib/C.jar, /path/A.jar are treated as different paths even though they are from the same jar.
 		 */
-		int subStringEnd = endsWithBang ? len -2 : len;
+		int subStringEnd = endsWithBang ? len - 2 : len;
 
 		if (!startsWithJar && !endsWithBang) {
 			return jarName;
@@ -114,14 +118,14 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 			return recursiveJarTrim(jarName.substring(subStringStart, subStringEnd));
 		}
 	}
-	
+
 	private static URL getURLToCheck(URL url) {
 		String pathString = url.toString();
 		int indexBang = pathString.indexOf("!/"); //$NON-NLS-1$
 
 		if (-1 != indexBang) {
-			/* For a nested jar (e.g. /path/A.jar!/lib/B.jar), validate the external jar file only (/path/A.jar), 
-			 * so trim the entry within the jar after "!/" 
+			/* For a nested jar (e.g. /path/A.jar!/lib/B.jar), validate the external jar file only (/path/A.jar),
+			 * so trim the entry within the jar after "!/"
 			 */
 			pathString = pathString.substring(0, indexBang);
 			try {
@@ -134,7 +138,7 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 	}
 
 	boolean validateClassLoader(ClassLoader loader, Class<?> clazz) {
-		if (loader==null) {
+		if (loader == null) {
 			/*[MSG "K0595", "Attempt to store {0} into garbage collected ClassLoader."]*/
 			printVerboseError(Msg.getString("K0595", clazz.getName())); //$NON-NLS-1$
 			return false;
@@ -159,6 +163,7 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 		}
 		if (checkExists) {
 			final URL urlToCheck = getURLToCheck(url);
+			@SuppressWarnings("removal")
 			Integer fExists = AccessController.doPrivileged(new PrivilegedAction<Integer>() {
 				@Override
 				public Integer run() {
@@ -177,7 +182,7 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 							f = new File(urlToCheck.getPath());
 						}
 					} catch (IllegalArgumentException e) {
-						/* There is a bug in the URI code which does not handle all UNC paths correctly 
+						/* There is a bug in the URI code which does not handle all UNC paths correctly
 						 * If we hit this, revert to using simple string path */
 						f = new File(urlToCheck.getPath());
 					}
@@ -188,8 +193,7 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 				/*[MSG "K0598", "URL resource {0} does not exist."]*/
 				printVerboseError(Msg.getString("K0598", url.toString())); //$NON-NLS-1$
 				return false;
-			} else
-			if (fExists.intValue() == URI_EXCEPTION) {
+			} else if (fExists.intValue() == URI_EXCEPTION) {
 				/*[MSG "K0599", "URI could not be created from the URL {0}"]*/
 				printVerboseError(Msg.getString("K0599", url.toString())); //$NON-NLS-1$
 				return false;
@@ -202,12 +206,13 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 	 * Sets the SharedClassFilter for a helper instance.  Supplying
 	 * null removes any filter that is currently associated with the
 	 * helper instance.
-	 * <p>
+	 *
 	 * @param filter The filter to use when finding and storing classes.
 	 */
 	@Override
+	@SuppressWarnings("removal")
 	public synchronized void setSharingFilter(SharedClassFilter filter) {
-		if (System.getSecurityManager()!=null) {
+		if (System.getSecurityManager() != null) {
 			ClassLoader loader = getClassLoader();
 			if (loader == null) {
 				/*[MSG "K059a", "ClassLoader has been garbage collected. Cannot set sharing filter."]*/
@@ -230,11 +235,12 @@ public abstract class SharedClassAbstractHelper extends SharedAbstractHelper imp
 
 	/**
 	 * Returns the SharedClassFilter associated with this helper.
-	 * <p>
+	 *
 	 * @return The filter instance, or null if none is associated
 	 */
 	@Override
 	public synchronized SharedClassFilter getSharingFilter() {
 		return this.sharedClassFilter;
 	}
+
 }

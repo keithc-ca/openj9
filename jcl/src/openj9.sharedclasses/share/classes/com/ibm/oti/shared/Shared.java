@@ -1,6 +1,4 @@
 /*[INCLUDE-IF SharedClasses]*/
-package com.ibm.oti.shared;
-
 /*******************************************************************************
  * Copyright (c) 1998, 2021 IBM Corp. and others
  *
@@ -22,6 +20,7 @@ package com.ibm.oti.shared;
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-exception-2.0 OR LicenseRef-GPL-2.0 WITH Assembly-exception
  *******************************************************************************/
+package com.ibm.oti.shared;
 
 /**
  * Global class that provides SharedClassHelperFactory, SharedDataHelperFactory and sharing status.
@@ -30,7 +29,7 @@ package com.ibm.oti.shared;
  * @see SharedDataHelperFactory
  */
 public class Shared {
-	
+
 	private static final String ENABLED_PROPERTY_NAME = "com.ibm.oti.shared.enabled"; //$NON-NLS-1$
 	private static Object monitor;
 	private static SharedClassHelperFactory shcHelperFactory;
@@ -39,7 +38,9 @@ public class Shared {
 
 	/*[PR 122459] LIR646 - Remove use of generic object for synchronization */
 	private static final class Monitor {
-		Monitor() { super(); }
+		Monitor() {
+			super();
+		}
 	}
 
 	static {
@@ -47,12 +48,12 @@ public class Shared {
 		/* Bootstrap class sharing is enabled by default in OpenJ9 Java 11 and up */
 		nonBootSharingEnabled = isNonBootSharingEnabledImpl();
 	}
-	
+
 	private static native boolean isNonBootSharingEnabledImpl();
 
 	/**
 	 * Checks if sharing is enabled for this JVM.
-	 * <p>
+	 *
 	 * @return true if using -Xshareclasses on the command-line, false otherwise.
 	 */
 	public static boolean isSharingEnabled() {
@@ -61,12 +62,12 @@ public class Shared {
 
 	/**
 	 * If sharing is enabled, returns a SharedClassHelperFactory, otherwise returns null.
-	 * <p>
+	 *
 	 * @return		SharedClassHelperFactory
 	 */
 	public static SharedClassHelperFactory getSharedClassHelperFactory() {
-		synchronized(monitor) {
-			if (shcHelperFactory==null && isSharingEnabled()) {
+		synchronized (monitor) {
+			if (shcHelperFactory == null && isSharingEnabled()) {
 				shcHelperFactory = new SharedClassHelperFactoryImpl();
 			}
 			return shcHelperFactory;
@@ -75,15 +76,21 @@ public class Shared {
 
 	/**
 	 * If sharing is enabled, returns a SharedDataHelperFactory, otherwise returns null.
-	 * <p>
+	 *
 	 * @return		SharedDataHelperFactory
 	 */
 	public static SharedDataHelperFactory getSharedDataHelperFactory() {
-		synchronized(monitor) {
-			if (shdHelperFactory==null && isSharingEnabled()) {
+		synchronized (monitor) {
+			if (shdHelperFactory == null && isSharingEnabled()) {
 				shdHelperFactory = new SharedDataHelperFactoryImpl();
 			}
 			return shdHelperFactory;
 		}
 	}
+
+	@Deprecated
+	public Shared() {
+		super();
+	}
+
 }
