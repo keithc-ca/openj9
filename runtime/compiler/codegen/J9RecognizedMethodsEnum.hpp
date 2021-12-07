@@ -1034,7 +1034,9 @@
    java_lang_invoke_MethodHandles_getStackClass,
    java_lang_invoke_MethodHandle_type,
    java_lang_invoke_MethodHandle_undoCustomizationLogic,
+#if defined(J9VM_OPT_METHOD_HANDLE)
    java_lang_invoke_PrimitiveHandle_initializeClassIfRequired,
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
    java_lang_invoke_MutableCallSite_getTarget,
    java_lang_invoke_PermuteHandle_permuteArgs,
    java_lang_invoke_SpreadHandle_arrayArg,

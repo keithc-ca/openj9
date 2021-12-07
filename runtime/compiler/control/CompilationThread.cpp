@@ -628,7 +628,11 @@ bool TR::CompilationInfo::shouldDowngradeCompReq(TR_MethodToBeCompiled *entry)
       // However, during start-up phase, allow such downgrades if SCC has been specified on the command line
       // (the check for J9SHR_RUNTIMEFLAG_ENABLE_CACHE_NON_BOOT_CLASSES prevents the downgrading when
       // the default SCC is used)
-      if (((_J9ROMMETHOD_J9MODIFIER_IS_SET(romMethod, J9AccMethodHasMethodHandleInvokes)) || fe->isThunkArchetype(method)) &&
+      if (((_J9ROMMETHOD_J9MODIFIER_IS_SET(romMethod, J9AccMethodHasMethodHandleInvokes))
+#if defined(J9VM_OPT_METHOD_HANDLE)
+           || fe->isThunkArchetype(method)
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
+           ) &&
            (_jitConfig->javaVM->phase == J9VM_PHASE_NOT_STARTUP ||
             !TR::Options::sharedClassCache() ||
             !J9_ARE_ALL_BITS_SET(jitConfig->javaVM->sharedClassConfig->runtimeFlags, J9SHR_RUNTIMEFLAG_ENABLE_CACHE_NON_BOOT_CLASSES)

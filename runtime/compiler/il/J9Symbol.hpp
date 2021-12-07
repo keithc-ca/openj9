@@ -40,6 +40,7 @@ namespace J9 { typedef J9::Symbol SymbolConnector; }
 #include "il/DataTypes.hpp"
 #include "infra/Assert.hpp"
 #include "infra/Flags.hpp"
+#include "j9cfg.h"
 
 class TR_FrontEnd;
 class TR_ResolvedMethod;
@@ -164,7 +165,9 @@ public:
       Java_util_Hashtable_elementCount,
       Java_math_BigInteger_ZERO,
       Java_math_BigInteger_useLongRepresentation,
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
       Java_lang_invoke_VarHandle_handleTable,
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
       Java_lang_invoke_MethodHandleImpl_LoopClauses_clauses,
       Java_lang_Integer_value,
       Java_lang_Long_value,

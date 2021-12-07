@@ -540,10 +540,10 @@ done:
 		return rc;
 	}
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
 	VMINLINE VM_BytecodeAction
 	i2jMHTransition(REGISTER_ARGS_LIST)
 	{
-#if defined(J9VM_OPT_METHOD_HANDLE)
 		/* VMThread->tempSlot will hold the MethodHandle.
 		 * VMThread->floatTemp1 will hold the compiledEntryPoint
 		 */
@@ -555,11 +555,8 @@ done:
 		Assert_VM_false(jitConfig->fsdEnabled);
 		/* Add one to MethodType->argSlots to account for the MethodHandle receiver */
 		return jitTransition(REGISTER_ARGS, J9VMJAVALANGINVOKEMETHODTYPE_ARGSLOTS(_currentThread, methodType) + 1, jitStartAddress);
-#else /* defined(J9VM_OPT_METHOD_HANDLE) */
-		Assert_VM_unreachable();
-		return EXECUTE_BYTECODE;
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	}
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 	VMINLINE VM_BytecodeAction
 	j2iTransition(REGISTER_ARGS_LIST)
@@ -796,7 +793,7 @@ done:
 		default:
 			Assert_VM_unreachable();
 		}
-#endif /* TRACE_TRANSITIONS */
+#endif /* defined(TRACE_TRANSITIONS) */
 		return EXECUTE_BYTECODE;
 	}
 
@@ -952,10 +949,10 @@ obj:
 		return (U_8*)returnFromNativeBytecodes[bytecodes[1]];
 	}
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
 	VMINLINE VM_BytecodeAction
 	j2iInvokeExact(REGISTER_ARGS_LIST, j9object_t methodHandle)
 	{
-#if defined(J9VM_OPT_METHOD_HANDLE)
 		VM_JITInterface::disableRuntimeInstrumentation(_currentThread);
 		VM_BytecodeAction rc = GOTO_RUN_METHODHANDLE;
 		static U_8 const bcReturnFromJ2I[] = { JBinvokestatic, 0, 0, JBreturnFromJ2I };
@@ -1028,11 +1025,8 @@ obj:
 			}
 		}
 		return rc;
-#else /* defined(J9VM_OPT_METHOD_HANDLE) */
-		Assert_VM_unreachable();
-		return EXECUTE_BYTECODE;
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	}
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 	/**
 	 * Perform a non-instrumentable allocation of a non-indexable class.
@@ -8375,13 +8369,6 @@ retry:
 
 		return rc;
 	}
-#else /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
-	VMINLINE VM_BytecodeAction
-	invokedynamic(REGISTER_ARGS_LIST)
-	{
-		Assert_VM_unreachable();
-		return EXECUTE_BYTECODE;
-	}
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 #if defined(J9VM_OPT_METHOD_HANDLE)
@@ -8476,19 +8463,12 @@ retry:
 
 		return rc;
 	}
-#else /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
-	VMINLINE VM_BytecodeAction
-	invokehandle(REGISTER_ARGS_LIST)
-	{
-		Assert_VM_unreachable();
-		return EXECUTE_BYTECODE;
-	}
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
 	VMINLINE VM_BytecodeAction
 	invokehandlegeneric(REGISTER_ARGS_LIST)
 	{
-#if defined(J9VM_OPT_METHOD_HANDLE)
 		/* MH.invoke is translated to invokehandlegeneric. */
 retry:
 		VM_BytecodeAction rc = GOTO_RUN_METHODHANDLE;
@@ -8549,15 +8529,8 @@ retry:
 		}
 done:
 		return rc;
-#else /* defined(J9VM_OPT_METHOD_HANDLE) */
-	/* When J9VM_OPT_OPENJDK_METHODHANDLE is enabled, MH.invoke and MH.invokeExact are
-	 * both translated to invokehandle. So, invokehandlegeneric is not used with OpenJDK
-	 * MethodHandles.
-	 */
-	Assert_VM_unreachable();
-	return EXECUTE_BYTECODE;
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	}
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	/* This INL only covers invokeBasic dispatched directly from bytecode, invokeBasic calls
@@ -8919,10 +8892,10 @@ done:
 	}
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
 	VMINLINE j9object_t
 	countAndCompileMethodHandle(REGISTER_ARGS_LIST, j9object_t methodHandle, void **compiledEntryPoint)
 	{
-#if defined(J9VM_OPT_METHOD_HANDLE)
 		J9JITConfig *jitConfig = _vm->jitConfig;
 		if (NULL != jitConfig) {
 			j9object_t thunks = J9VMJAVALANGINVOKEMETHODHANDLE_THUNKS(_currentThread, methodHandle);
@@ -8951,11 +8924,8 @@ done:
 			}
 		}
 		return methodHandle;
-#else
-	Assert_VM_unreachable();
-	return NULL;
-#endif /* J9VM_OPT_METHOD_HANDLE */
 	}
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 	VMINLINE VM_BytecodeAction
 	retFromNative0(REGISTER_ARGS_LIST)
@@ -8963,10 +8933,10 @@ done:
 		return retFromNativeHelper(REGISTER_ARGS, 0, _vm->jitConfig->jitExitInterpreter0);
 	}
 
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
 	VMINLINE VM_BytecodeAction
 	invokevarhandle(REGISTER_ARGS_LIST)
 	{
-#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
 		VM_BytecodeAction rc = GOTO_RUN_METHODHANDLE;
 
 		/* Determine stack shape */
@@ -9042,12 +9012,8 @@ done:
 		}
 done:
 		return rc;
-#else /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
-		/* invokevarhandle is not used for OpenJDK VarHandles (J9VM_OPT_OPENJDK_METHODHANDLE). */
-		Assert_VM_unreachable();
-		return EXECUTE_BYTECODE;
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
 	}
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
 
 	VMINLINE VM_BytecodeAction
 	retFromNative1(REGISTER_ARGS_LIST)
@@ -9547,8 +9513,16 @@ public:
 		JUMP_TABLE_ENTRY(JBgenericReturn), /* 0xE5(229) */
 		JUMP_TABLE_ENTRY(JBunimplemented), /* 0xE6(230) */
 		JUMP_TABLE_ENTRY(JBinvokeinterface2), /* 0xE7(231) */
+#if defined(J9VM_OPT_METHOD_HANDLE) || defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 		JUMP_TABLE_ENTRY(JBinvokehandle), /* 0xE8(232) */
+#else /* defined(J9VM_OPT_METHOD_HANDLE) || defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+		JUMP_TABLE_ENTRY(JBunimplemented), /* 0xE8(232) */
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) || defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+#if defined(J9VM_OPT_METHOD_HANDLE)
 		JUMP_TABLE_ENTRY(JBinvokehandlegeneric), /* 0xE9(233) */
+#else /* defined(J9VM_OPT_METHOD_HANDLE) */
+		JUMP_TABLE_ENTRY(JBunimplemented), /* 0xE9(233) */
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 		JUMP_TABLE_ENTRY(JBinvokestaticsplit), /* 0xEA(234) */
 		JUMP_TABLE_ENTRY(JBinvokespecialsplit), /* 0xEB(235) */
 		JUMP_TABLE_ENTRY(JBreturnC), /* 0xEC(236) */
@@ -9716,7 +9690,9 @@ public:
 		JUMP_TABLE_ENTRY(J9_BCLOOP_SEND_TARGET_INL_THREAD_ISINTERRUPTEDIMPL),
 		JUMP_TABLE_ENTRY(J9_BCLOOP_SEND_TARGET_INL_CLASSLOADER_INITIALIZEANONCLASSLOADER),
 		JUMP_TABLE_ENTRY(J9_BCLOOP_SEND_TARGET_INL_REFLECTION_GETCLASSACCESSFLAGS),
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
 		JUMP_TABLE_ENTRY(J9_BCLOOP_SEND_TARGET_VARHANDLE),
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
 		JUMP_TABLE_ENTRY(J9_BCLOOP_SEND_TARGET_INL_THREAD_ON_SPIN_WAIT),
 		JUMP_TABLE_ENTRY(J9_BCLOOP_SEND_TARGET_OUT_OF_LINE_INL),
 		JUMP_TABLE_ENTRY(J9_BCLOOP_SEND_TARGET_CLASS_ARRAY_TYPE_IMPL),
@@ -9741,22 +9717,34 @@ public:
  */
 #if defined(DEBUG_VERSION)
 #define DEBUG_ACTIONS \
-		case GOTO_EXECUTE_BREAKPOINTED_BYTECODE: \
-			goto executeBreakpointedBytecode; \
-		case REPORT_METHOD_ENTER: \
-			goto methodEnter; \
-		case HANDLE_POP_FRAMES: \
-			goto popFrames; \
-		case FALL_THROUGH: \
-			break;
+	case GOTO_EXECUTE_BREAKPOINTED_BYTECODE: \
+		goto executeBreakpointedBytecode; \
+	case REPORT_METHOD_ENTER: \
+		goto methodEnter; \
+	case HANDLE_POP_FRAMES: \
+		goto popFrames; \
+	case FALL_THROUGH: \
+		break;
 #else
 #define DEBUG_ACTIONS
 #endif
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
+#define PERFORM_RUN_METHODHANDLE_ACTIONS \
+	case GOTO_RUN_METHODHANDLE: \
+		goto runMethodHandle; \
+	case GOTO_RUN_METHODHANDLE_COMPILED: \
+		goto runMethodHandleCompiled; \
+	case GOTO_RUN_METHOD_FROM_METHOD_HANDLE: \
+		goto runMethodFromMethodHandle;
+#else /* defined(J9VM_OPT_METHOD_HANDLE) */
+#define PERFORM_RUN_METHODHANDLE_ACTIONS
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
+
 #if JAVA_SPEC_VERSION >= 16
 #define PERFORM_ACTION_VALUE_TYPE_IMSE \
 	case THROW_VALUE_TYPE_ILLEGAL_MONITOR_STATE: \
-	goto valueTypeIllegalMonitorState;
+		goto valueTypeIllegalMonitorState;
 #else /* JAVA_SPEC_VERSION >= 16 */
 #define PERFORM_ACTION_VALUE_TYPE_IMSE
 #endif /* JAVA_SPEC_VERSION >= 16 */
@@ -9783,12 +9771,7 @@ public:
 			goto asyncCheck; \
 		case GOTO_JAVA_STACK_OVERFLOW: \
 			goto javaStackOverflow; \
-		case GOTO_RUN_METHODHANDLE: \
-			goto runMethodHandle; \
-		case GOTO_RUN_METHODHANDLE_COMPILED: \
-			goto runMethodHandleCompiled; \
-		case GOTO_RUN_METHOD_FROM_METHOD_HANDLE: \
-			goto runMethodFromMethodHandle; \
+		PERFORM_RUN_METHODHANDLE_ACTIONS \
 		case THROW_MONITOR_ALLOC_FAIL: \
 			goto failedToAllocateMonitor; \
 		case THROW_HEAP_OOM: \
@@ -9836,40 +9819,42 @@ public:
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_RUN_METHOD %s\n", vmThread, currentMethodName);
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		goto runMethod;
 	case J9_BCLOOP_RUN_METHOD_INTERPRETED:
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_RUN_METHOD_INTERPRETED %s\n", vmThread, currentMethodName);
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		goto runMethodInterpreted;
+#if defined(J9VM_OPT_METHOD_HANDLE)
 	case J9_BCLOOP_RUN_METHOD_HANDLE:
 		/* Stash MethodHandle into tempSlot where MHInterpreter expects to find it */
 		vmThread->tempSlot = (UDATA)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _literals, _pc, currentMethodName);
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_RUN_METHOD_HANDLE %s\n", vmThread, currentMethodName);
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		goto runMethodHandle;
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	case J9_BCLOOP_EXECUTE_BYTECODE:
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _literals, _pc, currentMethodName);
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_EXECUTE_BYTECODE %s\n", vmThread, currentMethodName);
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		EXECUTE_CURRENT_BYTECODE();
 #if defined(DEBUG_VERSION)
 	case J9_BCLOOP_HANDLE_POP_FRAMES:
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_HANDLE_POP_FRAMES\n", vmThread);
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		goto popFrames;
 #endif
 	case J9_BCLOOP_THROW_CURRENT_EXCEPTION:
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_THROW_CURRENT_EXCEPTION exception=%p\n", vmThread, vmThread->currentException);
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		goto throwCurrentException;
 	case J9_BCLOOP_CHECK_ASYNC:
 		goto asyncCheck;
@@ -9884,21 +9869,23 @@ public:
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_J2I_TRANSITION %s\n", vmThread, currentMethodName);
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		PERFORM_ACTION(j2iTransition(REGISTER_ARGS));
+#if defined(J9VM_OPT_METHOD_HANDLE)
 	case J9_BCLOOP_J2I_INVOKE_EXACT: {
 		j9object_t methodHandle = (j9object_t)actionData;
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_J2I_INVOKE_EXACT methodHandle=%p\n", vmThread, methodHandle);
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		PERFORM_ACTION(j2iInvokeExact(REGISTER_ARGS, methodHandle));
 	}
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	case J9_BCLOOP_I2J_TRANSITION:
 		_sendMethod = (J9Method *)actionData;
 #if defined(TRACE_TRANSITIONS)
 		getMethodName(PORTLIB, _sendMethod, (U_8*)-1, currentMethodName);
 		j9tty_printf(PORTLIB, "<%p> enter: J9_BCLOOP_I2J_TRANSITION %s\n", vmThread, currentMethodName);
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		goto i2j;
 	case J9_BCLOOP_RETURN_FROM_JIT:
 		PERFORM_ACTION(returnFromJIT(REGISTER_ARGS, (UDATA)actionData, false));
@@ -9920,7 +9907,7 @@ public:
 	default:
 #if defined(TRACE_TRANSITIONS)
 		j9tty_printf(PORTLIB, "<%p> enter: UNKNOWN %d\n", vmThread, vmThread->returnValue);
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		break;
 	}
 	Assert_VM_unreachable();
@@ -10312,8 +10299,10 @@ runMethod: {
 		PERFORM_ACTION(inlInitializeAnonClassLoader(REGISTER_ARGS));
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INL_REFLECTION_GETCLASSACCESSFLAGS):
 		PERFORM_ACTION(inlReflectionGetClassAccessFlags(REGISTER_ARGS));
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_VARHANDLE):
 		PERFORM_ACTION(invokevarhandle(REGISTER_ARGS));
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_INL_THREAD_ON_SPIN_WAIT):
 		PERFORM_ACTION(inlThreadOnSpinWait(REGISTER_ARGS));
 	JUMP_TARGET(J9_BCLOOP_SEND_TARGET_OUT_OF_LINE_INL):
@@ -10353,8 +10342,8 @@ i2j:
 jni:
 	PERFORM_ACTION(runJNINative(REGISTER_ARGS));
 
-runMethodHandle: {
 #if defined(J9VM_OPT_METHOD_HANDLE)
+runMethodHandle: {
 	j9object_t methodHandle = (j9object_t)_currentThread->tempSlot;
 	void *compiledEntryPoint = VM_VMHelpers::methodHandleCompiledEntryPoint(_vm, _currentThread, methodHandle);
 	if (NULL != compiledEntryPoint) {
@@ -10369,13 +10358,9 @@ runMethodHandle: {
 		goto runMethodHandleCompiled;
 	}
 	PERFORM_ACTION(interpretMethodHandle(REGISTER_ARGS, methodHandle));
-#else
-	Assert_VM_unreachable();
-#endif /* J9VM_OPT_METHOD_HANDLE */
 }
 
 runMethodHandleCompiled:
-#if defined(J9VM_OPT_METHOD_HANDLE)
 	/* VMThread->tempSlot will hold the MethodHandle.
 	 * VMThread->floatTemp1 will hold the compiledEntryPoint
 	 */
@@ -10383,17 +10368,11 @@ runMethodHandleCompiled:
 	Assert_VM_notNull(_currentThread->floatTemp1);
 	modifyMethodHandleCountForI2J(REGISTER_ARGS, (j9object_t) _currentThread->tempSlot);
 	PERFORM_ACTION(i2jMHTransition(REGISTER_ARGS));
-#else
-	Assert_VM_unreachable();
-#endif /* J9VM_OPT_METHOD_HANDLE */
 
 runMethodFromMethodHandle:
-#if defined(J9VM_OPT_METHOD_HANDLE)
 	_sendMethod = (J9Method *)_currentThread->tempSlot;
 	goto runMethod;
-#else
-	Assert_VM_unreachable();
-#endif /* J9VM_OPT_METHOD_HANDLE */
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 asyncCheck:
 	PERFORM_ACTION(checkAsync(REGISTER_ARGS));
@@ -11122,9 +11101,11 @@ executeBytecodeFromLocal:
 		JUMP_TARGET(JBinvokehandle):
 			SINGLE_STEP();
 			PERFORM_ACTION(invokehandle(REGISTER_ARGS));
+#if defined(J9VM_OPT_METHOD_HANDLE)
 		JUMP_TARGET(JBinvokehandlegeneric):
 			SINGLE_STEP();
 			PERFORM_ACTION(invokehandlegeneric(REGISTER_ARGS));
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 		JUMP_TARGET(JBinvokestaticsplit):
 			SINGLE_STEP();
 			PERFORM_ACTION(invokestaticsplit(REGISTER_ARGS));
@@ -11190,7 +11171,7 @@ done:
 		updateVMStruct(REGISTER_ARGS);
 noUpdate:
 #if defined(TRACE_TRANSITIONS)
-		switch(_nextAction) {
+		switch (_nextAction) {
 		case J9_BCLOOP_EXECUTE_BYTECODE:
 			getMethodName(PORTLIB, _literals, _pc, currentMethodName);
 			j9tty_printf(PORTLIB, "<%p> exit : %s J9_BCLOOP_EXECUTE_BYTECODE %s (%d)\n", vmThread, currentMethodName, JavaBCNames[*vmThread->pc], *vmThread->pc);
@@ -11230,7 +11211,7 @@ noUpdate:
 			Assert_VM_unreachable();
 			break;
 		}
-#endif
+#endif /* defined(TRACE_TRANSITIONS) */
 		return _nextAction;
 	}
 

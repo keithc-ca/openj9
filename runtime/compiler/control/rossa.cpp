@@ -866,7 +866,10 @@ internalCompileClass(J9VMThread * vmThread, J9Class * clazz)
       if (!(romMethod->modifiers & (J9AccNative | J9AccAbstract))
          && method != newInstanceThunk
          && !TR::CompilationInfo::isCompiled(method)
-         && !fe->isThunkArchetype(method))
+#if defined(J9VM_OPT_METHOD_HANDLE)
+         && !fe->isThunkArchetype(method)
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
+         )
          {
          bool queued = false;
          TR_MethodEvent event;

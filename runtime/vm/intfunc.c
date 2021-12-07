@@ -294,7 +294,9 @@ J9InternalVMFunctions J9InternalFunctions = {
 	cacheObjectMonitorForLookup,
 	jniArrayAllocateMemoryFromThread,
 	jniArrayFreeMemoryFromThread,
+#if defined(J9VM_OPT_METHOD_HANDLE)
 	sendForGenericInvoke,
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	jitFillOSRBuffer,
 	sendResolveMethodHandle,
 	resolveOpenJDKInvokeHandle,

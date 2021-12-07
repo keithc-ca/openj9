@@ -258,11 +258,13 @@ J9::Recompilation::induceRecompilation(
    methodInfo = bodyInfo->getMethodInfo();
    TR_J9VMBase *fej9 = (TR_J9VMBase *)fe;
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
    if (fej9->isThunkArchetype(fej9->convertMethodOffsetToMethodPtr(methodInfo->getMethodInfo())))
       {
       // Do nothing. A thunk archetype should be not compiled as if it were a java ordinary method
       return false;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
    // If there is no plan (EDO triggered) we could create one
    //

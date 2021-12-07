@@ -4015,9 +4015,9 @@ TR_J9VMBase::canDereferenceAtCompileTimeWithFieldSymbol(TR::Symbol * fieldSymbol
       {
       case TR::Symbol::Java_lang_invoke_PrimitiveHandle_rawModifiers:
       case TR::Symbol::Java_lang_invoke_PrimitiveHandle_defc:
-#if defined(J9VM_OPT_METHOD_HANDLE)
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
       case TR::Symbol::Java_lang_invoke_VarHandle_handleTable:
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
       case TR::Symbol::Java_lang_invoke_MethodHandleImpl_LoopClauses_clauses:
          {
          return true;
@@ -5516,16 +5516,13 @@ TR_J9VMBase::getStringUTF8(uintptr_t objectPointer, char *buffer, intptr_t buffe
    return buffer;
    }
 
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
 uint32_t
 TR_J9VMBase::getVarHandleHandleTableOffset(TR::Compilation * comp)
    {
-#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
    return uint32_t(J9VMJAVALANGINVOKEVARHANDLE_HANDLETABLE_OFFSET(vmThread()));
-#else /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
-   Assert_JIT_unreachable();
-   return 0;
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
    }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
 
 // set a 32 bit field that will be printed if the VM crashes
 // typically, this should be used to represent the state of the
@@ -6247,10 +6244,10 @@ TR_J9VMBase::argumentCanEscapeMethodCall(TR::MethodSymbol * method, int32_t argI
    return true;
    }
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
 bool
 TR_J9VMBase::isThunkArchetype(J9Method * method)
    {
-#if defined(J9VM_OPT_METHOD_HANDLE)
    J9ROMMethod *romMethod = J9_ROM_METHOD_FROM_RAM_METHOD(method);
    J9ROMClass  *romClass  = J9_CLASS_FROM_METHOD(method)->romClass;
    if (_J9ROMMETHOD_J9MODIFIER_IS_SET(romMethod, J9AccMethodFrameIteratorSkip))
@@ -6271,9 +6268,9 @@ TR_J9VMBase::isThunkArchetype(J9Method * method)
 
       return isInJLI && isThunkArchetype;
       }
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
    return false;
    }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 TR_OpaqueClassBlock *
 TR_J9VMBase::getHostClass(TR_OpaqueClassBlock *clazzOffset)

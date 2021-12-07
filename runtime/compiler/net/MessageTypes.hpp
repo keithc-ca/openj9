@@ -114,7 +114,9 @@ enum MessageType : uint16_t
    VM_jitFieldsOrStaticsAreSame,
    VM_classHasBeenExtended,
    VM_compiledAsDLTBefore,
+#if defined(J9VM_OPT_METHOD_HANDLE)
    VM_isThunkArchetype,
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
    VM_printTruncatedSignature,
    VM_getStaticHookAddress,
    VM_isClassInitialized,
@@ -285,6 +287,6 @@ enum MessageType : uint16_t
    MessageType_MAXTYPE
    };
    extern const char *messageNames[];
-   }; // namespace JITServer
+   } // namespace JITServer
 
 #endif // MESSAGE_TYPES_HPP

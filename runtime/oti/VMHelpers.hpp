@@ -182,7 +182,9 @@ typedef enum {
 	J9_BCLOOP_SEND_TARGET_INL_THREAD_ISINTERRUPTEDIMPL,
 	J9_BCLOOP_SEND_TARGET_INL_CLASSLOADER_INITIALIZEANONCLASSLOADER,
 	J9_BCLOOP_SEND_TARGET_INL_REFLECTION_GETCLASSACCESSFLAGS,
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
 	J9_BCLOOP_SEND_TARGET_VARHANDLE,
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
 	J9_BCLOOP_SEND_TARGET_INL_THREAD_ON_SPIN_WAIT,
 	J9_BCLOOP_SEND_TARGET_OUT_OF_LINE_INL,
 	J9_BCLOOP_SEND_TARGET_CLASS_ARRAY_TYPE_IMPL,
@@ -330,6 +332,7 @@ public:
 		return 0 != J9VMCONSTANTPOOL_FIELDREF_AT(vm, cpIndex)->flags;
 	}
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
 	/**
 	 * Fetch the Interpreter-to-JIT compiled entry point from the methodhandle if one exists
 	 *
@@ -339,19 +342,18 @@ public:
 	 *
 	 * @returns the compiled i2j entrypoint or null.
 	 */
-	static VMINLINE void*
+	static VMINLINE void *
 	methodHandleCompiledEntryPoint(J9JavaVM *vm, J9VMThread *currentThread, j9object_t methodHandle)
 	{
 		void *compiledEntryPoint = NULL;
-#if defined(J9VM_OPT_METHOD_HANDLE)
 		if (J9_EXTENDED_RUNTIME_I2J_MH_TRANSITION_ENABLED == (vm->extendedRuntimeFlags & J9_EXTENDED_RUNTIME_I2J_MH_TRANSITION_ENABLED)) {
 			j9object_t thunks = J9VMJAVALANGINVOKEMETHODHANDLE_THUNKS(currentThread, methodHandle);
 			I_64 i2jEntry = J9VMJAVALANGINVOKETHUNKTUPLE_I2JINVOKEEXACTTHUNK(currentThread, thunks);
 			compiledEntryPoint = (void *)(UDATA)i2jEntry;
 		}
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 		return compiledEntryPoint;
 	}
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 	/**
 	 * @brief Return whether an exception is pending or not

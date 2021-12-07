@@ -293,7 +293,9 @@ public:
    virtual bool stringEquals(TR::Compilation * comp, uintptr_t* stringLocation1, uintptr_t* stringLocation2, int32_t& result);
    virtual bool getStringHashCode(TR::Compilation * comp, uintptr_t* stringLocation, int32_t& result);
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
    virtual bool isThunkArchetype(J9Method * method);
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
    J9VMThread * vmThread();
 
@@ -988,7 +990,9 @@ public:
    virtual intptr_t getStringUTF8Length(uintptr_t objectPointer);
    virtual char     *getStringUTF8      (uintptr_t objectPointer, char *buffer, intptr_t bufferSize);
 
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
    virtual uint32_t getVarHandleHandleTableOffset(TR::Compilation *);
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
 
    virtual void reportILGeneratorPhase();
    virtual void reportOptimizationPhase(OMR::Optimizations);

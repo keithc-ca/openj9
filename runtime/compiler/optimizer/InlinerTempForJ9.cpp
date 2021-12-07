@@ -4780,7 +4780,9 @@ TR_J9InlinerPolicy::supressInliningRecognizedInitialCallee(TR_CallSite* callsite
           * Otherwise, they can be folded away by VP and should not be inlined here.
           */
          case TR::java_lang_invoke_DirectHandle_nullCheckIfRequired:
+#if defined(J9VM_OPT_METHOD_HANDLE)
          case TR::java_lang_invoke_PrimitiveHandle_initializeClassIfRequired:
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
          case TR::java_lang_invoke_MethodHandle_invokeExactTargetAddress:
             {
             TR::IlGeneratorMethodDetails & details = comp->ilGenRequest().details();

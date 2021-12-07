@@ -2385,7 +2385,7 @@ VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved)
 			/* Consumed here as the option is dealt with before the consumed args list exists */
 			FIND_AND_CONSUME_ARG(STARTSWITH_MATCH, VMOPT_XOPTIONSFILE_EQUALS, NULL);
 
-#ifdef J9VM_OPT_METHOD_HANDLE
+#if defined(J9VM_OPT_METHOD_HANDLE)
 			if ((argIndex = FIND_AND_CONSUME_ARG(STARTSWITH_MATCH, VMOPT_XXMHCOMPILECOUNT_EQUALS, NULL)) >= 0) {
 				UDATA mhCompileCount = 0;
 				char *optname = VMOPT_XXMHCOMPILECOUNT_EQUALS;
@@ -2394,7 +2394,7 @@ VMInitStages(J9JavaVM *vm, IDATA stage, void* reserved)
 			} else {
 				vm->methodHandleCompileCount = 30;
 			}
-#endif
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 			vm->romMethodSortThreshold = UDATA_MAX;
 			if ((argIndex = FIND_AND_CONSUME_ARG(STARTSWITH_MATCH, VMOPT_ROMMETHODSORTTHRESHOLD_EQUALS, NULL)) >= 0) {
 				UDATA threshold = 0;
@@ -3440,7 +3440,7 @@ processVMArgsFromFirstToLast(J9JavaVM * vm)
 			vm->extendedRuntimeFlags &= ~(UDATA)J9_EXTENDED_RUNTIME_DEBUG_VM_ACCESS;
 		}
 	}
-#ifdef J9VM_OPT_METHOD_HANDLE
+#if defined(J9VM_OPT_METHOD_HANDLE)
 	{
 		IDATA mhAllowI2J = FIND_AND_CONSUME_ARG(EXACT_MATCH, VMOPT_XXMHALLOWI2J, NULL);
 		IDATA nomhAllowI2J = FIND_AND_CONSUME_ARG(EXACT_MATCH, VMOPT_XXNOMHALLOWI2J, NULL);
@@ -3450,7 +3450,7 @@ processVMArgsFromFirstToLast(J9JavaVM * vm)
 			vm->extendedRuntimeFlags &= ~(UDATA)J9_EXTENDED_RUNTIME_I2J_MH_TRANSITION_ENABLED;
 		}
 	}
-#endif
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 	{
 		IDATA lazySymbolResolution = FIND_AND_CONSUME_ARG(EXACT_MATCH, VMOPT_XXLAZYSYMBOLRESOLUTION, NULL);
 		IDATA nolazySymbolResolution = FIND_AND_CONSUME_ARG(EXACT_MATCH, VMOPT_XXNOLAZYSYMBOLRESOLUTION, NULL);
@@ -6695,7 +6695,7 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 #if defined(J9VM_OPT_METHOD_HANDLE)
 	/* Enable i2j MethodHandle transitions by default */
 	vm->extendedRuntimeFlags |= J9_EXTENDED_RUNTIME_I2J_MH_TRANSITION_ENABLED;
-#endif
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 	/* Default to using lazy in all but realtime */
 	vm->extendedRuntimeFlags |= J9_EXTENDED_RUNTIME_LAZY_SYMBOL_RESOLUTION;

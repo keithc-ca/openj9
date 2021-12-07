@@ -686,6 +686,7 @@ TR_J9ServerVM::getStaticObjectFlags()
    return vmInfo->_staticObjectAllocateFlags;
    }
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
 bool
 TR_J9ServerVM::isThunkArchetype(J9Method * method)
    {
@@ -693,6 +694,7 @@ TR_J9ServerVM::isThunkArchetype(J9Method * method)
    stream->write(JITServer::MessageType::VM_isThunkArchetype, method);
    return std::get<0>(stream->read<bool>());
    }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 static J9UTF8 *str2utf8(char *string, int32_t length, TR_Memory *trMemory, TR_AllocationKind allocKind)
    {

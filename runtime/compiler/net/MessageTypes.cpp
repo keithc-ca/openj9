@@ -105,7 +105,9 @@ const char *messageNames[] =
    "VM_jitFieldsOrStaticsAreSame",
    "VM_classHasBeenExtended",
    "VM_compiledAsDLTBefore",
+#if defined(J9VM_OPT_METHOD_HANDLE)
    "VM_isThunkArchetype",
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
    "VM_printTruncatedSignature",
    "VM_getStaticHookAddress",
    "VM_isClassInitialized",

@@ -341,12 +341,14 @@ handleServerMessage(JITServer::ClientStream *client, TR_J9VM *fe, JITServer::Mes
          client->write(response, fe->classHasBeenExtended(clazz));
          }
          break;
+#if defined(J9VM_OPT_METHOD_HANDLE)
       case MessageType::VM_isThunkArchetype:
          {
          J9Method *method = std::get<0>(client->getRecvData<J9Method *>());
          client->write(response, fe->isThunkArchetype(method));
          }
          break;
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       case MessageType::VM_printTruncatedSignature:
          {
          J9Method *method = (J9Method *) std::get<0>(client->getRecvData<TR_OpaqueMethodBlock *>());

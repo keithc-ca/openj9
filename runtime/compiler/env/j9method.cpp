@@ -3587,11 +3587,13 @@ void TR_ResolvedJ9Method::construct()
       {  TR::unknownMethod}
       };
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
    static X PrimitiveHandleMethods[] =
       {
       {x(TR::java_lang_invoke_PrimitiveHandle_initializeClassIfRequired,  "initializeClassIfRequired",       "()V")},
       {  TR::unknownMethod}
       };
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
    static X VarHandleMethods[] =
       {
@@ -4101,7 +4103,9 @@ void TR_ResolvedJ9Method::construct()
    static Y class32[] =
       {
       { "java/lang/invoke/MutableCallSite", MutableCallSiteMethods },
+#if defined(J9VM_OPT_METHOD_HANDLE)
       { "java/lang/invoke/PrimitiveHandle", PrimitiveHandleMethods },
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       { "com/ibm/dataaccess/PackedDecimal", DataAccessPackedDecimalMethods },
       { "jdk/incubator/vector/FloatVector", FloatVectorMethods},
       { 0 }

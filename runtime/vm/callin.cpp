@@ -930,10 +930,10 @@ sendResolveMethodHandle(J9VMThread *currentThread, UDATA cpIndex, J9ConstantPool
 	Trc_VM_sendResolveMethodHandle_Exit(currentThread);
 }
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
 void JNICALL
 sendForGenericInvoke(J9VMThread *currentThread, j9object_t methodHandle, j9object_t methodType, UDATA dropFirstArg)
 {
-#if defined(J9VM_OPT_METHOD_HANDLE)
 	Trc_VM_sendForGenericInvoke_Entry(currentThread);
 	J9VMEntryLocalStorage newELS;
 	if (buildCallInStackFrame(currentThread, &newELS, true, false)) {
@@ -947,10 +947,8 @@ sendForGenericInvoke(J9VMThread *currentThread, j9object_t methodHandle, j9objec
 		restoreCallInFrame(currentThread);
 	}
 	Trc_VM_sendForGenericInvoke_Exit(currentThread);
-#else /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
-	Assert_VM_unreachable();
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 void JNICALL
 sendResolveOpenJDKInvokeHandle(J9VMThread *currentThread, J9ConstantPool *ramCP, UDATA cpIndex, I_32 refKind, J9Class *resolvedClass, J9ROMNameAndSignature *nameAndSig)

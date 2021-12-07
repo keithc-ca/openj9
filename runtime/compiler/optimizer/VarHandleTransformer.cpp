@@ -134,10 +134,11 @@ static X VarHandleMethods[] =
 // Recognized method doesn't work for unresolved method, the following code works for both case
 TR::RecognizedMethod TR_VarHandleTransformer::getVarHandleAccessMethod(TR::Node * node)
 {
-   TR::SymbolReference *symRef = node->getSymbolReference();
    TR::RecognizedMethod varHandleAccessMethod = TR::unknownMethod;
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
+   TR::SymbolReference *symRef = node->getSymbolReference();
    OMR::MethodSymbol *symbol = node->getSymbol()->getMethodSymbol();
-      TR_J9Method * method = (TR_J9Method*)(symbol->getMethod());
+   TR_J9Method * method = (TR_J9Method*)(symbol->getMethod());
    if (symRef->isUnresolved())
       {
       char *className    = method->classNameChars();
@@ -162,6 +163,7 @@ TR::RecognizedMethod TR_VarHandleTransformer::getVarHandleAccessMethod(TR::Node 
       if (method->isVarHandleAccessMethod(comp()))
          varHandleAccessMethod = method->getMandatoryRecognizedMethod();
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
    return varHandleAccessMethod;
 }
 
@@ -171,7 +173,7 @@ TR::RecognizedMethod TR_VarHandleTransformer::getVarHandleAccessMethod(TR::Node 
  */
 int32_t TR_VarHandleTransformer::perform()
 {
-#if defined(J9VM_OPT_METHOD_HANDLE)
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
    TR::ResolvedMethodSymbol *methodSymbol = comp()->getMethodSymbol();
    TR_J9VMBase *fej9 = (TR_J9VMBase *)(comp()->fe());
    for (TR::TreeTop * tt = methodSymbol->getFirstTreeTop(); tt != NULL; tt = tt->getNextTreeTop())
@@ -241,7 +243,6 @@ int32_t TR_VarHandleTransformer::perform()
                   TR::Node::recreate(callTree->getNode(), newOpCode);
                }
 
-
             // Anchoring all the children for varhandle
             anchorAllChildren(node, tt);
             dumpOptDetails(comp(), "%sVarHandle access methods found, working on node %p\n", optDetailString(), node);
@@ -251,7 +252,7 @@ int32_t TR_VarHandleTransformer::perform()
              TR::Node * index = TR::Node::iconst(VarHandleMethods[varHandleAccessMethod - TR::java_lang_invoke_VarHandle_get].tableIndex);
 
              // Load the handleTable containing the method handle to be invoked
-             uint32_t handleTableOffset =  fej9->getVarHandleHandleTableOffset(comp());
+             uint32_t handleTableOffset = fej9->getVarHandleHandleTableOffset(comp());
 
              TR::SymbolReference *handleTableSymRef = comp()->getSymRefTab()->findOrFabricateShadowSymbol(methodSymbol, TR::Symbol::Java_lang_invoke_VarHandle_handleTable, TR::Address, handleTableOffset, false, false, true, "java/lang/invoke/VarHandle.handleTable [Ljava/lang/invoke/MethodHandle;");
              TR::Node *handleTable = TR::Node::createWithSymRef(comp()->il.opCodeForIndirectLoad(TR::Address), 1, 1, varHandle, handleTableSymRef);
@@ -285,7 +286,7 @@ int32_t TR_VarHandleTransformer::perform()
                 callTree->insertBefore(TR::TreeTop::create(comp(), TR::Node::create(node, TR::treetop, 1, methodHandle)));
 
             // TODO:
-            //fast path: get the method type from MT[] in the varhandle object
+            // fast path: get the method type from MT[] in the varhandle object
             // and compare it against the cached method type, and check if
             // operation is supported for the field, if so --> fast path
 
@@ -359,8 +360,8 @@ int32_t TR_VarHandleTransformer::perform()
             }
          }
       }
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
-return 0;
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
+   return 0;
 }
 
 const char *

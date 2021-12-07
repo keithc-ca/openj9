@@ -92,7 +92,9 @@ public:
    virtual uint32_t getStaticObjectFlags() override;
    virtual uintptr_t getOverflowSafeAllocSize() override;
    virtual void *getReferenceArrayCopyHelperAddress() override;
+#if defined(J9VM_OPT_METHOD_HANDLE)
    virtual bool isThunkArchetype(J9Method * method) override;
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
    virtual int32_t printTruncatedSignature(char *sigBuf, int32_t bufLen, TR_OpaqueMethodBlock *method) override;
    virtual bool isClassInitialized(TR_OpaqueClassBlock * clazz) override;
    virtual UDATA getOSRFrameSizeInBytes(TR_OpaqueMethodBlock * method) override;

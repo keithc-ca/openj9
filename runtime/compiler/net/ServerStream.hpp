@@ -272,6 +272,6 @@ private:
    ClientSessionData *_pClientSessionData;
    };
 
-}
+} // namespace JITServer
 
 #endif // SERVER_STREAM_H

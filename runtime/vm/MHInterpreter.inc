@@ -534,7 +534,7 @@ VM_MHInterpreter::dispatchLoop(j9object_t methodHandle)
 			}
 			break;
 		}
-#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
+#if JAVA_SPEC_VERSION >= 11
 		case J9_METHOD_HANDLE_KIND_VARHANDLE_INVOKE_EXACT:
 			/* fallthrough */
 		case J9_METHOD_HANDLE_KIND_VARHANDLE_INVOKE_GENERIC: {
@@ -613,7 +613,7 @@ VM_MHInterpreter::dispatchLoop(j9object_t methodHandle)
 			((j9object_t*)_currentThread->sp)[slotCount] = methodHandle;
 			break;
 		}
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
+#endif /* JAVA_SPEC_VERSION >= 11 */
 		default:
 			Assert_VM_unreachable();
 			break;
