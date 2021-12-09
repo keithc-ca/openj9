@@ -517,6 +517,7 @@ TR_ResolvedJ9Method::owningMethodDoesntMatter()
          {
          return true;
          }
+#if defined(J9VM_OPT_METHOD_HANDLE)
       else switch (TR_ResolvedJ9MethodBase::getRecognizedMethod())
          {
          case TR::java_lang_invoke_MethodHandle_invokeExactTargetAddress: // This is just a getter that's practically always inlined
@@ -524,7 +525,9 @@ TR_ResolvedJ9Method::owningMethodDoesntMatter()
          default:
             break;
          }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       }
+#if defined(J9VM_OPT_METHOD_HANDLE)
    else if (!strncmp((char*)J9UTF8_DATA(className), "java/lang/invoke/ILGenMacros", J9UTF8_LENGTH(className)))
       {
       // ILGen macros are always expanded into other trees, so the owning
@@ -532,6 +535,7 @@ TR_ResolvedJ9Method::owningMethodDoesntMatter()
       //
       return true;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
    // Safe default
    //
@@ -3562,23 +3566,27 @@ void TR_ResolvedJ9Method::construct()
 
    static X MethodHandleMethods[] =
       {
+      {x(TR::java_lang_invoke_MethodHandle_asType_instance, "asType", "(Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;")},
+      {  TR::java_lang_invoke_MethodHandle_invoke                   ,    6, "invoke",                     (int16_t)-1, "*"},
+      {  TR::java_lang_invoke_MethodHandle_invokeBasic              ,   11, "invokeBasic",                (int16_t)-1, "*"},
+      {  TR::java_lang_invoke_MethodHandle_invokeExact              ,   11, "invokeExact",                (int16_t)-1, "*"},
+      {x(TR::java_lang_invoke_MethodHandle_type                     ,   "type",                       "()Ljava/lang/invoke/MethodType;")},
+#if defined(J9VM_OPT_METHOD_HANDLE)
       {  TR::java_lang_invoke_MethodHandle_doCustomizationLogic     ,   20, "doCustomizationLogic",       (int16_t)-1, "*"},
       {  TR::java_lang_invoke_MethodHandle_undoCustomizationLogic   ,   22, "undoCustomizationLogic",     (int16_t)-1, "*"},
-      {  TR::java_lang_invoke_MethodHandle_invoke                   ,    6, "invoke",                     (int16_t)-1, "*"},
-      {  TR::java_lang_invoke_MethodHandle_invoke                   ,   13, "invokeGeneric",              (int16_t)-1, "*"}, // Older name from early versions of the jsr292 spec
-      {  TR::java_lang_invoke_MethodHandle_invokeExact              ,   11, "invokeExact",                (int16_t)-1, "*"},
       {  TR::java_lang_invoke_MethodHandle_invokeExactTargetAddress ,   24, "invokeExactTargetAddress",   (int16_t)-1, "*"},
-      {x(TR::java_lang_invoke_MethodHandle_type                     ,   "type",                       "()Ljava/lang/invoke/MethodType;")},
       {x(TR::java_lang_invoke_MethodHandle_asType, "asType", "(Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;")},
-      {x(TR::java_lang_invoke_MethodHandle_asType_instance, "asType", "(Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/MethodHandle;")},
-      {  TR::java_lang_invoke_MethodHandle_invokeBasic              ,   11, "invokeBasic",                (int16_t)-1, "*"},
-      {  TR::java_lang_invoke_MethodHandle_linkToStatic             ,   12, "linkToStatic",                (int16_t)-1, "*"},
-      {  TR::java_lang_invoke_MethodHandle_linkToSpecial            ,   13, "linkToSpecial",                (int16_t)-1, "*"},
-      {  TR::java_lang_invoke_MethodHandle_linkToVirtual            ,   13, "linkToVirtual",                (int16_t)-1, "*"},
-      {  TR::java_lang_invoke_MethodHandle_linkToInterface          ,   15, "linkToInterface",                (int16_t)-1, "*"},
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
+      {  TR::java_lang_invoke_MethodHandle_linkToStatic             ,   12, "linkToStatic",               (int16_t)-1, "*"},
+      {  TR::java_lang_invoke_MethodHandle_linkToSpecial            ,   13, "linkToSpecial",              (int16_t)-1, "*"},
+      {  TR::java_lang_invoke_MethodHandle_linkToVirtual            ,   13, "linkToVirtual",              (int16_t)-1, "*"},
+      {  TR::java_lang_invoke_MethodHandle_linkToInterface          ,   15, "linkToInterface",            (int16_t)-1, "*"},
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
       {  TR::unknownMethod}
       };
 
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
    static X DirectMethodHandleMethods[] =
       {
       {x(TR::java_lang_invoke_DirectMethodHandle_internalMemberName,            "internalMemberName",                 "(Ljava/lang/Object;)Ljava/lang/Object;")},
@@ -3586,6 +3594,7 @@ void TR_ResolvedJ9Method::construct()
       {x(TR::java_lang_invoke_DirectMethodHandle_constructorMethod,             "constructorMethod",       "(Ljava/lang/Object;)Ljava/lang/Object;")},
       {  TR::unknownMethod}
       };
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
 #if defined(J9VM_OPT_METHOD_HANDLE)
    static X PrimitiveHandleMethods[] =
@@ -3595,6 +3604,7 @@ void TR_ResolvedJ9Method::construct()
       };
 #endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
+#if JAVA_SPEC_VERSION >= 11
    static X VarHandleMethods[] =
       {
       // Recognized method only works for resolved methods
@@ -3634,7 +3644,9 @@ void TR_ResolvedJ9Method::construct()
       {  TR::java_lang_invoke_VarHandle_getAndBitwiseXorRelease   ,   28, "getAndBitwiseXorRelease_impl",         (int16_t)-1, "*"},
       {  TR::unknownMethod}
       };
+#endif /* JAVA_SPEC_VERSION >= 11 */
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
    static X ILGenMacrosMethods[] =
       {
       {  TR::java_lang_invoke_ILGenMacros_placeholder ,      11, "placeholder",      (int16_t)-1, "*"},
@@ -3673,7 +3685,9 @@ void TR_ResolvedJ9Method::construct()
       {  TR::java_lang_invoke_CollectHandle_invokeExact,          28,  "invokeExact_thunkArchetype_X",    (int16_t)-1, "*"},
       {  TR::unknownMethod}
       };
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
    static X InvokersMethods[] =
       {
       {x(TR::java_lang_invoke_Invokers_checkCustomized,                    "checkCustomized",             "(Ljava/lang/invoke/MethodHandle;)V")},
@@ -3681,12 +3695,15 @@ void TR_ResolvedJ9Method::construct()
       {x(TR::java_lang_invoke_Invokers_getCallSiteTarget,                  "getCallSiteTarget",           "(Ljava/lang/invoke/CallSite;)Ljava/lang/invoke/MethodHandle;")},
       {TR::unknownMethod}
       };
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
    static X AsTypeHandleMethods[] =
       {
       {  TR::java_lang_invoke_AsTypeHandle_convertArgs,   11, "convertArgs",     (int16_t)-1, "*"},
       {  TR::unknownMethod}
       };
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
    static X EncodeMethods[] =
       {
@@ -3710,6 +3727,7 @@ void TR_ResolvedJ9Method::construct()
       {  TR::unknownMethod}
       };
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
    static X ExplicitCastHandleMethods[] =
       {
       {  TR::java_lang_invoke_ExplicitCastHandle_convertArgs,   11, "convertArgs",     (int16_t)-1, "*"},
@@ -3747,7 +3765,9 @@ void TR_ResolvedJ9Method::construct()
       {x(TR::java_lang_invoke_InsertHandle_numValuesToInsert,  "numValuesToInsert", "()I")},
       {  TR::unknownMethod}
       };
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
    static X MethodHandleImplCountingWrapperMethods[] =
       {
       {x(TR::java_lang_invoke_MethodHandleImpl_CountingWrapper_getTarget,   "getTarget",  "()Ljava/lang/invoke/MethodHandle;")},
@@ -3759,7 +3779,9 @@ void TR_ResolvedJ9Method::construct()
       {x(TR::java_lang_invoke_DelegatingMethodHandle_getTarget,   "getTarget",  "()Ljava/lang/invoke/MethodHandle;")},
       {  TR::unknownMethod}
       };
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
    static X DirectHandleMethods[] =
       {
       {x(TR::java_lang_invoke_DirectHandle_isAlreadyCompiled,   "isAlreadyCompiled",  "(J)Z")},
@@ -3785,6 +3807,7 @@ void TR_ResolvedJ9Method::construct()
       {  TR::java_lang_invoke_FoldHandle_argumentsForCombiner,  20,  "argumentsForCombiner",    (int16_t)-1, "*"},
       {  TR::unknownMethod}
       };
+
    static X FilterArgumentsWithCombinerHandleMethods[] =
       {
       {x(TR::java_lang_invoke_FilterArgumentsWithCombinerHandle_filterPosition,               "filterPosition",            "()I")},
@@ -3827,6 +3850,7 @@ void TR_ResolvedJ9Method::construct()
       {x(TR::java_lang_invoke_MethodHandles_getStackClass,   "getStackClass",  "(I)Ljava/lang/Class;")},
       {  TR::unknownMethod}
       };
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
    static X MutableCallSiteMethods[] =
       {
@@ -3846,8 +3870,7 @@ void TR_ResolvedJ9Method::construct()
       {  TR::unknownMethod}
       };
 
-
-   static X  GPUMethods [] =
+   static X GPUMethods [] =
       {
       {x(TR::com_ibm_gpu_Kernel_blockIdxX,                   "getBlockIdxX",   "()I")},
       {x(TR::com_ibm_gpu_Kernel_blockIdxY,                   "getBlockIdxY",   "()I")},
@@ -3861,7 +3884,6 @@ void TR_ResolvedJ9Method::construct()
       {x(TR::com_ibm_gpu_Kernel_syncThreads,                 "syncThreads",    "()V")},
       {  TR::unknownMethod}
       };
-
 
 #if defined(ENABLE_SPMD_SIMD)
    static X SPMDKernelBaseMethods [] =
@@ -3890,12 +3912,14 @@ void TR_ResolvedJ9Method::construct()
       {  TR::unknownMethod}
       };
 
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
    static X JavaLangInvokeMethodHandleImplMethods [] =
       {
       {x(TR::java_lang_invoke_MethodHandleImpl_isCompileConstant, "isCompileConstant", "(Ljava/lang/Object;)Z")},
       {x(TR::java_lang_invoke_MethodHandleImpl_profileBoolean, "profileBoolean", "(Z[I)Z")},
       {  TR::unknownMethod}
       };
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
    static X MTTenantContext[] =
       {
@@ -4038,11 +4062,15 @@ void TR_ResolvedJ9Method::construct()
       { 0 }
       };
 
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
    static Y class25[] =
       {
       { "java/lang/invoke/Invokers", InvokersMethods },
       { 0 }
       };
+#else /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+#define class25 NULL
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
    static Y class27[] =
       {
@@ -4053,7 +4081,9 @@ void TR_ResolvedJ9Method::construct()
       { "sun/nio/cs/US_ASCII$Decoder", EncodeMethods },
       { "sun/nio/cs/ext/SBCS_Encoder", EncodeMethods },
       { "sun/nio/cs/ext/SBCS_Decoder", EncodeMethods },
+#if defined(J9VM_OPT_METHOD_HANDLE)
       { "java/lang/invoke/FoldHandle", FoldHandleMethods },
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       { "java/lang/ref/SoftReference", JavaLangRefSoftReferenceMethods },
       { 0 }
       };
@@ -4061,8 +4091,10 @@ void TR_ResolvedJ9Method::construct()
    static Y class28[] =
       {
       { "sun/io/ByteToCharDBCS_EBCDIC", DoubleByteConverterMethods },
+#if defined(J9VM_OPT_METHOD_HANDLE)
       { "java/lang/invoke/ILGenMacros", ILGenMacrosMethods },
       { "java/lang/invoke/CatchHandle", CatchHandleMethods },
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       { "com/ibm/tenant/TenantContext", MTTenantContext },
       { "java/util/stream/IntPipeline", JavaUtilStreamIntPipelineMethods },
       { 0 }
@@ -4071,10 +4103,12 @@ void TR_ResolvedJ9Method::construct()
    static Y class29[] =
       {
       { "java/lang/invoke/MethodHandle", MethodHandleMethods },
+#if defined(J9VM_OPT_METHOD_HANDLE)
       { "java/lang/invoke/AsTypeHandle", AsTypeHandleMethods },
       { "java/lang/invoke/InsertHandle", InsertHandleMethods },
       { "java/lang/invoke/SpreadHandle", SpreadHandleMethods },
       { "java/lang/invoke/DirectHandle", DirectHandleMethods },
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       { "sun/nio/cs/ISO_8859_1$Encoder", EncodeMethods },
       { "sun/nio/cs/ISO_8859_1$Decoder", EncodeMethods },
       { "java/io/ByteArrayOutputStream", ByteArrayOutputStreamMethods },
@@ -4084,10 +4118,12 @@ void TR_ResolvedJ9Method::construct()
    static Y class30[] =
       {
       { "com/ibm/Compiler/Internal/Quad", QuadMethods },
+#if defined(J9VM_OPT_METHOD_HANDLE)
       { "java/lang/invoke/CollectHandle", CollectHandleMethods },
       { "java/lang/invoke/FinallyHandle", FinallyHandleMethods },
       { "java/lang/invoke/PermuteHandle", PermuteHandleMethods },
       { "java/lang/invoke/MethodHandles", MethodHandlesMethods },
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       { "com/ibm/dataaccess/DecimalData", DataAccessDecimalDataMethods },
       { "sun/nio/cs/ext/IBM1388$Encoder", IBM1388EncoderMethods },
       { "java/util/HashMap$HashIterator", HashMapHashIteratorMethods },
@@ -4100,6 +4136,7 @@ void TR_ResolvedJ9Method::construct()
       { "jdk/internal/reflect/Reflection", ReflectionMethods },
       { 0 }
       };
+
    static Y class32[] =
       {
       { "java/lang/invoke/MutableCallSite", MutableCallSiteMethods },
@@ -4115,7 +4152,9 @@ void TR_ResolvedJ9Method::construct()
       {
       { "java/util/stream/AbstractPipeline", JavaUtilStreamAbstractPipelineMethods },
       { "java/util/stream/IntPipeline$Head", JavaUtilStreamIntPipelineHeadMethods },
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       { "java/lang/invoke/MethodHandleImpl", JavaLangInvokeMethodHandleImplMethods },
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
       { 0 }
       };
 
@@ -4124,24 +4163,31 @@ void TR_ResolvedJ9Method::construct()
       { "java/util/Hashtable$HashEnumerator", HashtableHashEnumeratorMethods },
       { "java/util/concurrent/atomic/Fences", JavaUtilConcurrentAtomicFencesMethods },
       { "com/ibm/Compiler/Internal/Prefetch", PrefetchMethods },
+#if JAVA_SPEC_VERSION >= 11
       { "java/lang/invoke/VarHandleInternal", VarHandleMethods },
+#endif /* JAVA_SPEC_VERSION >= 11 */
       { "jdk/incubator/vector/VectorSpecies", VectorSpeciesMethods},
-
       { 0 }
       };
 
    static Y class35[] =
       {
-      { "java/lang/invoke/ExplicitCastHandle", ExplicitCastHandleMethods },
-      { "jdk/internal/loader/NativeLibraries", NativeLibrariesMethods },
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       { "java/lang/invoke/DirectMethodHandle", DirectMethodHandleMethods },
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+#if defined(J9VM_OPT_METHOD_HANDLE)
+      { "java/lang/invoke/ExplicitCastHandle", ExplicitCastHandleMethods },
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
+      { "jdk/internal/loader/NativeLibraries", NativeLibrariesMethods },
       { 0 }
       };
 
    static Y class36[] =
       {
-      { "java/lang/invoke/GuardWithTestHandle", GuardWithTestHandleMethods },
+#if defined(J9VM_OPT_METHOD_HANDLE)
       { "java/lang/invoke/ArgumentMoverHandle", ArgumentMoverHandleMethods },
+      { "java/lang/invoke/GuardWithTestHandle", GuardWithTestHandleMethods },
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       { "com/ibm/rmi/io/FastPathForCollocated", FastPathForCollocatedMethods },
       { "com/ibm/tenant/InternalTenantContext", MTTenantContext },
       { "java/lang/StringCoding$StringDecoder", StringCoding_StringDecoderMethods },
@@ -4154,7 +4200,9 @@ void TR_ResolvedJ9Method::construct()
    static Y class38[] =
       {
       { "java/util/concurrent/atomic/AtomicLong", JavaUtilConcurrentAtomicLongMethods },
+#if defined(J9VM_OPT_METHOD_HANDLE)
       { "java/lang/invoke/FilterArgumentsHandle", FilterArgumentsHandleMethods },
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       { "com/ibm/dataaccess/ByteArrayMarshaller", DataAccessByteArrayMarshallerMethods },
       { "java/util/concurrent/ConcurrentHashMap", JavaUtilConcurrentConcurrentHashMapMethods},
       { "com/ibm/crypto/provider/P224PrimeField", CryptoECC224Methods},
@@ -4166,7 +4214,9 @@ void TR_ResolvedJ9Method::construct()
    static Y class39[] =
       {
       { "com/ibm/jit/crypto/JITFullHardwareCrypt", ZCryptoMethods },
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       { "java/lang/invoke/DelegatingMethodHandle", DelegatingMethodHandleMethods },
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
       { 0 }
       };
 
@@ -4184,7 +4234,9 @@ void TR_ResolvedJ9Method::construct()
       { "org/apache/harmony/luni/platform/OSMemory", OSMemoryMethods },
       { "java/util/concurrent/atomic/AtomicBoolean", JavaUtilConcurrentAtomicBooleanMethods },
       { "java/util/concurrent/atomic/AtomicInteger", JavaUtilConcurrentAtomicIntegerMethods },
+#if defined(J9VM_OPT_METHOD_HANDLE)
       { "java/lang/invoke/BruteArgumentMoverHandle", BruteArgumentMoverHandleMethods },
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       { 0 }
       };
 
@@ -4205,19 +4257,25 @@ void TR_ResolvedJ9Method::construct()
       { 0 }
       };
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
    static Y class44[] =
       {
       { "java/lang/invoke/ConvertHandle$FilterHelpers", ConvertHandleFilterHelpersMethods },
       { 0 }
       };
+#else /* defined(J9VM_OPT_METHOD_HANDLE) */
+#define class44 NULL
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
+#if defined(J9VM_OPT_JAVA_CRYPTO_ACCELERATION)
    static Y class45[] =
       {
-#ifdef J9VM_OPT_JAVA_CRYPTO_ACCELERATION
       { "com/ibm/crypto/provider/ByteArrayUnmarshaller", DataAccessByteArrayUnmarshallerMethods },
-#endif
       { 0 }
       };
+#else /* defined(J9VM_OPT_JAVA_CRYPTO_ACCELERATION) */
+#define class45 NULL
+#endif /* defined(J9VM_OPT_JAVA_CRYPTO_ACCELERATION) */
 
    static Y class46[] =
       {
@@ -4233,16 +4291,22 @@ void TR_ResolvedJ9Method::construct()
       { 0 }
       };
 
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
    static Y class49[] =
       {
       { "java/lang/invoke/MethodHandleImpl$CountingWrapper", MethodHandleImplCountingWrapperMethods },
       { 0 }
       };
+#else /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+#define class49 NULL
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
    static Y class50[] =
       {
       { "java/util/concurrent/atomic/AtomicLongFieldUpdater", JavaUtilConcurrentAtomicLongFieldUpdaterMethods },
+#if defined(J9VM_OPT_METHOD_HANDLE)
       { "java/lang/invoke/FilterArgumentsWithCombinerHandle", FilterArgumentsWithCombinerHandleMethods },
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       { 0 }
       };
 
@@ -4334,6 +4398,7 @@ void TR_ResolvedJ9Method::construct()
             setRecognizedMethodInfo(TR::java_util_concurrent_ConcurrentHashMap_all);
          else if ((classNameLen == 16) && !strncmp(className, "java/util/Vector", 16))
             setRecognizedMethodInfo(TR::java_util_Vector_all);
+#if defined(J9VM_OPT_METHOD_HANDLE)
          else if ((classNameLen == 28) && !strncmp(className, "java/lang/invoke/ILGenMacros", 28))
             {
             if (!strncmp(name, "invokeExact_", 12))
@@ -4343,6 +4408,7 @@ void TR_ResolvedJ9Method::construct()
             else if (!strncmp(name, "last_", 5))
                setRecognizedMethodInfo(TR::java_lang_invoke_ILGenMacros_last);
             }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
          else if ((classNameLen == 29) && !strncmp(className, "java/lang/invoke/MethodHandle", 29))
             {
             if (!strncmp(name, "asType", 6))
@@ -4353,15 +4419,19 @@ void TR_ResolvedJ9Method::construct()
                   {
                   setRecognizedMethodInfo(TR::java_lang_invoke_MethodHandle_asType_instance);
                   }
+#if defined(J9VM_OPT_METHOD_HANDLE)
                else
                   {
                   setRecognizedMethodInfo(TR::java_lang_invoke_MethodHandle_asType);
                   }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
                }
-
-            if (!strncmp(name, "invokeExactTargetAddress",24))
+#if defined(J9VM_OPT_METHOD_HANDLE)
+            else if (!strncmp(name, "invokeExactTargetAddress",24))
                setRecognizedMethodInfo(TR::java_lang_invoke_MethodHandle_invokeExactTargetAddress);
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
             }
+#if defined(J9VM_OPT_METHOD_HANDLE)
          else if ((classNameLen == 29) && !strncmp(className, "java/lang/invoke/DirectHandle", 29))
             {
             if (!strncmp(name, "directCall_", 11))
@@ -4390,6 +4460,7 @@ void TR_ResolvedJ9Method::construct()
             else if (!strncmp(name, "dispatchJ9Method_", 17))
                setRecognizedMethodInfo(TR::java_lang_invoke_ComputedCalls_dispatchJ9Method);
             }
+#if JAVA_SPEC_VERSION >= 11
          else if ((classNameLen >= 59 + 3 && classNameLen <= 59 + 7) && !strncmp(className, "java/lang/invoke/ArrayVarHandle$ArrayVarHandleOperations$Op", 59))
             {
             setRecognizedMethodInfo(TR::java_lang_invoke_ArrayVarHandle_ArrayVarHandleOperations_OpMethod);
@@ -4406,6 +4477,7 @@ void TR_ResolvedJ9Method::construct()
             {
             setRecognizedMethodInfo(TR::java_lang_invoke_ByteArrayViewVarHandle_ByteArrayViewVarHandleOperations_OpMethod);
             }
+#endif /* JAVA_SPEC_VERSION >= 11 */
          else if (classNameLen == strlen(JSR292_StaticFieldGetterHandle)
                   && !strncmp(className, JSR292_StaticFieldGetterHandle, classNameLen))
             {
@@ -4430,6 +4502,7 @@ void TR_ResolvedJ9Method::construct()
             if (nameLen > 27 && !strncmp(name, "invokeExact_thunkArchetype_", 27))
                setRecognizedMethodInfo(TR::java_lang_invoke_FieldSetterHandle_invokeExact);
             }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
          }
       }
    #if defined(TR_HOST_X86)
@@ -5500,6 +5573,7 @@ TR_J9MethodBase::isUnsafePut(TR::RecognizedMethod rm)
 bool
 TR_J9MethodBase::isVarHandleOperationMethod(TR::RecognizedMethod rm)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
    switch (rm)
       {
       case TR::java_lang_invoke_ArrayVarHandle_ArrayVarHandleOperations_OpMethod:
@@ -5508,14 +5582,16 @@ TR_J9MethodBase::isVarHandleOperationMethod(TR::RecognizedMethod rm)
       case TR::java_lang_invoke_ByteArrayViewVarHandle_ByteArrayViewVarHandleOperations_OpMethod:
          return true;
       default:
-         return false;
+         break;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
    return false;
    }
 
 bool
 TR_J9MethodBase::isVarHandleAccessMethod(TR::Compilation * comp)
    {
+#if JAVA_SPEC_VERSION >= 11
    TR::RecognizedMethod rm = getMandatoryRecognizedMethod();
    switch (rm)
       {
@@ -5550,18 +5626,19 @@ TR_J9MethodBase::isVarHandleAccessMethod(TR::Compilation * comp)
       case TR::java_lang_invoke_VarHandle_getAndBitwiseXor:
       case TR::java_lang_invoke_VarHandle_getAndBitwiseXorAcquire:
       case TR::java_lang_invoke_VarHandle_getAndBitwiseXorRelease:
-        return true;
+         return true;
       default:
-         return false;
+         break;
       }
-
+#endif /* JAVA_SPEC_VERSION >= 11 */
    return false;
    }
 
 bool
 TR_J9MethodBase::isSignaturePolymorphicMethod(TR::Compilation * comp)
    {
-   if (isVarHandleAccessMethod(comp)) return true;
+   if (isVarHandleAccessMethod(comp))
+      return true;
 
    TR::RecognizedMethod rm = getMandatoryRecognizedMethod();
    switch (rm)
@@ -5569,13 +5646,15 @@ TR_J9MethodBase::isSignaturePolymorphicMethod(TR::Compilation * comp)
       case TR::java_lang_invoke_MethodHandle_invoke:
       case TR::java_lang_invoke_MethodHandle_invokeBasic:
       case TR::java_lang_invoke_MethodHandle_invokeExact:
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_MethodHandle_linkToStatic:
       case TR::java_lang_invoke_MethodHandle_linkToSpecial:
       case TR::java_lang_invoke_MethodHandle_linkToVirtual:
       case TR::java_lang_invoke_MethodHandle_linkToInterface:
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
          return true;
       default:
-        return false;
+         break;
       }
 
    return false;
@@ -7459,6 +7538,7 @@ TR_J9ByteCodeIlGenerator::runFEMacro(TR::SymbolReference *symRef)
 
    switch (rm)
       {
+#if defined(J9VM_OPT_METHOD_HANDLE)
       case TR::java_lang_invoke_CollectHandle_allocateArray:
          {
          TR::Node* methodHandleNode = top();
@@ -9170,8 +9250,9 @@ TR_J9ByteCodeIlGenerator::runFEMacro(TR::SymbolReference *symRef)
          loadConstant(TR::iconst, actuallyCustom == queryingCustom);
          return true;
          }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       default:
-         return false;
+         break;
       }
    return false;
    }

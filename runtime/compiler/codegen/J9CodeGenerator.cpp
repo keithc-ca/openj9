@@ -774,12 +774,15 @@ J9::CodeGenerator::lowerTreeIfNeeded(
       {
       TR::RecognizedMethod rm = node->getSymbol()->castToMethodSymbol()->getRecognizedMethod();
 
-      if(rm == TR::java_lang_invoke_MethodHandle_invokeBasic ||
-        rm == TR::java_lang_invoke_MethodHandle_linkToStatic ||
-        rm == TR::java_lang_invoke_MethodHandle_linkToSpecial ||
-        rm == TR::java_lang_invoke_MethodHandle_linkToVirtual ||
-        rm == TR::java_lang_invoke_MethodHandle_linkToInterface)
-         {
+      if (rm == TR::java_lang_invoke_MethodHandle_invokeBasic
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
+      ||  rm == TR::java_lang_invoke_MethodHandle_linkToStatic
+      ||  rm == TR::java_lang_invoke_MethodHandle_linkToSpecial
+      ||  rm == TR::java_lang_invoke_MethodHandle_linkToVirtual
+      ||  rm == TR::java_lang_invoke_MethodHandle_linkToInterface
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
+      )
+      {
          // invokeBasic and linkTo* are signature-polymorphic, so the VM needs to know the number of argument slots
          // for the INL call in order to locate the start of the arguments on the stack. The arg slot count is stored
          // in vmThread.tempSlot.
@@ -819,6 +822,7 @@ J9::CodeGenerator::lowerTreeIfNeeded(
          tempSlotStoreNode->setByteCodeIndex(node->getByteCodeIndex());
          TR::TreeTop::create(self()->comp(), tt->getPrevTreeTop(), tempSlotStoreNode);
 
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
          if (rm == TR::java_lang_invoke_MethodHandle_linkToStatic || rm ==  TR::java_lang_invoke_MethodHandle_linkToSpecial)
             {
             int32_t numArgs;
@@ -836,6 +840,7 @@ J9::CodeGenerator::lowerTreeIfNeeded(
             floatTemp1StoreNode->setByteCodeIndex(node->getByteCodeIndex());
             TR::TreeTop::create(self()->comp(), tt->getPrevTreeTop(), floatTemp1StoreNode);
             }
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
          }
       }
 

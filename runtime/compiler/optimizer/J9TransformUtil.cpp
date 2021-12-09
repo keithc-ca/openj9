@@ -2189,14 +2189,18 @@ TR::MethodSymbol::Kinds getTargetMethodCallKind(TR::RecognizedMethod rm)
    switch (rm)
       {
       case TR::java_lang_invoke_MethodHandle_invokeBasic:
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_MethodHandle_linkToStatic:
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
          callKind = TR::MethodSymbol::Static; break;
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_MethodHandle_linkToSpecial:
          callKind = TR::MethodSymbol::Special; break;
       case TR::java_lang_invoke_MethodHandle_linkToVirtual:
          callKind = TR::MethodSymbol::Virtual; break;
       case TR::java_lang_invoke_MethodHandle_linkToInterface:
          callKind = TR::MethodSymbol::Interface; break;
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
       default:
          TR_ASSERT_FATAL(0, "Unsupported method");
       }
@@ -2209,12 +2213,16 @@ TR::ILOpCodes getTargetMethodCallOpCode(TR::RecognizedMethod rm, TR::DataType ty
    switch (rm)
       {
       case TR::java_lang_invoke_MethodHandle_invokeBasic:
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_MethodHandle_linkToStatic:
       case TR::java_lang_invoke_MethodHandle_linkToSpecial:
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
          return TR::ILOpCode::getDirectCall(type);
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_MethodHandle_linkToVirtual:
       case TR::java_lang_invoke_MethodHandle_linkToInterface:
          return TR::ILOpCode::getIndirectCall(type);
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
       default:
          TR_ASSERT_FATAL(0, "Unsupported method");
       }

@@ -7244,9 +7244,11 @@ TR_J9VM::methodTrampolineLookup(TR::Compilation *comp, TR::SymbolReference * sym
    TR::MethodSymbol *methodSym = symRef->getSymbol()->castToMethodSymbol();
    switch (methodSym->getMandatoryRecognizedMethod())
       {
+#if defined(J9VM_OPT_METHOD_HANDLE)
       case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
          tramp = TR::CodeCacheManager::instance()->findHelperTrampoline(TR_j2iTransition, callSite);
          break;
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       default:
          tramp = (intptr_t)TR::CodeCacheManager::instance()->findMethodTrampoline(method, callSite);
          break;
@@ -7517,6 +7519,7 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
    TR::RecognizedMethod mandatoryMethodID = callNode->getSymbol()->castToResolvedMethodSymbol()->getMandatoryRecognizedMethod();
    switch (mandatoryMethodID)
       {
+#if defined(J9VM_OPT_METHOD_HANDLE)
       case TR::java_lang_invoke_ComputedCalls_dispatchDirect:
       case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
          {
@@ -7541,6 +7544,7 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
 #endif /* defined(J9VM_OPT_JITSERVER) */
          return callNode;
          }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       default:
         break;
       }
@@ -7649,8 +7653,10 @@ TR_J9VM::inlineNativeCall(TR::Compilation * comp, TR::TreeTop * callNodeTreeTop,
          // fall through intended
          return 0;   // FIXME:: disabled for now
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
       case TR::java_lang_invoke_MethodHandles_getStackClass:
          return 0;
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
       case TR::sun_reflect_Reflection_getCallerClass:
          {

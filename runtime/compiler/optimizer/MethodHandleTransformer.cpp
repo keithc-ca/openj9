@@ -360,6 +360,7 @@ TR_MethodHandleTransformer::getObjectInfoOfNode(TR::Node* node)
       return koi;
       }
 
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
    auto knot = comp()->getKnownObjectTable();
    if (knot &&
        node->getOpCode().isCall() &&
@@ -393,8 +394,6 @@ TR_MethodHandleTransformer::getObjectInfoOfNode(TR::Node* node)
               return mnIndex;
               }
            }
-
-#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
          case TR::java_lang_invoke_DelegatingMethodHandle_getTarget:
             {
             TR::KnownObjectTable::Index dmhIndex =
@@ -403,12 +402,12 @@ TR_MethodHandleTransformer::getObjectInfoOfNode(TR::Node* node)
             return comp()->fej9()->delegatingMethodHandleTarget(
                comp(), dmhIndex, trace());
             }
-#endif
 
          default:
             break;
         }
       }
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
    return TR::KnownObjectTable::UNKNOWN;
    }
@@ -504,6 +503,7 @@ void TR_MethodHandleTransformer::visitCall(TR::TreeTop* tt, TR::Node* node)
       case TR::java_lang_invoke_MethodHandle_invokeBasic:
          process_java_lang_invoke_MethodHandle_invokeBasic(tt, node);
          break;
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_MethodHandle_linkToSpecial:
       case TR::java_lang_invoke_MethodHandle_linkToVirtual:
       case TR::java_lang_invoke_MethodHandle_linkToStatic:
@@ -515,7 +515,7 @@ void TR_MethodHandleTransformer::visitCall(TR::TreeTop* tt, TR::Node* node)
       case TR::java_lang_invoke_Invokers_checkExactType:
          process_java_lang_invoke_Invokers_checkExactType(tt, node);
          break;
-
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
       default:
          break;
       }

@@ -907,12 +907,14 @@ InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
 
    switch (recognizedMethod)
       {
+#if defined(J9VM_OPT_METHOD_HANDLE)
       case TR::java_lang_invoke_ILGenMacros_isCustomThunk:
          result = new (trStackMemory()) IconstOperand(1);
          break;
       case TR::java_lang_invoke_ILGenMacros_isShareableThunk:
          result = new (trStackMemory()) IconstOperand(0);
          break;
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_DelegatingMethodHandle_getTarget:
@@ -928,10 +930,12 @@ InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
          result = new (trStackMemory()) KnownObjOperand(targetIndex);
          break;
          }
-#endif
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
       case TR::java_lang_invoke_MutableCallSite_getTarget:
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_Invokers_getCallSiteTarget:
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
          {
          // The CallSite object is always topmost on the stack.
          TR::KnownObjectTable::Index callSiteIndex = top()->getKnownObjectIndex();
@@ -947,6 +951,7 @@ InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
          debugTrace(tracer(), "potential MCS target: call site obj%d(*%p) mutableCallsiteClass %p\n", callSiteIndex, knot->getPointerLocation(callSiteIndex), mutableCallsiteClass);
          if (mutableCallsiteClass)
             {
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
             if (recognizedMethod != TR::java_lang_invoke_MutableCallSite_getTarget)
                {
                TR_OpaqueClassBlock *callSiteType =
@@ -962,6 +967,7 @@ InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
                   return NULL;
                   }
                }
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
    #if defined(J9VM_OPT_JITSERVER)
             if (comp()->isOutOfProcessCompilation())
@@ -994,6 +1000,7 @@ InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
             }
          }
          break;
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_DirectMethodHandle_internalMemberName:
       case TR::java_lang_invoke_DirectMethodHandle_internalMemberNameEnsureInit:
          {
@@ -1023,7 +1030,7 @@ InterpreterEmulator::getReturnValue(TR_ResolvedMethod *callee)
             }
          break;
          }
-
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
       default:
          break;
       }
@@ -1041,6 +1048,7 @@ InterpreterEmulator::refineResolvedCalleeForInvokestatic(TR_ResolvedMethod *&cal
    TR::RecognizedMethod rm = callee->getRecognizedMethod();
    switch (rm)
       {
+#if defined(J9VM_OPT_METHOD_HANDLE)
       // refine the ILGenMacros_invokeExact* callees
       case TR::java_lang_invoke_ILGenMacros_invokeExact:
       case TR::java_lang_invoke_ILGenMacros_invokeExact_X:
@@ -1091,6 +1099,7 @@ InterpreterEmulator::refineResolvedCalleeForInvokestatic(TR_ResolvedMethod *&cal
          callee = newCallee;
          return;
          }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_MethodHandle_linkToStatic:
       case TR::java_lang_invoke_MethodHandle_linkToSpecial:
@@ -1140,7 +1149,7 @@ InterpreterEmulator::refineResolvedCalleeForInvokestatic(TR_ResolvedMethod *&cal
          pop();
          return;
          }
-#endif //J9VM_OPT_OPENJDK_METHODHANDLE
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
       default:
          break;
@@ -1414,7 +1423,7 @@ InterpreterEmulator::refineResolvedCalleeForInvokevirtual(TR_ResolvedMethod *&ca
          heuristicTrace(tracer(), "Refine invokeBasic to %s\n", callee->signature(trMemory(), stackAlloc));
          return;
          }
-#endif //J9VM_OPT_OPENJDK_METHODHANDLE
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
       default:
          return;
       }
@@ -1441,6 +1450,7 @@ InterpreterEmulator::visitInvokevirtual()
       if (_iteratorWithState)
          refineResolvedCalleeForInvokevirtual(_currentCallMethod, isIndirectCall);
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
       // Customization logic is not needed in customized thunk or in inlining
       // with known MethodHandle object
       // Since branch folding is disabled and we're ignoring the coldness info
@@ -1454,12 +1464,12 @@ InterpreterEmulator::visitInvokevirtual()
          case TR::java_lang_invoke_MethodHandle_undoCustomizationLogic:
             if (_callerIsThunkArchetype)
                return;
-         
          default:
             break;
          }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
-      bool allconsts= false;
+      bool allconsts = false;
       heuristicTrace(tracer(),"numberOfExplicitParameters = %d  _pca.getNumPrevConstArgs = %d\n",_currentCallMethod->numberOfExplicitParameters() ,_pca.getNumPrevConstArgs(_currentCallMethod->numberOfExplicitParameters()));
       if ( _currentCallMethod->numberOfExplicitParameters() > 0 && _currentCallMethod->numberOfExplicitParameters() <= _pca.getNumPrevConstArgs(_currentCallMethod->numberOfExplicitParameters()))
          allconsts = true;

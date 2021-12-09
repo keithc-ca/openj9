@@ -285,6 +285,7 @@ void TR_MultipleCallTargetInliner::generateNodeEstimate::operator ()(TR_CallTarg
 bool
 TR_J9InlinerPolicy::mustBeInlinedEvenInDebug(TR_ResolvedMethod * calleeMethod, TR::TreeTop *callNodeTreeTop)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE)
    if (calleeMethod)
       {
       switch (calleeMethod->convertToMethod()->getMandatoryRecognizedMethod())
@@ -319,9 +320,10 @@ TR_J9InlinerPolicy::mustBeInlinedEvenInDebug(TR_ResolvedMethod * calleeMethod, T
                return true;
             }
          default:
-          break;
+            break;
          }
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
    return false;
    }
 
@@ -4769,6 +4771,7 @@ TR_J9InlinerPolicy::validateArguments(TR_CallTarget *calltarget, TR_LinkHead<TR_
 bool
 TR_J9InlinerPolicy::supressInliningRecognizedInitialCallee(TR_CallSite* callsite, TR::Compilation* comp)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE)
    TR_ResolvedMethod * initialCalleeMethod = callsite->_initialCalleeMethod;
 
    if (initialCalleeMethod)
@@ -4780,9 +4783,7 @@ TR_J9InlinerPolicy::supressInliningRecognizedInitialCallee(TR_CallSite* callsite
           * Otherwise, they can be folded away by VP and should not be inlined here.
           */
          case TR::java_lang_invoke_DirectHandle_nullCheckIfRequired:
-#if defined(J9VM_OPT_METHOD_HANDLE)
          case TR::java_lang_invoke_PrimitiveHandle_initializeClassIfRequired:
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
          case TR::java_lang_invoke_MethodHandle_invokeExactTargetAddress:
             {
             TR::IlGeneratorMethodDetails & details = comp->ilGenRequest().details();
@@ -4798,6 +4799,7 @@ TR_J9InlinerPolicy::supressInliningRecognizedInitialCallee(TR_CallSite* callsite
             break;
          }
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
    return (callsite->_callNode && comp->fej9()->supressInliningRecognizedInitialCallee(callsite, comp));
    }
 
@@ -5006,8 +5008,10 @@ TR_InlinerFailureReason
       case TR::java_lang_StringUTF16_getChar:
       case TR::java_lang_StringUTF16_putChar:
       case TR::java_lang_StringUTF16_toBytes:
+#if defined(J9VM_OPT_METHOD_HANDLE)
       case TR::java_lang_invoke_MethodHandle_asType:
-            return DontInline_Callee;
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
+         return DontInline_Callee;
       default:
          break;
    }
@@ -5136,6 +5140,7 @@ bool TR_J9InlinerPolicy::isJSR292AlwaysWorthInlining(TR_ResolvedMethod *resolved
 
 bool TR_J9InlinerPolicy::isJSR292SmallHelperMethod(TR_ResolvedMethod *resolvedMethod)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE)
    TR::RecognizedMethod method =  resolvedMethod->getRecognizedMethod();
    switch (method)
       {
@@ -5148,19 +5153,22 @@ bool TR_J9InlinerPolicy::isJSR292SmallHelperMethod(TR_ResolvedMethod *resolvedMe
       default:
          break;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
    return false;
    }
 
 bool TR_J9InlinerPolicy::isJSR292SmallGetterMethod(TR_ResolvedMethod *resolvedMethod)
    {
-   TR::RecognizedMethod method =  resolvedMethod->getRecognizedMethod();
+   TR::RecognizedMethod method = resolvedMethod->getRecognizedMethod();
    // small getters
    switch (method)
       {
       case TR::java_lang_invoke_MutableCallSite_getTarget:
       case TR::java_lang_invoke_MethodHandle_type:
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
       case TR::java_lang_invoke_DirectMethodHandle_internalMemberName:
       case TR::java_lang_invoke_MethodHandleImpl_CountingWrapper_getTarget:
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
          return true;
 
       default:
@@ -6749,6 +6757,7 @@ TR_J9InnerPreexistenceInfo::getPreexistencePointImpl(int32_t ordinal, TR_CallSta
 
 bool TR_J9InlinerPolicy::dontPrivatizeArgumentsForRecognizedMethod(TR::RecognizedMethod recognizedMethod)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE)
    static char *aggressiveJSR292Opts = feGetEnv("TR_aggressiveJSR292Opts");
    if (aggressiveJSR292Opts && strchr(aggressiveJSR292Opts, '2'))
       {
@@ -6761,6 +6770,7 @@ bool TR_J9InlinerPolicy::dontPrivatizeArgumentsForRecognizedMethod(TR::Recognize
             break;
          }
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
    return false;
    }
 

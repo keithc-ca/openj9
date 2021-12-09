@@ -103,6 +103,7 @@ static bool isTransformableUnsafeAtomic(TR::Compilation *comp, TR::RecognizedMet
 
 static bool isKnownUnsafeCaller(TR::RecognizedMethod rm)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
    switch (rm)
       {
       case TR::java_lang_invoke_ArrayVarHandle_ArrayVarHandleOperations_OpMethod:
@@ -115,13 +116,15 @@ static bool isKnownUnsafeCaller(TR::RecognizedMethod rm)
       case TR::java_lang_invoke_FieldSetterHandle_invokeExact:
          return true;
       default:
-         return false;
+         break;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
    return false;
    }
 
 static bool isUnsafeCallerAccessingStaticField(TR::RecognizedMethod rm)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
    switch (rm)
       {
       case TR::java_lang_invoke_StaticFieldVarHandle_StaticFieldVarHandleOperations_OpMethod:
@@ -129,39 +132,45 @@ static bool isUnsafeCallerAccessingStaticField(TR::RecognizedMethod rm)
       case TR::java_lang_invoke_StaticFieldSetterHandle_invokeExact:
          return true;
       default:
-         return false;
+         break;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
    return false;
    }
 
 static bool isUnsafeCallerAccessingArrayElement(TR::RecognizedMethod rm)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
    switch (rm)
       {
       case TR::java_lang_invoke_ArrayVarHandle_ArrayVarHandleOperations_OpMethod:
       case TR::java_lang_invoke_ByteArrayViewVarHandle_ByteArrayViewVarHandleOperations_OpMethod:
          return true;
       default:
-         return false;
+         break;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
    return false;
    }
 
 static bool isVarHandleOperationMethodOnArray(TR::RecognizedMethod rm)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
    switch (rm)
       {
       case TR::java_lang_invoke_ArrayVarHandle_ArrayVarHandleOperations_OpMethod:
       case TR::java_lang_invoke_ByteArrayViewVarHandle_ByteArrayViewVarHandleOperations_OpMethod:
          return true;
       default:
-         return false;
+         break;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
    return false;
    }
 
 static bool isVarHandleOperationMethodOnNonStaticField(TR::RecognizedMethod rm)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
    switch (rm)
       {
       case TR::java_lang_invoke_InstanceFieldVarHandle_InstanceFieldVarHandleOperations_OpMethod:
@@ -169,8 +178,9 @@ static bool isVarHandleOperationMethodOnNonStaticField(TR::RecognizedMethod rm)
       case TR::java_lang_invoke_ByteArrayViewVarHandle_ByteArrayViewVarHandleOperations_OpMethod:
          return true;
       default:
-         return false;
+         break;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
    return false;
    }
 
@@ -248,6 +258,7 @@ bool TR_UnsafeFastPath::tryTransformUnsafeAtomicCallInVarHandleAccessMethod(TR::
       return false;
 
    TR::Node* unsafeAddress = NULL;
+#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
    if (callerMethod == TR::java_lang_invoke_StaticFieldVarHandle_StaticFieldVarHandleOperations_OpMethod)
       {
       TR::Node *jlClass = node->getChild(1);
@@ -262,6 +273,7 @@ bool TR_UnsafeFastPath::tryTransformUnsafeAtomicCallInVarHandleAccessMethod(TR::
                                                        TR::Node::create(node, TR::aladd, 2, ramStatics, offset);
       }
    else
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
       {
       TR::Node* object = node->getChild(1);
       TR::Node* offset = node->getChild(2);

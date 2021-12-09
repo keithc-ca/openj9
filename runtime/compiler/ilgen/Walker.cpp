@@ -955,10 +955,11 @@ TR_J9ByteCodeIlGenerator::genArgPlaceholderCall()
 
 static bool isPlaceholderCall(TR::Node *node)
    {
+#if defined(J9VM_OPT_METHOD_HANDLE)
    if (node->getOpCode().isCall() && node->getSymbol()->getResolvedMethodSymbol())
       return node->getSymbol()->castToResolvedMethodSymbol()->getMandatoryRecognizedMethod() == TR::java_lang_invoke_ILGenMacros_placeholder;
-   else
-      return false;
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
+   return false;
    }
 
 int32_t
@@ -3537,12 +3538,12 @@ TR_J9ByteCodeIlGenerator::genHandleTypeCheck(TR::Node* handle, TR::Node* expecte
       traceMsg(comp(), "Inserted indirect load of MethodHandle.type n%dn %p\n", handleType->getGlobalIndex(), handleType);
       }
 
-    // Generate zerochk
-    TR::Node* zerochkNode = TR::Node::createWithSymRef(TR::ZEROCHK, 1, 1,
-                                                       TR::Node::create(TR::acmpeq, 2, expectedType, handleType),
-                                                       symRefTab()->findOrCreateMethodTypeCheckSymbolRef(_methodSymbol));
-    return zerochkNode;
-    }
+   // Generate zerochk
+   TR::Node* zerochkNode = TR::Node::createWithSymRef(TR::ZEROCHK, 1, 1,
+                                                      TR::Node::create(TR::acmpeq, 2, expectedType, handleType),
+                                                      symRefTab()->findOrCreateMethodTypeCheckSymbolRef(_methodSymbol));
+   return zerochkNode;
+   }
 
 TR::Node *
 TR_J9ByteCodeIlGenerator::genInvokeHandleGeneric(int32_t cpIndex)
@@ -4153,6 +4154,7 @@ break
       return NULL;
       }
 
+#if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
    /**
     * java/lang/invoke/MethodHandleImpl.profileBoolean() performs some internal profiling
     * on the boolean parameter value before returning it.  Since the OpenJ9 JIT does not
@@ -4166,6 +4168,7 @@ break
       genTreeTop(resultNode);
       return resultNode;
       }
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
 
     // Can't use recognized methods since it's not enabled on AOT
     //if (symbol->getRecognizedMethod() == TR::com_ibm_rmi_io_FastPathForCollocated_isVMDeepCopySupported)
@@ -4549,6 +4552,7 @@ break
    handleSideEffect(treeTopNode);
 
    TR::TreeTop *callNodeTreeTop = NULL;
+#if defined(J9VM_OPT_METHOD_HANDLE)
    if (symbol->getMandatoryRecognizedMethod() == TR::java_lang_invoke_ILGenMacros_placeholder)
       {
       // This call is not a real Java call.  We can't put down a treetop for
@@ -4557,6 +4561,7 @@ break
       // the wrong refcounts.
       }
    else
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
       {
       if (!_intrinsicErrorHandling)
          {
@@ -4819,6 +4824,7 @@ TR_J9ByteCodeIlGenerator::runMacro(TR::SymbolReference * symRef)
 
    TR_ASSERT(symbol->isStatic(), "Macro methods must be static or else signature processing gets complicated by the implicit receiver");
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
    switch (symRef->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
       {
       case TR::java_lang_invoke_ILGenMacros_numArguments:
@@ -5040,8 +5046,10 @@ TR_J9ByteCodeIlGenerator::runMacro(TR::SymbolReference * symRef)
          return true;
          }
       default:
-         return false;
+         break;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
+   return false;
    }
 
 //----------------------------------------------

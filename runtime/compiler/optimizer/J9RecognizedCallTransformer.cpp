@@ -934,12 +934,11 @@ bool J9::RecognizedCallTransformer::isInlineable(TR::TreeTop* treetop)
             else
                return true;
          default:
-            return false;
+            break;
          }
       }
-#else
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
    return false;
-#endif
    }
 
 void J9::RecognizedCallTransformer::transform(TR::TreeTop* treetop)
@@ -1056,5 +1055,5 @@ void J9::RecognizedCallTransformer::transform(TR::TreeTop* treetop)
             break;
          }
       }
-#endif
+#endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
    }

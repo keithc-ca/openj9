@@ -90,6 +90,7 @@ struct X
    const int32_t tableIndex;
 };
 
+#if JAVA_SPEC_VERSION >= 11
 // Method names for unresolved VarHandle access methods
 static X VarHandleMethods[] =
       {
@@ -130,12 +131,13 @@ static X VarHandleMethods[] =
       {  TR::java_lang_invoke_VarHandle_getAndBitwiseXorRelease   ,   23, "getAndBitwiseXorRelease",         (int16_t)-1, "*", 30},
       {  TR::unknownMethod, 0, 0, 0, 0, -1}
       };
+#endif /* JAVA_SPEC_VERSION >= 11 */
 
 // Recognized method doesn't work for unresolved method, the following code works for both case
 TR::RecognizedMethod TR_VarHandleTransformer::getVarHandleAccessMethod(TR::Node * node)
 {
    TR::RecognizedMethod varHandleAccessMethod = TR::unknownMethod;
-#if defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11)
+#if JAVA_SPEC_VERSION >= 11
    TR::SymbolReference *symRef = node->getSymbolReference();
    OMR::MethodSymbol *symbol = node->getSymbol()->getMethodSymbol();
    TR_J9Method * method = (TR_J9Method*)(symbol->getMethod());
@@ -163,7 +165,7 @@ TR::RecognizedMethod TR_VarHandleTransformer::getVarHandleAccessMethod(TR::Node 
       if (method->isVarHandleAccessMethod(comp()))
          varHandleAccessMethod = method->getMandatoryRecognizedMethod();
       }
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) && (JAVA_SPEC_VERSION >= 11) */
+#endif /* JAVA_SPEC_VERSION >= 11 */
    return varHandleAccessMethod;
 }
 

@@ -832,6 +832,7 @@ int32_t J9::X86::AMD64::PrivateLinkage::buildArgs(TR::Node                      
       passArgsOnStack = methodSymbol->isVMInternalNative() && cg()->supportVMInternalNatives();
       }
 
+#if defined(J9VM_OPT_METHOD_HANDLE)
    switch (callNode->getSymbol()->castToMethodSymbol()->getMandatoryRecognizedMethod())
       {
       case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
@@ -840,6 +841,7 @@ int32_t J9::X86::AMD64::PrivateLinkage::buildArgs(TR::Node                      
       default:
       	break;
       }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
 
 #ifdef J9VM_OPT_JAVA_CRYPTO_ACCELERATION
    // Violate the right-to-left linkage requirement for JIT helpers for the AES helpers.
@@ -964,11 +966,13 @@ int32_t J9::X86::AMD64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node        
                TR::MethodSymbol *sym = callNode->getSymbol()->castToMethodSymbol();
                switch (sym->getMandatoryRecognizedMethod())
                   {
+#if defined(J9VM_OPT_METHOD_HANDLE)
                   case TR::java_lang_invoke_ComputedCalls_dispatchJ9Method:
                      rregIndex = getProperties().getJ9MethodArgumentRegister();
                      numSpecialArgs++;
                      break;
                   case TR::java_lang_invoke_ComputedCalls_dispatchVirtual:
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
                   case TR::com_ibm_jit_JITHelpers_dispatchVirtual:
                      rregIndex = getProperties().getVTableIndexArgumentRegister();
                      numSpecialArgs++;

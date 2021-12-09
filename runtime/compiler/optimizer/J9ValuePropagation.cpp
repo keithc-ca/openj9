@@ -1320,6 +1320,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
       {
       switch (rm)
          {
+#if defined(J9VM_OPT_METHOD_HANDLE)
          case TR::java_lang_invoke_MethodHandle_asType:
             {
             TR::Node* mh = node->getArgument(0);
@@ -1370,7 +1371,6 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                }
             break;
             }
-#if defined(J9VM_OPT_METHOD_HANDLE)
          case TR::java_lang_invoke_PrimitiveHandle_initializeClassIfRequired:
             {
             TR::Node* mh = node->getArgument(0);
@@ -1415,7 +1415,6 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                }
             break;
             }
-#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
          case TR::java_lang_invoke_DirectHandle_nullCheckIfRequired:
             {
             TR::Node* mh = node->getArgument(0);
@@ -1486,6 +1485,7 @@ J9::ValuePropagation::constrainRecognizedMethod(TR::Node *node)
                }
             break;
             }
+#endif /* defined(J9VM_OPT_METHOD_HANDLE) */
          // Transform java/lang/Object.newInstancePrototype into new and a call to default constructor of the given class
          // AOT class pointer relocation is only supported on aconst nodes. However aconst node cannot be a child work of
          // a TR::New node because it does not have a symref indicating the size of the instance of the class.
