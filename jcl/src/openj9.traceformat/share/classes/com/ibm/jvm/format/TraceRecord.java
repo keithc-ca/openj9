@@ -136,8 +136,8 @@ public class TraceRecord implements Comparable<TraceRecord> {
     protected                 BigInteger  upperWord         = BigInteger.ZERO;
 	protected                 Stack<BigInteger> wrapTimes = new Stack<>();
 	protected                 Stack<Integer> longEntryTraceIDs = new Stack<>(); /*ibm@26172*/
-    protected                 boolean     notFormatted = false;
-    private                   int         lastErrorRecord = -1;              /*ibm@50367*/
+    protected                 boolean     notFormatted;
+    private                   boolean     isDuplicateRecord;                 /*ibm@50367*/
 
     //Set default size for old trace versions
     protected                 int         headerSize = 72;                   /*ibm@67471*/
@@ -262,56 +262,47 @@ public class TraceRecord implements Comparable<TraceRecord> {
     }
 
     /** returns the latest time stamp read so far
-     *
-     * @param   info
-     * @return  a biginteger that is that timestamp
-     */
-    final protected TraceRecord getNextRecord()
+	 *
+	 * @param   info
+	 * @return  a biginteger that is that timestamp
+	 */
+	protected final TraceRecord getNextRecord()
     {
-        int next = traceThread.indexOf(this) + 1;
+		TraceRecord nextRecord = traceThread.getNextTraceRecord(this);
 
-        if (next >= traceThread.size()) {
-            return null; // not more records for this thread.
-        } else {
-           /* ibm@50367:
-            * There is a defect (51252) which can cause a trace record to be written
-            * out twice.  If the timestamps of the current and next record are
-            * identical, then this must have happened.  This code is inserted to
-            * skip over the repeated record.
-            */
-			BigInteger thisTimeStamp = ((TraceRecord) traceThread.elementAt(next - 1)).timeStamp ; /*ibm@50367*/
-			BigInteger nextTimeStamp = ((TraceRecord) traceThread.elementAt(next)).timeStamp ;   /*ibm@50367*/
-                                                                                                /*ibm@50367*/
-            if(thisTimeStamp.equals(nextTimeStamp))  {                                          /*ibm@50367*/
-                /* Only issue message once per duplicate record */                              /*ibm@50367*/
-                if(lastErrorRecord != next) {                                                   /*ibm@50367*/
-                    lastErrorRecord = next;                                                     /*ibm@50367*/
-                    TraceFormat.outStream.println("\nWARNING: duplicate trace record discarded "+  /*ibm@52623*/
-                                       "(record "+(next+1)+                                     /*ibm@50367*/
-                                       " for thread " + Util.formatAsHexString(threadID)+")");        /*ibm@50367*/
-                    // One less record to expect...
-                    TraceFormat.expectedRecords--;                                              /*ibm@52623*/
-                }                                                                               /*ibm@50367*/
-                                                                                                /*ibm@50367*/
-               /*
-                *  return the next but one record rather than next record.
-                *  If it doesn't exist, return null.
-                */
-                if (next+1 >= traceThread.size()) {                                             /*ibm@50367*/
-                    return null;    // last two were the same, so we've finished
-                } else {                                                                        /*ibm@50367*/
-					return (TraceRecord) traceThread.elementAt(next + 1);                       /*ibm@50367*/
-                }
-            } else {
-				return (TraceRecord) traceThread.elementAt(next);
+		if (nextRecord != null) {
+			/*
+			 * There is a defect (51252) which can cause a trace record to be written
+			 * out twice.  If the timestamps of the current and next record are
+			 * identical, then this must have happened.  This code is inserted to
+			 * skip over the repeated record.
+			 */
+			if (nextRecord.timeStamp.equals(timeStamp)) {
+				/* Only issue message once per duplicate record */
+				if (!isDuplicateRecord) {
+					isDuplicateRecord = true;
+					TraceFormat.outStream.println("\nWARNING: duplicate trace record discarded "
+							+ "(timestamp " + timeStamp
+							+ " for thread " + Util.formatAsHexString(threadID) + ")");
+					// One less record to expect...
+					TraceFormat.expectedRecords -= 1;
+				}
+
+				/*
+				 * return the next but one record rather than next record.
+				 * If it doesn't exist, return null.
+				 */
+				nextRecord = traceThread.getNextTraceRecord(nextRecord);
 			}
 		}
-    }
 
-    /**
-     * sets up current* fields for later formatting
-     */
-    final protected int processNextEntryHeader(byte[] entry,int start) throws IOException
+		return nextRecord;
+	}
+
+	/**
+	 * sets up current* fields for later formatting
+	 */
+	final protected int processNextEntryHeader(byte[] entry,int start) throws IOException
     {
 
         currentLength    = Util.constructUnsignedByte(entry, start);

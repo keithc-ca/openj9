@@ -24,7 +24,9 @@ package com.ibm.jvm.format;
 
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.Vector;
 
 /**
  * Merges the trace entries
@@ -33,107 +35,105 @@ import java.util.*;
  */
 public final class Merge {
 
-	private TraceRecord currentTraceRecord = null;
-    private BigInteger  nextOldest;
-    private LinkedList<TraceRecord>  traceRecordList = new LinkedList<>();
-    private boolean     oneThreadLeft = false;
-    private int         numberOfRecordsProcessed = 0;
+	private TraceRecord currentTraceRecord;
+	private BigInteger nextOldest;
+	private LinkedList<TraceRecord> traceRecordList = new LinkedList<>();
+	private boolean oneThreadLeft;
+	private int numberOfRecordsProcessed;
 
-    /** construct the Merge object
-     *
-     * @param   List of threads with trace records to merge
-     */
-    protected Merge(Vector<TraceThread> threads) throws IOException
-    {
+	/** construct the Merge object
+	 *
+	 * @param   List of threads with trace records to merge
+	 */
+	protected Merge(Vector<TraceThread> threads) throws IOException
+	{
 		// prime the oldest Trace Record in each thread
-		for (Iterator<TraceThread> t = threads.iterator(); t.hasNext();) {
-			TraceThread traceThread = t.next();
-			TraceRecord traceRecord = (TraceRecord) traceThread.firstElement();
+		for (TraceThread traceThread : threads) {
+			TraceRecord traceRecord = traceThread.getFirstTraceRecord();
 			traceRecord.prime();
-            traceRecordList.add(traceRecord);
-        }
-        TraceFormat.outStream.println("Number of Trace Buffers Processed:");
-        TraceFormat.outStream.print("     0 ");
+			traceRecordList.add(traceRecord);
+		}
+		TraceFormat.outStream.println("Number of Trace Buffers Processed:");
+		TraceFormat.outStream.print("     0 ");
 
-        getCurrentTraceRecordAndUpdateNextOldest();
-        Util.Debug.println("Merge: nextOldest after constructor " + nextOldest);
-    }
+		getCurrentTraceRecordAndUpdateNextOldest();
+		Util.Debug.println("Merge: nextOldest after constructor " + nextOldest);
+	}
 
-    /** get the current Trace Record and update the nextOldest.
-     *
-     * @param   void
-     * @return  void
-     */
-    final protected void getCurrentTraceRecordAndUpdateNextOldest()
-    {
-        Collections.sort(traceRecordList);
-        currentTraceRecord = (TraceRecord)traceRecordList.get(0);
-        if (traceRecordList.size() > 1) {
-            nextOldest =  ((TraceRecord)traceRecordList.get(1)).getCurrentTimeStamp();
-        }
-        else {
-            nextOldest = BigInteger.ZERO;
-            oneThreadLeft = true;
-        }
-        return;
-    }
+	/** get the current Trace Record and update the nextOldest.
+	 *
+	 * @param   void
+	 * @return  void
+	 */
+	final protected void getCurrentTraceRecordAndUpdateNextOldest()
+	{
+		Collections.sort(traceRecordList);
+		currentTraceRecord = traceRecordList.get(0);
+		if (traceRecordList.size() > 1) {
+			nextOldest = traceRecordList.get(1).getCurrentTimeStamp();
+		} else {
+			nextOldest = BigInteger.ZERO;
+			oneThreadLeft = true;
+		}
+		return;
+	}
 
-    /** get the next trace entry ( the oldest )
-     *
-     * @param   void
-     * @return  the formatted trace entry ( null means we are finished )
-     */
-    final protected String getNextEntry() throws IOException
-    {
-        BigInteger  timeStamp;      // timeStamp of the next entry
-        TraceRecord traceRecord;
+	/** get the next trace entry ( the oldest )
+	 *
+	 * @param   void
+	 * @return  the formatted trace entry ( null means we are finished )
+	 */
+	final protected String getNextEntry() throws IOException
+	{
+		BigInteger  timeStamp;      // timeStamp of the next entry
+		TraceRecord traceRecord;
 
-        while (currentTraceRecord.getNextEntry() == 0) {  // 0 means we have no more entries on this record
-            Util.Debug.println("Merge: no more entries in this Record");
+		while (currentTraceRecord.getNextEntry() == 0) {  // 0 means we have no more entries on this record
+			Util.Debug.println("Merge: no more entries in this Record");
 
-            numberOfRecordsProcessed++;
-            if (numberOfRecordsProcessed%10 == 0 ||
-                numberOfRecordsProcessed == TraceFormat.expectedRecords)
-            {
-                StringBuffer tempBuffer = new StringBuffer(Integer.toString(numberOfRecordsProcessed));
-                Util.padBuffer(tempBuffer, 6, ' ', false);    // right justify - field width 6 (at least)
+			numberOfRecordsProcessed++;
+			if (numberOfRecordsProcessed%10 == 0 ||
+					numberOfRecordsProcessed == TraceFormat.expectedRecords)
+			{
+				StringBuffer tempBuffer = new StringBuffer(Integer.toString(numberOfRecordsProcessed));
+				Util.padBuffer(tempBuffer, 6, ' ', false);    // right justify - field width 6 (at least)
 				TraceFormat.outStream.print(tempBuffer + " ");
-            }
+			}
 
 			if ((numberOfRecordsProcessed + 10) % 100 == 0) { // throw new line BEFORE the 100 multiples
 				TraceFormat.outStream.println("");
 			}
 
 			currentTraceRecord.release();                     // release the large buffer for GC
-            traceRecordList.remove(currentTraceRecord);       // remove Record from list of current Records
-            traceRecord = currentTraceRecord.getNextRecord(); // get this threads next record
-            if (traceRecord != null ) {                       // if we have one ....
-                Util.Debug.println("Merge: priming next Record on this thread");
-                traceRecord.prime();                          // prime it ....
-                traceRecordList.add(traceRecord);             // and add to list of current Records
-            }
+			traceRecordList.remove(currentTraceRecord);       // remove Record from list of current Records
+			traceRecord = currentTraceRecord.getNextRecord(); // get this threads next record
+			if (traceRecord != null ) {                       // if we have one ....
+				Util.Debug.println("Merge: priming next Record on this thread");
+				traceRecord.prime();                          // prime it ....
+				traceRecordList.add(traceRecord);             // and add to list of current Records
+			}
 
-            if (traceRecordList.size() == 0 ) {               // if current record list is empty .....
-                Util.Debug.println("Merge: Finished");
-                TraceFormat.outStream.println(" ");
-                return null;                                  // we have finished
-            }
-            getCurrentTraceRecordAndUpdateNextOldest();       // update currentTraceRecord and nextOldest
-        }
-        timeStamp = currentTraceRecord.getCurrentTimeStamp();
+			if (traceRecordList.size() == 0 ) {               // if current record list is empty .....
+				Util.Debug.println("Merge: Finished");
+				TraceFormat.outStream.println(" ");
+				return null;                                  // we have finished
+			}
+			getCurrentTraceRecordAndUpdateNextOldest();       // update currentTraceRecord and nextOldest
+		}
+		timeStamp = currentTraceRecord.getCurrentTimeStamp();
 
-        //Util.Debug.println("Merge: timeStamp  = " + timeStamp);
-        //Util.Debug.println("Merge: nextOldest = " + nextOldest);
-        //Util.Debug.println("Merge: compareTo  = " + timeStamp.compareTo(nextOldest));
+		//Util.Debug.println("Merge: timeStamp  = " + timeStamp);
+		//Util.Debug.println("Merge: nextOldest = " + nextOldest);
+		//Util.Debug.println("Merge: compareTo  = " + timeStamp.compareTo(nextOldest));
 
-        // is current TimeStamp older than cached ( nextOldest )
-        if (timeStamp.compareTo(nextOldest) != -1 && oneThreadLeft == false ) {
-            //Util.Debug.println("Merge: swapping records      " );
-            getCurrentTraceRecordAndUpdateNextOldest();
-            //Util.Debug.println("Merge: nextOldest after swap " + nextOldest);
-            currentTraceRecord.getNextEntry();
-        }
+		// is current TimeStamp older than cached ( nextOldest )
+		if (timeStamp.compareTo(nextOldest) != -1 && oneThreadLeft == false ) {
+			//Util.Debug.println("Merge: swapping records      " );
+			getCurrentTraceRecordAndUpdateNextOldest();
+			//Util.Debug.println("Merge: nextOldest after swap " + nextOldest);
+			currentTraceRecord.getNextEntry();
+		}
 
-        return currentTraceRecord.formatCurrentEntry();
-    }
+		return currentTraceRecord.formatCurrentEntry();
+	}
 }
