@@ -23,24 +23,29 @@
 package com.ibm.jvm.format;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
+
+import com.ibm.jvm.trace.TracePointThreadChronologicalIterator;
 
 /**  
  * Vector containing all trace records for a specific thread.
  *
  * @author Tim Preece
  */
-final public class TraceThread extends Vector implements com.ibm.jvm.trace.TraceThread {
+public final class TraceThread implements com.ibm.jvm.trace.TraceThread {
 
-    protected                     long           threadID      =     0;
-    protected                     String         threadName;
+	private final List<TraceRecord50> traceRecords;
+	protected final long threadID;
+	protected final String threadName;
 
-    private                       TracePoint     tp = null;
-    private                       boolean        primed = false;
+    private                       TracePoint     tp;
+    private                       boolean        primed;
 
-    private                       TraceRecord50  currentTraceRecord = null;
-    private                       int            currentIndent = 0;
+    private                       TraceRecord50  currentTraceRecord;
+    private                       int            currentIndent;
     /** construct a new trace thread vector
      *
      * @param   ID ( hex value of threadID )
@@ -48,9 +53,10 @@ final public class TraceThread extends Vector implements com.ibm.jvm.trace.Trace
      */
     protected TraceThread(long ID, String threadName)
     {
-        super();
-        this.threadID = ID;
-        this.threadName = threadName;
+		super();
+		this.traceRecords = new ArrayList<>();
+		this.threadID = ID;
+		this.threadName = threadName;
     }
 
     public static int numBufs = 0;
@@ -70,16 +76,16 @@ final public class TraceThread extends Vector implements com.ibm.jvm.trace.Trace
         }
     }
 
-    private void popTopTraceRecord(){        
-        TraceRecord50 oldTraceRecord = currentTraceRecord;
-        if (isEmpty()){
-        	Util.Debug.println("last trace record popped from trace thread");
+	private void popTopTraceRecord() {
+		TraceRecord50 oldTraceRecord = currentTraceRecord;
+		if (traceRecords.isEmpty()) {
+			Util.Debug.println("last trace record popped from trace thread");
             Util.Debug.println("TraceThread " + Util.formatAsHexString( threadID ) + " emptied");
             currentTraceRecord = null;
             return;
         }
-        currentTraceRecord = (TraceRecord50) elementAt( 0 );
-        byte[] extraData = null;
+		currentTraceRecord = traceRecords.get(0);
+		byte[] extraData = null;
         BigInteger lastUpperWord = null;
         if (oldTraceRecord != null) {
             lastUpperWord = oldTraceRecord.getLastUpperWord();
@@ -105,11 +111,11 @@ final public class TraceThread extends Vector implements com.ibm.jvm.trace.Trace
                 System.arraycopy(temp, 0, extraData, current.length, temp.length);
             }
 
-            if (size() > 1) {
-            	removeElementAt(0);
-            	incrementBuffersProcessed();
-            	currentTraceRecord = (TraceRecord50) elementAt( 0 );
-            } else {
+			if (traceRecords.size() > 1) {
+				traceRecords.remove(0);
+				incrementBuffersProcessed();
+				currentTraceRecord = traceRecords.get(0);
+			} else {
             	currentTraceRecord = null;
             }
         }
@@ -117,31 +123,31 @@ final public class TraceThread extends Vector implements com.ibm.jvm.trace.Trace
             if (extraData != null) {
                 currentTraceRecord.addOverspillData( extraData, lastUpperWord );
             } 
-            tp = currentTraceRecord.getNextTracePoint();
-            while ((tp == null) && (size() > 1)) {
-                /* skip e.g. empty buffers or buffers containing only control points */                                    
-                removeElementAt( 0 );            
-                incrementBuffersProcessed();
-                currentTraceRecord = (TraceRecord50) elementAt( 0 );                    
-                if ( currentTraceRecord != null ) {
+			tp = currentTraceRecord.getNextTracePoint();
+			while ((tp == null) && (traceRecords.size() > 1)) {
+				/* skip e.g. empty buffers or buffers containing only control points */
+				traceRecords.remove(0);
+				incrementBuffersProcessed();
+				currentTraceRecord = traceRecords.get(0);
+				if (currentTraceRecord != null) {
                     tp = currentTraceRecord.getNextTracePoint();
                 }                    
-            }                
-        }
-        /* remove it so it can be taken off the heap - by this time it will have been heavily populated with data! */
-        removeElementAt( 0 );            
-        incrementBuffersProcessed();
-        return;        
-    }
+			}
+		}
+		/* remove it so it can be taken off the heap - by this time it will have been heavily populated with data! */
+		traceRecords.remove(0);
+		incrementBuffersProcessed();
+		return;
+	}
 
-    public TracePoint getNextTracePoint(){
-        TracePoint ret = tp;
-        if (!primed) {
-            prime();
-        }
-        if (currentTraceRecord != null) {
-            tp = currentTraceRecord.getNextTracePoint();
-            if (tp == null) {
+	public TracePoint getNextTracePoint() {
+		TracePoint ret = tp;
+		if (!primed) {
+			prime();
+		}
+		if (currentTraceRecord != null) {
+			tp = currentTraceRecord.getNextTracePoint();
+			if (tp == null) {
                 /* currentTraceRecord is exhausted */
                 popTopTraceRecord();
             }
@@ -178,25 +184,35 @@ final public class TraceThread extends Vector implements com.ibm.jvm.trace.Trace
         } else {
             /* occasionally we get duped by a corrupt or empty trace record
                this clause will pick those instances up */
-            if (size() > 0) {
+            if (traceRecords.size() > 0) {
                 popTopTraceRecord();
                 if (tp != null) {
                     return tp.getRawTimeStamp();
                 } /* else fall through to return null below */
             }
-            return null;
-        }
-    }  
-    
-    /* methods implementing the com.ibm.jvm.trace.TraceThread interface */
-    public Iterator getChronologicalTracePointIterator(){
-    	return new com.ibm.jvm.trace.TracePointThreadChronologicalIterator(this);
-    }
-    
-	public String getThreadName(){
+			return null;
+		}
+	}
+
+	/* methods implementing the com.ibm.jvm.trace.TraceThread interface */
+	public Iterator<com.ibm.jvm.trace.TracePoint> getChronologicalTracePointIterator() {
+		return new TracePointThreadChronologicalIterator(this);
+	}
+
+	public String getThreadName() {
 		return threadName;
 	}
-	public long getThreadID(){
+
+	public long getThreadID() {
 		return threadID;
 	}
+
+	public void sortTraceRecords() {
+		Collections.sort(traceRecords);
+	}
+
+	public void addTraceRecord(TraceRecord50 traceRecord) {
+		traceRecords.add(traceRecord);
+	}
+
 }

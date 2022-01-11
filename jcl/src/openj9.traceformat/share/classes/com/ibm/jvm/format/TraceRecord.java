@@ -34,13 +34,13 @@ import java.util.Stack;
  *
  * @author Tim Preece
  */
-public class TraceRecord implements Comparable {
+public class TraceRecord implements Comparable<TraceRecord> {
 
-    /*ibm@52623-start*/
-    // Class Variables
-    protected   static        Hashtable   indentLevels;                        /*ibm@53159*/
-    protected   static        long        lastThread;                          /*ibm@53159*/
-    
+	/*ibm@52623-start*/
+	// Class Variables
+	protected static Hashtable<String, StringBuffer> indentLevels; /*ibm@53159*/
+	protected static long lastThread; /*ibm@53159*/
+
     protected   static final byte        EVENT_TYPE       = 0;
     protected   static final byte        EXCEPTION_TYPE   = 1;
     protected   static final byte        ENTRY_TYPE       = 2;
@@ -55,7 +55,7 @@ public class TraceRecord implements Comparable {
     protected   static final byte        PERF_EXCPT_TYPE  = 11;
     protected   static final byte        ASSERT_TYPE      = 12;
     protected   static final byte        APP_TYPE         = 13;
-    protected   static final byte        ERROR_TYPE         = 14;
+    protected   static final byte        ERROR_TYPE       = 14;
     
     protected   static final String[]    Chars = new String[] {
     	"-",
@@ -91,7 +91,6 @@ public class TraceRecord implements Comparable {
         "AppTrace  ",
         "ERROR     "
     };
-
 
     // Class Constants
     protected   static final  StringBuffer BASE_INDENT      = new StringBuffer();
@@ -135,8 +134,8 @@ public class TraceRecord implements Comparable {
     private                   String      currentComponent;
 
     protected                 BigInteger  upperWord         = BigInteger.ZERO;
-    protected                 Stack       wrapTimes = new Stack();
-    protected                 Stack       longEntryTraceIDs = new Stack();   /*ibm@26172*/
+	protected                 Stack<BigInteger> wrapTimes = new Stack<>();
+	protected                 Stack<Integer> longEntryTraceIDs = new Stack<>(); /*ibm@26172*/
     protected                 boolean     notFormatted = false;
     private                   int         lastErrorRecord = -1;              /*ibm@50367*/
 
@@ -152,16 +151,16 @@ public class TraceRecord implements Comparable {
         writeSystem   = traceFile.readBigInteger(8);
         threadID      = traceFile.readL();
         if (TraceFileHeader.isUTE()) {                                       /*ibm@67471*/
-            threadSyn1    = traceFile.readL();                               /*ibm@67471*/
-            threadSyn2    = traceFile.readL();                               /*ibm@67471*/
-            headerSize    = traceFile.readI();                               /*ibm@67471*/
-            nextEntry     = traceFile.readI();                               /*ibm@67471*/
-            threadName    = traceFile.readString(headerSize - 64);           /*ibm@67471*/
+        	threadSyn1    = traceFile.readL();                               /*ibm@67471*/
+        	threadSyn2    = traceFile.readL();                               /*ibm@67471*/
+        	headerSize    = traceFile.readI();                               /*ibm@67471*/
+        	nextEntry     = traceFile.readI();                               /*ibm@67471*/
+        	threadName    = traceFile.readString(headerSize - 64);           /*ibm@67471*/
         } else {                                                             /*ibm@67471*/
-            threadName    = traceFile.readString(28);
-            nextEntry     = traceFile.readI();
+        	threadName    = traceFile.readString(28);
+        	nextEntry     = traceFile.readI();
         }                                                                    /*ibm@67471*/
-       traceFile.read(nextEight, 0, 8);                             //ibm@56594
+        traceFile.read(nextEight, 0, 8);                             //ibm@56594
 
         upperWord     = timeStamp.shiftRight(32);
         wrapTimes.push(upperWord);
@@ -218,15 +217,15 @@ public class TraceRecord implements Comparable {
         Util.Debug.println("*********************************************************");
 
         boolean     foundThreadID  =     false;
-        Util.Debug.println("Processing Record Header");
-        foundThreadID = false;
+		Util.Debug.println("Processing Record Header");
+		foundThreadID = false;
 
-        if ( Util.findThreadID(Long.valueOf(threadID)) == false ) {
-            return;
-        }
+		if (Util.findThreadID(Long.valueOf(threadID)) == false) {
+			return;
+		}
 
-        for (Iterator i=TraceFormat.threads.iterator(); i.hasNext();) {
-            traceThread = (TraceThread)i.next();
+		for (Iterator<TraceThread> i = TraceFormat.threads.iterator(); i.hasNext();) {
+			traceThread = i.next();
             if (threadID == traceThread.threadID  && threadName.equals(traceThread.threadName)) { /*ibm@67471*/
                 foundThreadID = true;
                 Util.Debug.println("Found existing threadID " + threadID );
@@ -235,10 +234,11 @@ public class TraceRecord implements Comparable {
         }
         if (foundThreadID == false) {
             traceThread = new TraceThread(threadID,threadName);
-            TraceFormat.threads.addElement(traceThread);
-        }
-        traceThread.addElement(this);
-    }
+			TraceFormat.threads.addElement(traceThread);
+		}
+		// traceThread.addElement(this);
+		traceThread.addTraceRecord(this);
+	}
 
     /** Initializes static variables.
      *
@@ -279,8 +279,8 @@ public class TraceRecord implements Comparable {
             * identical, then this must have happened.  This code is inserted to
             * skip over the repeated record.
             */
-            BigInteger thisTimeStamp = ((TraceRecord)traceThread.elementAt(next-1)).timeStamp ; /*ibm@50367*/
-            BigInteger nextTimeStamp = ((TraceRecord)traceThread.elementAt(next)).timeStamp ;   /*ibm@50367*/
+			BigInteger thisTimeStamp = ((TraceRecord) traceThread.elementAt(next - 1)).timeStamp ; /*ibm@50367*/
+			BigInteger nextTimeStamp = ((TraceRecord) traceThread.elementAt(next)).timeStamp ;   /*ibm@50367*/
                                                                                                 /*ibm@50367*/
             if(thisTimeStamp.equals(nextTimeStamp))  {                                          /*ibm@50367*/
                 /* Only issue message once per duplicate record */                              /*ibm@50367*/
@@ -300,12 +300,12 @@ public class TraceRecord implements Comparable {
                 if (next+1 >= traceThread.size()) {                                             /*ibm@50367*/
                     return null;    // last two were the same, so we've finished
                 } else {                                                                        /*ibm@50367*/
-                    return(TraceRecord)traceThread.elementAt(next+1);                           /*ibm@50367*/
+					return (TraceRecord) traceThread.elementAt(next + 1);                       /*ibm@50367*/
                 }
             } else {
-                return(TraceRecord)traceThread.elementAt(next);
-            }
-        }
+				return (TraceRecord) traceThread.elementAt(next);
+			}
+		}
     }
 
     /**
@@ -341,7 +341,7 @@ public class TraceRecord implements Comparable {
             Util.Debug.println("processing long record: previous currentLength  " + currentLength);       /*ibm@26172*/
             Util.Debug.println("processing long record: previous currentTraceID " + currentTraceID);      /*ibm@26172*/
             currentLength = currentLength + currentTraceID*256;                                           /*ibm@26172*/
-            currentTraceID = ((Integer)longEntryTraceIDs.pop()).intValue();                               /*ibm@26172*/
+            currentTraceID = longEntryTraceIDs.pop().intValue();                               /*ibm@26172*/
             Util.Debug.println("processing long record: currentLength           " + currentLength);       /*ibm@26172*/
             Util.Debug.println("processing long record: currentTraceID          " + currentTraceID);      /*ibm@26172*/
         }
@@ -354,32 +354,32 @@ public class TraceRecord implements Comparable {
             if (currentLength == 8) {
                 Util.Debug.println("TraceRecord: Adding unrecognized event message format for tracepoint: " + currentTraceID);
                 TraceFormat.messageFile.addMessage(Util.formatAsHexString(currentTraceID) + " 1 01 1 N ApplicationTraceEntry \"Unrecognized tracepoint\"");
-                currentMessage = TraceFormat.messageFile.getMessageFromID(currentTraceID);
+                currentMessage = MessageFile.getMessageFromID(currentTraceID);
             } else {
                 switch (entry[start + 10]) {
                     case '>': {
                         Util.Debug.println("TraceRecord: Adding entry message format for tracepoint: " + currentTraceID);
                         TraceFormat.messageFile.addMessage(Util.formatAsHexString(currentTraceID) + " 2 01 1 N ApplicationTraceEntry \"%s\"");
-                        currentMessage = TraceFormat.messageFile.getMessageFromID(currentTraceID);
+                        currentMessage = MessageFile.getMessageFromID(currentTraceID);
                         break;
                     }
                     case '<': {
                         int exception = entry[start + 8] == '*' ? 1 : 0;
                         Util.Debug.println("TraceRecord: Adding exit message format for tracepoint: " + currentTraceID);
                         TraceFormat.messageFile.addMessage(Util.formatAsHexString(currentTraceID) + " " + (exception + 4) + " 01 1 N ApplicationTraceExit \"%s\"");
-                        currentMessage = TraceFormat.messageFile.getMessageFromID(currentTraceID);
+                        currentMessage = MessageFile.getMessageFromID(currentTraceID);
                         break;
                     }
                     case '-': {
                         Util.Debug.println("TraceRecord: Adding event message format for tracepoint: " + currentTraceID);
                         TraceFormat.messageFile.addMessage(Util.formatAsHexString(currentTraceID) + " 0 01 1 N ApplicationTraceEvent \"%s\"");
-                        currentMessage = TraceFormat.messageFile.getMessageFromID(currentTraceID);
+                        currentMessage = MessageFile.getMessageFromID(currentTraceID);
                         break;
                     }
                     case '*': {
                         Util.Debug.println("TraceRecord: Adding exception message format for tracepoint: " + currentTraceID);
                         TraceFormat.messageFile.addMessage(Util.formatAsHexString(currentTraceID) + " 1 00 0 N ApplicationTraceException \"%s\"");
-                        currentMessage = TraceFormat.messageFile.getMessageFromID(currentTraceID);
+                        currentMessage = MessageFile.getMessageFromID(currentTraceID);
                         break;
                     }
                     default: {
@@ -514,11 +514,11 @@ public class TraceRecord implements Comparable {
      *  @return    an int which is negative if this entry is older than other, 0,
      *             if they are the same age, and positive if this is newer
      */
-    final public int compareTo(Object other)
+	public final int compareTo(TraceRecord other)
     {
         // Util.Debug.println("TraceRecord compareTo: currentTimeStamp " + currentTimeStamp );
         // Util.Debug.println("TraceRecord compareTo: ((TraceRecord)other).getCurrentTimeStamp() " + ((TraceRecord)other).getCurrentTimeStamp() );
-        return currentTimeStamp.compareTo(((TraceRecord)other).getCurrentTimeStamp());
+        return currentTimeStamp.compareTo(other.getCurrentTimeStamp());
     }
 
     /** sets the indent associated with a given thread id
@@ -532,7 +532,7 @@ public class TraceRecord implements Comparable {
             return BASE_INDENT;
         } else {
             if ( indentLevels == null ) {
-                indentLevels = new Hashtable();
+                indentLevels = new Hashtable<>();
             }
             StringBuffer sb = (StringBuffer)indentLevels.get(threadID);
             return(sb == null ) ? new StringBuffer() : sb;
@@ -547,7 +547,7 @@ public class TraceRecord implements Comparable {
     final protected static void setIndent(String threadID, StringBuffer buffer)
     {
         if ( indentLevels == null ) {
-            indentLevels = new Hashtable();
+            indentLevels = new Hashtable<>();
         }
         indentLevels.remove(threadID);
         indentLevels.put(threadID, buffer);

@@ -22,8 +22,6 @@
  *******************************************************************************/
 package com.ibm.jvm.trace.format.api;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 

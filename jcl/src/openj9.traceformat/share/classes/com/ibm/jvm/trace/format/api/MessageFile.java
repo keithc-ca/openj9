@@ -25,55 +25,55 @@ package com.ibm.jvm.trace.format.api;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * Acts as a template for mapping trace ids to messages.
  * 
  * @author Jonathon Lee
  */
-final public class MessageFile {
+public final class MessageFile {
 	TraceContext context;
 
 	private BufferedReader reader;
 
 	private String formatName;
 
-	protected float verMod = 0;
+	protected float verMod;
 
-	private HashMap messages = new HashMap();
+	private Map<String, Message> messages = new HashMap<>();
 
-	private HashMap componentList = new HashMap();;
+	private Map<String, Component> componentList = new HashMap<>();
 
-	private final String fromDATFile = ".definedInDatFile";
-	private boolean processingDATFile = false;
+	private static final String fromDATFile = ".definedInDatFile";
 
 	int counter = 0;
 
 	String savedComponentName = "not_a_component";
 	Component savedComponent = null;
 
-	public HashMap getStatistics() {
-		HashMap stats = new HashMap();
-		
-		Iterator mItr = messages.keySet().iterator();
+	public Map<String, Properties> getStatistics() {
+		Map<String, Properties> stats = new HashMap<>();
+
+		Iterator<String> mItr = messages.keySet().iterator();
 		while (mItr.hasNext()) {
-			Object mKey = mItr.next();
-			Message msg = (Message)messages.get(mKey);		
+			String mKey = mItr.next();
+			Message msg = messages.get(mKey);
 			if (msg != null) {
 				stats.put(mKey, msg.getStatistics());
 			}
 		}
 
-		Iterator cItr = componentList.keySet().iterator();
+		Iterator<String> cItr = componentList.keySet().iterator();
 		while (cItr.hasNext()) {
-			Object cKey = cItr.next();
-			Component comp = (Component)componentList.get(cKey);
+			String cKey = cItr.next();
+			Component comp = componentList.get(cKey);
 			if (comp != null) {
-				int id = 0;
-				for (id = 0; id < comp.messageList.size(); id++) {
-					Message msg = (Message)comp.messageList.get(id);
+				for (int id = 0; id < comp.messageList.size(); id++) {
+					Message msg = comp.messageList.get(id);
 					if (msg != null) {
-						stats.put(comp.getName()+"."+id, msg.getStatistics());
+						stats.put(comp.getName() + "." + id, msg.getStatistics());
 					}
 				}
 			}
@@ -108,22 +108,17 @@ final public class MessageFile {
 			throw new IOException("file is empty");
 		}
 		readHeader(headerLine);
-		processingDATFile = true;
-		try {
-			String line = reader.readLine();
-			if (verMod >= 5.0) {
-				while (line != null && line.length() != 0) {
-					addMessage_50(line);
-					line = reader.readLine();
-				}
-			} else {
-				while (line != null) {
-					addMessage_12(line);
-					line = reader.readLine();
-				}
+		String line = reader.readLine();
+		if (verMod >= 5.0) {
+			while (line != null && line.length() != 0) {
+				addMessage_50(line);
+				line = reader.readLine();
 			}
-		} finally {
-			processingDATFile = false;
+		} else {
+			while (line != null) {
+				addMessage_12(line);
+				line = reader.readLine();
+			}
 		}
 	}
 
@@ -266,7 +261,7 @@ final public class MessageFile {
 
 		Message message = new Message(type, msg, id, level, componentName, symbol, context);
 
-		messages.put(Integer.valueOf(id), message);
+		messages.put(Integer.toString(id), message);
 	}
 
 	/**
@@ -283,7 +278,7 @@ final public class MessageFile {
 			return null;
 		}
 
-		return (Message) messages.get(Integer.valueOf(id));
+		return messages.get(Integer.toString(id));
 	}
 
 	/**
@@ -302,12 +297,12 @@ final public class MessageFile {
 			return null;
 		}
 
-		Component component = (Component) componentList.get(compName);
+		Component component = componentList.get(compName);
 		if (component != null) {
 			message = component.getMessageByID(id);
 		} else {
 			String messageKey = new String(compName + "." + id);
-			message = (Message) messages.get(messageKey);
+			message = messages.get(messageKey);
 		}
 
 		if (message == null) {

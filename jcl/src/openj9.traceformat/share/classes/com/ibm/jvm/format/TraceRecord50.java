@@ -31,7 +31,7 @@ import java.util.Vector;
  * 
  * @author Simon Rowland
  */
-public class TraceRecord50 implements Comparable {
+public class TraceRecord50 implements Comparable<TraceRecord50> {
 	public static final int INTERNAL_WRAP_SPLIT_TP = -1;
 	public static final int EXTERNAL_WRAP_SPLIT_TP = -2;
 	
@@ -49,10 +49,6 @@ public class TraceRecord50 implements Comparable {
 
 	private long threadID = 0;
 
-	private long threadSyn1 = 0;
-
-	private long threadSyn2 = 0;
-
 	private int firstEntry;
 
 	private int nextEntry;
@@ -62,8 +58,6 @@ public class TraceRecord50 implements Comparable {
 	/* end of UtTraceRecord struct - see ute_internal.h */
 	private BigInteger upperTimeWord = BigInteger.ZERO;
 
-	private String threadIDString = null;
-
 	private String fromFileName = null;
 
 	private long offsetInFile = -1;
@@ -72,7 +66,7 @@ public class TraceRecord50 implements Comparable {
 
 	private int traceRecordType = -1;
 
-	private Vector tps = new Vector();
+	private Vector<TracePoint> tps = new Vector<>();
 
 	private int dataStart;
 
@@ -81,8 +75,6 @@ public class TraceRecord50 implements Comparable {
 	private int dataLength;
 
 	private byte[] overspillData = null;
-
-	private BigInteger overspillUpperWord = null;
 
 	private boolean primed = false;
 
@@ -118,14 +110,13 @@ public class TraceRecord50 implements Comparable {
 		writePlatform = traceFile.readBigInteger(8);
 		writeSystem = traceFile.readBigInteger(8);
 		threadID = traceFile.readL();
-		threadSyn1 = traceFile.readL();
-		threadSyn2 = traceFile.readL();
+		traceFile.readL(); // threadSyn1
+		traceFile.readL(); // threadSyn2
 		firstEntry = traceFile.readI();
 		nextEntry = traceFile.readI();
 		threadName = traceFile.readString(firstEntry - 64);
 
 		upperTimeWord = timeStamp.shiftRight(32);
-		threadIDString = Util.formatAsHexString(threadID);
 
 		dataStart = firstEntry;
 		dataEnd = nextEntry;
@@ -390,7 +381,6 @@ public class TraceRecord50 implements Comparable {
 					break;
 					/* this record's data is exhausted */
 				}
-				int numberOfMissingBytes = tplength - offset;
 				if (traceRecordType == 0) {
 					/* We are in a record that wraps back into itself */
 					startOfCurrentTP = INTERNAL_WRAP_SPLIT_TP;
@@ -505,9 +495,9 @@ public class TraceRecord50 implements Comparable {
 				} else {
 					sp.setRawTimeStamp(timeStamp);
 				}
-				
+
 				if (tps.size() > 0) {
-					tps.insertElementAt(sp, tps.size() -1);
+					tps.insertElementAt(sp, tps.size() - 1);
 				} else {
 					tps.add(sp);
 				}
@@ -565,7 +555,7 @@ public class TraceRecord50 implements Comparable {
 		timeStamp = newTimeStamp;
 	}
 
-	public int compareTo(Object other) {
+	public int compareTo(TraceRecord50 other) {
 		/* CMVC 177932. Fix to use system write time for sorting trace records rather than the nanosecond tracepoint
 		 * timer, because the nanosecond timer is known to hop around across CPUs on some systems. The records for a 
 		 * thread are always written FIFO, so sorting is only actually needed in case the trace file was wrapped, i.e.
@@ -582,18 +572,18 @@ public class TraceRecord50 implements Comparable {
 		 * Invoked indirectly via call to Collections.sort() in com.ibm.jvm.format.TraceFormat.prime().
 		 */
 		
-		if (writeSystem == BigInteger.ZERO || ((TraceRecord50)other).writeSystem == BigInteger.ZERO) {
+		if (writeSystem == BigInteger.ZERO || other.writeSystem == BigInteger.ZERO) {
 			Util.Debug.println("TraceRecord50.compareTo() found trace record with a zero system write time");
 			return 0;
 		}
 		
-		int result = writeSystem.compareTo(((TraceRecord50)other).writeSystem);
+		int result = writeSystem.compareTo(other.writeSystem);
 		if (result == 0) {
 			// record write times are the same, calculate tie-breaker for records in wrapped trace files
-			if (offsetInFile <= traceFile.wrapOffset && ((TraceRecord50)other).offsetInFile > traceFile.wrapOffset) {
+			if (offsetInFile <= traceFile.wrapOffset && other.offsetInFile > traceFile.wrapOffset) {
 				return 1;
 			}
-			if (offsetInFile > traceFile.wrapOffset && ((TraceRecord50)other).offsetInFile <= traceFile.wrapOffset) {
+			if (offsetInFile > traceFile.wrapOffset && other.offsetInFile <= traceFile.wrapOffset) {
 				return -1;
 			}
 			// drop through

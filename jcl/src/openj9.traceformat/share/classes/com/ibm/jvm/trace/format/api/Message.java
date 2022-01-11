@@ -35,7 +35,6 @@ final public class Message {
 	private int type;
 	private String message;
 	private String component;
-	private boolean zero = false;
 	private Arg parameterTypes[];
 	private Arg nonConstantParameterTypes[];
 	private int id;

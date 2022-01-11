@@ -30,7 +30,7 @@ import java.math.BigInteger;
  *
  * @author Tim Preece
  */
-final public class TraceArgs {
+public final class TraceArgs {
 
     public      static            String               traceFile;
     public      static            String               outputFile;
@@ -53,19 +53,19 @@ final public class TraceArgs {
     *  <p>This is called each time the TraceFormatter is started, from the initStatics()
     *     method in TraceFormat.java</p>
     */
-    final protected static void initStatics()
+    protected static final void initStatics()
     {
-        traceFile  = null;
-        outputFile = null;
-        indent     = false;
-        summary    = false;
-        debug      = false;
-        symbolic   = false;
-        gui        = false;
-        j9         = false;
-        userVMIdentifier = null;
-	is50orNewer = false;
-	override = false;
+    	traceFile  = null;
+    	outputFile = null;
+    	indent     = false;
+    	summary    = false;
+    	debug      = false;
+    	symbolic   = false;
+    	gui        = false;
+    	j9         = false;
+    	userVMIdentifier = null;
+    	is50orNewer = false;
+    	override = false;
     }
 
     /** parses the command line arguments
@@ -139,27 +139,27 @@ final public class TraceArgs {
                             throw new UsageException("please specify an integer value after -overridetimezone that will be used as an offset for the formatted hour field");
                         }                        
                     } else if ( args[index].startsWith("-50") ){
-			/* this offers a manual override to enforce 50 behaviour when the trace file has a version number of
-			 * < 5.0. This could be useful if you have a development build that produced a snap but didn't yet have
-			 * the ute.h patch to upgrade the version number in the headers.
-			 */
-			is50orNewer = true;
-		    } else if ( args[index].startsWith("-11") ){
-			/* this offers a manual override to enforce 50 behaviour when the trace file has a version number of
-			 * < 5.0. This could be useful if you have a development build that produced a snap but didn't yet have
-			 * the ute.h patch to upgrade the version number in the headers.
-			 */
-			is50orNewer = false;
-			override = true;
+                    	/* this offers a manual override to enforce 50 behaviour when the trace file has a version number of
+                    	 * < 5.0. This could be useful if you have a development build that produced a snap but didn't yet have
+                    	 * the ute.h patch to upgrade the version number in the headers.
+                    	 */
+                    	is50orNewer = true;
+                    } else if ( args[index].startsWith("-11") ){
+                    	/* this offers a manual override to enforce 50 behaviour when the trace file has a version number of
+                    	 * < 5.0. This could be useful if you have a development build that produced a snap but didn't yet have
+                    	 * the ute.h patch to upgrade the version number in the headers.
+                    	 */
+                    	is50orNewer = false;
+                    	override = true;
 
-		    } else if ( args[index].startsWith("-datdir") ){
-			index++;
-                        if ( (index >= args.length) || (args[index].startsWith("-"))) {
-                            throw new UsageException("no dat file directory name provided");
-                        }
-			datFileDirectory = new String( args[index] );
-		    } else {
-                        throw new UsageException();
+                    } else if ( args[index].startsWith("-datdir") ){
+                    	index++;
+                    	if ( (index >= args.length) || (args[index].startsWith("-"))) {
+                    		throw new UsageException("no dat file directory name provided");
+                    	}
+                    	datFileDirectory = new String( args[index] );
+                    } else {
+                    	throw new UsageException();
                     }
                     index++;
                 }
@@ -209,7 +209,7 @@ final public class TraceArgs {
         } else if ( close == open ) { // only possible if both == -1
             Util.putComponent(component);
         } else {
-            Vector types   =  new Vector(10);
+			Vector<String> types = new Vector<>(10);
             String temp    =  component.substring(open + 1, component.length()-1);
 
             int index;
@@ -224,34 +224,32 @@ final public class TraceArgs {
 
     private void parseThread(String thread) throws UsageException
     {
-        String id = null;
-       try {
-            String   temp  = thread.substring("-thread:".length());
-            int      index;
-             while ( (index = temp.indexOf(",")) != -1 ) {
-            	id = temp.substring(0, index);
-                Util.putThreadID(Long.decode(id));
-                temp = temp.substring(index+1, temp.length());
-            }
-            id = temp.substring(0, temp.length());
-            Util.putThreadID(Long.decode(id));
-        } catch ( NumberFormatException nfe ) {
-            throw new UsageException("Bad thread ID: " + id);
-        }
+    	String id = null;
+    	try {
+    		String   temp  = thread.substring("-thread:".length());
+    		int      index;
+    		while ( (index = temp.indexOf(",")) != -1 ) {
+    			id = temp.substring(0, index);
+    			Util.putThreadID(Long.decode(id));
+    			temp = temp.substring(index+1, temp.length());
+    		}
+    		id = temp.substring(0, temp.length());
+    		Util.putThreadID(Long.decode(id));
+    	} catch ( NumberFormatException nfe ) {
+    		throw new UsageException("Bad thread ID: " + id);
+    	}
     }
 
-    class UsageException extends Exception {
-        UsageException(String s)
-        {
-            super(s);
-        }
+    static class UsageException extends Exception {
+    	UsageException(String s)
+    	{
+    		super(s);
+    	}
 
-        UsageException()
-        {
-            super();
-        }
+    	UsageException()
+    	{
+    		super();
+    	}
     }
 
 }
-
-

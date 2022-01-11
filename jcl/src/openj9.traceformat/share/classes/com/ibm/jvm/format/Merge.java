@@ -26,17 +26,16 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.*;
 
-/**  
+/**
  * Merges the trace entries
  *
  * @author Tim Preece
  */
-final public class Merge {
+public final class Merge {
 
-    private Vector      threads;
-    private TraceRecord currentTraceRecord=null;
+	private TraceRecord currentTraceRecord = null;
     private BigInteger  nextOldest;
-    private LinkedList  traceRecordList = new LinkedList();
+    private LinkedList<TraceRecord>  traceRecordList = new LinkedList<>();
     private boolean     oneThreadLeft = false;
     private int         numberOfRecordsProcessed = 0;
 
@@ -44,17 +43,13 @@ final public class Merge {
      *
      * @param   List of threads with trace records to merge
      */
-    protected Merge(Vector threads) throws IOException
+    protected Merge(Vector<TraceThread> threads) throws IOException
     {
-        this.threads = threads;
-
-        // prime the oldest Trace Record in each thread
-        TraceThread traceThread;
-        TraceRecord traceRecord;
-        for (Iterator t=threads.iterator(); t.hasNext();) {
-            traceThread = (TraceThread)t.next();
-            traceRecord = (TraceRecord)traceThread.firstElement();
-            traceRecord.prime();
+		// prime the oldest Trace Record in each thread
+		for (Iterator<TraceThread> t = threads.iterator(); t.hasNext();) {
+			TraceThread traceThread = t.next();
+			TraceRecord traceRecord = (TraceRecord) traceThread.firstElement();
+			traceRecord.prime();
             traceRecordList.add(traceRecord);
         }
         TraceFormat.outStream.println("Number of Trace Buffers Processed:");
@@ -80,7 +75,7 @@ final public class Merge {
             nextOldest = BigInteger.ZERO;
             oneThreadLeft = true;
         }
-        return ;
+        return;
     }
 
     /** get the next trace entry ( the oldest )
@@ -102,14 +97,14 @@ final public class Merge {
             {
                 StringBuffer tempBuffer = new StringBuffer(Integer.toString(numberOfRecordsProcessed));
                 Util.padBuffer(tempBuffer, 6, ' ', false);    // right justify - field width 6 (at least)
-                TraceFormat.outStream.print(tempBuffer+" ");
+				TraceFormat.outStream.print(tempBuffer + " ");
             }
 
-            if ((numberOfRecordsProcessed+10)%100 == 0) {     // throw new line BEFORE the 100 multiples
-                TraceFormat.outStream.println("");
-            }
+			if ((numberOfRecordsProcessed + 10) % 100 == 0) { // throw new line BEFORE the 100 multiples
+				TraceFormat.outStream.println("");
+			}
 
-            currentTraceRecord.release();                     // release the large buffer for GC
+			currentTraceRecord.release();                     // release the large buffer for GC
             traceRecordList.remove(currentTraceRecord);       // remove Record from list of current Records
             traceRecord = currentTraceRecord.getNextRecord(); // get this threads next record
             if (traceRecord != null ) {                       // if we have one ....

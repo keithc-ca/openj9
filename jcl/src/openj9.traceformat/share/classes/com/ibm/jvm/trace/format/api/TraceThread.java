@@ -26,13 +26,10 @@ import java.math.BigInteger;
 import java.nio.BufferUnderflowException;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.Vector;
 
-public class TraceThread implements Comparable {
+public class TraceThread implements Comparable<TraceThread> {
 	TraceContext context;
 
 	BigInteger timerUpperWord = BigInteger.ZERO;
@@ -298,9 +295,7 @@ public class TraceThread implements Comparable {
 		userDiscardedData = true;
 	}
 	
-	public int compareTo(Object obj) {
-		TraceThread thread = (TraceThread)obj;
-
+	public int compareTo(TraceThread thread) {
 		if (next != null && thread.next != null) {
 			/* we actually have a tracepoint for both so can compare */
 			return next.time_merged.compareTo(thread.next.time_merged);

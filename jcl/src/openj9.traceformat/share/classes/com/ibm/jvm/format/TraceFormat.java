@@ -32,27 +32,25 @@ import java.util.*;
  *
  * @author Tim Preece
  */
-final public class TraceFormat
+public final class TraceFormat
 {
 	protected static final int traceFormatMajorVersion = 1;
 	protected static final int traceFormatMinorVersion = 0;
 
-	private TraceArgs traceArgs = null;
+	private Vector<TraceFile> traceFiles = new Vector<>();
 
-	private Vector traceFiles = new Vector();
-
-	private TraceFile traceFile = null;
+	private TraceFile traceFile;
 
 	private BufferedWriter out;
 
 	private static int generations;
 
 	// Global data
-	protected static long lostRecordCount = 0;
+	protected static long lostRecordCount;
 
 	protected static MessageFile messageFile;
 
-	protected static Vector threads;
+	protected static Vector<TraceThread> threads;
 
 	protected static int invalidBuffers;
 
@@ -80,18 +78,18 @@ final public class TraceFormat
 
 	protected static int expectedRecords;
 
-	private boolean traceFileIsTruncatedOrCorrupt = false;
+	private boolean traceFileIsTruncatedOrCorrupt;
 
-	private boolean primed = false;
+	private boolean primed;
 
 	// constants
 	protected static final String usageMessage = "Usage:\n"
 /*[IF Sidecar18-SE-OpenJ9]*/
-			+ "traceformat input_filespec [output_filespec] \n"
+			+ "traceformat input_filespec [output_filespec]\n"
 /*[ELSE]*/
-			+ "java com.ibm.jvm.format.TraceFormat input_filespec [output_filespec] \n"
+			+ "java com.ibm.jvm.format.TraceFormat input_filespec [output_filespec]\n"
 /*[ENDIF] Sidecar18-SE-OpenJ9 */
-			+ "\t[-summary] [-datdir datfiledirectory] [-uservmid vmid] [-thread:id] [-indent] \n"
+			+ "\t[-summary] [-datdir datfiledirectory] [-uservmid vmid] [-thread:id] [-indent]\n"
 			+ "\t[-overridetimezone noOfHours] [-help]\n"
 			+ "\n"
 			+ "where:\n"
@@ -116,8 +114,8 @@ final public class TraceFormat
 			+ "\t      e.g. java com.ibm.jvm.format.TraceFormat 142trcfile /\n"
 /*[ENDIF] Sidecar18-SE-OpenJ9 */
 			+ "\t           -datdir /142sdk/jre/lib\n"
-			+ "\tthread = only trace information for the specified thread will \n"
-			+ "\t      be formatted. Any number of thread IDs can be specified, \n"
+			+ "\tthread = only trace information for the specified thread will\n"
+			+ "\t      be formatted. Any number of thread IDs can be specified,\n"
 			+ "\t      separated by commas.\n"
 			+ "\toverridetimezone = specify an integer number of hours to be\n"
 			+ "\t      added to the formatted tracepoints (can be negative).\n"
@@ -207,7 +205,7 @@ final public class TraceFormat
 	 */
 	private void initStatics()
 	{
-		threads = new Vector();
+		threads = new Vector<>();
 		invalidBuffers = 0;
 		overallStartSystem = BigInteger.ZERO;
 		overallStartPlatform = BigInteger.ZERO;
@@ -242,8 +240,7 @@ final public class TraceFormat
 	public void readAndFormat(String[] args, boolean processFully)
 	{
 		try {
-			traceArgs = new TraceArgs(args); // parse the command line
-			// arguments
+			new TraceArgs(args); // parse the command line arguments
 		} catch (TraceArgs.UsageException usage) {
 			TraceFormat.outStream.println(usage.getMessage());
 			TraceFormat.outStream.println("TraceFormat " + usageMessage);
@@ -292,23 +289,21 @@ final public class TraceFormat
 	private void readAndFormatOldStyle() throws IOException
 	{
 		// process the trace records in all the input files
-		for (Iterator i = traceFiles.iterator(); i.hasNext();) {
-			traceFile = (TraceFile) i.next();
+		for (Iterator<TraceFile> i = traceFiles.iterator(); i.hasNext();) {
+			traceFile = i.next();
 			instantiateMessageFileOldStyle();
 			traceFile.traceFileHeader.processTraceBufferHeaders();
 		}
 
 		// for each thread sort the trace records
-		TraceThread traceThread;
-		for (Iterator i = threads.iterator(); i.hasNext();) {
-			traceThread = (TraceThread) i.next();
-			Collections.sort(traceThread);
+		for (Iterator<TraceThread> i = threads.iterator(); i.hasNext();) {
+			TraceThread traceThread = i.next();
+			traceThread.sortTraceRecords();
 		}
 
 		// if -summary then just summarize to stdout
 		if (TraceArgs.summary) {
-			doSummary(new BufferedWriter(new OutputStreamWriter(
-					TraceFormat.outStream)));
+			doSummary(new BufferedWriter(new OutputStreamWriter(TraceFormat.outStream)));
 			return;
 		} else {
 			if (doSummary(out) != 0)
@@ -511,12 +506,12 @@ final public class TraceFormat
 
 		int bufferSize = 0;
 
-		Hashtable listOfThreadBuffers = new Hashtable();
+		Hashtable<Long, TraceThread> listOfThreadBuffers = new Hashtable<>();
 		// process the trace files in order
 		TraceFormat.outStream
 				.println("*** Starting data extraction from binary trace file(s) ");
-		for (Iterator i = traceFiles.iterator(); i.hasNext();) {
-			traceFile = (TraceFile) i.next();
+		for (Iterator<TraceFile> i = traceFiles.iterator(); i.hasNext();) {
+			traceFile = i.next();
 			instantiateMessageFilesNewStyle();
 			/* traceFile.traceFileHeader.processTraceBufferHeaders() */
 			long dataStart = traceFile.traceFileHeader.getTraceDataStart();
@@ -569,12 +564,12 @@ final public class TraceFormat
 				if (listOfThreadBuffers.containsKey(threadID)) {
 					TraceThread buffersForThread = (TraceThread) listOfThreadBuffers
 							.get(threadID);
-					buffersForThread.add(traceRecord);
+					buffersForThread.addTraceRecord(traceRecord);
 
 				} else {
-					Vector buffersForThread = new TraceThread(threadID
+					TraceThread buffersForThread = new TraceThread(threadID
 							.longValue(), traceRecord.getThreadName());
-					buffersForThread.addElement(traceRecord);
+					buffersForThread.addTraceRecord(traceRecord);
 					threads.addElement(buffersForThread);
 					listOfThreadBuffers.put(threadID, buffersForThread);
 				}
@@ -590,11 +585,10 @@ final public class TraceFormat
 		}
 
 		TraceFormat.outStream.println("*** Sorting buffers");
-		TraceThread traceThread;
-		for (Iterator i = threads.iterator(); i.hasNext();) {
+		for (Iterator<TraceThread> i = threads.iterator(); i.hasNext();) {
 			/* if the trace file wrapped internally, we need to sort the buffers. */
-			traceThread = (TraceThread) i.next();
-			Collections.sort(traceThread);
+			TraceThread traceThread = (TraceThread) i.next();
+			traceThread.sortTraceRecords();
 		}
 
 		// if -summary then just summarize to stdout
@@ -649,7 +643,7 @@ final public class TraceFormat
 
 	private void readAndFormatNewStyle() throws IOException
 	{
-		if (!primed){
+		if (!primed) {
 			prime();
 		}
 		double onetenthofbuffers = (double) globalNumberOfBuffers / 10.0;
@@ -784,7 +778,6 @@ final public class TraceFormat
 	 */
 	protected int doSummary(BufferedWriter out) throws IOException
 	{
-		TraceThread traceThread;
 		out.write("                Trace Summary");
 		out.newLine();
 		out.newLine();
@@ -794,8 +787,8 @@ final public class TraceFormat
 		out.newLine();
 
 		// Write out list of threads in trace files
-		for (Iterator i = threads.iterator(); i.hasNext();) {
-			traceThread = (TraceThread) i.next();
+		for (Iterator<TraceThread> i = threads.iterator(); i.hasNext();) {
+			TraceThread traceThread = i.next();
 			out.write(Util.SUM_TAB
 					+ Util.formatAsHexString(traceThread.threadID));
 			out.write("  ");
@@ -887,9 +880,9 @@ final public class TraceFormat
 
 		if (hash == -1) { // no # char in name of input file
 			try {
-				traceFiles.addElement(new TraceFile(traceArgs.traceFile, "r"));
+				traceFiles.addElement(new TraceFile(TraceArgs.traceFile, "r"));
 			} catch (FileNotFoundException e) {
-				TraceFormat.outStream.println("Trace file " + traceArgs.traceFile + " not found");
+				TraceFormat.outStream.println("Trace file " + TraceArgs.traceFile + " not found");
 				return (FAIL);
 			} catch (Exception e) {
 				e.printStackTrace(TraceFormat.errStream);

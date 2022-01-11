@@ -1,6 +1,6 @@
 /*[INCLUDE-IF Sidecar18-SE]*/
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -22,9 +22,7 @@
  *******************************************************************************/
 package com.ibm.jvm.format;
 
-import java.math.BigInteger;
-
-final public class Message
+public final class Message
 {
    private static int   ptrSize;
 
@@ -50,14 +48,12 @@ final public class Message
     */
    protected StringBuffer processPercents(String str, byte[] buffer, int offset)
    {
-
       FormatSpec     fspec    = null;
       StringBuffer   result   = new StringBuffer();
       int            index    = str.indexOf("%");
                      zero     = false;
       int            dataSize;
       long           l;
-      int            i;
       String         s;
       boolean        prefix0x;
       boolean        utf8;
@@ -284,7 +280,6 @@ final public class Message
     */
    protected StringBuffer skipPercents(String str, byte[] buffer, int offset)
    {
-
       StringBuffer   result   = new StringBuffer();
       int            index    = str.indexOf("%");
 
@@ -398,24 +393,6 @@ final public class Message
       return new String(digits, 0, index);
    }
 
-
-   private StringBuffer format(BigInteger val, FormatSpec spec)
-   {
-      StringBuffer str = new StringBuffer(val.toString());
-      if ( spec != null )
-      {
-         if ( spec.precision != null )
-         {
-            Util.padBuffer(str, spec.precision.intValue(), '0');
-         }
-         if ( spec.width != null )
-         {
-            Util.padBuffer(str, spec.width.intValue(), ' ', spec.leftJustified);
-         }
-      }
-      return str;
-   }
-
    private StringBuffer format(long val, FormatSpec spec)
    {
       return format(val, spec, 10);
@@ -441,19 +418,6 @@ final public class Message
       return str;
    }
 
-   private StringBuffer format(float val, FormatSpec spec)
-   {
-      StringBuffer str = new StringBuffer(Float.toString(val));
-      if ( spec != null )
-      {
-         if ( spec.width != null )
-         {
-            Util.padBuffer(str, spec.width.intValue(), ' ', spec.leftJustified);
-         }
-      }
-      return str;
-   }
-
    private StringBuffer format(double val, FormatSpec spec)
    {
       StringBuffer str = new StringBuffer(Double.toString(val));
@@ -466,6 +430,7 @@ final public class Message
       }
       return str;
    }
+
    private StringBuffer format(String str, FormatSpec spec)
    {
       StringBuffer result = new StringBuffer();
@@ -494,7 +459,6 @@ final public class Message
       return result;
    }
 
-
    /** retrieve the text of the message, parsing any percent directives and replacing them with data from the buffer
     *
     * @param   buffer      an array of bytes
@@ -503,18 +467,18 @@ final public class Message
     */
    public String getMessage(byte[] buffer, int offset, int end)
    {
-      String prefix = (  TraceArgs.symbolic ) ? symbol+" " : "";
+	   String prefix = (  TraceArgs.symbolic ) ? symbol+" " : "";
 
-      if ( offset < end )
-      {
-          // If this is preformatted application trace, skip the first 4 bytes
-          if (component == "ApplicationTrace") {
-              offset += 4;
-          }
-         return prefix + processPercents(message, buffer, offset).toString();
-      } else {
-        return prefix + skipPercents(message, buffer, offset).toString();
-      }
+	   if ( offset < end )
+	   {
+		   // If this is preformatted application trace, skip the first 4 bytes
+		   if (component == "ApplicationTrace") {
+			   offset += 4;
+		   }
+		   return prefix + processPercents(message, buffer, offset).toString();
+	   } else {
+		   return prefix + skipPercents(message, buffer, offset).toString();
+	   }
    }
 
    /** returns the component this message corresponds to, as
@@ -542,7 +506,7 @@ final public class Message
        return message;
    }
 
-   class FormatSpec
+   static class FormatSpec
    {
       protected Integer width;         // this are object types to have
       protected Integer precision;     // a null value mean not set.

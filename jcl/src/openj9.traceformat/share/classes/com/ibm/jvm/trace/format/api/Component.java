@@ -23,6 +23,7 @@
 package com.ibm.jvm.trace.format.api;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /*
  * represents a trace component (eg: j9vm) and is responsible for holding on to
@@ -30,15 +31,15 @@ import java.util.ArrayList;
  */
 public class Component {
 
-	private String name;
-	private byte nameBytes[];
-	ArrayList messageList;
+	private final String name;
+	private final byte nameBytes[];
+	final List<Message> messageList;
 	private int base;
 
 	public Component(String componentName) {
 		name = componentName;
 		nameBytes = componentName.getBytes();
-		messageList = new ArrayList();
+		messageList = new ArrayList<>();
 		base = -1;
 	}
 
@@ -62,12 +63,12 @@ public class Component {
 			if (id >= messageList.size()) {
 				return null;
 			}
-			return (Message)messageList.get(id);
+			return messageList.get(id);
 		} else {
 			if (id - base >= messageList.size()) {
 				return null;
 			}
-			return (Message)messageList.get(id - base);
+			return messageList.get(id - base);
 		}
 	}
 

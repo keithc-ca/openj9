@@ -24,30 +24,31 @@ package com.ibm.jvm.trace;
 
 import java.util.Iterator;
 
+import com.ibm.jvm.format.TraceThread;
+
 /**
  * @author Simon Rowland
- *
  */
-public class TracePointThreadChronologicalIterator<Type extends com.ibm.jvm.trace.TracePoint> implements Iterator {
+public class TracePointThreadChronologicalIterator implements Iterator<TracePoint> {
 
-	private com.ibm.jvm.format.TraceThread thread = null;
-	
-	public TracePointThreadChronologicalIterator(com.ibm.jvm.format.TraceThread thread){
+	private final TraceThread thread;
+
+	public TracePointThreadChronologicalIterator(TraceThread thread) {
 		this.thread = thread;
-		updateNext();
-		/* prime */
+		updateNext(); /* prime */
 	}
-	
-	private com.ibm.jvm.trace.TracePoint next = null;
-	private synchronized void updateNext(){
+
+	private TracePoint next;
+
+	private synchronized void updateNext() {
 		next = thread.getNextTracePoint();
 	}
-	
+
 	/* (non-Javadoc)
 	 * @see java.util.Iterator#hasNext()
 	 */
 	public boolean hasNext() {
-		if (next == null){
+		if (next == null) {
 			return false;
 		} else {
 			return true;
@@ -57,8 +58,8 @@ public class TracePointThreadChronologicalIterator<Type extends com.ibm.jvm.trac
 	/* (non-Javadoc)
 	 * @see java.util.Iterator#next()
 	 */
-	public com.ibm.jvm.trace.TracePoint next() {
-		com.ibm.jvm.trace.TracePoint toReturn = next;
+	public TracePoint next() {
+		TracePoint toReturn = next;
 		updateNext();
 		return toReturn;
 	}
