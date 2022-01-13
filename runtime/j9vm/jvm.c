@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2002, 2021 IBM Corp. and others
+ * Copyright (c) 2002, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -2231,11 +2231,15 @@ JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs)
  *
  *	DLL: jvm
  */
+jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *vm_args)
+{
+	JDK1_1InitArgs *initArgs = (JDK1_1InitArgs *)vm_args;
+	UDATA jniVersion = (UDATA)initArgs->version;
 
-jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *vm_args) {
-	UDATA requestedVersion = (UDATA)((JDK1_1InitArgs *)vm_args)->version;
-
-	switch (requestedVersion) {
+	switch (jniVersion) {
+	case JNI_VERSION_1_1:
+		initArgs->javaStackSize = J9_OS_STACK_SIZE;
+		break;
 	case JNI_VERSION_1_2:
 	case JNI_VERSION_1_4:
 	case JNI_VERSION_1_6:
@@ -2247,6 +2251,8 @@ jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *vm_args) {
 	case JNI_VERSION_10:
 #endif /* JAVA_SPEC_VERSION >= 10 */
 		return JNI_OK;
+	default:
+		break;
 	}
 
 	return JNI_EVERSION;

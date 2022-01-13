@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 1991, 2021 IBM Corp. and others
+ * Copyright (c) 1991, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -59,7 +59,6 @@ static J9VMLSTable VMLSTable;
 
 static UDATA terminateRemainingThreads (J9VMThread* vmThread);
 static jint attachCurrentThread (JavaVM * vm, void ** p_env, void * thr_args, UDATA threadType);
-jint JNICALL JNI_GetDefaultJavaVMInitArgs (void * vm_args);
 static jint verifyCurrentThreadAttached (J9JavaVM * vm, J9VMThread ** pvmThread);
 #if (defined(J9VM_OPT_SIDECAR)) 
 void sidecarShutdown (J9VMThread* shutdownThread);

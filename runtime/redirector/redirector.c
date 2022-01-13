@@ -908,26 +908,32 @@ JNI_GetDefaultJavaVMInitArgs(void *vm_args)
 	iconv_init();
 #endif
 
-	if(globalInitArgs) {
+	if (globalInitArgs) {
 		return globalInitArgs(vm_args);
 	} else {
-		UDATA jniVersion = (UDATA)((JDK1_1InitArgs *)vm_args)->version;
+		JDK1_1InitArgs *initArgs = (JDK1_1InitArgs *)vm_args;
+		UDATA jniVersion = (UDATA)initArgs->version;
 
-		if ((jniVersion == JNI_VERSION_1_2)
-			|| (jniVersion == JNI_VERSION_1_4)
-			|| (jniVersion == JNI_VERSION_1_6)
-			|| (jniVersion == JNI_VERSION_1_8)
+		switch (jniVersion) {
+		case JNI_VERSION_1_1:
+			initArgs->javaStackSize = J9_OS_STACK_SIZE;
+			break;
+		case JNI_VERSION_1_2:
+		case JNI_VERSION_1_4:
+		case JNI_VERSION_1_6:
+		case JNI_VERSION_1_8:
 #if JAVA_SPEC_VERSION >= 9
-			|| (jniVersion == JNI_VERSION_9)
+		case JNI_VERSION_9:
 #endif /* JAVA_SPEC_VERSION >= 9 */
 #if JAVA_SPEC_VERSION >= 10
-			|| (jniVersion == JNI_VERSION_10)
+		case JNI_VERSION_10:
 #endif /* JAVA_SPEC_VERSION >= 10 */
-		) {
 			return JNI_OK;
-		} else {
-			return JNI_EVERSION;
+		default:
+			break;
 		}
+
+		return JNI_EVERSION;
 	}
 }
 
