@@ -626,7 +626,7 @@ TR::ResolvedMethodSymbol *TR_NewInitialization::findInlinableMethod(TR::TreeTop 
 
    TR_CallSite *callsite = TR_CallSite::create(callTree, parent, callNode, thisClass, symRef,  0, comp(), comp()->trMemory(), stackAlloc);
 
-	//TR_CallSite *callsite = new (trStackMemory()) TR_CallSite (symRef->getOwningMethod(comp()),callTree,parent,callNode,calleeMethodSymbol->getMethod(),thisClass,(int32_t)symRef->getOffset(),symRef->getCPIndex(),0,calleeMethodSymbol->getResolvedMethodSymbol(),callNode->getOpCode().isCallIndirect(),calleeMethodSymbol->isInterface(),callNode->getByteCodeInfo(),comp());
+   //TR_CallSite *callsite = new (trStackMemory()) TR_CallSite (symRef->getOwningMethod(comp()),callTree,parent,callNode,calleeMethodSymbol->getMethod(),thisClass,(int32_t)symRef->getOffset(),symRef->getCPIndex(),0,calleeMethodSymbol->getResolvedMethodSymbol(),callNode->getOpCode().isCallIndirect(),calleeMethodSymbol->isInterface(),callNode->getByteCodeInfo(),comp());
 
    newInlineCall.getSymbolAndFindInlineTargets(NULL,callsite);
    bool canSniff = callsite->numTargets() ? true : false;
@@ -879,14 +879,14 @@ bool TR_NewInitialization::visitNode(TR::Node *node)
          else if (base->getSecondChild()->getOpCodeValue() == TR::lconst)
             {
             int64_t longOffset = base->getSecondChild()->getLongInt();
-	    if ((longOffset <= (int64_t) INT_MAX) && (longOffset >= (int64_t) INT_MIN))
-	       {
+            if ((longOffset <= (int64_t) INT_MAX) && (longOffset >= (int64_t) INT_MIN))
+               {
                // Array new reference with constant index
                //
                offset = node->getSymbolReference()->getOffset() + ((int32_t) longOffset) - c->startOffset;
-	       }
+               }
             }
-	 else if (node->getOpCode().isLoadVar())
+         else if (node->getOpCode().isLoadVar())
             {
             // Array new reference with unknown index
             //

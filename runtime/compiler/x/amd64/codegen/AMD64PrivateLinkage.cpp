@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -382,7 +382,7 @@ uint8_t *J9::X86::AMD64::PrivateLinkage::flushArguments(
             numFPArgs++;
             break;
          default:
-         	break;
+            break;
          }
 
       if (needFlush)
@@ -517,7 +517,7 @@ J9::X86::AMD64::PrivateLinkage::flushArguments(
             numFPArgs++;
             break;
          default:
-         	break;
+            break;
          }
 
       }
@@ -838,7 +838,7 @@ int32_t J9::X86::AMD64::PrivateLinkage::buildArgs(TR::Node                      
          passArgsOnStack = true;
          break;
       default:
-      	break;
+         break;
       }
 
 #ifdef J9VM_OPT_JAVA_CRYPTO_ACCELERATION
@@ -974,7 +974,7 @@ int32_t J9::X86::AMD64::PrivateLinkage::buildPrivateLinkageArgs(TR::Node        
                      numSpecialArgs++;
                      break;
                   default:
-                  	break;
+                     break;
                   }
                }
             if (rregIndex == noReg)

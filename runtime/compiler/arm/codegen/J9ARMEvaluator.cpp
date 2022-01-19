@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -367,17 +367,17 @@ TR::Register *OMR::ARM::TreeEvaluator::VMifInstanceOfEvaluator(TR::Node *node, T
       TR::ARMLinkageProperties properties = cg->getLinkage()->getProperties();
       for (i = 0; i < depNode->getNumChildren(); i++)
           {
-    	  TR::Node *childNode = depNode->getChild(i);
+          TR::Node *childNode = depNode->getChild(i);
           int32_t  regIndex = cg->getGlobalRegister(depNode->getChild(i)->getGlobalRegisterNumber());
           int32_t highIndex = childNode->getHighGlobalRegisterNumber();
 
           if (needsHelperCall)
-        	 {
+             {
              if (highIndex > -1)
                 highIndex = cg->getGlobalRegister(highIndex);
              if (!properties.getPreserved((TR::RealRegister::RegNum) regIndex) || (highIndex > -1 && !properties.getPreserved((TR::RealRegister::RegNum) highIndex)))
                 return (TR::Register *)1;
-        	 }
+             }
           else
              {
              // Below check code taken from PPC.

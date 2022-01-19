@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -198,16 +198,16 @@ bool TR_SignExtendLoads::gatheri2lNodes(TR::Node* parent,TR::Node *node, TR_Scra
             case TR::iload: // only need to visit these if shared
             case TR::iconst:
             case TR::iloadi:
-              if(child->getReferenceCount() < 2) break;
+               if (child->getReferenceCount() < 2) break;
             case TR::i2l:
             case TR::iadd:
             case TR::isub:
-              addNodeToHash(child,node);
-              if(trace()) traceMsg(comp(), "node %p has %d references\n",child,child->getReferenceCount());
+               addNodeToHash(child,node);
+               if (trace()) traceMsg(comp(), "node %p has %d references\n",child,child->getReferenceCount());
             default:
-            	break;
+               break;
             }
-          nodesGathered = gatheri2lNodes(node, child,i2lList,useri2lList,isIndexSubtree || (i==1 && isAlAdd))
+         nodesGathered = gatheri2lNodes(node, child,i2lList,useri2lList,isIndexSubtree || (i==1 && isAlAdd))
             || nodesGathered;
          }
       }

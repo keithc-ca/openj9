@@ -380,12 +380,12 @@ void TR_RuntimeAssumptionTable::addAssumption(OMR::RuntimeAssumption *a, TR_Runt
    if (TR::Options::getCmdLineOptions()->getOption(TR_EnableRATPurging))
       {
       //If we are invalidating assumptions, check to see if we should purge the table at this point.
-   		if (! (assumptionCount[kind] % 10))
+      if (! (assumptionCount[kind] % 10))
          purgeRATTable(fe);
       }
    }
 
-/** 
+/**
  * Mark an assumption for future detach and reclaiming from the RAT
  * @param assumption The assumption to be marked for removal
  * Once all assumptions are marked a call to reclaimMarkedFromRAT() will free
@@ -405,9 +405,9 @@ void TR_RuntimeAssumptionTable::markForDetachFromRAT(OMR::RuntimeAssumption *ass
 
 /**
  * Traverse the entire RAT detaching and reclaiming all marked assumptions.
- * This assumes that the assumptions have already been detached from the 
+ * This assumes that the assumptions have already been detached from the
  * metadata's linked list. Only RAT 'kinds' that have any marked assumptions
- * will be traversed, and only the hashtable linked-lists that have a non-zero 
+ * will be traversed, and only the hashtable linked-lists that have a non-zero
  * marked for detach count will be traversed.
  */
 void TR_RuntimeAssumptionTable::reclaimMarkedAssumptionsFromRAT(int32_t cleanupCount)
@@ -499,14 +499,14 @@ void TR_RuntimeAssumptionTable::markAssumptionsAndDetach(void * md, bool reclaim
             #if defined(PROD_WITH_ASSUMES) || defined(DEBUG)
             TR_RuntimeAssumptionKind kind = cursor->getAssumptionKind();
             TR_ASSERT(kind == RuntimeAssumptionOnClassRedefinitionPIC ||
-                      kind == RuntimeAssumptionOnClassRedefinitionUPIC || 
+                      kind == RuntimeAssumptionOnClassRedefinitionUPIC ||
                       kind == RuntimeAssumptionOnClassRedefinitionNOP,
                "non redefinition assumption (RA=%p kind=%d key=%p) left after metadata reclamation\n",
                cursor, kind, cursor->getKey());
             #endif
             }
          }
-      
+
       if (!entriesRemain)
          {
          sentry->markForDetach();
@@ -1259,7 +1259,7 @@ J9::PersistentInfo::isUnloadedClass(
       auto clientData = TR::compInfoPT->getClientData();
       OMR::CriticalSection isUnloadedClass(clientData->getROMMapMonitor());
       return clientData->getUnloadedClassAddresses().mayContain((uintptr_t)v);
-      } 
+      }
 #endif
    OMR::CriticalSection isUnloadedClass(assumptionTableMutex);
    bool result = (_unloadedClassAddresses && _unloadedClassAddresses->mayContain((uintptr_t)v));

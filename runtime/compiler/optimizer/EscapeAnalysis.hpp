@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -143,7 +143,7 @@ class Candidate : public TR_Link<Candidate>
         _callSites(c->trMemory()),
         _dememoizedMethodSymRef(NULL),
         _dememoizedConstructorCall(NULL),
-    	_virtualCallSitesToBeFixed(c->trMemory()),
+        _virtualCallSitesToBeFixed(c->trMemory()),
         _coldBlockEscapeInfo(c->trMemory())
          {
           static const char *forceContinguousAllocation = feGetEnv("TR_forceContinguousAllocation");
@@ -651,7 +651,7 @@ class TR_EscapeAnalysis : public TR::Optimization
    struct TR_CallSitesFixedMapper : public TR_Link<TR_CallSitesFixedMapper>
       {
       TR_CallSitesFixedMapper(TR::TreeTop * virtualCallSite, TR::TreeTop * directCallSite)
-	 :	 _vCallSite(virtualCallSite), _dCallSite(directCallSite){ }
+         : _vCallSite(virtualCallSite), _dCallSite(directCallSite) {}
 
       TR::TreeTop * _vCallSite;
       TR::TreeTop * _dCallSite;
@@ -802,8 +802,6 @@ class TR_LocalFlushElimination
    TR_ScratchList<TR_DependentAllocations> _dependentAllocations;
    };
 
-
-
 #if CHECK_MONITORS
 class TR_MonitorStructureChecker
    {
@@ -825,12 +823,3 @@ class TR_MonitorStructureChecker
 
 #endif
 #endif
-
-
-
-
-
-
-
-
-

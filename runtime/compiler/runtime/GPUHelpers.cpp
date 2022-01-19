@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -1275,8 +1275,8 @@ calculateComputeCapability(int tracing, short * computeMajor, short * computeMin
          *computeMinor = 0;
          }
       else //Compute Capability range: 0.0-1.9
-	 {
-	 if (detailsTrace) TR_VerboseLog::writeLine(TR_Vlog_GPU, "\tCompute Capability %d.%d is unsupported. Compute Capability must be 2.0 or higher", major, minor);
+         {
+         if (detailsTrace) TR_VerboseLog::writeLine(TR_Vlog_GPU, "\tCompute Capability %d.%d is unsupported. Compute Capability must be 2.0 or higher", major, minor);
          return false;
          }
       }
@@ -2480,8 +2480,8 @@ I_32 jitCallGPU(J9VMThread *vmThread, J9Method *method,
 
 extern "C"
 int callGPU(void *vmThread, void *method, char * programSource, void * invokeObject, int deviceId,
-		 int gridDimX, int gridDimY, int gridDimZ,
-		 int blockDimX, int blockDimY, int blockDimZ,
+         int gridDimX, int gridDimY, int gridDimZ,
+         int blockDimX, int blockDimY, int blockDimZ,
          int argCount, void **args)
    {
    return 0;
@@ -2491,8 +2491,8 @@ int callGPU(void *vmThread, void *method, char * programSource, void * invokeObj
 
 extern "C"
 int callGPU(void *vmThread, void *method, char * programSource, void * invokeObject, int deviceId,
-		    int gridDimX, int gridDimY, int gridDimZ,
-		    int blockDimX, int blockDimY, int blockDimZ,
+            int gridDimX, int gridDimY, int gridDimZ,
+            int blockDimX, int blockDimY, int blockDimZ,
             int argCount, void **args)
    {
    return 0;

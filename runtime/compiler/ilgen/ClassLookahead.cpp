@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -709,7 +709,7 @@ TR_ClassLookahead::examineNode(TR::TreeTop *nextTree, TR::Node *grandParent, TR:
              if (arrayFieldInfo)
                 arrayFieldInfo->setIsDimensionInfoValid(INVALID);
              else
-	        fieldInfo->setCanChangeToArray(false);
+                fieldInfo->setCanChangeToArray(false);
              }
           }
        else if ((sym->isShadow() ||
@@ -733,7 +733,7 @@ TR_ClassLookahead::examineNode(TR::TreeTop *nextTree, TR::Node *grandParent, TR:
           }
 
       if (sym->isStatic() && sym->isFinal() && !_inClassInitializerMethod)
-	 _classInfo->setCannotTrustStaticFinal();
+         _classInfo->setCannotTrustStaticFinal();
 
       if (isPrivateFieldAccess(node) || isProperFieldAccess(node))
          {
@@ -752,7 +752,7 @@ TR_ClassLookahead::examineNode(TR::TreeTop *nextTree, TR::Node *grandParent, TR:
                if (arrayFieldInfo)
                   arrayFieldInfo->setIsDimensionInfoValid(INVALID);
                else
-	          fieldInfo->setCanChangeToArray(false);
+                  fieldInfo->setCanChangeToArray(false);
                }
             }
 
@@ -1075,7 +1075,7 @@ void TR_ClassLookahead::invalidateIfEscapingLoad(TR::TreeTop *nextTree, TR::Node
              if (arrayFieldInfo)
                 arrayFieldInfo->setIsDimensionInfoValid(INVALID);
              else
-	        fieldInfo->setCanChangeToArray(false);
+                fieldInfo->setCanChangeToArray(false);
              }
           }
 
@@ -1576,4 +1576,3 @@ void TR_PersistentArrayFieldInfo::dumpInfo(TR_FrontEnd *fe, TR::FILE *logFile)
    }
 
 #endif
-

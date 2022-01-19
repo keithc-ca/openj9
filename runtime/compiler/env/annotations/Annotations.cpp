@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2018 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -55,14 +55,14 @@ TR_Debug::printAnnotationInfoEntry(J9AnnotationInfo * annotationInfo,
    switch(flag)
       {
       case ANNOTATION_TYPE_CLASS:
-	 annotationTypeName="class";
-	 break;
+         annotationTypeName="class";
+    break;
 
       case ANNOTATION_TYPE_FIELD:{
          int32_t len;
          J9UTF8 *name      = SRP_GET(annotationInfoEntryPtr->memberName,J9UTF8*);
-	 annotationTypeName="field:";
-	 signatureName=utf8Data(name,len);
+         annotationTypeName="field:";
+         signatureName=utf8Data(name,len);
          strncpy(stringBufferA,signatureName,len);
          stringBufferA[len] = ' ';
          stringBufferA[len+1] = '\0';
@@ -75,35 +75,35 @@ TR_Debug::printAnnotationInfoEntry(J9AnnotationInfo * annotationInfo,
 
          signatureName = stringBufferA;
 
-	 //filterOnName=true;
-	 break;
+         //filterOnName=true;
+         break;
       }
       case ANNOTATION_TYPE_METHOD:
-	 annotationTypeName="method";
-	 filterOnName=true;
-	 break;
+         annotationTypeName="method";
+         filterOnName=true;
+         break;
 
       case ANNOTATION_TYPE_ANNOTATION:{
          int32_t len;
          J9UTF8 *name      = SRP_GET(annotationInfoEntryPtr->annotationType,J9UTF8*);
-	 annotationTypeName="annotation:";
-	 signatureName=utf8Data(name,len);
+         annotationTypeName="annotation:";
+         signatureName=utf8Data(name,len);
          strncpy(stringBufferA,signatureName,len);
          stringBufferA[len] = '\0';
          signatureName = stringBufferA;
-	 break;
-	 }
+         break;
+         }
       default:
-	 if ((flag & ~ANNOTATION_PARM_MASK) == ANNOTATION_TYPE_PARAMETER)
-	    {
-	    sprintf(annNameBuffer,"parm(%d)",(flag & ANNOTATION_PARM_MASK)>> ANNOTATION_PARM_SHIFT);
-	    TR_ASSERT( strlen(annNameBuffer) < ANNO_NAMEBUF_LEN, "buffer length somehow exceeded\n");
-	    annotationTypeName=annNameBuffer;
-	    filterOnName=true;
-	    break;
-	    }
+         if ((flag & ~ANNOTATION_PARM_MASK) == ANNOTATION_TYPE_PARAMETER)
+            {
+            sprintf(annNameBuffer,"parm(%d)",(flag & ANNOTATION_PARM_MASK)>> ANNOTATION_PARM_SHIFT);
+            TR_ASSERT( strlen(annNameBuffer) < ANNO_NAMEBUF_LEN, "buffer length somehow exceeded\n");
+            annotationTypeName=annNameBuffer;
+            filterOnName=true;
+            break;
+            }
          else
-	    annotationTypeName = "unknown";
+            annotationTypeName = "unknown";
       }
 
    if (filterOnName){
@@ -273,4 +273,3 @@ TR_Debug::printByteCodeAnnotations()
 
    trfprintf(_file, "</annotations>\n");
    }
-

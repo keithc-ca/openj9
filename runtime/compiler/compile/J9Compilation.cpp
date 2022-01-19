@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -90,7 +90,7 @@ void *operator new(size_t size)
 
 // Avoid -Wimplicit-exception-spec-mismatch error on platforms that specify the global delete operator with throw()
 #ifndef _NOEXCEPT
-#define _NOEXCEPT 
+#define _NOEXCEPT
 #endif
 
 /**
@@ -440,7 +440,7 @@ J9::Compilation::isConverterMethod(TR::RecognizedMethod rm)
       case TR::sun_nio_cs_UTF_16_Encoder_encodeUTF16Little:
          return true;
       default:
-      	return false;
+         return false;
       }
 
    return false;

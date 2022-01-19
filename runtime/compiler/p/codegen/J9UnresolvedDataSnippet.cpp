@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -179,7 +179,7 @@ uint8_t *J9::Power::UnresolvedDataSnippet::emitSnippetBody()
    if (getMemoryReference()->useIndexedForm())
       *(int32_t *)cursor |= 1<<28;                           // Set the index bit
    if (is32BitLong())
-      *(int32_t *)cursor |= 1<<27;	                     // Set the double word load/store bit
+      *(int32_t *)cursor |= 1<<27;                           // Set the double word load/store bit
    cursor += 4;
 
    *(intptr_t *)cursor = (intptr_t)getDataSymbolReference()->getOwningMethod(comp)->constantPool();
@@ -213,25 +213,25 @@ uint8_t *J9::Power::UnresolvedDataSnippet::emitSnippetBody()
    if (getMemoryReference()->isTOCAccess())
       {
       if (getMemoryReference()->getTOCOffset() != PTOC_FULL_INDEX)
-	 {
+         {
          if (getMemoryReference()->getTOCOffset()<LOWER_IMMED ||
              getMemoryReference()->getTOCOffset()>UPPER_IMMED)
-	    {
+            {
             *(int32_t *)cursor = 0x3c000000;
             toRealRegister(getMemoryReference()->getModBase())->setRegisterFieldRT((uint32_t *)cursor);
-	    }
+            }
          else
-	    {
-       *(int32_t *)cursor = comp->target().is64Bit()?0xe8000000:0x80000000;
+            {
+            *(int32_t *)cursor = comp->target().is64Bit()?0xe8000000:0x80000000;
             getDataRegister()->setRegisterFieldRT((uint32_t *)cursor);
-	    }
+            }
          cg()->getTOCBaseRegister()->setRegisterFieldRA((uint32_t *)cursor);
-	 }
+         }
       else
-	 {
+         {
          *(int32_t *)cursor = 0x3c000000;
          getDataRegister()->setRegisterFieldRT((uint32_t *)cursor);
-	 }
+         }
       }
    else
       {

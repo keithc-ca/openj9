@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -29,20 +29,20 @@ enum TR_J9ByteCode
    J9BCnop,
    J9BCaconstnull,
    J9BCiconstm1,
-   J9BCiconst0, J9BCiconst1, J9BCiconst2, J9BCiconst3, J9BCiconst4, J9BCiconst5, 
-   J9BClconst0, J9BClconst1, 
+   J9BCiconst0, J9BCiconst1, J9BCiconst2, J9BCiconst3, J9BCiconst4, J9BCiconst5,
+   J9BClconst0, J9BClconst1,
    J9BCfconst0, J9BCfconst1, J9BCfconst2,
    J9BCdconst0, J9BCdconst1,
    J9BCbipush, J9BCsipush,
    J9BCldc, J9BCldcw, J9BCldc2lw, J9BCldc2dw,
    J9BCiload, J9BClload, J9BCfload, J9BCdload, J9BCaload,
-   J9BCiload0, J9BCiload1, J9BCiload2, J9BCiload3, 
+   J9BCiload0, J9BCiload1, J9BCiload2, J9BCiload3,
    J9BClload0, J9BClload1, J9BClload2, J9BClload3,
    J9BCfload0, J9BCfload1, J9BCfload2, J9BCfload3,
    J9BCdload0, J9BCdload1, J9BCdload2, J9BCdload3,
    J9BCaload0, J9BCaload1, J9BCaload2, J9BCaload3,
    J9BCiaload, J9BClaload, J9BCfaload, J9BCdaload, J9BCaaload, J9BCbaload, J9BCcaload, J9BCsaload,
-   J9BCiloadw, J9BClloadw, J9BCfloadw, J9BCdloadw, J9BCaloadw, 
+   J9BCiloadw, J9BClloadw, J9BCfloadw, J9BCdloadw, J9BCaloadw,
    J9BCistore, J9BClstore, J9BCfstore, J9BCdstore, J9BCastore,
    J9BCistorew, J9BClstorew, J9BCfstorew, J9BCdstorew, J9BCastorew,
    J9BCistore0, J9BCistore1, J9BCistore2, J9BCistore3,
@@ -64,8 +64,8 @@ enum TR_J9ByteCode
    J9BCiand, J9BCland,
    J9BCior, J9BClor,
    J9BCixor, J9BClxor,
-   J9BCiinc, J9BCiincw, 
-   J9BCi2l, J9BCi2f, J9BCi2d, 
+   J9BCiinc, J9BCiincw,
+   J9BCi2l, J9BCi2f, J9BCi2d,
    J9BCl2i, J9BCl2f, J9BCl2d, J9BCf2i, J9BCf2l, J9BCf2d,
    J9BCd2i, J9BCd2l, J9BCd2f,
    J9BCi2b, J9BCi2c, J9BCi2s,
@@ -73,35 +73,35 @@ enum TR_J9ByteCode
    J9BCifeq, J9BCifne, J9BCiflt, J9BCifge, J9BCifgt, J9BCifle,
    J9BCificmpeq, J9BCificmpne, J9BCificmplt, J9BCificmpge, J9BCificmpgt, J9BCificmple, J9BCifacmpeq, J9BCifacmpne,
    J9BCifnull, J9BCifnonnull,
-   J9BCgoto, 
-   J9BCgotow, 
+   J9BCgoto,
+   J9BCgotow,
    J9BCtableswitch, J9BClookupswitch,
    J9BCgenericReturn,
    J9BCgetstatic, J9BCputstatic,
    J9BCgetfield, J9BCputfield,
-   J9BCinvokevirtual, J9BCinvokespecial, J9BCinvokestatic, J9BCinvokeinterface, J9BCinvokedynamic, J9BCinvokehandle, J9BCinvokehandlegeneric,J9BCinvokespecialsplit, 
+   J9BCinvokevirtual, J9BCinvokespecial, J9BCinvokestatic, J9BCinvokeinterface, J9BCinvokedynamic, J9BCinvokehandle, J9BCinvokehandlegeneric,J9BCinvokespecialsplit,
 
    /** \brief
     *      Pops 1 int32_t argument off the stack and truncates to a uint16_t.
     */
-	J9BCReturnC,
+   J9BCReturnC,
 
-	/** \brief
+   /** \brief
     *      Pops 1 int32_t argument off the stack and truncates to a int16_t.
     */
-	J9BCReturnS,
+   J9BCReturnS,
 
-	/** \brief
+   /** \brief
     *      Pops 1 int32_t argument off the stack and truncates to a int8_t.
     */
-	J9BCReturnB,
+   J9BCReturnB,
 
-	/** \brief
+   /** \brief
     *      Pops 1 int32_t argument off the stack returns the single lowest order bit.
     */
-	J9BCReturnZ,
+   J9BCReturnZ,
 
-	J9BCinvokestaticsplit, J9BCinvokeinterface2,
+   J9BCinvokestaticsplit, J9BCinvokeinterface2,
    J9BCnew, J9BCnewarray, J9BCanewarray, J9BCmultianewarray,
    J9BCarraylength,
    J9BCathrow,

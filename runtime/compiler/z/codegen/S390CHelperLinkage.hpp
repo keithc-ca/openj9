@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -39,11 +39,11 @@ class CHelperLinkage : public TR::Linkage
    uint32_t _preservedRegisterMapForGC;
    TR::RealRegister::RegNum _methodMetaDataRegister;
    TR::RealRegister::RegNum _returnAddressRegister;
-	// Following Regs are needed only in the case of zOS.
+   // Following Regs are needed only in the case of zOS.
 #if defined(J9ZOS390)
-	TR::RealRegister::RegNum _DSAPointerRegister;
+   TR::RealRegister::RegNum _DSAPointerRegister;
 #if defined(TR_HOST_32BIT)
-	TR::RealRegister::RegNum _CAAPointerRegister;
+   TR::RealRegister::RegNum _CAAPointerRegister;
 #endif
 #endif
 public:
@@ -72,11 +72,11 @@ public:
    virtual TR::RealRegister::RegNum setReturnAddressRegister(TR::RealRegister::RegNum r) { return _returnAddressRegister = r; }
    virtual TR::RealRegister::RegNum getReturnAddressRegister() { return _returnAddressRegister; }
 #if defined(J9ZOS390)
-	virtual TR::RealRegister::RegNum setDSAPointerRegister(TR::RealRegister::RegNum r) { return _DSAPointerRegister = r; }
-	virtual TR::RealRegister::RegNum getDSAPointerRegister() { return _DSAPointerRegister; }
+   virtual TR::RealRegister::RegNum setDSAPointerRegister(TR::RealRegister::RegNum r) { return _DSAPointerRegister = r; }
+   virtual TR::RealRegister::RegNum getDSAPointerRegister() { return _DSAPointerRegister; }
 #if defined(TR_HOST_32BIT)
-	virtual TR::RealRegister::RegNum setCAAPointerRegister(TR::RealRegister::RegNum r) { return _CAAPointerRegister = r; }
-	virtual TR::RealRegister::RegNum getCAAPointerRegister() { return _CAAPointerRegister; }
+   virtual TR::RealRegister::RegNum setCAAPointerRegister(TR::RealRegister::RegNum r) { return _CAAPointerRegister = r; }
+   virtual TR::RealRegister::RegNum getCAAPointerRegister() { return _CAAPointerRegister; }
 #endif
 #endif
    /** \brief

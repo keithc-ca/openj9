@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -35,17 +35,17 @@
 #include "compile/Compilation.hpp"
 
 static int isReferenceSignature(char *signature)
-{
-     return ( (signature[0] == 'L' )  || (signature[0] == '[') || (signature[0] == 'Q'));
-}
+   {
+   return ( (signature[0] == 'L' )  || (signature[0] == '[') || (signature[0] == 'Q'));
+   }
 
 int TR_VMField::isReference()
-{
-     return ( isReferenceSignature(signature) );
-}
+   {
+   return ( isReferenceSignature(signature) );
+   }
 
 TR_VMField::TR_VMField(TR::Compilation * comp, J9Class *aClazz, J9ROMFieldShape *fieldShape,  TR_AllocationKind allocKind)
-{
+   {
    int nameLength=0, sigLength=0;
    char *nPtr=NULL, *sPtr=NULL;
    J9UTF8 *nameUtf8;
@@ -72,13 +72,13 @@ TR_VMField::TR_VMField(TR::Compilation * comp, J9Class *aClazz, J9ROMFieldShape 
       offset = 0;
    else
       offset = comp->fej9()->getInstanceFieldOffset((TR_OpaqueClassBlock *)aClazz, name, (uint32_t)(nameLength-1), signature, (uint32_t)(sigLength-1));
-}
+   }
 
 
 void TR_VMField::print(TR_FrontEnd *fe, TR::FILE *outFile)
-{
+   {
    trfprintf(outFile, "name=%s signature=%s modifiers=0x%p offset=%d\n", name, signature, modifiers, offset);
-}
+   }
 
 
 TR_VMFieldsInfo::TR_VMFieldsInfo(TR::Compilation * comp, J9Class *aClazz, int buildFields, TR_AllocationKind allocKind)
@@ -88,7 +88,7 @@ TR_VMFieldsInfo::TR_VMFieldsInfo(TR::Compilation * comp, J9Class *aClazz, int bu
      _fields(NULL),
      _statics(NULL),
      _allocKind(allocKind)
-{
+   {
    if (buildFields)
       {
       // Weird: We can't seem to just use List with stackAlloc?  I need to use a subclass??
@@ -176,7 +176,7 @@ TR_VMFieldsInfo::TR_VMFieldsInfo(TR::Compilation * comp, J9Class *aClazz, int bu
       }
    // null terminated
    _gcDescriptor.push_back(0);
-}
+   }
 
 void
 TR_VMFieldsInfo::collectFieldInfo(J9Class *aClazz)
@@ -199,7 +199,7 @@ TR_VMFieldsInfo::buildField(J9Class *aClazz, J9ROMFieldShape *fieldShape)
       {
       field = new (_comp->trMemory(), _allocKind) TR_VMField(_comp, aClazz, fieldShape, _allocKind);
       _statics->add(field);
-	   }
+      }
    else if (_fields)
       {
       field = new (_comp->trMemory(), _allocKind) TR_VMField(_comp, aClazz, fieldShape,  _allocKind);

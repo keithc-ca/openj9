@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -66,10 +66,10 @@ J9::Z::zLinuxSystemLinkage::zLinuxSystemLinkage(TR::CodeGenerator * codeGen)
 ////////////////////////////////////////////////////////////////////////////////
 void
 J9::Z::zLinuxSystemLinkage::generateInstructionsForCall(TR::Node * callNode,
-	TR::RegisterDependencyConditions * deps, intptr_t targetAddress,
-	TR::Register * methodAddressReg, TR::Register * javaLitOffsetReg,
-	TR::LabelSymbol * returnFromJNICallLabel,
-	TR::Snippet * callDataSnippet, bool isJNIGCPoint)
+   TR::RegisterDependencyConditions * deps, intptr_t targetAddress,
+   TR::Register * methodAddressReg, TR::Register * javaLitOffsetReg,
+   TR::LabelSymbol * returnFromJNICallLabel,
+   TR::Snippet * callDataSnippet, bool isJNIGCPoint)
    {
    TR::S390JNICallDataSnippet * jniCallDataSnippet = static_cast<TR::S390JNICallDataSnippet *>(callDataSnippet);
    TR::CodeGenerator * codeGen = cg();
@@ -82,11 +82,11 @@ J9::Z::zLinuxSystemLinkage::generateInstructionsForCall(TR::Node * callNode,
    TR::Register * parm5 = deps->searchPreConditionRegister(getIntegerArgumentRegister(4));
 
    TR::RegisterDependencyConditions * postDeps =
-		   new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
-				   deps->getPostConditions(), 0, deps->getAddCursorForPost(), cg());
+         new (trHeapMemory()) TR::RegisterDependencyConditions(NULL,
+               deps->getPostConditions(), 0, deps->getAddCursorForPost(), cg());
 
    TR::Register * systemReturnAddressRegister =
-		   deps->searchPostConditionRegister(getReturnAddressRegister());
+         deps->searchPostConditionRegister(getReturnAddressRegister());
 
    bool passLitPoolReg = false;
    if (codeGen->isLiteralPoolOnDemandOn())
@@ -111,21 +111,21 @@ J9::Z::zLinuxSystemLinkage::generateInstructionsForCall(TR::Node * callNode,
     *
     */
    if (fej9->needRelocationsForHelpers()
-		   && !(callNode->getSymbol()->isResolvedMethod()
-				   || jniCallDataSnippet))
+         && !(callNode->getSymbol()->isResolvedMethod()
+               || jniCallDataSnippet))
       {
       generateRegLitRefInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, systemReturnAddressRegister,
-    		  (uintptr_t) callNode->getSymbolReference(), TR_HelperAddress, NULL, NULL, NULL);
-	   }
+              (uintptr_t) callNode->getSymbolReference(), TR_HelperAddress, NULL, NULL, NULL);
+      }
    // get the address of the function descriptor
    else if (callNode->getSymbol()->isResolvedMethod() && jniCallDataSnippet) // unresolved means a helper being called using system linkage
       {
       generateRXInstruction(codeGen, TR::InstOpCode::getLoadOpCode(), callNode,
-    		  systemReturnAddressRegister, generateS390MemoryReference(jniCallDataSnippet->getBaseRegister(),
-    				  jniCallDataSnippet->getTargetAddressOffset(), codeGen));
+              systemReturnAddressRegister, generateS390MemoryReference(jniCallDataSnippet->getBaseRegister(),
+                      jniCallDataSnippet->getTargetAddressOffset(), codeGen));
       }
    else if (codeGen->needClassAndMethodPointerRelocations()
-    		  && callNode->isPreparedForDirectJNI())
+              && callNode->isPreparedForDirectJNI())
       {
       TR_ExternalRelocationTargetKind reloType;
       if (callNode->getSymbol()->castToResolvedMethodSymbol()->isSpecial())
@@ -140,16 +140,16 @@ J9::Z::zLinuxSystemLinkage::generateInstructionsForCall(TR::Node * callNode,
          TR_ASSERT(0,"JNI relocation not supported.");
          }
       generateRegLitRefInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode,
-				systemReturnAddressRegister, (uintptr_t) targetAddress,
-				reloType, NULL, NULL, NULL);
-	   }
+                systemReturnAddressRegister, (uintptr_t) targetAddress,
+                reloType, NULL, NULL, NULL);
+      }
    else
       {
       genLoadAddressConstant(codeGen, callNode, targetAddress,
-				systemReturnAddressRegister, NULL, NULL, javaLitPoolRegister);
+                systemReturnAddressRegister, NULL, NULL, javaLitPoolRegister);
       }
 
-	//param 3, 4 and 5 are currently in gpr8, gpr9 and gpr10, move them in correct regs( gpr4, gpr5 and gpr6 )
+   //param 3, 4 and 5 are currently in gpr8, gpr9 and gpr10, move them in correct regs( gpr4, gpr5 and gpr6 )
    if (parm3)
       {
       TR::Register * gpr4Reg = deps->searchPostConditionRegister(TR::RealRegister::GPR4);
@@ -163,14 +163,14 @@ J9::Z::zLinuxSystemLinkage::generateInstructionsForCall(TR::Node * callNode,
       {
       //save litpool reg GPR6
       generateRRInstruction(codeGen, TR::InstOpCode::getLoadRegOpCode(), callNode,
-    		  javaLitOffsetReg, javaLitPoolRegister);
+              javaLitOffsetReg, javaLitPoolRegister);
       generateRRInstruction(codeGen, TR::InstOpCode::getLoadRegOpCode(), callNode,
-    		  javaLitPoolRegister, parm5);
+              javaLitPoolRegister, parm5);
       }
    // call the JNI function
    TR::Instruction * gcPoint = generateRRInstruction(codeGen, TR::InstOpCode::BASR,
-		   callNode, systemReturnAddressRegister,
-		   systemReturnAddressRegister, deps);
+           callNode, systemReturnAddressRegister,
+           systemReturnAddressRegister, deps);
 
    if (isJNIGCPoint)
       {
@@ -182,7 +182,7 @@ J9::Z::zLinuxSystemLinkage::generateInstructionsForCall(TR::Node * callNode,
       {
       //restore litpool reg GPR6
       generateRRInstruction(codeGen, TR::InstOpCode::getLoadRegOpCode(), callNode,
-    		  javaLitPoolRegister, javaLitOffsetReg);
+              javaLitPoolRegister, javaLitOffsetReg);
       }
 
 }

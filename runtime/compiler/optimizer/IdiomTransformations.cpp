@@ -1825,7 +1825,7 @@ byte byteArray[ ];
 while(true){
    if (booltable(byteArray[i])) break;
    i++;
-   if (i >= end) break;	// optional
+   if (i >= end) break; // optional
 }
 
 Note 1: The wildcard node "booltable" matches if-statements or switch-case statements
@@ -1939,11 +1939,11 @@ makeTRTGraph2(TR::Compilation *c, int32_t ctrl)
 /****************************************************************************************
 Corresponding Java-like pseudocode
 int i, end;
-char charArray[ ];	// char array
+char charArray[ ]; // char array
 while(true){
    if (booltable(charArray[i])) break;
    i++;
-   if (i >= end) break;	// optional
+   if (i >= end) break; // optional
 }
 
 Note 1: There is one limitation. Only when the booltable matches if-statements comparing
@@ -2271,7 +2271,7 @@ byte byteArray[ ], map[ ];
 while(true){
    if (map[byteArray[i] & 0xff] != 0)) break;
    i++;
-   if (i >= end) break;	// optional
+   if (i >= end) break; // optional
 }
 ****************************************************************************************/
 TR_PCISCGraph *
@@ -2351,7 +2351,7 @@ while(true){
    T = v0[v1];
    if (T < 0 || map[T] != 0)) break;
    v1++;
-   if (v1 >= end) break;	// optional
+   if (v1 >= end) break; // optional
 }
 ****************************************************************************************/
 TR_PCISCGraph *
@@ -2445,8 +2445,8 @@ CISCTransform2CopyingTROx(TR_CISCTransformer *trans)
    bool genSIMD = comp->cg()->getSupportsVectorRegisters() && !comp->getOption(TR_DisableSIMDArrayTranslate);
 
    if (!isOutputChar  && genSIMD && !genTRxx){
-	   traceMsg(comp, "Bailing CISCTransform2CopyingTROx : b2b - no proper evaluator available\n");
-	   return false;
+       traceMsg(comp, "Bailing CISCTransform2CopyingTROx : b2b - no proper evaluator available\n");
+       return false;
    }
 
    bool isSignExtending = false;
@@ -2671,54 +2671,54 @@ CISCTransform2CopyingTROx(TR_CISCTransformer *trans)
       }
    else
       {
-	   //SIMD or TRxx
+       //SIMD or TRxx
       if (isOutputChar)
          {
-    	  //b2c
+          //b2c
          termchar = TERMCHAR;
          uint16_t table[256];
 
          bool isSIMDPossible = genSIMD && !isSignExtending;
          if (isSIMDPossible) {
             //SIMD possible only if we have consecutive chars, and no ranges
-       	    for (int i = 0; i < 256; i++) {
-       		   if (tmpTable[i] == 0) {
+            for (int i = 0; i < 256; i++) {
+               if (tmpTable[i] == 0) {
                   if (stopchar != (i-1)) {
                      isSIMDPossible = false;
-       				 break;
-       			  }
-       			  stopchar++;
-       		    }
-       	    }
+                     break;
+                  }
+                  stopchar++;
+                }
+            }
 
-       	    //case all are non-valid chars
-       	    if (stopchar == -1 )
-       		   isSIMDPossible = false;
+            //case all are non-valid chars
+            if (stopchar == -1 )
+               isSIMDPossible = false;
          }
 
-       	 if (isSIMDPossible) {
-       		tableNode = TR::Node::create(baseRepNode, TR::aconst, 0, 0); //dummy table node, it's not gonna be used
-       	 } else if (!genTRxx){
+         if (isSIMDPossible) {
+            tableNode = TR::Node::create(baseRepNode, TR::aconst, 0, 0); //dummy table node, it's not gonna be used
+         } else if (!genTRxx){
              traceMsg(comp, "Bailing CISCTransform2CopyingTROx: b2c - no proper evaluator available\n");
              return false;
-       	 } else {
-       		 for (int i = 0; i < 256; i++)
-       		 	 {
-       			 uint8_t excluded = tmpTable[i];
-       			 uint16_t *entry = &table[i];
-       			 if (excluded)
-       			    *entry = TERMCHAR;
-       			 else if (isSignExtending)
-       			    *entry = (int8_t)i; // sign-extends up from 8-bit
-       			 else
-       			    *entry = i;
-       		 	 }
-       		 tableNode = createTableLoad(comp, baseRepNode, 8, 16, table, disptrace);
-         	 }
+         } else {
+             for (int i = 0; i < 256; i++)
+                 {
+                 uint8_t excluded = tmpTable[i];
+                 uint16_t *entry = &table[i];
+                 if (excluded)
+                    *entry = TERMCHAR;
+                 else if (isSignExtending)
+                    *entry = (int8_t)i; // sign-extends up from 8-bit
+                 else
+                    *entry = i;
+                 }
+             tableNode = createTableLoad(comp, baseRepNode, 8, 16, table, disptrace);
+             }
          }
       else
          {
-    	  //b2b
+          //b2b
          termchar = -1;
          for (int i = 0; i < 256; i++)
             {
@@ -3313,8 +3313,8 @@ makeCopyingTROxGraph(TR::Compilation *c, int32_t ctrl, int pattern)
 /****************************************************************************************
 Corresponding Java-like Pseudo Program
 int v1, end;
-int v3;			// optional
-int v4;	// v4 usually has the value of "v3 - v1".
+int v3; // optional
+int v4; // v4 usually has the value of "v3 - v1".
 byte v0[ ];
 char v2[ ];
 while(true){
@@ -3322,7 +3322,7 @@ while(true){
    if (booltable(T)) break;
    v2[v1+v4] = T;
    v1++;
-   v3 = v1+v4;		// optional
+   v3 = v1+v4; // optional
    if (v1 >= end) break;
 }
 ****************************************************************************************/
@@ -3718,8 +3718,8 @@ CISCTransform2CopyingTRTx(TR_CISCTransformer *trans)
    bool genSIMD = comp->cg()->getSupportsVectorRegisters() && !comp->getOption(TR_DisableSIMDArrayTranslate);
 
    if (isOutputChar  && genSIMD && !genTRxx){
-	   traceMsg(comp, "Bailing CISCTransform2CopyingTRTx : c2c - no proper evaluator available\n");
-	   return false;
+       traceMsg(comp, "Bailing CISCTransform2CopyingTRTx : c2c - no proper evaluator available\n");
+       return false;
    }
 
 
@@ -3838,10 +3838,10 @@ CISCTransform2CopyingTRTx(TR_CISCTransformer *trans)
             return false;
       if (comp->cg()->getSupportsArrayTranslateTRTO255())
          {
-    	 for (int i = 0; i < 256; i++)
-    	    if (tmpTable[i] != 0)
-    	       return false;
-    	 termchar = 0x0ff00ff00;
+         for (int i = 0; i < 256; i++)
+            if (tmpTable[i] != 0)
+               return false;
+         termchar = 0x0ff00ff00;
          }
       else
          {
@@ -3886,8 +3886,8 @@ CISCTransform2CopyingTRTx(TR_CISCTransformer *trans)
          for (i = 0; i < 65536; i++)
             {
             if (tmpTable[i] == 0) {
-            	if ( i >= 256)
-            		return false;
+                if ( i >= 256)
+                    return false;
                termByteTable[i] = 1;
                }
             }
@@ -3895,71 +3895,71 @@ CISCTransform2CopyingTRTx(TR_CISCTransformer *trans)
 
          bool isSIMDPossible = genSIMD;
          if (isSIMDPossible) {
-        	//SIMD possible only if we have consecutive chars, and no ranges
-        	for (int i = 0; i < 256; i++) {
-       	       if (tmpTable[i] == 0) {
-       		      if (stopchar != (i-1)) {
+            //SIMD possible only if we have consecutive chars, and no ranges
+            for (int i = 0; i < 256; i++) {
+               if (tmpTable[i] == 0) {
+                  if (stopchar != (i-1)) {
                      isSIMDPossible = false;
-       			     break;
-       		      }
-       		      stopchar++;
-       		   }
-       	    }
+                     break;
+                  }
+                  stopchar++;
+               }
+            }
 
-       	    //case all non valid chars
-       	    if (stopchar == -1 )
-       		   isSIMDPossible = false;
+            //case all non valid chars
+            if (stopchar == -1 )
+               isSIMDPossible = false;
          }
 
         if (isSIMDPossible) {
             tableNode = TR::Node::create(baseRepNode, TR::aconst, 0, 0); //dummy table node, it's not gonna be used
         } else if(!genTRxx){
-        	traceMsg(comp, "Bailing CISCTransform2CopyingTRTx : c2b - no proper evaluator available\n");
-        	return false;
+            traceMsg(comp, "Bailing CISCTransform2CopyingTRTx : c2b - no proper evaluator available\n");
+            return false;
         } else {
-        	//TRxx
-        	 for (i = 256; --i >= 0; )
-        	 {
-        		 if (termByteTable[i] == 0)
-        		 {
-        			 termchar = i;  // find termchar;
-        			 break;
-        		 }
-        	 }
+            //TRxx
+             for (i = 256; --i >= 0; )
+             {
+                 if (termByteTable[i] == 0)
+                 {
+                     termchar = i;  // find termchar;
+                     break;
+                 }
+             }
 
-        	 // Create the function table for TRTO
-        	 if (termchar < 0) // no room of termchar
-        	 {
-        		 isAllowSourceCellTermChar = true; // Generated code will check whether the character is a delimiter.
-        		 termchar = TERMBYTE;
-        		 if (disptrace)
-        			 traceMsg(comp, "setAllowSourceCellIsTermChar: ");
-        	 }
-        	 if (disptrace)
-        		 traceMsg(comp, "termchar is 0x%02x\n", termchar);
+             // Create the function table for TRTO
+             if (termchar < 0) // no room of termchar
+             {
+                 isAllowSourceCellTermChar = true; // Generated code will check whether the character is a delimiter.
+                 termchar = TERMBYTE;
+                 if (disptrace)
+                     traceMsg(comp, "setAllowSourceCellIsTermChar: ");
+             }
+             if (disptrace)
+                 traceMsg(comp, "termchar is 0x%02x\n", termchar);
 
 
-        	 uint8_t *table = (uint8_t*)comp->trMemory()->allocateMemory(65536, stackAlloc);
-        	 //Only check up to 256 because we already
-        	 for (i = 0; i < 65536; i++)
-        	 {
-        		 uint8_t u8 = tmpTable[i];
-        	 	 //Not sure I understand the reasning behind discarding those: chars larger than 256 which map to byte ... possible
-        	 	 //we have the table to hold all chars. Value needs to represent i & ff
-        	 	 //for now I moved the check up - so bail out earlier.
-        	 	 //Reach here only if chars that need mapping are <256.
-        	 	 //if 	(!u8 && i >= 256)
-        	 	 // return false;
-        	 	 table[i] = (uint8_t)(u8 ? termchar : i);
-         	 }
-        	 tableNode = createTableLoad(comp, baseRepNode, 16, 8, table, disptrace);
+             uint8_t *table = (uint8_t*)comp->trMemory()->allocateMemory(65536, stackAlloc);
+             //Only check up to 256 because we already
+             for (i = 0; i < 65536; i++)
+             {
+                 uint8_t u8 = tmpTable[i];
+                 //Not sure I understand the reasning behind discarding those: chars larger than 256 which map to byte ... possible
+                 //we have the table to hold all chars. Value needs to represent i & ff
+                 //for now I moved the check up - so bail out earlier.
+                 //Reach here only if chars that need mapping are <256.
+                 //if   (!u8 && i >= 256)
+                 // return false;
+                 table[i] = (uint8_t)(u8 ? termchar : i);
+             }
+             tableNode = createTableLoad(comp, baseRepNode, 16, 8, table, disptrace);
          }
 
          }
       else
          {
-    	  //c2c case - currently no SIMD support
-    	 uint16_t *table = (uint16_t*)comp->trMemory()->allocateMemory(65536*2, stackAlloc);
+          //c2c case - currently no SIMD support
+         uint16_t *table = (uint16_t*)comp->trMemory()->allocateMemory(65536*2, stackAlloc);
          int i;
          for (i = 0; i < 65536; i++)
             {
@@ -4624,15 +4624,15 @@ makeCopyingTRTOGraphSpecial(TR::Compilation *c, int32_t ctrl)
 /****************************************************************************************
 Corresponding Java-like Pseudo Program
 int v1, end;
-int v3;			// optional
-int v4;	// v4 usually has the value of "v3 - v1".
+int v3;         // optional
+int v4; // v4 usually has the value of "v3 - v1".
 byte v0[ ];
 char v2[ ];
 while(true){
    char T = (char)v0[v1];
    if (booltable(T)) break;
    v2[v1+v4] = T;
-   v3 = (v1+v4)+1;		// optional
+   v3 = (v1+v4)+1;      // optional
    v1++;
    if (v1 >= end) break;
 }
@@ -5176,7 +5176,7 @@ makeTRTOArrayGraph(TR::Compilation *c, int32_t ctrl)
    TR_PCISCNode *entry      = new (PERSISTENT_NEW) TR_PCISCNode(c->trMemory(), TR_entrynode, TR::NoType, tgt->incNumNodes(),  2,   1,   0); tgt->addNode(entry);
    TR_PCISCNode *charAddr   = createIdiomCharArrayLoadInLoop(tgt, ctrl, 1,   entry, charArray, idx0, aHeader, elemSize);
    TR_PCISCNode *convNode   = new (PERSISTENT_NEW) TR_PCISCNode(c->trMemory(), (ctrl & CISCUtilCtl_64Bit) ? TR::su2l : TR::su2i,
-								(ctrl & CISCUtilCtl_64Bit) ? TR::Int64 : TR::Int32,
+                                (ctrl & CISCUtilCtl_64Bit) ? TR::Int64 : TR::Int32,
                                                 tgt->incNumNodes(),  1,   1,   1,   charAddr, charAddr);  tgt->addNode(convNode);
    TR_PCISCNode *mapAddr    = createIdiomArrayLoadInLoop(tgt, ctrl|CISCUtilCtl_NoI2L, 1,   convNode, TR::bloadi, TR::Int8,  map, convNode, aHeader, mulFactor);
    TR_PCISCNode *b          = new (PERSISTENT_NEW) TR_PCISCNode(c->trMemory(), TR::b2i, TR::Int32,       tgt->incNumNodes(),  1,   1,   1,   mapAddr, mapAddr);  tgt->addNode(b);
@@ -5225,7 +5225,7 @@ byte byteArray[ ], *map;
 while(true){
    int T = charArray[i];
    if (T >= limit) break;       // optional
-   byte b = *(map + T);		- (1)
+   byte b = *(map + T);     - (1)
    if (b == exitValue) break;
    byteArray[j] = b;
    i++;
@@ -5996,7 +5996,7 @@ makeMemCpySpecialGraph(TR::Compilation *c, int32_t ctrl)
 /****************************************************************************************
 Corresponding Java-like Pseudo Program
 int v1, v3, end;
- v0[ ], v2[ ];	// char, int, float, long, and so on
+ v0[ ], v2[ ];  // char, int, float, long, and so on
 while(true){
    v2[v3] = v0[v1];
    v1++;
@@ -6057,7 +6057,7 @@ makeMemCpyGraph(TR::Compilation *c, int32_t ctrl)
 /****************************************************************************************
 Corresponding Java-like Pseudo Program
 int v1, v3, end;
- v0[ ], v2[ ];	// char, int, float, long, and so on
+ v0[ ], v2[ ];  // char, int, float, long, and so on
 while(true){
    v2[v1] = v0[v1];
    v1--;
@@ -8024,7 +8024,7 @@ CISCTransform2ArraySet(TR_CISCTransformer *trans)
          // This value becomes the index of the first element in the count-up version, and hence
          // the first element of the arrayset.
 
-       	 TR::Node * lastValueNode = convertStoreToLoad(comp, variableORconstRepNode1);
+         TR::Node * lastValueNode = convertStoreToLoad(comp, variableORconstRepNode1);
 
          // Determine if the induction variable update is before the arrayset
          bool isIndexVarUpdateBeforeArrayset = (trans->findStoreToSymRefInInsertBeforeNodes(indexVarSymRef->getReferenceNumber()) != NULL);
@@ -9777,7 +9777,7 @@ CISCTransform2ArrayCmpIndexOf(TR_CISCTransformer *trans)
 /****************************************************************************************
 Corresponding Java-like Pseudo Program
 int v1, v2, end;
- v3[ ], v4[ ]; 	// char, int, float, long, and so on
+ v3[ ], v4[ ];  // char, int, float, long, and so on
 while(true){
    ifcmpall (v3[v1], v4[v2] ) break;
    v1++;
@@ -9842,7 +9842,7 @@ makeMemCmpGraph(TR::Compilation *c, int32_t ctrl)
 /****************************************************************************************
 Corresponding Java-like Pseudo Program
 int v1, v2, end;
- v3[ ], v4[ ]; 	// char, int, float, long, and so on
+ v3[ ], v4[ ];  // char, int, float, long, and so on
 while(true){
    ifcmpall (v3[v1], v4[v2] ) break;
    v1++;
@@ -9908,7 +9908,7 @@ makeMemCmpIndexOfGraph(TR::Compilation *c, int32_t ctrl)
 /****************************************************************************************
 Corresponding Java-like Pseudo Program
 int v1, v2, end, v5;
- v3[ ], v4[ ]; 	// char, int, float, long, and so on
+ v3[ ], v4[ ];  // char, int, float, long, and so on
 while(true){
    v5 = v3[v1++] - v4[v2++];
    if (v5 != 0) break;
@@ -10476,9 +10476,9 @@ static const int64_t digit10Table[] =
 #if 0
 struct ppcDigit10TableEnt
    {
-   int32_t	digits;
-   uint32_t	limit;		// 10^digits-1
-   uint64_t	limitLong;	// 10^digits-1
+   int32_t  digits;
+   uint32_t limit;      // 10^digits-1
+   uint64_t limitLong;  // 10^digits-1
    };
 
 // For CountDecimalDigitInt, use ppcDigit10Table[32..64]
@@ -10776,9 +10776,9 @@ makeCountDecimalDigitLongGraph(TR::Compilation *c, int32_t ctrl, bool isDiv2Mul)
    }
 
 /****************************************************************************************
-Corresponding Java-like Pseudo Program	(Division version)
+Corresponding Java-like Pseudo Program (Division version)
 int v1, v2;
-while(true){
+while(true) {
    v1++;
    v2 = v2 / 10;
    if (v2 == 0) break;

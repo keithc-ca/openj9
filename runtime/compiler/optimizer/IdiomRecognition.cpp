@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -2350,14 +2350,14 @@ TR_CISCTransformer::addAllSubNodes(TR_CISCGraph *const graph, TR::Block *const b
 
       int32_t numCreateChildren;
       if (isSwitch)
-      	 {
-      	 numCreateChildren = 1;
-      	 numChildren = node->getCaseIndexUpperBound();
-      	 }
+         {
+         numCreateChildren = 1;
+         numChildren = node->getCaseIndexUpperBound();
+         }
       else
-      	 {
-      	 numCreateChildren = numChildren;    // for ops other than switches, process the children first
-      	 }
+         {
+         numCreateChildren = numChildren;    // for ops other than switches, process the children first
+         }
 
       if (parent &&
           ((parent->getOpCodeValue() == TR::aiadd && node->getOpCodeValue() == TR::isub && node->getChild(0)->getOpCodeValue() != TR::imul) ||
@@ -5629,7 +5629,7 @@ TR_CISCTransformer::removeEdgesExceptFor(TR::CFGEdgeList *succList, TR::Block *s
          _cfg->removeEdge(*(edge++));
          }
       else
-    	  ++edge;
+          ++edge;
       }
    return;
    }
@@ -5693,7 +5693,7 @@ TR_CISCTransformer::setEdges(TR::CFGEdgeList *succList, TR::Block *srcBlock, TR:
             }
          }
       else
-    	  ++edge;
+          ++edge;
       }
    }
 

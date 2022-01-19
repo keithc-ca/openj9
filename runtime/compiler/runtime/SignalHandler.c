@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -34,27 +34,30 @@
 
 #if defined(TR_HOST_X86) && defined(TR_TARGET_X86)
 static UDATA isDfSet(J9VMThread* vmThread, void *sigInfo)
-{
-	PORT_ACCESS_FROM_VMC(vmThread);
-	const char* infoName;
-	void* infoValue;
-	U_32 infoType;
-	UDATA eflags;
-	const char* enableDFCheck = getenv("TR_enableBreakOnDFSet");
+   {
+   PORT_ACCESS_FROM_VMC(vmThread);
+   const char* infoName;
+   void* infoValue;
+   U_32 infoType;
+   UDATA eflags;
+   const char* enableDFCheck = getenv("TR_enableBreakOnDFSet");
 
-	if (enableDFCheck) {
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_X86_EFLAGS, &infoName, &infoValue);
-		if (infoType == J9PORT_SIG_VALUE_ADDRESS) {
-			eflags = *(UDATA*)infoValue;
-			if ((eflags & 0x400) != 0) {
-				j9tty_printf(PORTLIB, "EFlags %zx, EFlags & 0x400 = %zx, DF flag is set\n", eflags, eflags & 0x400);
-				return TRUE;
-			}
-		}
-	}
+   if (enableDFCheck)
+      {
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_X86_EFLAGS, &infoName, &infoValue);
+      if (infoType == J9PORT_SIG_VALUE_ADDRESS)
+         {
+         eflags = *(UDATA*)infoValue;
+         if ((eflags & 0x400) != 0)
+            {
+            j9tty_printf(PORTLIB, "EFlags %zx, EFlags & 0x400 = %zx, DF flag is set\n", eflags, eflags & 0x400);
+            return TRUE;
+            }
+         }
+      }
 
-	return FALSE;
-}
+   return FALSE;
+   }
 #endif
 
 #if defined(TR_HOST_X86) && defined(TR_TARGET_X86) && !defined(TR_TARGET_64BIT)
@@ -102,18 +105,18 @@ static I_32 jitX86decodeInstruction(U_8 * eip)
             sibLo3 = sib & 0x7;
 
             if (mod == 1)
-               return 4;		/* case 6 */
+               return 4;        /* case 6 */
             if (sibLo3 == 0x7 || sibLo3 == 0)
-               return 3;		/* case 4 */
-            return 7;		/* cases 3, 8 */
+               return 3;        /* case 4 */
+            return 7;       /* cases 3, 8 */
             }
          else
             {
             if (mod == 1)
-               return 3;		/* case 7 */
+               return 3;        /* case 7 */
             if (rm == 7 || rm == 0)
-               return 2;		/* case 5 */
-            return 6;		/* cases 2, 9 */
+               return 2;        /* case 5 */
+            return 6;       /* cases 2, 9 */
             }
          }
       return -1;
@@ -121,314 +124,360 @@ static I_32 jitX86decodeInstruction(U_8 * eip)
    }
 
 static IDATA jitX86regValFromIndex(J9PortLibrary* portLib, void* sigInfo, I_32 index)
-{
-	PORT_ACCESS_FROM_PORT(portLib);
-	I_32 infoCategory = J9PORT_SIG_GPR;
-	I_32 infoIndex = 0;
-	const char* infoName;
-	void* infoValue;
-	U_32 infoType;
+   {
+   PORT_ACCESS_FROM_PORT(portLib);
+   I_32 infoCategory = J9PORT_SIG_GPR;
+   I_32 infoIndex = 0;
+   const char* infoName;
+   void* infoValue;
+   U_32 infoType;
 
-	switch(index) {
-	case 0:
-		infoIndex = J9PORT_SIG_GPR_X86_EAX;
-		break;
-	case 1:
-		infoIndex = J9PORT_SIG_GPR_X86_ECX;
-		break;
-	case 2:
-		infoIndex = J9PORT_SIG_GPR_X86_EDX;
-		break;
-	case 3:
-		infoIndex = J9PORT_SIG_GPR_X86_EBX;
-		break;
-	case 4:
-		infoCategory = J9PORT_SIG_CONTROL;
-		infoIndex = J9PORT_SIG_CONTROL_SP;
-		break;
-	case 5:
-		infoCategory = J9PORT_SIG_CONTROL;
-		infoIndex = J9PORT_SIG_CONTROL_BP;
-		break;
-	case 6:
-		infoIndex = J9PORT_SIG_GPR_X86_ESI;
-		break;
-	case 7:
-		infoIndex = J9PORT_SIG_GPR_X86_EDI;
-		break;
-	}
+   switch (index)
+      {
+      case 0:
+         infoIndex = J9PORT_SIG_GPR_X86_EAX;
+         break;
+      case 1:
+         infoIndex = J9PORT_SIG_GPR_X86_ECX;
+         break;
+      case 2:
+         infoIndex = J9PORT_SIG_GPR_X86_EDX;
+         break;
+      case 3:
+         infoIndex = J9PORT_SIG_GPR_X86_EBX;
+         break;
+      case 4:
+         infoCategory = J9PORT_SIG_CONTROL;
+         infoIndex = J9PORT_SIG_CONTROL_SP;
+         break;
+      case 5:
+         infoCategory = J9PORT_SIG_CONTROL;
+         infoIndex = J9PORT_SIG_CONTROL_BP;
+         break;
+      case 6:
+         infoIndex = J9PORT_SIG_GPR_X86_ESI;
+         break;
+      case 7:
+         infoIndex = J9PORT_SIG_GPR_X86_EDI;
+         break;
+      }
 
-	if (infoIndex >= 0) {
-		/* error! */
-		return 0xDEADBEEF;
-	}
+   if (infoIndex >= 0)
+      {
+      /* error! */
+      return 0xDEADBEEF;
+      }
 
-	infoType = j9sig_info(sigInfo, infoCategory, infoIndex, &infoName, &infoValue);
-	if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-		/* error! */
-		return 0xDEADBEEF;
-	}
+   infoType = j9sig_info(sigInfo, infoCategory, infoIndex, &infoName, &infoValue);
+   if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+      {
+      /* error! */
+      return 0xDEADBEEF;
+      }
 
-	return *(IDATA*)infoValue;
-}
+   return *(IDATA*)infoValue;
+   }
 
 static IDATA jitX86decodeIdivInstruction(J9PortLibrary* portLib, void* sigInfo, U_8 * eip)
 {
-	PORT_ACCESS_FROM_PORT(portLib);
-	I_32 eaddr;
-	I_32 baseRegIndex, baseRegValue=0;
-	I_32 indexRegIndex, indexRegValue=0;
-	I_32 rmRegValue;
-	I_32 scale=0;
-	I_32 disp=0;
-	IDATA reg=0;
-	IDATA regValue=0;
-	IDATA value;
+   PORT_ACCESS_FROM_PORT(portLib);
+   I_32 eaddr;
+   I_32 baseRegIndex, baseRegValue = 0;
+   I_32 indexRegIndex, indexRegValue = 0;
+   I_32 rmRegValue;
+   I_32 scale = 0;
+   I_32 disp = 0;
+   IDATA reg = 0;
+   IDATA regValue = 0;
+   IDATA value;
 
-	/* This is based on jitX86decodeInstruction(U_8 *eip) */
+   /* This is based on jitX86decodeInstruction(U_8 *eip) */
 
-	/* check for IDIV opcode */
-	if (0xF7 == *eip++) {
-		U_8 modRM = *eip++;
-		U_8 mod = modRM >> 6;
-		U_8 rm = modRM & 0x7;
+   /* check for IDIV opcode */
+   if (0xF7 == *eip++)
+      {
+      U_8 modRM = *eip++;
+      U_8 mod = modRM >> 6;
+      U_8 rm = modRM & 0x7;
 
-		/*
-		 Mod R/M	  SIB	 Total Instruction Size
-		 1 11xxxxxx	 n/a			   2
-		 2 00xxx101	 n/a			   6
-		 3 00xxx100   xxxxx101			7
-		 4 00xxx100   xxxxxyyy			3
-		 5 00xxxyyy	 n/a			   2
-		 6 01xxx100   xxxxxxxx			4
-		 7 01xxxyyy	 n/a			   3
-		 8 10xxx100   xxxxxxxx			7
-		 9 10xxxyyy	 n/a			   6
-	*/
+      /*
+       Mod R/M      SIB    Total Instruction Size
+       1 11xxxxxx  n/a               2
+       2 00xxx101  n/a               6
+       3 00xxx100   xxxxx101          7
+       4 00xxx100   xxxxxyyy          3
+       5 00xxxyyy  n/a               2
+       6 01xxx100   xxxxxxxx          4
+       7 01xxxyyy  n/a               3
+       8 10xxx100   xxxxxxxx          7
+       9 10xxxyyy  n/a               6
+       */
 
+      reg = rm;
+      regValue = jitX86regValFromIndex(portLib, sigInfo, reg);
+      if (mod == 3)
+         {
+         return regValue;
+         }
 
-		reg = rm;
-		regValue = jitX86regValFromIndex(portLib, sigInfo, reg);
-		if (mod == 3) {
-		return regValue;
-		}
+      /* look for SIB byte present, look for low = 100 */
+      if (rm == 4)
+         {
+         /* indexing, base addressing mode */
+         U_8 sib = *eip++, sibLo3;
+         sibLo3 = sib & 0x7;
 
-		/* look for SIB byte present, look for low = 100 */
-		if (rm == 4) {
-		/* indexing, base addressing mode */
-		U_8 sib = *eip++, sibLo3;
-		sibLo3 = sib & 0x7;
+         baseRegIndex = sib & 0x7;
+         indexRegIndex = (sib >> 3) & 0x7;
+         scale = (sib >> 6) & 0x3;
 
-		baseRegIndex = sib & 0x7;
-		indexRegIndex = (sib>>3) & 0x7;
-		scale = (sib>>6) & 0x3;
+         if (baseRegIndex == 5)
+            {
+            if (mod ==0)
+               {
+               disp = *(int *)eip;
+               baseRegValue=0;
+               }
+            else
+               {
+               /* returns ebp */
+               baseRegValue = jitX86regValFromIndex(portLib, sigInfo, baseRegIndex);
+               }
+            }
+         else
+            {
+            baseRegValue = jitX86regValFromIndex(portLib, sigInfo, baseRegIndex);
+            }
+         if (indexRegIndex != 4 )
+            {
+            indexRegValue = jitX86regValFromIndex(portLib, sigInfo, indexRegIndex);
+            }
+         }
 
-		if (baseRegIndex == 5) {
-			if (mod ==0) {
-			disp = *(int *)eip;
-			baseRegValue=0;
-			} else {
-			/* returns ebp */
-			baseRegValue = jitX86regValFromIndex(portLib, sigInfo, baseRegIndex);
-			}
-		} else {
-			baseRegValue = jitX86regValFromIndex(portLib, sigInfo, baseRegIndex);
-		}
-		if (indexRegIndex != 4 ) {
-			indexRegValue = jitX86regValFromIndex(portLib, sigInfo, indexRegIndex);
-		}
+      if (mod == 1)
+         {
+         /* one byte displacement */
+         disp = *(signed char *)eip;
+         }
+      else if (mod == 2 || (mod == 0 && rm == 5))
+         {
+         /* 4 byte displacement */
+         disp = *(int *)eip;
+         }
+      else
+         {
+         /* no disp */
+         }
 
-
-		}
-
-	 if (mod == 1) {
-		 /* one byte displacement */
-		 disp = *(signed char *)eip;
-	 } else if (mod == 2 || (mod==0 && rm ==5)) {
-		 /* 4 byte displacement */
-		 disp = *(int *)eip;
-	 } else {
-		 /* no disp */
-	 }
-
-
-		if (rm==4) {
-		eaddr = baseRegValue + ((1<<scale) * indexRegValue) + disp;
-		return value = *(int *)eaddr;
-		} else {
-		if (mod==0 && rm==5) {
-			return value = *(int *) disp;
-		} else {
-			return value = *(int *)( regValue + disp);
-		}
-		}
-	}
-	return -1;
-	}
+      if (rm == 4)
+         {
+         eaddr = baseRegValue + ((1<<scale) * indexRegValue) + disp;
+         return value = *(int *)eaddr;
+         }
+      else
+         {
+         if (mod==0 && rm==5)
+            {
+            return value = *(int *) disp;
+            }
+         else
+            {
+            return value = *(int *)( regValue + disp);
+            }
+         }
+      }
+   return -1;
+   }
 
 UDATA jitX86Handler(J9VMThread* vmThread, U_32 sigType, void* sigInfo)
-{
-	PORT_ACCESS_FROM_VMC(vmThread);
+   {
+   PORT_ACCESS_FROM_VMC(vmThread);
 
-	J9JITExceptionTable *exceptionTable = NULL;
-	J9JITConfig *jitConfig = vmThread->javaVM->jitConfig;
+   J9JITExceptionTable *exceptionTable = NULL;
+   J9JITConfig *jitConfig = vmThread->javaVM->jitConfig;
 
-	if (jitConfig) {
-		J9SFJITResolveFrame * resolveFrame;
-		const char* infoName;
-		void* infoValue;
-		U_32 infoType;
-		U_8* eip;
-		UDATA* eipPtr;
-		UDATA* espPtr;
-		UDATA* eaxPtr;
-		UDATA* ecxPtr;
-		UDATA* edxPtr;
-		UDATA* ebpPtr;
+   if (jitConfig)
+      {
+      J9SFJITResolveFrame * resolveFrame;
+      const char* infoName;
+      void* infoValue;
+      U_32 infoType;
+      U_8* eip;
+      UDATA* eipPtr;
+      UDATA* espPtr;
+      UDATA* eaxPtr;
+      UDATA* ecxPtr;
+      UDATA* edxPtr;
+      UDATA* ebpPtr;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_PC, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		eipPtr = (UDATA*) infoValue;
-		eip = (U_8*)*eipPtr;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_PC, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      eipPtr = (UDATA*) infoValue;
+      eip = (U_8*)*eipPtr;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_X86_EAX, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		eaxPtr = (UDATA*) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_X86_EAX, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      eaxPtr = (UDATA*) infoValue;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_X86_ECX, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		ecxPtr = (UDATA*) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_X86_ECX, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      ecxPtr = (UDATA*) infoValue;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_X86_EDX, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		edxPtr = (UDATA*) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_X86_EDX, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      edxPtr = (UDATA*) infoValue;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_SP, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		espPtr = (UDATA*) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_SP, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      espPtr = (UDATA*) infoValue;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_BP, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		ebpPtr = (UDATA*) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_BP, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      ebpPtr = (UDATA*) infoValue;
 
-		/* check to see if we're in the math helpers first jitrt/Math64 . */
-		if ((eip >= (U_8 *) & jitMathHelpersDivideBegin) && (eip < (U_8 *) & jitMathHelpersDivideEnd)) {
-			exceptionTable = (J9JITExceptionTable *) 1; /* make it non-0 to allow exception to be handled */
-		} else if ((eip >= (U_8 *) & jitMathHelpersRemainderBegin) && (eip < (U_8 *) & jitMathHelpersRemainderEnd)) {
-			exceptionTable = (J9JITExceptionTable *) 2; /* make it non-0 to allow exception to be handled */
-		} else {
-			exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, (UDATA)eip);
-		}
+      /* check to see if we're in the math helpers first jitrt/Math64 . */
+      if ((eip >= (U_8 *) & jitMathHelpersDivideBegin) && (eip < (U_8 *) & jitMathHelpersDivideEnd))
+         {
+         exceptionTable = (J9JITExceptionTable *) 1; /* make it non-0 to allow exception to be handled */
+         }
+      else if ((eip >= (U_8 *) & jitMathHelpersRemainderBegin) && (eip < (U_8 *) & jitMathHelpersRemainderEnd))
+         {
+         exceptionTable = (J9JITExceptionTable *) 2; /* make it non-0 to allow exception to be handled */
+         }
+      else
+         {
+         exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, (UDATA)eip);
+         }
 
-		if (exceptionTable == NULL) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		} else {
-			void * stackMap;
-			UDATA registerMap;
+      if (exceptionTable == NULL)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      else
+         {
+         void * stackMap;
+         UDATA registerMap;
 
-			switch (sigType) {
-			case J9PORT_SIG_FLAG_SIGFPE_DIV_BY_ZERO:
-			case J9PORT_SIG_FLAG_SIGFPE_INT_DIV_BY_ZERO:
-				if (0xF7 == *eip ) {
-					/* find the divisor */
-					UDATA div = jitX86decodeIdivInstruction(PORTLIB, sigInfo, eip);
-					if (div != 0 ) {
-						*eipPtr += jitX86decodeInstruction(eip);
-						*eaxPtr = 0x80000000;
-						*edxPtr = 0;
-						return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
-					}
-				}
+         switch (sigType)
+            {
+            case J9PORT_SIG_FLAG_SIGFPE_DIV_BY_ZERO:
+            case J9PORT_SIG_FLAG_SIGFPE_INT_DIV_BY_ZERO:
+               if (0xF7 == *eip )
+                  {
+                  /* find the divisor */
+                  UDATA div = jitX86decodeIdivInstruction(PORTLIB, sigInfo, eip);
+                  if (div != 0 )
+                     {
+                     *eipPtr += jitX86decodeInstruction(eip);
+                     *eaxPtr = 0x80000000;
+                     *edxPtr = 0;
+                     return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+                     }
+                  }
 
-				if (((J9JITExceptionTable *)1) == exceptionTable) {
-					/* did we come from the long divide helper? */
+               if (((J9JITExceptionTable *)1) == exceptionTable)
+                  {
+                  /* did we come from the long divide helper? */
 
-					vmThread->jitException = (J9Object *) *((UDATA *) *espPtr);
-					/* 4 pushes + ret addr */
-					*espPtr += 5 * sizeof(UDATA);
-				} else if (((J9JITExceptionTable *)2) == exceptionTable) {
-					/* did we come from the long remainder helper? */
+                  vmThread->jitException = (J9Object *) *((UDATA *) *espPtr);
+                  /* 4 pushes + ret addr */
+                  *espPtr += 5 * sizeof(UDATA);
+                  }
+               else if (((J9JITExceptionTable *)2) == exceptionTable)
+                  {
+                  /* did we come from the long remainder helper? */
 
-					vmThread->jitException = (J9Object *) *(((UDATA *) *espPtr) + 3);
-					*ecxPtr = *(((UDATA *) *espPtr) + 1);
-					*espPtr += 8 * sizeof(UDATA); /* 7 pushes + ret addr */
-				} else {
-					/* add 1 so as to move past the instruction so that the exception thrower will -1 like it would in all other cases. */
-					vmThread->jitException = (J9Object *) ((UDATA)eip + 1);
-				}
+                  vmThread->jitException = (J9Object *) *(((UDATA *) *espPtr) + 3);
+                  *ecxPtr = *(((UDATA *) *espPtr) + 1);
+                  *espPtr += 8 * sizeof(UDATA); /* 7 pushes + ret addr */
+                  }
+               else
+                  {
+                  /* add 1 so as to move past the instruction so that the exception thrower will -1 like it would in all other cases. */
+                  vmThread->jitException = (J9Object *) ((UDATA)eip + 1);
+                  }
 
-				*eipPtr = (UDATA) ((void *) &jitHandleIntegerDivideByZeroTrap);
-				((J9VMJITRegisterState*)vmThread->entryLocalStorage->jitGlobalStorageBase)->jit_ebp = *ebpPtr;
-				*ebpPtr = (UDATA) vmThread;
+               *eipPtr = (UDATA) ((void *) &jitHandleIntegerDivideByZeroTrap);
+               ((J9VMJITRegisterState*)vmThread->entryLocalStorage->jitGlobalStorageBase)->jit_ebp = *ebpPtr;
+               *ebpPtr = (UDATA) vmThread;
 
-				return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+               return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
 
-			case J9PORT_SIG_FLAG_SIGFPE_INT_OVERFLOW:
-				if (0xF7 == *eip) {
-					*eipPtr += jitX86decodeInstruction(eip);
-					*eaxPtr = 0x80000000;
-					*edxPtr = 0;
-					return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
-				}
-				/* unexpected SIGFPE */
-				break;
+            case J9PORT_SIG_FLAG_SIGFPE_INT_OVERFLOW:
+               if (0xF7 == *eip)
+                  {
+                  *eipPtr += jitX86decodeInstruction(eip);
+                  *eaxPtr = 0x80000000;
+                  *edxPtr = 0;
+                  return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+                  }
+               /* unexpected SIGFPE */
+               break;
 
-			case J9PORT_SIG_FLAG_SIGSEGV:
-				if (isDfSet(vmThread, sigInfo) == TRUE)
-					break;
-			case J9PORT_SIG_FLAG_SIGBUS:
+            case J9PORT_SIG_FLAG_SIGSEGV:
+               if (isDfSet(vmThread, sigInfo) == TRUE)
+                  break;
+            case J9PORT_SIG_FLAG_SIGBUS:
 
-				infoType = j9sig_info(sigInfo, J9PORT_SIG_SIGNAL, J9PORT_SIG_SIGNAL_INACCESSIBLE_ADDRESS, &infoName, &infoValue);
-				if (sigType == J9PORT_SIG_FLAG_SIGSEGV && infoType == J9PORT_SIG_VALUE_ADDRESS) {
-					if ( *(UDATA*)infoValue > 0xFFFF ) {
-						/* we know where the fault occurred, and it wasn't within the first page. This is an unexpected error */
-						break;
-					}
-				}
+               infoType = j9sig_info(sigInfo, J9PORT_SIG_SIGNAL, J9PORT_SIG_SIGNAL_INACCESSIBLE_ADDRESS, &infoName, &infoValue);
+               if (sigType == J9PORT_SIG_FLAG_SIGSEGV && infoType == J9PORT_SIG_VALUE_ADDRESS)
+                  {
+                  if ( *(UDATA*)infoValue > 0xFFFF )
+                     {
+                     /* we know where the fault occurred, and it wasn't within the first page. This is an unexpected error */
+                     break;
+                     }
+                  }
 
-				stackMap = jitConfig->jitGetStackMapFromPC(vmThread, exceptionTable, (UDATA) (eip + 1));
-				if (stackMap ) {
-					registerMap = jitConfig->getJitRegisterMap(exceptionTable, stackMap);
-					*espPtr += (((registerMap >> 16) & 0xFF) * sizeof(UDATA));
-				}
+               stackMap = jitConfig->jitGetStackMapFromPC(vmThread, exceptionTable, (UDATA) (eip + 1));
+               if (stackMap)
+                  {
+                  registerMap = jitConfig->getJitRegisterMap(exceptionTable, stackMap);
+                  *espPtr += (((registerMap >> 16) & 0xFF) * sizeof(UDATA));
+                  }
 
-				vmThread->jitException = (J9Object *) ((UDATA) eip + 1);
-				*eipPtr = (UDATA)(void*)(sigType == J9PORT_SIG_FLAG_SIGSEGV ? jitHandleNullPointerExceptionTrap : jitHandleInternalErrorTrap);
-				((J9VMJITRegisterState*)vmThread->entryLocalStorage->jitGlobalStorageBase)->jit_ebp = (UDATA) *ebpPtr;
-				*ebpPtr = (UDATA) vmThread;
+               vmThread->jitException = (J9Object *) ((UDATA) eip + 1);
+               *eipPtr = (UDATA)(void*)(sigType == J9PORT_SIG_FLAG_SIGSEGV ? jitHandleNullPointerExceptionTrap : jitHandleInternalErrorTrap);
+               ((J9VMJITRegisterState*)vmThread->entryLocalStorage->jitGlobalStorageBase)->jit_ebp = (UDATA) *ebpPtr;
+               *ebpPtr = (UDATA) vmThread;
 
-				return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+               return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
 
-			case J9PORT_SIG_FLAG_SIGILL:
-				/* unexpected SIGILL */
-				break;
+            case J9PORT_SIG_FLAG_SIGILL:
+               /* unexpected SIGILL */
+               break;
+            }
 
-			}
+         /*
+          * if we reached here, then this is an unexpected error. Build a resolve
+          * frame so that the stack is walkable and allow normal fault handling
+          * to continue
+          * CMVC 104332 : do not update the java stack pointer as it is misleading. We just need the stack to be walkable by our diagnostic tools.
+          */
+         jitPushResolveFrame(vmThread, (UDATA*)*espPtr, eip);
+         }
+      }
 
-			/*
-			 * if we reached here, then this is an unexpected error. Build a resolve
-			 * frame so that the stack is walkable and allow normal fault handling
-			 * to continue
-			 * CMVC 104332 : do not update the java stack pointer as it is misleading. We just need the stack to be walkable by our diagnostic tools.
-			 */
-			jitPushResolveFrame(vmThread, (UDATA*)*espPtr, eip);
-		}
-	}
-
-	return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-}
+   return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+   }
 
 #elif defined(TR_HOST_POWER) && defined(TR_TARGET_POWER)
 
@@ -441,66 +490,66 @@ UDATA jitX86Handler(J9VMThread* vmThread, U_32 sigType, void* sigInfo)
 #endif
 
 static IDATA jitPPCIdentifyCodeCacheTrapType(U_8 *iar)
-{
+   {
+   #define TRAP_TO_LT   0x10
+   #define TRAP_TO_LE   0x14
+   #define TRAP_TO_EQ   0x4
+   #define TRAP_TO_GE   0xC
+   #define TRAP_TO_GT   0x8
+   #define TRAP_TO_NE   0x18
+   #define TRAP_TO_LLT  0x2
+   #define TRAP_TO_LLE  0x6
+   #define TRAP_TO_LGE  0x5
+   #define TRAP_TO_LGT  0x1
+   #define TRAP_TO_LNE  0x3
+   #define TRAP_TO_NONE 0x1F
 
-	#define TRAP_TO_LT   0x10
-	#define TRAP_TO_LE   0x14
-	#define TRAP_TO_EQ   0x4
-	#define TRAP_TO_GE   0xC
-	#define TRAP_TO_GT   0x8
-	#define TRAP_TO_NE   0x18
-	#define TRAP_TO_LLT  0x2
-	#define TRAP_TO_LLE  0x6
-	#define TRAP_TO_LGE  0x5
-	#define TRAP_TO_LGT  0x1
-	#define TRAP_TO_LNE  0x3
-	#define TRAP_TO_NONE 0x1F
-
-	U_32 instruction = ((U_32 *) iar)[0];
-	U_32 to = (instruction >> 21) & 31;
-	I_32 si = ((I_16) (instruction & 0xFFFF));
-	U_32 opcode = instruction >> 26;
+   U_32 instruction = ((U_32 *) iar)[0];
+   U_32 to = (instruction >> 21) & 31;
+   I_32 si = ((I_16) (instruction & 0xFFFF));
+   U_32 opcode = instruction >> 26;
 
 #ifdef JIT_SIGNAL_DEBUG
-	printf("<JIT: iar=0x%p, instruction=0x%x opcode=0x%x to=0x%x si=0x%x>\n", iar, instruction, opcode, to, si);
+   printf("<JIT: iar=0x%p, instruction=0x%x opcode=0x%x to=0x%x si=0x%x>\n", iar, instruction, opcode, to, si);
 #endif
 
-	switch (opcode) {
-	case 31:	/* twXXX or tdXXX */
-		if (TRAP_TO_LLE == to)
-			return TRAP_TYPE_ARRAY_BOUNDS;	/* twlle */
-		if (TRAP_TO_LT == to)
-			return TRAP_TYPE_ARRAY_BOUNDS;	/* twlt */
-		if (TRAP_TO_NONE == to)
-			return TRAP_TYPE_ARRAY_BOUNDS;	/* trap */
-		break;
+   switch (opcode)
+      {
+      case 31:    /* twXXX or tdXXX */
+         if (TRAP_TO_LLE == to)
+            return TRAP_TYPE_ARRAY_BOUNDS;  /* twlle */
+         if (TRAP_TO_LT == to)
+            return TRAP_TYPE_ARRAY_BOUNDS;  /* twlt */
+         if (TRAP_TO_NONE == to)
+            return TRAP_TYPE_ARRAY_BOUNDS;  /* trap */
+         break;
 
-	case 3:	/* twXXXi */
-	case 2:	/* tdXXXi */
-		if ((TRAP_TO_LLT == to) && (1 == si))	/* twllti */
-			return TRAP_TYPE_DIV_CHECK;
-		if ((TRAP_TO_EQ == to) && (0 == si))	/* tweqi */
-			return TRAP_TYPE_NULL_CHECK;
+      case 3: /* twXXXi */
+      case 2: /* tdXXXi */
+         if ((TRAP_TO_LLT == to) && (1 == si))   /* twllti */
+            return TRAP_TYPE_DIV_CHECK;
+         if ((TRAP_TO_EQ == to) && (0 == si))    /* tweqi */
+            return TRAP_TYPE_NULL_CHECK;
 #if defined(TR_ASYNC_CHECK_TRAPS)
-		if ((TRAP_TO_EQ == to) && (-1 == si))	/* tweqi */
-			return TRAP_TYPE_ASYNC_CHECK;
+         if ((TRAP_TO_EQ == to) && (-1 == si))   /* tweqi */
+            return TRAP_TYPE_ASYNC_CHECK;
 #endif
 
-		if (TRAP_TO_LLE == to)
-			return TRAP_TYPE_ARRAY_BOUNDS;	/* twllei */
-		if (TRAP_TO_LGE == to)
-			return TRAP_TYPE_ARRAY_BOUNDS;	/* twlgei */
-		if (TRAP_TO_GT == to)
-			return TRAP_TYPE_ARRAY_BOUNDS;	/* twgti */
-		if (TRAP_TO_LT == to)
-			return TRAP_TYPE_ARRAY_BOUNDS;	/* twlti */
-		break;
-	}
+         if (TRAP_TO_LLE == to)
+            return TRAP_TYPE_ARRAY_BOUNDS;  /* twllei */
+         if (TRAP_TO_LGE == to)
+            return TRAP_TYPE_ARRAY_BOUNDS;  /* twlgei */
+         if (TRAP_TO_GT == to)
+            return TRAP_TYPE_ARRAY_BOUNDS;  /* twgti */
+         if (TRAP_TO_LT == to)
+            return TRAP_TYPE_ARRAY_BOUNDS;  /* twlti */
+         break;
+      }
 #ifdef JIT_SIGNAL_DEBUG
-		printf("<JIT: instruction decode error -- unknown trap format!>\n");
+   printf("<JIT: instruction decode error -- unknown trap format!>\n");
 #endif
-		return TRAP_TYPE_UNKNOWN;
-}
+   return TRAP_TYPE_UNKNOWN;
+   }
 
 extern void jitHandleNullPointerExceptionTrap(void);
 extern void jitHandleArrayIndexOutOfBoundsTrap(void);
@@ -511,130 +560,139 @@ extern void jitHandleInternalErrorTrap(void);
 extern UDATA jitPPCEmulation(J9VMThread* vmThread, void* sigInfo);
 
 UDATA jitPPCHandler(J9VMThread* vmThread, U_32 sigType, void* sigInfo)
-{
-	if (J9PORT_SIG_FLAG_SIGILL == sigType) {
-		return jitPPCEmulation(vmThread, sigInfo);
-	}
+   {
+   if (J9PORT_SIG_FLAG_SIGILL == sigType)
+      {
+      return jitPPCEmulation(vmThread, sigInfo);
+      }
 
-	PORT_ACCESS_FROM_VMC(vmThread);
+   PORT_ACCESS_FROM_VMC(vmThread);
 
-	J9JITConfig *jitConfig = vmThread->javaVM->jitConfig;
+   J9JITConfig *jitConfig = vmThread->javaVM->jitConfig;
 
-	if (jitConfig) {
-		const char* infoName;
-		UDATA *iarPtr;
-		void *infoValue;
-		U_32 infoType;
-		J9JITExceptionTable *exceptionTable;
+   if (jitConfig)
+      {
+      const char* infoName;
+      UDATA *iarPtr;
+      void *infoValue;
+      U_32 infoType;
+      J9JITExceptionTable *exceptionTable;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_PC, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		iarPtr = (UDATA *) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_PC, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+      {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+      }
+      iarPtr = (UDATA *) infoValue;
 
-		exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, *iarPtr);
+      exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, *iarPtr);
 
-		if( !exceptionTable && J9PORT_SIG_FLAG_SIGBUS == sigType ){
-		   // We might be in a jit helper routine (like arraycopy) so look at the link register as well...
-		   UDATA *lrPtr;
-		   infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_POWERPC_LR, &infoName, &infoValue);
-		   if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-		      return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		   }
-		   lrPtr = (UDATA *) infoValue;
-		   exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, *lrPtr);
-		   if (exceptionTable) {
-				vmThread->jitException = (J9Object *) (*lrPtr);  /* the lr points at the instruction after the helper call */
+      if (!exceptionTable && J9PORT_SIG_FLAG_SIGBUS == sigType)
+         {
+         // We might be in a jit helper routine (like arraycopy) so look at the link register as well...
+         UDATA *lrPtr;
+         infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_POWERPC_LR, &infoName, &infoValue);
+         if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+            {
+            return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+            }
+         lrPtr = (UDATA *) infoValue;
+         exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, *lrPtr);
+         if (exceptionTable)
+            {
+            vmThread->jitException = (J9Object *) (*lrPtr);  /* the lr points at the instruction after the helper call */
 #if (defined(LINUXPPC64) && !defined(__LITTLE_ENDIAN__)) || defined(AIXPPC)
-				*iarPtr = *(UDATA*) ((void *) &jitHandleInternalErrorTrap);  /* get routine address from TOC entry */
+            *iarPtr = *(UDATA*) ((void *) &jitHandleInternalErrorTrap);  /* get routine address from TOC entry */
 #else
-				*iarPtr = (UDATA) ((void *) &jitHandleInternalErrorTrap);
+            *iarPtr = (UDATA) ((void *) &jitHandleInternalErrorTrap);
 #endif
-				return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
-		   }
-		}
+            return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+            }
+         }
 
-		if (exceptionTable) {
-			if (J9PORT_SIG_FLAG_SIGBUS == sigType) {
-                        	vmThread->jitException = (J9Object *) (*iarPtr + 1);  /* add one for symmetry with IA32, handler check subs one */
+      if (exceptionTable)
+         {
+         if (J9PORT_SIG_FLAG_SIGBUS == sigType)
+            {
+            vmThread->jitException = (J9Object *) (*iarPtr + 1);  /* add one for symmetry with IA32, handler check subs one */
 #if (defined(LINUXPPC64) && !defined(__LITTLE_ENDIAN__)) || defined(AIXPPC)
-                                *iarPtr = *(UDATA*) ((void *) &jitHandleInternalErrorTrap);  /* get routine address from TOC entry */
+            *iarPtr = *(UDATA*) ((void *) &jitHandleInternalErrorTrap);  /* get routine address from TOC entry */
 #else
-                                *iarPtr = (UDATA) ((void *) &jitHandleInternalErrorTrap);
+            *iarPtr = (UDATA) ((void *) &jitHandleInternalErrorTrap);
 #endif
-                                return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
-	
-			}
-			else if (J9PORT_SIG_FLAG_SIGTRAP == sigType) {
-				IDATA trapType = jitPPCIdentifyCodeCacheTrapType((U_8 *) *iarPtr);
-				
-				switch (trapType) {
+            return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+            }
+         else if (J9PORT_SIG_FLAG_SIGTRAP == sigType)
+            {
+            IDATA trapType = jitPPCIdentifyCodeCacheTrapType((U_8 *) *iarPtr);
 
-				case TRAP_TYPE_NULL_CHECK:
-					vmThread->jitException = (J9Object *) (*iarPtr + 1);  /* add one for symmetry with IA32, handler check subs one */
-#if (defined(LINUXPPC64) && !defined(__LITTLE_ENDIAN__)) || defined(AIXPPC)
-					*iarPtr = *(UDATA*) ((void *) &jitHandleNullPointerExceptionTrap);  /* get routine address from TOC entry */
-#else
-					*iarPtr = (UDATA) ((void *) &jitHandleNullPointerExceptionTrap);
-#endif
-					return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+            switch (trapType)
+               {
+               case TRAP_TYPE_NULL_CHECK:
+                  vmThread->jitException = (J9Object *) (*iarPtr + 1);  /* add one for symmetry with IA32, handler check subs one */
+   #if (defined(LINUXPPC64) && !defined(__LITTLE_ENDIAN__)) || defined(AIXPPC)
+                  *iarPtr = *(UDATA*) ((void *) &jitHandleNullPointerExceptionTrap);  /* get routine address from TOC entry */
+   #else
+                  *iarPtr = (UDATA) ((void *) &jitHandleNullPointerExceptionTrap);
+   #endif
+                  return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
 
-				case TRAP_TYPE_ARRAY_BOUNDS:
-					vmThread->jitException = (J9Object *) (*iarPtr + 1);  /* add one for symmetry with IA32, handler check subs one */
-#if (defined(LINUXPPC64) && !defined(__LITTLE_ENDIAN__)) || defined(AIXPPC)
-					*iarPtr = *(UDATA*) ((void *) &jitHandleArrayIndexOutOfBoundsTrap);  /* get routine address from TOC entry */
-#else
-					*iarPtr = (UDATA) ((void *) &jitHandleArrayIndexOutOfBoundsTrap);
-#endif
-					return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+               case TRAP_TYPE_ARRAY_BOUNDS:
+                  vmThread->jitException = (J9Object *) (*iarPtr + 1);  /* add one for symmetry with IA32, handler check subs one */
+   #if (defined(LINUXPPC64) && !defined(__LITTLE_ENDIAN__)) || defined(AIXPPC)
+                  *iarPtr = *(UDATA*) ((void *) &jitHandleArrayIndexOutOfBoundsTrap);  /* get routine address from TOC entry */
+   #else
+                  *iarPtr = (UDATA) ((void *) &jitHandleArrayIndexOutOfBoundsTrap);
+   #endif
+                  return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
 
-				case TRAP_TYPE_DIV_CHECK:
-					vmThread->jitException = (J9Object *) (*iarPtr + 1);  /* add one for symmetry with IA32, handler check subs one */
-#if (defined(LINUXPPC64) && !defined(__LITTLE_ENDIAN__)) || defined(AIXPPC)
-					*iarPtr = *(UDATA*) ((void *) &jitHandleIntegerDivideByZeroTrap);  /* get routine address from TOC entry */
-#else
-					*iarPtr = (UDATA) ((void *) &jitHandleIntegerDivideByZeroTrap);
-#endif
-					return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+               case TRAP_TYPE_DIV_CHECK:
+                  vmThread->jitException = (J9Object *) (*iarPtr + 1);  /* add one for symmetry with IA32, handler check subs one */
+   #if (defined(LINUXPPC64) && !defined(__LITTLE_ENDIAN__)) || defined(AIXPPC)
+                  *iarPtr = *(UDATA*) ((void *) &jitHandleIntegerDivideByZeroTrap);  /* get routine address from TOC entry */
+   #else
+                  *iarPtr = (UDATA) ((void *) &jitHandleIntegerDivideByZeroTrap);
+   #endif
+                  return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
 
-#if defined(TR_ASYNC_CHECK_TRAPS)
-				case TRAP_TYPE_ASYNC_CHECK:
-					{
-					UDATA *lrPtr;
-					infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_POWERPC_LR, &infoName, &infoValue);
-					lrPtr = (UDATA *) infoValue;
-					/* set the link register to the instruction after the trap */
-					*lrPtr = *iarPtr + 4;
-					/* set the iar to the helper */
-#if (defined(LINUXPPC64) && !defined(__LITTLE_ENDIAN__)) || defined(AIXPPC)
-					*iarPtr = *(UDATA*) ((void *) &jitCheckAsyncMessages);  /* get routine address from TOC entry */
-#else
-					*iarPtr = (UDATA) ((void *) &jitCheckAsyncMessages);
-#endif
-					return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
-					}
-#endif
-				}
-			}
+   #if defined(TR_ASYNC_CHECK_TRAPS)
+               case TRAP_TYPE_ASYNC_CHECK:
+                  {
+                  UDATA *lrPtr;
+                  infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_POWERPC_LR, &infoName, &infoValue);
+                  lrPtr = (UDATA *) infoValue;
+                  /* set the link register to the instruction after the trap */
+                  *lrPtr = *iarPtr + 4;
+                  /* set the iar to the helper */
+  #if (defined(LINUXPPC64) && !defined(__LITTLE_ENDIAN__)) || defined(AIXPPC)
+                  *iarPtr = *(UDATA*) ((void *) &jitCheckAsyncMessages);  /* get routine address from TOC entry */
+  #else
+                  *iarPtr = (UDATA) ((void *) &jitCheckAsyncMessages);
+  #endif
+                  return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+                  }
+   #endif
+               }
+         }
 
-			/*
-			 * if we reached here, then this is an unexpected error. Build a resolve
-			 * frame so that the stack is walkable and allow normal fault handling
-			 * to continue
-			 * CMVC 104332 : do not update the java stack pointer as it is misleading. We just need the stack to be walkable by our diagnostic tools.
-			 */
+         /*
+          * if we reached here, then this is an unexpected error. Build a resolve
+          * frame so that the stack is walkable and allow normal fault handling
+          * to continue
+          * CMVC 104332 : do not update the java stack pointer as it is misleading. We just need the stack to be walkable by our diagnostic tools.
+          */
 
-			/* the Java SP is r14 on Power PC */
-			infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, 14, &infoName, &infoValue);
-			if (infoType == J9PORT_SIG_VALUE_ADDRESS) {
-				UDATA **javaSPPtr = (UDATA **) infoValue;
-				jitPushResolveFrame(vmThread, *javaSPPtr, (U_8 *) *iarPtr);
-			}
-		}
-	}
+         /* the Java SP is r14 on Power PC */
+         infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, 14, &infoName, &infoValue);
+         if (infoType == J9PORT_SIG_VALUE_ADDRESS)
+            {
+            UDATA **javaSPPtr = (UDATA **) infoValue;
+            jitPushResolveFrame(vmThread, *javaSPPtr, (U_8 *) *iarPtr);
+            }
+         }
+      }
 
-	return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+   return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
 }
 
 #elif defined(TR_HOST_S390) && defined(TR_TARGET_S390)
@@ -654,24 +712,24 @@ UDATA jitPPCHandler(J9VMThread* vmThread, U_32 sigType, void* sigInfo)
 #define PSW_AMODE31_MASK        0x80000000
 
 static IDATA jit390IdentifyCodeCacheTrapType(J9VMThread* vmThread, U_8 *iar, U_8 *ilc, void* sigInfo)
-{
-    PORT_ACCESS_FROM_VMC(vmThread);
+   {
+   PORT_ACCESS_FROM_VMC(vmThread);
 
-	U_8 *instruction = iar - 6;
-	U_8 opcode0     = ((U_8 *) instruction)[0];
-	U_8 opcode1     = ((U_8 *) instruction)[1];
-	U_8 opcode2     = ((U_8 *) instruction)[2];
-	U_8 opcode3     = ((U_8 *) instruction)[3];
-	U_8 opcode4     = ((U_8 *) instruction)[4];
-	U_8 opcode5     = ((U_8 *) instruction)[5];
-    U_8 clt_register;
-    U_32 infoType;
-    const char * infoName;
-    void * infoValue;
-    UDATA memAccessLocation;
+   U_8 *instruction = iar - 6;
+   U_8 opcode0     = ((U_8 *) instruction)[0];
+   U_8 opcode1     = ((U_8 *) instruction)[1];
+   U_8 opcode2     = ((U_8 *) instruction)[2];
+   U_8 opcode3     = ((U_8 *) instruction)[3];
+   U_8 opcode4     = ((U_8 *) instruction)[4];
+   U_8 opcode5     = ((U_8 *) instruction)[5];
+   U_8 clt_register;
+   U_32 infoType;
+   const char * infoName;
+   void * infoValue;
+   UDATA memAccessLocation;
 
 #ifdef JIT_SIGNAL_DEBUG
-	printf("<JIT: iar=0x%p, instruction=0x%x opcode0=0x%x opcode1=0x%x opcode5=0x%x>\n", iar, instruction, opcode0, opcode1, opcode5);
+   printf("<JIT: iar=0x%p, instruction=0x%x opcode0=0x%x opcode1=0x%x opcode5=0x%x>\n", iar, instruction, opcode0, opcode1, opcode5);
 #endif
 
    /* For the 6-byte trap instructions (CIT/CGIT,CLFIT/CLGIT ), opcode2 is the imm field */
@@ -689,7 +747,7 @@ static IDATA jit390IdentifyCodeCacheTrapType(J9VMThread* vmThread, U_8 *iar, U_8
          }
       }
    else if (opcode0 == 0xEC)
-   	  /* imm=0 and branchCond TR::InstOpCode::COND_BE = mask 0x80 */
+      /* imm=0 and branchCond TR::InstOpCode::COND_BE = mask 0x80 */
       {
       switch (opcode5)
          {
@@ -760,10 +818,10 @@ static IDATA jit390IdentifyCodeCacheTrapType(J9VMThread* vmThread, U_8 *iar, U_8
       }
 
 #ifdef JIT_SIGNAL_DEBUG
-   printf("<JIT: instruction decode error -- unknown trap format!>\n");
+  printf("<JIT: instruction decode error -- unknown trap format!>\n");
 #endif
-   *ilc = 0;
-   return TRAP_TYPE_UNKNOWN;
+  *ilc = 0;
+  return TRAP_TYPE_UNKNOWN;
 }
 
 extern void jitHandleNullPointerExceptionTrap(void);
@@ -789,7 +847,6 @@ void jit390SetTrapHandler(UDATA *controlPC, UDATA *entryPointRegister, void* fun
    *controlPC = functionPtrAModeTagged;
 #endif
    }
-
 
 #define true 1
 #define false 0
@@ -1063,7 +1120,7 @@ UDATA jit390Handler(J9VMThread* vmThread, U_32 sigType, void* sigInfo)
              * every DAA generated instruction that might throw HW exception is followed by a TR::InstOpCode::COND_NOP branch (BRC/BRCL)
              * the BRC/BRCL inst contains the OOL code offset to the instruction. It has to be computed and replace the
              * entryPointRegister.
-             * */
+             */
             if (FPE_DECOVF == si_code)
                {
                /* Decimal Overflow */
@@ -1190,7 +1247,7 @@ UDATA jit390Handler(J9VMThread* vmThread, U_32 sigType, void* sigInfo)
                /* BRC uses only 2 bytes to represent offsets, so we have to use short here.
                 * at the moment controlPCValue points to the instr immediately after exception-throwing
                 * instr, controlPCValue - ILC + CVBYAdjustment + 6 makes it points to the BRC/BRCL.
-                * */
+                */
                U_16 offset = *((U_16*)(controlPCValue - ILC + CVBYAdjustment + 6 + 2));
                cont_offset = ((U_32)offset)*2;
                }
@@ -1251,13 +1308,13 @@ UDATA jit390Handler(J9VMThread* vmThread, U_32 sigType, void* sigInfo)
                /* add one to *controlPC for symmetry with IA32, handler check subs one */
                jit390SetTrapHandler(controlPC, entryPointRegister, (void *) &jitHandleNullPointerExceptionTrap);
                return restoreSystemStackPointerState(vmThread, sigType, sigInfo);
-   
+
             case TRAP_TYPE_INTERNAL_ERROR:
                vmThread->jitException = (J9Object *) (controlPCValue + 1);
                /* add one to *controlPC for symmetry with IA32, handler check subs one */
                jit390SetTrapHandler(controlPC, entryPointRegister, (void *) &jitHandleInternalErrorTrap);
                return restoreSystemStackPointerState(vmThread, sigType, sigInfo);
-            
+
             case TRAP_TYPE_ARRAY_BOUNDS:
                vmThread->jitException = (J9Object *) (controlPCValue + 1);
                /* add one to *controlPC for symmetry with IA32, handler check subs one */
@@ -1308,576 +1365,629 @@ extern void jitHandleNullPointerExceptionTrap(void);
 extern void jitHandleInternalErrorTrap(void);
 
 static UDATA jitAMD64isREXPrefix(U_8 byte)
-{
-	return (0x40 <= byte && byte <= 0x4f);
-}
+   {
+   return (0x40 <= byte && byte <= 0x4f);
+   }
 
 static UDATA jitAMD64isLegacyPrefix(U_8 byte)
-{
-	switch(byte) {
-		case 0x66: case 0x67: case 0x2e: case 0x3e: case 0x26: case 0x64:
-		case 0x65: case 0x36: case 0xf0: case 0xf3: case 0xf2:
-			return byte;
-			break;
-		default:
-			return FALSE;
-			break;
-        }
-}
+   {
+   switch (byte)
+      {
+      case 0x66: case 0x67: case 0x2e: case 0x3e: case 0x26: case 0x64:
+      case 0x65: case 0x36: case 0xf0: case 0xf3: case 0xf2:
+         return byte;
+         break;
+      default:
+         return FALSE;
+         break;
+      }
+   }
 
 static I_64 jitAMD64regValFromRMBase(J9PortLibrary* portLib, U_8 base, U_8 rexPrefix, void *sigInfo)
-{
-	PORT_ACCESS_FROM_PORT(portLib);
-	const char* infoName;
-	void* infoValue;
-	U_32 infoType;
+   {
+   PORT_ACCESS_FROM_PORT(portLib);
+   const char* infoName;
+   void* infoValue;
+   U_32 infoType;
 
-	/* all #define'd register indexes are negative values */
-	I_32 infoIndex = 1;
+   /* all #define'd register indexes are negative values */
+   I_32 infoIndex = 1;
 
-	switch(base) {
+   switch (base)
+      {
+      case 0:
+         infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R8 : J9PORT_SIG_GPR_AMD64_RAX);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 0:
-			infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R8 : J9PORT_SIG_GPR_AMD64_RAX);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      case 1:
+         infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R9 : J9PORT_SIG_GPR_AMD64_RCX);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 1:
-			infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R9 : J9PORT_SIG_GPR_AMD64_RCX);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      case 2:
+         infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R10 : J9PORT_SIG_GPR_AMD64_RDX);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 2:
-			infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R10 : J9PORT_SIG_GPR_AMD64_RDX);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      case 3:
+         infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R11 : J9PORT_SIG_GPR_AMD64_RBX);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 3:
-			infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R11 : J9PORT_SIG_GPR_AMD64_RBX);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      case 4:
+         if (IS_REXB(rexPrefix))
+            {
+            infoIndex = J9PORT_SIG_GPR_AMD64_R12;
+            infoType = J9PORT_SIG_GPR;
+            }
+         else
+            {
+            infoIndex = J9PORT_SIG_CONTROL_SP;
+            infoType = J9PORT_SIG_CONTROL;
+            }
+         break;
 
-		case 4:
-			if (IS_REXB(rexPrefix)) {
-				infoIndex = J9PORT_SIG_GPR_AMD64_R12;
-				infoType = J9PORT_SIG_GPR;
-			} else {
-				infoIndex = J9PORT_SIG_CONTROL_SP;
-				infoType = J9PORT_SIG_CONTROL;
-			}
-			break;
+      case 5:
+         if (IS_REXB(rexPrefix))
+            {
+            infoIndex = J9PORT_SIG_GPR_AMD64_R13;
+            infoType = J9PORT_SIG_GPR;
+            }
+         else
+            {
+            infoIndex = J9PORT_SIG_CONTROL_BP;
+            infoType = J9PORT_SIG_CONTROL;
+            }
+         break;
 
-		case 5:
-			if (IS_REXB(rexPrefix)) {
-				infoIndex = J9PORT_SIG_GPR_AMD64_R13;
-				infoType = J9PORT_SIG_GPR;
-			} else {
-				infoIndex = J9PORT_SIG_CONTROL_BP;
-				infoType = J9PORT_SIG_CONTROL;
-			}
-			break;
+      case 6:
+         infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R14 : J9PORT_SIG_GPR_AMD64_RSI);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 6:
-			infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R14 : J9PORT_SIG_GPR_AMD64_RSI);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      case 7:
+         infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R15 : J9PORT_SIG_GPR_AMD64_RDI);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 7:
-			infoIndex = ((IS_REXB(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R15 : J9PORT_SIG_GPR_AMD64_RDI);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      default:
+         return -1;
+      }
 
-		default:
-			return -1;
-			break;
-	}
+   if (j9sig_info(sigInfo, infoType, infoIndex, &infoName, &infoValue) != J9PORT_SIG_VALUE_ADDRESS)
+      {
+      /* error! */
+      return -1;
+      }
 
-	if (j9sig_info(sigInfo, infoType, infoIndex, &infoName, &infoValue) != J9PORT_SIG_VALUE_ADDRESS) {
-		/* error! */
-		return -1;
-	}
-
-	return *(I_64 *)infoValue;
-}
+   return *(I_64 *)infoValue;
+   }
 
 static I_64 jitAMD64regValFromIndex(J9PortLibrary* portLib, U_8 index, U_8 rexPrefix, void *sigInfo)
-{
-	PORT_ACCESS_FROM_PORT(portLib);
-	const char* infoName;
-	void* infoValue;
-	U_32 infoType;
+   {
+   PORT_ACCESS_FROM_PORT(portLib);
+   const char* infoName;
+   void* infoValue;
+   U_32 infoType;
 
-	/* all #define(d) register indexes are negative values */
-	I_32 infoIndex = 1;
+   /* all #define(d) register indexes are negative values */
+   I_32 infoIndex = 1;
 
-	switch(index) {
+   switch (index)
+      {
+      case 0:
+         infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R8 : J9PORT_SIG_GPR_AMD64_RAX);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 0:
-			infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R8 : J9PORT_SIG_GPR_AMD64_RAX);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      case 1:
+         infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R9 : J9PORT_SIG_GPR_AMD64_RCX);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 1:
-			infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R9 : J9PORT_SIG_GPR_AMD64_RCX);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      case 2:
+         infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R10 : J9PORT_SIG_GPR_AMD64_RDX);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 2:
-			infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R10 : J9PORT_SIG_GPR_AMD64_RDX);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      case 3:
+         infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R11 : J9PORT_SIG_GPR_AMD64_RBX);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 3:
-			infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R11 : J9PORT_SIG_GPR_AMD64_RBX);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      case 4:
+         if (IS_REXX(rexPrefix))
+            {
+            infoIndex = J9PORT_SIG_GPR_AMD64_R12;
+            infoType = J9PORT_SIG_GPR;
+            }
+         else
+            {
+            infoIndex = J9PORT_SIG_CONTROL_SP;
+            infoType = J9PORT_SIG_CONTROL;
+            }
+         break;
 
-		case 4:
-			if (IS_REXX(rexPrefix)) {
-				infoIndex = J9PORT_SIG_GPR_AMD64_R12;
-				infoType = J9PORT_SIG_GPR;
-			} else {
-				infoIndex = J9PORT_SIG_CONTROL_SP;
-				infoType = J9PORT_SIG_CONTROL;
-			}
-			break;
+      case 5:
+         if (IS_REXX(rexPrefix))
+            {
+            infoIndex = J9PORT_SIG_GPR_AMD64_R13;
+            infoType = J9PORT_SIG_GPR;
+            }
+         else
+            {
+            infoIndex = J9PORT_SIG_CONTROL_BP;
+            infoType = J9PORT_SIG_CONTROL;
+            }
+         break;
 
-		case 5:
-			if (IS_REXX(rexPrefix)) {
-				infoIndex = J9PORT_SIG_GPR_AMD64_R13;
-				infoType = J9PORT_SIG_GPR;
-			} else {
-				infoIndex = J9PORT_SIG_CONTROL_BP;
-				infoType = J9PORT_SIG_CONTROL;
-			}
-			break;
+      case 6:
+         infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R14 : J9PORT_SIG_GPR_AMD64_RSI);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 6:
-			infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R14 : J9PORT_SIG_GPR_AMD64_RSI);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      case 7:
+         infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R15 : J9PORT_SIG_GPR_AMD64_RDI);
+         infoType = J9PORT_SIG_GPR;
+         break;
 
-		case 7:
-			infoIndex = ((IS_REXX(rexPrefix)) ? J9PORT_SIG_GPR_AMD64_R15 : J9PORT_SIG_GPR_AMD64_RDI);
-			infoType = J9PORT_SIG_GPR;
-			break;
+      default:
+         return -1;
+   }
 
-		default:
-			return -1;
-			break;
-	}
+   if (j9sig_info(sigInfo, infoType, infoIndex, &infoName, &infoValue) != J9PORT_SIG_VALUE_ADDRESS)
+      {
+      /* error! */
+      return -1;
+      }
 
-	if (j9sig_info(sigInfo, infoType, infoIndex, &infoName, &infoValue) != J9PORT_SIG_VALUE_ADDRESS) {
-		/* error! */
-		return -1;
-	}
-
-	return *(I_64 *)infoValue;
-}
+   return *(I_64 *)infoValue;
+   }
 
 static I_64
 jitAMD64maskValue(I_64 value, UDATA size)
-{
-
-	switch(size) {
-		case 64: return value;
-			break;
-		case 32: return (value & 0xffffffff);
-			break;
-		case 16: return (value & 0xffff);
-			break;
-		case 8: return (value & 0xff);
-			break;
-		default:
-			return -1;
-			break;
-	}
-}
+   {
+   switch (size)
+      {
+      case 64: return value;
+      case 32: return (value & 0xffffffff);
+      case 16: return (value & 0xffff);
+      case 8: return (value & 0xff);
+      default: return -1;
+      }
+   }
 
 static I_64 jitAMD64dereference_eaddr(U_64 eaddr, int operand_size, int address_size_override)
-{
-	if (address_size_override) {
-		eaddr = jitAMD64maskValue(eaddr, 32);   /* truncate */
-	}
+   {
+   if (address_size_override)
+      {
+      eaddr = jitAMD64maskValue(eaddr, 32);   /* truncate */
+      }
 
-	switch (operand_size) 	{
-		case 64: return *((U_64 *)eaddr);
-			break;
-		case 32: return *((U_32 *)eaddr);
-			break;
-		case 16: return *((U_16 *)eaddr);
-			break;
-		case 8: return *((U_8 *)eaddr);
-			break;
-		default:
-			return -1;
-	}
-}
+   switch (operand_size)
+      {
+      case 64: return *((U_64 *)eaddr);
+      case 32: return *((U_32 *)eaddr);
+      case 16: return *((U_16 *)eaddr);
+      case 8: return *((U_8 *)eaddr);
+      default: return -1;
+      }
+   }
 
 /* Return TRUE if an instruction is a div (unsigned divide) or
  *   idiv (signed divide), else return FALSE
 */
 static UDATA jitAMD64isDivInstruction(U_8 *rip)
-{
-	U_8 ModRM;
-	U_8 reg; /* bits 5-3 of the ModRM byte */
+   {
+   U_8 ModRM;
+   U_8 reg; /* bits 5-3 of the ModRM byte */
 
-	while (jitAMD64isLegacyPrefix(*rip)) {
-		/* return false for LOCK or Repeat prefixes */
-		if (*rip == 0xf0) {
-			return FALSE;
-		} else if 	((*rip == 0xf3) || (*rip == 0xf2)) {
-			return FALSE;
-		}
-		rip++;
-	}
+   while (jitAMD64isLegacyPrefix(*rip))
+      {
+      /* return false for LOCK or Repeat prefixes */
+      if (*rip == 0xf0)
+         {
+         return FALSE;
+         }
+      else if ((*rip == 0xf3) || (*rip == 0xf2))
+         {
+         return FALSE;
+         }
+      rip++;
+      }
 
-	if (jitAMD64isREXPrefix(*rip)) rip++; /* REX Prefix must precede opcode */
+   if (jitAMD64isREXPrefix(*rip)) rip++; /* REX Prefix must precede opcode */
 
-	/* div instructions match f6/6 and f7/6, idiv matches f6/7 and f7/7 */
-	if (*rip == 0xf7 || *rip == 0xf6) {
-		ModRM = *(rip + 1);
-		reg = (ModRM & 0x38) >> 3;
-		if ((reg == 0x6 ) || (reg == 0x7)) {
-			return TRUE;
-		}
-	}
+   /* div instructions match f6/6 and f7/6, idiv matches f6/7 and f7/7 */
+   if (*rip == 0xf7 || *rip == 0xf6)
+      {
+      ModRM = *(rip + 1);
+      reg = (ModRM & 0x38) >> 3;
+      if ((reg == 0x6 ) || (reg == 0x7))
+         {
+         return TRUE;
+         }
+      }
 
-	return FALSE;
-}
+   return FALSE;
+   }
 
 static I_64 jitAMD64decodeDiv(J9PortLibrary* portLib, U_8 *rip, void *sigInfo, UDATA *ins_size, UDATA *operand_size)
-{
-	PORT_ACCESS_FROM_PORT(portLib);
+   {
+   PORT_ACCESS_FROM_PORT(portLib);
 
-	U_8 REX_PREFIX = 0;  /* 0 indicating no prefix */
-	U_8 ModRM, SIB = 0;  /* 0 indicating no SIB byte */
-	U_8 mod, reg, rm;       /* ModRM fields */
-	U_8 scale, index, base;  /* SIB fields */
+   U_8 REX_PREFIX = 0;  /* 0 indicating no prefix */
+   U_8 ModRM, SIB = 0;  /* 0 indicating no SIB byte */
+   U_8 mod, reg, rm;       /* ModRM fields */
+   U_8 scale, index, base;  /* SIB fields */
 
-	const char* infoName;
-	void* infoValue;
-	U_32 infoType;
-	UDATA* ripPtr;
+   const char* infoName;
+   void* infoValue;
+   U_32 infoType;
+   UDATA* ripPtr;
 
-	UDATA operand_size_override = FALSE;
-	UDATA address_size_override = FALSE;
-	UDATA mask;
-	I_32 disp = 0; /* displacement */
-	U_64 eaddr;    /* effective address */
-	I_64 result;
+   UDATA operand_size_override = FALSE;
+   UDATA address_size_override = FALSE;
+   UDATA mask;
+   I_32 disp = 0; /* displacement */
+   U_64 eaddr;    /* effective address */
+   I_64 result;
 
-	infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_PC, &infoName, &infoValue);
-	if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-		/* error */
-		return -1;
-	}
-	ripPtr = (UDATA*) infoValue;
+   infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_PC, &infoName, &infoValue);
+   if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+      {
+      /* error */
+      return -1;
+      }
+   ripPtr = (UDATA*) infoValue;
 
-	*ins_size = 0;  /*  ins_size = instruction size */
+   *ins_size = 0;  /*  ins_size = instruction size */
 
-	while (jitAMD64isLegacyPrefix(*rip)) {
-		if (*rip == 0x66) {
-			operand_size_override = TRUE;
-		}
-		if (*rip == 0x67) {
-			address_size_override = TRUE;
-		}
-		if (*rip == 0xf0) {
-			return -1;  /* invalid opcode exception with idiv */
-		}
-		rip++; ++*ins_size;
-	}
+   while (jitAMD64isLegacyPrefix(*rip))
+      {
+      if (*rip == 0x66)
+         {
+         operand_size_override = TRUE;
+         }
+      if (*rip == 0x67)
+         {
+         address_size_override = TRUE;
+         }
+      if (*rip == 0xf0)
+         {
+         return -1;  /* invalid opcode exception with idiv */
+         }
+      rip++; ++*ins_size;
+      }
 
-	/* REX Prefix if it exits must precede the opcode */
-	if (jitAMD64isREXPrefix(*rip)) {
-		REX_PREFIX = *rip;   /* save the rex prefix */
-		/* The REX prefix takes precedence over the legacy prefix */
-		if (IS_REXW(REX_PREFIX)) operand_size_override = FALSE;
-		rip++; ++*ins_size;
-	}
+   /* REX Prefix if it exits must precede the opcode */
+   if (jitAMD64isREXPrefix(*rip))
+      {
+      REX_PREFIX = *rip;   /* save the rex prefix */
+      /* The REX prefix takes precedence over the legacy prefix */
+      if (IS_REXW(REX_PREFIX)) operand_size_override = FALSE;
+      rip++; ++*ins_size;
+      }
 
-	/* double check opcode is div or idiv, and set operand_size */
-	if (*rip == 0xf7) {
-		if (IS_REXW(REX_PREFIX)) *operand_size = 64;
-		else if (operand_size_override) *operand_size = 16;
-		else *operand_size = 32;
-	} else if (*rip == 0xf6)	{
-		*operand_size = 8;
-	} else {
-		return -1;  /* not an idiv instruction */
-	}
+   /* double check opcode is div or idiv, and set operand_size */
+   if (*rip == 0xf7)
+      {
+      if (IS_REXW(REX_PREFIX)) *operand_size = 64;
+      else if (operand_size_override) *operand_size = 16;
+      else *operand_size = 32;
+      }
+   else if (*rip == 0xf6)
+      {
+      *operand_size = 8;
+      }
+   else
+      {
+      return -1;  /* not an idiv instruction */
+      }
 
-	rip++; ++*ins_size;
+   rip++; ++*ins_size;
 
-	ModRM = *rip++; ++*ins_size;
-	mod = ModRM >> 6;          /* bits 7-6 */
-	reg = (ModRM & 0x38) >> 3; /* bits 5-3 */
-	rm = ModRM & 0x7;          /* bits 3-0 */
-
-#if defined JIT_SIGNAL_DEBUG
-	fprintf(stderr, "ModRM = %#x\n", ModRM);
-	fprintf(stderr, "\tmod = %#x, reg = %x, rm = %x\n", mod, reg, rm);
-#endif
-
-	/* double check that we are dealing with a div or idiv instruction */
-	if ((reg != 0x6) && (reg != 0x7)) {
-		return -1;
-	}
-
-	if (mod == 0x3) {  /* is the divisor in a register? */
-		result = jitAMD64regValFromRMBase(PORTLIB, rm, REX_PREFIX, sigInfo);
-		return (jitAMD64maskValue(result, *operand_size));
-	}
-
-	/* RIP-Relative Addressing */
-	if ((mod == 0x0) && (rm == 0x5)) 	{
-		*ins_size += 4;  /* 4 bytes for the 32 bit offset */
-		eaddr = *ripPtr + *ins_size; /* i.e., relative to the next instruction */
-		disp = *((I_32 *)(rip));
-		eaddr += disp;
-		result = jitAMD64dereference_eaddr(eaddr, *operand_size, address_size_override);
-		return result;
-	}
-
-	if (rm != 0x4) {   /* true if there is no SIB byte */
-		if (mod == 0x1) {
-			disp = *((I_8 *)(rip));
-			*ins_size += 1;
-		} else if (mod == 0x2)	{
-			disp = *((I_32 *)(rip));
-			*ins_size += 4;
-		}
-
-		eaddr = jitAMD64regValFromRMBase(PORTLIB, rm, REX_PREFIX, sigInfo) + disp;
-
-		result = jitAMD64dereference_eaddr(eaddr, *operand_size, address_size_override);
-		return result;
-	} else { /* SIB byte present */
-		SIB = *rip++; ++*ins_size;
-		scale = SIB >> 6;
-		index = (SIB & 0x38) >> 3;
-		base = SIB & 0x7;
+   ModRM = *rip++; ++*ins_size;
+   mod = ModRM >> 6;          /* bits 7-6 */
+   reg = (ModRM & 0x38) >> 3; /* bits 5-3 */
+   rm = ModRM & 0x7;          /* bits 3-0 */
 
 #if defined JIT_SIGNAL_DEBUG
-		fprintf(stderr, "SIB = %#x\n", SIB);
-		fprintf(stderr, "\tscale = %#x, index = %#x, base = %#x\n", scale, index, base);
+   fprintf(stderr, "ModRM = %#x\n", ModRM);
+   fprintf(stderr, "\tmod = %#x, reg = %x, rm = %x\n", mod, reg, rm);
 #endif
 
-		/* Get a displacement if it exists */
-		if ((base == 0x5) && (mod == 0x0))	{
-			disp = *((I_32 *)(rip));
-			*ins_size += 4;
+   /* double check that we are dealing with a div or idiv instruction */
+   if ((reg != 0x6) && (reg != 0x7))
+      {
+      return -1;
+      }
+
+   if (mod == 0x3) /* is the divisor in a register? */
+      {
+      result = jitAMD64regValFromRMBase(PORTLIB, rm, REX_PREFIX, sigInfo);
+      return (jitAMD64maskValue(result, *operand_size));
+      }
+
+   /* RIP-Relative Addressing */
+   if ((mod == 0x0) && (rm == 0x5))
+      {
+      *ins_size += 4;  /* 4 bytes for the 32 bit offset */
+      eaddr = *ripPtr + *ins_size; /* i.e., relative to the next instruction */
+      disp = *((I_32 *)(rip));
+      eaddr += disp;
+      result = jitAMD64dereference_eaddr(eaddr, *operand_size, address_size_override);
+      return result;
+      }
+
+   if (rm != 0x4) /* true if there is no SIB byte */
+      {
+      if (mod == 0x1)
+         {
+         disp = *((I_8 *)(rip));
+         *ins_size += 1;
+         }
+      else if (mod == 0x2)
+         {
+         disp = *((I_32 *)(rip));
+         *ins_size += 4;
+         }
+
+      eaddr = jitAMD64regValFromRMBase(PORTLIB, rm, REX_PREFIX, sigInfo) + disp;
+
+      result = jitAMD64dereference_eaddr(eaddr, *operand_size, address_size_override);
+      return result;
+      }
+   else
+      {
+      /* SIB byte present */
+      SIB = *rip++; ++*ins_size;
+      scale = SIB >> 6;
+      index = (SIB & 0x38) >> 3;
+      base = SIB & 0x7;
+
 #if defined JIT_SIGNAL_DEBUG
-			fprintf(stderr, "disp = %#x\n", disp);
+      fprintf(stderr, "SIB = %#x\n", SIB);
+      fprintf(stderr, "\tscale = %#x, index = %#x, base = %#x\n", scale, index, base);
 #endif
-			eaddr = disp; /* no base register */
-		} else {
-			if (mod == 0x1) {
-				disp = *((I_8 *)(rip));
-				*ins_size += 1;
-			} else if (mod == 0x2)	{
-				disp = *((I_32 *)(rip));
-				*ins_size += 4;
-			}
+
+      /* Get a displacement if it exists */
+      if ((base == 0x5) && (mod == 0x0))
+         {
+         disp = *((I_32 *)(rip));
+         *ins_size += 4;
 #if defined JIT_SIGNAL_DEBUG
-			fprintf(stderr, "disp = %#x\n", disp);
+         fprintf(stderr, "disp = %#x\n", disp);
 #endif
-			eaddr = jitAMD64regValFromRMBase(PORTLIB, base, REX_PREFIX, sigInfo) + disp;
-		}
+         eaddr = disp; /* no base register */
+         }
+      else
+         {
+         if (mod == 0x1)
+            {
+            disp = *((I_8 *)(rip));
+            *ins_size += 1;
+            }
+         else if (mod == 0x2)
+            {
+            disp = *((I_32 *)(rip));
+            *ins_size += 4;
+            }
+#if defined JIT_SIGNAL_DEBUG
+         fprintf(stderr, "disp = %#x\n", disp);
+#endif
+         eaddr = jitAMD64regValFromRMBase(PORTLIB, base, REX_PREFIX, sigInfo) + disp;
+      }
 
-		/* calculate scale*index except when index = 0x4, and REX.X is not set
-		 * i.e., can't encode index = rSP
-		*/
-		if ((index == 0x4) && !(IS_REXX(REX_PREFIX))) {
-			/* do nothing  */
-		} else {
-			eaddr += (jitAMD64regValFromIndex(PORTLIB, index, REX_PREFIX, sigInfo) * (1<<scale));
-		}
+      /* calculate scale*index except when index = 0x4, and REX.X is not set
+       * i.e., can't encode index = rSP
+       */
+      if ((index == 0x4) && !(IS_REXX(REX_PREFIX)))
+         {
+         /* do nothing  */
+         }
+      else
+         {
+         eaddr += (jitAMD64regValFromIndex(PORTLIB, index, REX_PREFIX, sigInfo) * (1<<scale));
+         }
 
-		result = jitAMD64dereference_eaddr(eaddr, *operand_size, address_size_override);
-		return result;
-	}
+      result = jitAMD64dereference_eaddr(eaddr, *operand_size, address_size_override);
+      return result;
+  }
 
-	return -1;
+   return -1;
 }
 
 UDATA jitAMD64Handler(J9VMThread* vmThread, U_32 sigType, void *sigInfo)
-{
-	PORT_ACCESS_FROM_VMC(vmThread);
+   {
+   PORT_ACCESS_FROM_VMC(vmThread);
 
-	J9JITExceptionTable *exceptionTable = NULL;
-	J9JITConfig *jitConfig = vmThread->javaVM->jitConfig;
+   J9JITExceptionTable *exceptionTable = NULL;
+   J9JITConfig *jitConfig = vmThread->javaVM->jitConfig;
 
-	if (jitConfig) {
+   if (jitConfig)
+      {
+      J9SFJITResolveFrame * resolveFrame;
+      const char* infoName;
+      void* infoValue;
+      U_32 infoType;
+      U_8* rip;
+      UDATA* ripPtr;
+      UDATA* rspPtr;
+      UDATA* raxPtr;
+      UDATA* rcxPtr;
+      UDATA* rdxPtr;
+      UDATA* rbpPtr;
 
-		J9SFJITResolveFrame * resolveFrame;
-		const char* infoName;
-		void* infoValue;
-		U_32 infoType;
-		U_8* rip;
-		UDATA* ripPtr;
-		UDATA* rspPtr;
-		UDATA* raxPtr;
-		UDATA* rcxPtr;
-		UDATA* rdxPtr;
-		UDATA* rbpPtr;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_PC, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      ripPtr = (UDATA*) infoValue;
+      rip = (U_8*)*ripPtr;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_PC, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		ripPtr = (UDATA*) infoValue;
-		rip = (U_8*)*ripPtr;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_AMD64_RAX, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      raxPtr = (UDATA*) infoValue;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_AMD64_RAX, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		raxPtr = (UDATA*) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_AMD64_RCX, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      rcxPtr = (UDATA*) infoValue;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_AMD64_RCX, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		rcxPtr = (UDATA*) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_AMD64_RDX, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      rdxPtr = (UDATA*) infoValue;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, J9PORT_SIG_GPR_AMD64_RDX, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		rdxPtr = (UDATA*) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_SP, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      rspPtr = (UDATA*) infoValue;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_SP, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		rspPtr = (UDATA*) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_BP, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      rbpPtr = (UDATA*) infoValue;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_BP, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		rbpPtr = (UDATA*) infoValue;
-
-		exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, (U_64)rip);
-		if (exceptionTable == NULL) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		} else {
-			void * stackMap;
-			UDATA registerMap;
-			switch (sigType) {
-			case J9PORT_SIG_FLAG_SIGFPE_DIV_BY_ZERO:
-			case J9PORT_SIG_FLAG_SIGFPE_INT_DIV_BY_ZERO:
+      exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, (U_64)rip);
+      if (exceptionTable == NULL)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      else
+         {
+         void * stackMap;
+         UDATA registerMap;
+         switch (sigType)
+            {
+            case J9PORT_SIG_FLAG_SIGFPE_DIV_BY_ZERO:
+            case J9PORT_SIG_FLAG_SIGFPE_INT_DIV_BY_ZERO:
 #if !defined(LINUX)
-			case J9PORT_SIG_FLAG_SIGFPE_INT_OVERFLOW:
+            case J9PORT_SIG_FLAG_SIGFPE_INT_OVERFLOW:
 #endif
-				if (jitAMD64isDivInstruction(rip)) {
+               if (jitAMD64isDivInstruction(rip))
+                  {
+                  IDATA div;
+                  UDATA ins_size, operand_size;
 
-					IDATA div;
-					UDATA ins_size, operand_size;
+                  /* find divisor */
+                  div = jitAMD64decodeDiv(PORTLIB, rip, sigInfo, &ins_size, &operand_size);
 
-	 				/* find divisor */
-					div = jitAMD64decodeDiv(PORTLIB, rip, sigInfo, &ins_size, &operand_size);
+                  if (div != 0 )
+                     {
+                     *ripPtr += ins_size;
+                     switch (operand_size)
+                        {
+                        case 64:
+                           *raxPtr = 0x8000000000000000;
+                           break;
+                        case 32:
+                           *raxPtr = 0x80000000;
+                           break;
+                        case 16:
+                           *raxPtr = 0x8000;
+                           break;
+                        case 8:
+                           *raxPtr = 0x80;
+                           break;
+                        default:
+                           /* error */
+                           break;
+                        }
+                     *rdxPtr = 0;
 
-					if (div != 0 ) {
+                     return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+                     }
+                  }
 
-						*ripPtr += ins_size;
-						switch (operand_size) {
-						case 64:
-							*raxPtr = 0x8000000000000000;
-							break;
-						case 32:
-							*raxPtr = 0x80000000;
-							 break;
-						case 16:
-							*raxPtr = 0x8000;
-							break;
-						case 8:
-							*raxPtr = 0x80;
-							break;
-						default:
-				   			/* error */
-							break;
-						}
-						*rdxPtr = 0;
+               /* Add 1 to make rip point inside the instruction
+                * since we assume most pc values are after a call instruction
+                * the first byte of an instruction might not be in the exception range
+                * Note, adding the instruction length is also incorrect, since it is possible
+                * that exactly one instruction was in the range
+                */
+               vmThread->jitException = (J9Object *) (*ripPtr + 1);
 
-						return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
-					}
-				}
-
-	 			/* Add 1 to make rip point inside the instruction
-	 			*   since we assume most pc values are after a call instruction
-	 			*   the first byte of an instruction might not be in the exception range
-	 			*   Note, adding the instruction length is also incorrect, since it is possible
-	 			*   that exactly one instruction was in the range
-				*/
-				vmThread->jitException = (J9Object *) (*ripPtr + 1);
-
-				*ripPtr = (U_64) ((void *) &jitHandleIntegerDivideByZeroTrap);
-				((J9VMJITRegisterState*)vmThread->entryLocalStorage->jitGlobalStorageBase)->jit_rbp = (UDATA) *rbpPtr;
-				*rbpPtr = (U_64) vmThread;
-				return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+               *ripPtr = (U_64) ((void *) &jitHandleIntegerDivideByZeroTrap);
+               ((J9VMJITRegisterState*)vmThread->entryLocalStorage->jitGlobalStorageBase)->jit_rbp = (UDATA) *rbpPtr;
+               *rbpPtr = (U_64) vmThread;
+               return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
 
 #ifdef LINUX
-			case J9PORT_SIG_FLAG_SIGFPE_INT_OVERFLOW:
+            case J9PORT_SIG_FLAG_SIGFPE_INT_OVERFLOW:
+               if (jitAMD64isDivInstruction(rip))
+                  {
+                  I_64 div;
+                  UDATA ins_size, operand_size;
+                  div = jitAMD64decodeDiv(PORTLIB, rip, sigInfo, &ins_size, &operand_size);
 
-				if (jitAMD64isDivInstruction(rip)) {
-					I_64 div;
-					UDATA ins_size, operand_size;
-					div = jitAMD64decodeDiv(PORTLIB, rip, sigInfo, &ins_size, &operand_size);
-
-					if ( div != 0) {
-						*ripPtr += ins_size;
-						switch (operand_size) {
-						case 64:
-							*raxPtr = 0x8000000000000000;
-							 break;
-						case 32:
-							*raxPtr = 0x80000000;
-							break;
-						case 16:
-							*raxPtr = 0x8000;
-							break;
-						case 8:
-							*raxPtr = 0x80;
-							break;
-						default:
-							/* error */
-							break;
-						}
-						*rdxPtr = 0;
-						return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
-					}
-				}
-				break;
+                  if (div != 0)
+                     {
+                     *ripPtr += ins_size;
+                     switch (operand_size)
+                        {
+                        case 64:
+                           *raxPtr = 0x8000000000000000;
+                           break;
+                        case 32:
+                           *raxPtr = 0x80000000;
+                           break;
+                        case 16:
+                           *raxPtr = 0x8000;
+                           break;
+                        case 8:
+                           *raxPtr = 0x80;
+                           break;
+                        default:
+                           /* error */
+                           break;
+                        }
+                     *rdxPtr = 0;
+                     return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+                     }
+                  }
+               break;
 #endif
-			case J9PORT_SIG_FLAG_SIGSEGV:
-				if (isDfSet(vmThread, sigInfo) == TRUE)
-					break;
-			case J9PORT_SIG_FLAG_SIGBUS:
+            case J9PORT_SIG_FLAG_SIGSEGV:
+               if (isDfSet(vmThread, sigInfo) == TRUE)
+                  break;
+            case J9PORT_SIG_FLAG_SIGBUS:
 
-				vmThread->jitException = (J9Object *) ((UDATA) rip + 1);
-				*ripPtr = (U_64)(void*)(sigType == J9PORT_SIG_FLAG_SIGSEGV ? jitHandleNullPointerExceptionTrap : jitHandleInternalErrorTrap);
-				((J9VMJITRegisterState*)vmThread->entryLocalStorage->jitGlobalStorageBase)->jit_rbp = (UDATA) *rbpPtr;
-				*rbpPtr = (U_64) vmThread;
-				return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+               vmThread->jitException = (J9Object *) ((UDATA) rip + 1);
+               *ripPtr = (U_64)(void*)(sigType == J9PORT_SIG_FLAG_SIGSEGV ? jitHandleNullPointerExceptionTrap : jitHandleInternalErrorTrap);
+               ((J9VMJITRegisterState*)vmThread->entryLocalStorage->jitGlobalStorageBase)->jit_rbp = (UDATA) *rbpPtr;
+               *rbpPtr = (U_64) vmThread;
+               return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
 
-			case J9PORT_SIG_FLAG_SIGILL:
-				break;
-			}
+            case J9PORT_SIG_FLAG_SIGILL:
+               break;
+            }
 
-			/*
-			 * if we reached here, then this is an unexpected error. Build a resolve
-			 * frame so that the stack is walkable and allow normal fault handling
-			 * to continue
-			 * CMVC 104332 : do not update the java stack pointer as it is misleading. We just need the stack to be walkable by our diagnostic tools.
-			 */
-			jitPushResolveFrame(vmThread, (UDATA*)*rspPtr, rip);
-		}
-	}
+         /*
+          * if we reached here, then this is an unexpected error. Build a resolve
+          * frame so that the stack is walkable and allow normal fault handling
+          * to continue
+          * CMVC 104332 : do not update the java stack pointer as it is misleading. We just need the stack to be walkable by our diagnostic tools.
+          */
+         jitPushResolveFrame(vmThread, (UDATA*)*rspPtr, rip);
+      }
+   }
 
-	return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+   return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
 }
 
 #elif defined(TR_HOST_ARM64) && defined(TR_TARGET_ARM64)
@@ -1887,79 +1997,89 @@ extern void jitHandleNullPointerExceptionTrap(void);
 extern void jitHandleInternalErrorTrap(void);
 
 UDATA jitARM64Handler(J9VMThread* vmThread, U_32 sigType, void* sigInfo)
-{
-	PORT_ACCESS_FROM_VMC(vmThread);
+   {
+   PORT_ACCESS_FROM_VMC(vmThread);
 
-	J9JITExceptionTable *exceptionTable = NULL;
-	J9JITConfig *jitConfig = vmThread->javaVM->jitConfig;
+   J9JITExceptionTable *exceptionTable = NULL;
+   J9JITConfig *jitConfig = vmThread->javaVM->jitConfig;
 
-	if (jitConfig) {
-		const char *infoName;
-		UDATA *pcPtr;
-		void *infoValue;
-		U_32 infoType;
-		J9JITExceptionTable *exceptionTable;
+   if (jitConfig)
+      {
+      const char *infoName;
+      UDATA *pcPtr;
+      void *infoValue;
+      U_32 infoType;
+      J9JITExceptionTable *exceptionTable;
 
-		infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_PC, &infoName, &infoValue);
-		if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-			return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		}
-		pcPtr = (UDATA *) infoValue;
+      infoType = j9sig_info(sigInfo, J9PORT_SIG_CONTROL, J9PORT_SIG_CONTROL_PC, &infoName, &infoValue);
+      if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+         {
+         return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+         }
+      pcPtr = (UDATA *) infoValue;
 
-		exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, *pcPtr);
+      exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, *pcPtr);
 
-		if (!exceptionTable && J9PORT_SIG_FLAG_SIGBUS == sigType) {
-		   // We might be in a jit helper routine (like arraycopy) so look at the link register as well...
-		   UDATA *lrPtr;
-		   /* R30 is LR for aarch64 */
-		   infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, 30, &infoName, &infoValue);
-		   if (infoType != J9PORT_SIG_VALUE_ADDRESS) {
-		      return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-		   }
-		   lrPtr = (UDATA *) infoValue;
-		   exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, *lrPtr);
-		   if (exceptionTable) {
-				vmThread->jitException = (J9Object *) (*lrPtr);  /* the lr points at the instruction after the helper call */
-				*pcPtr = (UDATA) ((void *) &jitHandleInternalErrorTrap);
-				return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
-		   }
-		}
+      if (!exceptionTable && J9PORT_SIG_FLAG_SIGBUS == sigType)
+         {
+         // We might be in a jit helper routine (like arraycopy) so look at the link register as well...
+         UDATA *lrPtr;
+         /* R30 is LR for aarch64 */
+         infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, 30, &infoName, &infoValue);
+         if (infoType != J9PORT_SIG_VALUE_ADDRESS)
+            {
+            return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+            }
+         lrPtr = (UDATA *) infoValue;
+         exceptionTable = jitConfig->jitGetExceptionTableFromPC(vmThread, *lrPtr);
+         if (exceptionTable)
+            {
+            vmThread->jitException = (J9Object *) (*lrPtr);  /* the lr points at the instruction after the helper call */
+            *pcPtr = (UDATA) ((void *) &jitHandleInternalErrorTrap);
+            return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+            }
+         }
 
-		if (exceptionTable) {
-			switch (sigType) {
-			case J9PORT_SIG_FLAG_SIGBUS:
-			case J9PORT_SIG_FLAG_SIGSEGV:
-				infoType = j9sig_info(sigInfo, J9PORT_SIG_SIGNAL, J9PORT_SIG_SIGNAL_INACCESSIBLE_ADDRESS, &infoName, &infoValue);
-				if (sigType == J9PORT_SIG_FLAG_SIGSEGV && infoType == J9PORT_SIG_VALUE_ADDRESS) {
-					if ( *(UDATA*)infoValue >= NUMBEROFBYTESINACCESSIBLE) {
-						/* we know where the fault occurred, and it wasn't within the first page. This is an unexpected error */
-						break;
-					}
-				}
-				vmThread->jitException = (J9Object *) (*pcPtr + 1);  /* add one for symmetry with IA32, handler check subs one */
-				*pcPtr = (UDATA)(void*)(sigType == J9PORT_SIG_FLAG_SIGSEGV ? jitHandleNullPointerExceptionTrap : jitHandleInternalErrorTrap);
-				return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
+      if (exceptionTable)
+         {
+         switch (sigType)
+            {
+            case J9PORT_SIG_FLAG_SIGBUS:
+            case J9PORT_SIG_FLAG_SIGSEGV:
+               infoType = j9sig_info(sigInfo, J9PORT_SIG_SIGNAL, J9PORT_SIG_SIGNAL_INACCESSIBLE_ADDRESS, &infoName, &infoValue);
+               if (sigType == J9PORT_SIG_FLAG_SIGSEGV && infoType == J9PORT_SIG_VALUE_ADDRESS)
+                  {
+                  if ( *(UDATA*)infoValue >= NUMBEROFBYTESINACCESSIBLE)
+                     {
+                     /* we know where the fault occurred, and it wasn't within the first page. This is an unexpected error */
+                     break;
+                     }
+                  }
+               vmThread->jitException = (J9Object *) (*pcPtr + 1);  /* add one for symmetry with IA32, handler check subs one */
+               *pcPtr = (UDATA)(void*)(sigType == J9PORT_SIG_FLAG_SIGSEGV ? jitHandleNullPointerExceptionTrap : jitHandleInternalErrorTrap);
+               return J9PORT_SIG_EXCEPTION_CONTINUE_EXECUTION;
 
-			default:
-				break;
-			}
+            default:
+               break;
+            }
 
-			/*
-			 * if we reached here, then this is an unexpected error. Build a resolve
-			 * frame so that the stack is walkable and allow normal fault handling
-			 * to continue
-			 */
+         /*
+          * if we reached here, then this is an unexpected error. Build a resolve
+          * frame so that the stack is walkable and allow normal fault handling
+          * to continue
+          */
 
-			/* the Java SP is r20 on aarch64 */
-			infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, 20, &infoName, &infoValue);
-			if (infoType == J9PORT_SIG_VALUE_ADDRESS) {
-				UDATA **javaSPPtr = (UDATA **) infoValue;
-				jitPushResolveFrame(vmThread, *javaSPPtr, (U_8 *) *pcPtr);
-			}
-		}
-	}
-	return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
-}
+         /* the Java SP is r20 on aarch64 */
+         infoType = j9sig_info(sigInfo, J9PORT_SIG_GPR, 20, &infoName, &infoValue);
+         if (infoType == J9PORT_SIG_VALUE_ADDRESS)
+            {
+            UDATA **javaSPPtr = (UDATA **) infoValue;
+            jitPushResolveFrame(vmThread, *javaSPPtr, (U_8 *) *pcPtr);
+            }
+         }
+      }
+   return J9PORT_SIG_EXCEPTION_CONTINUE_SEARCH;
+   }
 
 #endif
 

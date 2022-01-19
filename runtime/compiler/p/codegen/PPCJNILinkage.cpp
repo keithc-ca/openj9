@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -754,7 +754,7 @@ void J9::Power::JNILinkage::releaseVMAccessAtomicFree(TR::Node* callNode, TR::Re
    generateTrg1ImmInstruction(cg(), TR::InstOpCode::li, callNode, tempReg1, 1);
    generateMemSrc1Instruction(cg(), TR::InstOpCode::Op_st, callNode, TR::MemoryReference::createWithDisplacement(cg(), metaReg, (int32_t)offsetof(struct J9VMThread, inNative), TR::Compiler->om.sizeofReferenceAddress()), tempReg1);
 #if !defined(J9VM_INTERP_ATOMIC_FREE_JNI_USES_FLUSH)
-	generateInstruction(cg(), TR::InstOpCode::sync, callNode);
+   generateInstruction(cg(), TR::InstOpCode::sync, callNode);
 #endif /* !J9VM_INTERP_ATOMIC_FREE_JNI_USES_FLUSH */
    generateTrg1MemInstruction(cg(), TR::InstOpCode::Op_load, callNode, tempReg1, TR::MemoryReference::createWithDisplacement(cg(), metaReg, fej9->thisThreadGetPublicFlagsOffset(), TR::Compiler->om.sizeofReferenceAddress()));
    TR_ASSERT_FATAL(J9_PUBLIC_FLAGS_VM_ACCESS >= LOWER_IMMED && J9_PUBLIC_FLAGS_VM_ACCESS <= UPPER_IMMED, "VM access bit must be immediate");

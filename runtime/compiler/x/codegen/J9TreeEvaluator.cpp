@@ -456,13 +456,13 @@ static TR_OutlinedInstructions *generateArrayletReference(
       //
       if (loadNeedsDecompression)
          {
-		 if (comp->target().is64Bit() && comp->useCompressedPointers())
-		    {
+         if (comp->target().is64Bit() && comp->useCompressedPointers())
+            {
             if (shiftOffset > 0)
                {
                generateRegImmInstruction(TR::InstOpCode::SHL8RegImm1, node, loadOrStoreReg, shiftOffset, cg);
                }
-			}
+            }
          }
       }
    else
@@ -5662,7 +5662,7 @@ TR::Register
          //generateImmSymInstruction(TR::InstOpCode::PUSHImm4, node, (uintptr_t)doneTestLabel->getStaticSymbol()->getStaticAddress(), node->getSymbolReference(), cg);
          //generateRegInstruction(TR::InstOpCode::POPReg, node, scratchReg, cg);
 
-	 TR::TreeEvaluator::generateValueTracingCode (node, vmThreadReg, scratchReg, objectReg, tempReg, cg);
+         TR::TreeEvaluator::generateValueTracingCode (node, vmThreadReg, scratchReg, objectReg, tempReg, cg);
 
          // cause crash in some cases
          if (0)
@@ -8743,7 +8743,7 @@ J9::X86::TreeEvaluator::VMarrayStoreCHKEvaluator(
          sourceClassReg = scratchRegisterManager->findOrCreateScratchRegister();
          TR::MemoryReference *sourceClassMR = generateX86MemoryReference(sourceReg, TR::Compiler->om.offsetOfObjectVftField(), cg);
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, sourceClassReg, sourceClassMR, cg);
-	 TR::TreeEvaluator::generateVFTMaskInstruction(node, sourceClassReg, cg);
+         TR::TreeEvaluator::generateVFTMaskInstruction(node, sourceClassReg, cg);
          }
 
       TR::MemoryReference *tempMR = generateX86MemoryReference(sourceClassReg, offsetof(J9Class,superclasses), cg);
@@ -8780,7 +8780,7 @@ J9::X86::TreeEvaluator::VMarrayStoreCHKEvaluator(
          TR::MemoryReference *destClassMR = generateX86MemoryReference(destReg, TR::Compiler->om.offsetOfObjectVftField(), cg);
 
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, destComponentClassReg, destClassMR, cg);
-	 TR::TreeEvaluator::generateVFTMaskInstruction(node, destComponentClassReg, cg);
+         TR::TreeEvaluator::generateVFTMaskInstruction(node, destComponentClassReg, cg);
          TR::MemoryReference *destCompTypeMR =
             generateX86MemoryReference(destComponentClassReg, offsetof(J9ArrayClass, componentType), cg);
 
@@ -8865,8 +8865,8 @@ TR::Register *J9::X86::TreeEvaluator::VMarrayCheckEvaluator(TR::Node *node, TR::
       else
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, tempReg, generateX86MemoryReference(object1Reg,  TR::Compiler->om.offsetOfObjectVftField(), cg), cg);
 
-	 TR::TreeEvaluator::generateVFTMaskInstruction(node, tempReg, cg);
-         generateMemImmInstruction(testOpCode, node, generateX86MemoryReference(tempReg,  offsetof(J9Class, classDepthAndFlags), cg), J9AccClassRAMArray, cg);
+      TR::TreeEvaluator::generateVFTMaskInstruction(node, tempReg, cg);
+      generateMemImmInstruction(testOpCode, node, generateX86MemoryReference(tempReg,  offsetof(J9Class, classDepthAndFlags), cg), J9AccClassRAMArray, cg);
       if (!snippetLabel)
          {
          snippetLabel = generateLabelSymbol(cg);
@@ -8915,12 +8915,12 @@ TR::Register *J9::X86::TreeEvaluator::VMarrayCheckEvaluator(TR::Node *node, TR::
       if (!node->isArrayChkReferenceArray1())
          {
 
-    	 if (TR::Compiler->om.compressObjectReferences())
+         if (TR::Compiler->om.compressObjectReferences())
             generateRegMemInstruction(TR::InstOpCode::L4RegMem, node, tempReg, generateX86MemoryReference(object1Reg,  TR::Compiler->om.offsetOfObjectVftField(), cg), cg);
          else
             generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, tempReg, generateX86MemoryReference(object1Reg,  TR::Compiler->om.offsetOfObjectVftField(), cg), cg);
 
-	 TR::TreeEvaluator::generateVFTMaskInstruction(node, tempReg, cg);
+         TR::TreeEvaluator::generateVFTMaskInstruction(node, tempReg, cg);
          generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, tempReg, generateX86MemoryReference(tempReg, offsetof(J9Class, classDepthAndFlags), cg), cg);
          // X = (ramclass->ClassDepthAndFlags)>>J9AccClassRAMShapeShift
 
@@ -8954,8 +8954,8 @@ TR::Register *J9::X86::TreeEvaluator::VMarrayCheckEvaluator(TR::Node *node, TR::
             generateRegMemInstruction(TR::InstOpCode::L4RegMem, node, tempReg, generateX86MemoryReference(object2Reg,  TR::Compiler->om.offsetOfObjectVftField(), cg), cg);
          else
             generateRegMemInstruction(TR::InstOpCode::LRegMem(), node, tempReg, generateX86MemoryReference(object2Reg,  TR::Compiler->om.offsetOfObjectVftField(), cg), cg);
-	    TR::TreeEvaluator::generateVFTMaskInstruction(node, tempReg, cg);
-            generateMemImmInstruction(testOpCode, node, generateX86MemoryReference(tempReg,  offsetof(J9Class, classDepthAndFlags), cg), J9AccClassRAMArray, cg);
+         TR::TreeEvaluator::generateVFTMaskInstruction(node, tempReg, cg);
+         generateMemImmInstruction(testOpCode, node, generateX86MemoryReference(tempReg,  offsetof(J9Class, classDepthAndFlags), cg), J9AccClassRAMArray, cg);
          if (!snippetLabel)
             {
             snippetLabel = generateLabelSymbol(cg);
@@ -10274,8 +10274,8 @@ bool J9::X86::TreeEvaluator::VMinlineCallEvaluator(
            break;
            }
         default:
-      	  break;
-         }
+           break;
+        }
       }
 
    if (!resolvedMethodSymbol)
@@ -10294,7 +10294,7 @@ bool J9::X86::TreeEvaluator::VMinlineCallEvaluator(
             }
 #endif
          default:
-         	break;
+            break;
          }
       }
 

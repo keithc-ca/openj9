@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -98,7 +98,7 @@ uint8_t *TR::PPCStackCheckFailureSnippet::emitSnippetBody()
 
    if (offsetAdjust)
       {
-      if (offsetAdjust > UPPER_IMMED)	// addi is not applicable
+      if (offsetAdjust > UPPER_IMMED) // addi is not applicable
          {
          // prologue arranged for gr12 to contain offsetAdjust
          // add sp, sp, gr12
@@ -181,7 +181,7 @@ uint8_t *TR::PPCStackCheckFailureSnippet::emitSnippetBody()
       {
       // For FSD, we have to reload the return address
       if (comp->getOption(TR_FullSpeedDebug))
-	 {
+         {
          if (comp->target().is64Bit())
             // ld gr0, [gr14, 0]
             *(int32_t *)buffer = 0xe80e0000;
@@ -189,7 +189,7 @@ uint8_t *TR::PPCStackCheckFailureSnippet::emitSnippetBody()
             // lwz gr0, [gr14, 0]
             *(int32_t *)buffer = 0x800e0000;
          buffer += 4;
-	 }
+         }
 
       // mtlr gr0
       *(int32_t *)buffer = 0x7c0803a6;
@@ -198,7 +198,7 @@ uint8_t *TR::PPCStackCheckFailureSnippet::emitSnippetBody()
 
    if (offsetAdjust)
       {
-      if (offsetAdjust > (-LOWER_IMMED))	// addi is not applicable
+      if (offsetAdjust > (-LOWER_IMMED)) // addi is not applicable
          {
          // prologue arranged for gr12 to contain offsetAdjust
          // and gr12 is preserved across the call to jitStackOverflow
@@ -240,12 +240,12 @@ uint8_t *TR::PPCStackCheckFailureSnippet::emitSnippetBody()
 
       map->copy(atlas->getParameterMap());
       while (paramCursor != NULL)
-	 {
+         {
          int32_t  intRegArgIndex = paramCursor->getLinkageRegisterIndex();
          if (intRegArgIndex >= 0                   &&
              paramCursor->isReferencedParameter()  &&
              paramCursor->isCollectedReference())
-	    {
+            {
             // In full speed debug all the parameters are passed in the stack for this case
             // but will also reside in the registers
             if (!comp->getOption(TR_FullSpeedDebug))
@@ -253,9 +253,9 @@ uint8_t *TR::PPCStackCheckFailureSnippet::emitSnippetBody()
                map->resetBit(paramCursor->getGCMapIndex());
                }
             map->setRegisterBits(cg()->registerBitMask(linkage.getIntegerArgumentRegister(intRegArgIndex)));
-	    }
+            }
          paramCursor = paramIterator.getNext();
-	 }
+         }
 
       // set the GC map
       gcMap().setStackMap(map);

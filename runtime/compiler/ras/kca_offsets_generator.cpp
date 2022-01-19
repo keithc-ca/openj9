@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -90,7 +90,7 @@ J9::Options::kcaOffsets(char *option, void *, TR::OptionTable *entry)
       #if !defined(J9VM_INTERP_FLAGS_IN_CLASS_SLOT)
       fprintf( file, "#define J9OBJECT_FLAGS             (%" OMR_PRIuSIZE ")\n", offsetof(J9IndexableObjectContiguous,flags) );
       #else
-	  fprintf( file, "#define J9OBJECT_FLAGS             (0) // Does not exist!\n" );
+      fprintf( file, "#define J9OBJECT_FLAGS             (0) // Does not exist!\n" );
       #endif
       fprintf( file, "#define J9OBJECT_MONITOR           (0) // Does not exist!\n" );
       fprintf( file, "#define J9OBJECT_ARRAY_SIZE        (%" OMR_PRIuSIZE ")\n", offsetof(J9IndexableObjectContiguous,size) );

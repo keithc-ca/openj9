@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -152,9 +152,9 @@ J9::Z::CHelperLinkage::CHelperLinkage(TR::CodeGenerator * codeGen,TR_LinkageConv
       setNumIntegerArgumentRegisters(3);
 
 #if defined(J9ZOS390)
-	   setDSAPointerRegister(TR::RealRegister::GPR4);
+      setDSAPointerRegister(TR::RealRegister::GPR4);
 #if defined(TR_HOST_32BIT)
-	   setCAAPointerRegister(TR::RealRegister::GPR12);
+      setCAAPointerRegister(TR::RealRegister::GPR12);
 #endif
 #endif
       }
@@ -342,7 +342,7 @@ TR::Register * J9::Z::CHelperLinkage::buildDirectDispatch(TR::Node * callNode, T
       generateRXInstruction(cg(), TR::InstOpCode::getLoadOpCode(), callNode, DSAPointerReg, generateS390MemoryReference(vmThreadRegister, offsetOfSSP, cg()));
       generateSS1Instruction(cg(), TR::InstOpCode::XC, callNode, pointerSize,
          generateS390MemoryReference(vmThreadRegister, offsetOfSSP, cg()),
-	 generateS390MemoryReference(vmThreadRegister, offsetOfSSP, cg()));
+      generateS390MemoryReference(vmThreadRegister, offsetOfSSP, cg()));
 #if defined(TR_HOST_32BIT)
       padding += 2;
       // Loading CAA Pointer Register

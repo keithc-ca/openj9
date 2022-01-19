@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -259,19 +259,21 @@ TR_AnnotationBase::getDefaultAnnotationInfo(const char *annotationName)
 
    }
 
-bool TR_AnnotationBase::isValid(){
-  return _isValid;
-  }
+bool TR_AnnotationBase::isValid()
+   {
+   return _isValid;
+   }
 
-TR_ScratchList<const char*> TR_AnnotationBase::getAnnotationNames(){
-  TR_ScratchList<const char*> result(_comp->trMemory());
-  return result;
-  }
+TR_ScratchList<const char*> TR_AnnotationBase::getAnnotationNames()
+   {
+   TR_ScratchList<const char*> result(_comp->trMemory());
+   return result;
+   }
 
-  TR_AnnotationBase::AnnotationType TR_AnnotationBase::getAnnotationType(const char* annotationName){
-    return kUnknown;
-  }
-
+TR_AnnotationBase::AnnotationType TR_AnnotationBase::getAnnotationType(const char* annotationName)
+   {
+   return kUnknown;
+   }
 
 
   /* for now must do a search though all the annotation entries--later when Charlie has fixed it use
@@ -288,9 +290,9 @@ TR_AnnotationBase::getTaggedAnnotationInfoEntry(TR::SymbolReference *symRef,Anno
    {
    return getAnnotationInfoEntry(symRef,recognizedAnnotations[annotationEnum].name,true);
    }
+
 J9AnnotationInfoEntry *
 TR_AnnotationBase::getAnnotationInfoEntry(TR::SymbolReference *symRef,const char *annotationName,bool isTag)
-
    {
 
    char *nameBuf=NULL;
@@ -349,7 +351,7 @@ TR_AnnotationBase::getAnnotationInfoEntry(TR::SymbolReference *symRef,const char
             return NULL;
 
          strncpy(nameBuf,name,length);
-	 memberName = nameBuf;
+         memberName = nameBuf;
 
          int i;
          for( i=0; i < length;++i)
@@ -373,7 +375,7 @@ TR_AnnotationBase::getAnnotationInfoEntry(TR::SymbolReference *symRef,const char
 
       }
       else
-	 return NULL;
+         return NULL;
 
       }
    else if(sym->isParm())
@@ -465,6 +467,7 @@ bool TR_AnnotationBase::getValue(TR::SymbolReference *symRef,const char *annotat
    return true;
 
    }
+
 bool TR_AnnotationBase::extractValue(J9AnnotationInfoEntry * annotationInfoEntryPtr,
                                      const char *annotationName,  AnnotationType type,void *ptr)
    {
@@ -481,7 +484,7 @@ bool TR_AnnotationBase::extractValue(J9AnnotationInfoEntry * annotationInfoEntry
                                                               &data);
    if(NULL ==namePtr) return false;
 
-   do{
+   do {
      int32_t * dataPtr = (int32_t *)data;
      int32_t tag = *dataPtr & ANNOTATION_TAG_MASK;
      char *fieldName;int32_t len;
@@ -515,44 +518,41 @@ bool TR_AnnotationBase::extractValue(J9AnnotationInfoEntry * annotationInfoEntry
      *(int32_t* *)ptr = dataPtr;
      return true;
    } while((namePtr = intFunc->annotationElementIteratorNext(&state,&data)));
-    if(trace) printf("Search failed\n");
-    return false;
-  }
+   if(trace) printf("Search failed\n");
+   return false;
+   }
 
 
 bool TR_AnnotationBase::getEnumeration(TR::SymbolReference * symRef,const char *annotationName,
-				       char * * enumerationName,
-				       int32_t *nameLength,
-				       char * * enumerationValue,
-				       int32_t *valueLength)
-  {
-  J9SRP *j9ptr;
-  bool trace=false;
-  if(trace) printf("getting value for %s...\n",annotationName);
+                       char * * enumerationName,
+                       int32_t *nameLength,
+                       char * * enumerationValue,
+                       int32_t *valueLength)
+   {
+   J9SRP *j9ptr;
+   bool trace=false;
+   if(trace) printf("getting value for %s...\n",annotationName);
 
-  if(!getValue(symRef,annotationName,kEnum,(void *)&j9ptr))
-     {
-     return false;
-     }
+   if(!getValue(symRef,annotationName,kEnum,(void *)&j9ptr))
+      {
+      return false;
+      }
 
-  J9SRP *typeNamePtr = (J9SRP* )j9ptr++;
-  J9SRP *valueNamePtr = (J9SRP* )j9ptr;
-  J9UTF8 *typeName =  (J9UTF8 *)SRP_PTR_GET(typeNamePtr,J9UTF8*);
-  J9UTF8 *valueName = (J9UTF8 *)SRP_PTR_GET(valueNamePtr,J9UTF8*);
-  *enumerationName = utf8Data(typeName,*nameLength);
-  *enumerationValue = utf8Data(valueName,*valueLength);
+   J9SRP *typeNamePtr = (J9SRP* )j9ptr++;
+   J9SRP *valueNamePtr = (J9SRP* )j9ptr;
+   J9UTF8 *typeName =  (J9UTF8 *)SRP_PTR_GET(typeNamePtr,J9UTF8*);
+   J9UTF8 *valueName = (J9UTF8 *)SRP_PTR_GET(valueNamePtr,J9UTF8*);
+   *enumerationName = utf8Data(typeName,*nameLength);
+   *enumerationValue = utf8Data(valueName,*valueLength);
 
-  if(trace) printf("Enumeration returns %.*s %.*s\n",*nameLength,*enumerationName,
-                   *valueLength,*enumerationValue);
-  return true;
-  }
+   if(trace) printf("Enumeration returns %.*s %.*s\n",*nameLength,*enumerationName,
+                    *valueLength,*enumerationValue);
+   return true;
+   }
 
 TR_AnnotationBase::AnnotationTable TR_AnnotationBase::recognizedAnnotations[] = {
 #undef ANNOT_ENTRY
 #define ANNOT_ENTRY(A,B) {B,sizeof(B)-1,NULL},
 #include "env/annotations/AnnotationTable.inc"
-  {"kUnknown",0}
+   {"kUnknown",0}
 };
-
-
-

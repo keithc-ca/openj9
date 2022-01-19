@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -796,7 +796,7 @@ TR_J9EstimateCodeSize::processBytecodeAndGenerateCFG(TR_CallTarget *calltarget, 
             flags[i].set(InterpreterEmulator::BytecodePropertyFlag::isUnsanitizeable);
             break;
          default:
-         	break;
+            break;
          }
 
       if (flags[i].testAny(InterpreterEmulator::BytecodePropertyFlag::isUnsanitizeable))
@@ -1605,7 +1605,6 @@ TR_J9EstimateCodeSize::realEstimateCodeSize(TR_CallTarget *calltarget, TR_CallSt
                      //_optimisticSize = origOptimisticSize;
                      //_realSize = origRealSize;
                      calltargetSetTooBig = true;
-                        
                      }
                   }
 
@@ -1965,7 +1964,7 @@ TR_J9EstimateCodeSize::labelGraph(TR::CFG *cfg,
          nodesToBeEvaluated.enqueue(dest);
          }
       for (auto e = currentBlock->getExceptionPredecessors().begin(); e != currentBlock->getExceptionPredecessors().end();
-    		  ++e)
+              ++e)
          {
          TR::Block *dest = (*e)->getFrom()->asBlock();
          nodesToBeEvaluated.enqueue(dest);

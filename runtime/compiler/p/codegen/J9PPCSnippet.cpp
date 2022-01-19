@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -1151,7 +1151,9 @@ void TR::createCCPreLoadedCode(uint8_t *CCPreLoadedCodeBase, uint8_t *CCPreLoade
          iterator = relocs.erase(iterator);
          }
       else
-    	  ++iterator;
+         {
+         ++iterator;
+         }
       }
 
 #if defined(TR_HOST_POWER)
@@ -1262,4 +1264,3 @@ uint32_t TR::PPCNonZeroAllocPrefetchSnippet::getLength(int32_t estimatedCodeStar
 
    return PPC_INSTRUCTION_LENGTH;
    }
-

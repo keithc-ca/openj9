@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -276,7 +276,6 @@ void TR_SPMDKernelParallelizer::genVectorAccessForScalar(TR::Node *parent, int32
    _visitedNodes.reset(node->getGlobalIndex());
    parent->setAndIncChild(childIndex, splatsNode);
    }
-
 
 
 static void collectUses(TR::Node *defNode, TR::Compilation *comp, TR_UseDefInfo *info, CS2::ArrayOf<TR::Node *, TR::Allocator> &useNodesOfDefsInLoop)
@@ -734,9 +733,9 @@ bool TR_SPMDKernelParallelizer::visitNodeToSIMDize(TR::Node *parent, int32_t chi
                platformSupport = platformSupport && comp->cg()->getSupportsOpCodeForAutoSIMD(TR::vsplats,  node->getDataType());
 
                if (trace && platformSupport)
-		  traceMsg(comp, "   Found use of induction variable at node [%p]\n", node);
+                  traceMsg(comp, "   Found use of induction variable at node [%p]\n", node);
 
-	       if (trace && !platformSupport)
+               if (trace && !platformSupport)
                   traceMsg(comp, "   Found use of induction variable at node [%p] - platform does not support this vectorization\n", node);
                if (trace && platformSupport)
                   traceMsg(comp, "   Found use of induction variable at node [%p] - vectorization disabled for now\n", node);
@@ -4413,4 +4412,3 @@ TR_SPMDKernelParallelizer::vectorize(TR::Compilation *comp, TR_RegionStructure *
    bool vl = processSPMDKernelLoopForSIMDize(comp, optimizer, loop, piv, reductionHashTab, peelCount, loopInvariantBlock);
    return vl;
    }
-

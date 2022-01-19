@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -472,9 +472,9 @@ bool TR_InlinerBase::inlineCallTarget(TR_CallStack *callStack, TR_CallTarget *ca
                                calltarget->_guard,
                                calltarget->_receiverClass,
                                argInfo))
-		{
-		return false;
-		}
+      {
+      return false;
+      }
 
    //OSR
    int32_t numLivePendingPushSlots = 0;
@@ -1246,8 +1246,6 @@ bool TR_ProfileableCallSite::findProfiledCallTargets (TR_CallStack *callStack, T
       return false;
       }
 
-
-
    TR_ScratchList<TR_ExtraAddressInfo> valuesSortedByFrequency(comp()->trMemory());
    valueInfo->getSortedList(comp(), &valuesSortedByFrequency);
    ListIterator<TR_ExtraAddressInfo> sortedValuesIt(&valuesSortedByFrequency);
@@ -1276,5 +1274,3 @@ bool TR_ProfileableCallSite::findProfiledCallTargets (TR_CallStack *callStack, T
 
    return numTargets();
    }
-
-

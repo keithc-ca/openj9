@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2016, 2021 IBM Corp. and others
+ * Copyright (c) 2016, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -163,7 +163,8 @@ TR::MemoryReference *J9::ARM::JNILinkage::getOutgoingArgumentMemRef(int32_t     
    {
 /* totalSize does not matter */
 #ifdef DEBUG_ARM_LINKAGE
-printf("JNI: offset %d\n", offset); fflush(stdout);
+   printf("JNI: offset %d\n", offset);
+   fflush(stdout);
 #endif
    const TR::ARMLinkageProperties &jniLinkageProperties = getProperties();
    int32_t                spOffset = offset + getOffsetToFirstParm();
@@ -343,12 +344,12 @@ int32_t J9::ARM::JNILinkage::buildJNIArgs(TR::Node *callNode,
          }
       }
 
-	#ifdef DEBUG_ARM_LINKAGE
-	// const char *sig = callNode->getSymbol()->getResolvedMethodSymbol()->signature();
-	const char *sig = "CALL";
-	printf("%s: numIntegerArgRegIndex %d numMemArgs %d\n", sig,  numIntegerArgRegIndex, numMemArgs); fflush(stdout);
-	#endif
-
+#ifdef DEBUG_ARM_LINKAGE
+   // const char *sig = callNode->getSymbol()->getResolvedMethodSymbol()->signature();
+   const char *sig = "CALL";
+   printf("%s: numIntegerArgRegIndex %d numMemArgs %d\n", sig, numIntegerArgRegIndex, numMemArgs);
+   fflush(stdout);
+#endif
 
    int32_t numStackParmSlots = 0;
    // From here, down, all stack memory allocations will expire / die when the function returns.
@@ -363,7 +364,8 @@ int32_t J9::ARM::JNILinkage::buildJNIArgs(TR::Node *callNode,
       // On EABI, keep the C stack 8-byte aligned on entry to native callee.
       numStackParmSlots = (isEABI ? ((stackOffset + 4) & (~7)) : stackOffset);
 #ifdef DEBUG_ARM_LINKAGE
-printf("subtracting %d slots from SP\n", numStackParmSlots); fflush(stdout);
+      printf("subtracting %d slots from SP\n", numStackParmSlots);
+      fflush(stdout);
 #endif
       TR::RealRegister *sp = codeGen->machine()->getRealRegister(jniLinkageProperties.getStackPointerRegister());
       uint32_t base, rotate;
@@ -447,7 +449,8 @@ printf("subtracting %d slots from SP\n", numStackParmSlots); fflush(stdout);
             else
                {
 #ifdef DEBUG_ARM_LINKAGE
-printf("pushing 32-bit arg %d %d\n", numIntegerArgRegIndex, memArg); fflush(stdout);
+               printf("pushing 32-bit arg %d %d\n", numIntegerArgRegIndex, memArg);
+               fflush(stdout);
 #endif
                tempMR = getOutgoingArgumentMemRef(0, stackOffset, reg, TR::InstOpCode::str, pushToMemory[memArg++]);
                stackOffset += 4;
@@ -463,7 +466,8 @@ printf("pushing 32-bit arg %d %d\n", numIntegerArgRegIndex, memArg); fflush(stdo
                if (numIntegerArgRegIndex & 1)
                   {
 #ifdef DEBUG_ARM_LINKAGE
-printf("skipping one argument slot\n"); fflush(stdout);
+                  printf("skipping one argument slot\n");
+                  fflush(stdout);
 #endif
                   numIntegerArgRegIndex++;
                   }
@@ -516,7 +520,8 @@ printf("skipping one argument slot\n"); fflush(stdout);
                else
                   {
 #ifdef DEBUG_ARM_LINKAGE
-printf("pushing %s word of 64-bit arg %d %d\n", bigEndian ? "low" : "high", numIntegerArgRegIndex, memArg); fflush(stdout);
+                  printf("pushing %s word of 64-bit arg %d %d\n", bigEndian ? "low" : "high", numIntegerArgRegIndex, memArg);
+                  fflush(stdout);
 #endif
                   tempMR = getOutgoingArgumentMemRef(0, stackOffset, bigEndian ? reg->getRegisterPair()->getLowOrder() : reg->getRegisterPair()->getHighOrder(), TR::InstOpCode::str, pushToMemory[memArg++]);
                   stackOffset += 4;
@@ -525,7 +530,8 @@ printf("pushing %s word of 64-bit arg %d %d\n", bigEndian ? "low" : "high", numI
             else
                {
 #ifdef DEBUG_ARM_LINKAGE
-printf("pushing 64-bit JNI arg %d %d %d\n", numIntegerArgs, memArg, totalSize); fflush(stdout);
+               printf("pushing 64-bit JNI arg %d %d %d\n", numIntegerArgs, memArg, totalSize);
+               fflush(stdout);
 #endif
                if (isEABI)
                   stackOffset = (stackOffset + 4) & (~7);
@@ -684,7 +690,8 @@ printf("pushing 64-bit JNI arg %d %d %d\n", numIntegerArgs, memArg, totalSize); 
    for (i = 0; i < numMemArgs; i++)
       {
 #ifdef DEBUG_ARM_LINKAGE
-printf("pushing mem arg %d of %d (in reg %x) to [sp + %d]... ", i, numMemArgs, pushToMemory[i].argRegister, pushToMemory[i].argMemory->getOffset()); fflush(stdout);
+      printf("pushing mem arg %d of %d (in reg %x) to [sp + %d]... ", i, numMemArgs, pushToMemory[i].argRegister, pushToMemory[i].argMemory->getOffset());
+      fflush(stdout);
 #endif
       TR::Register *aReg = pushToMemory[i].argRegister;
       generateMemSrc1Instruction(codeGen,
@@ -694,7 +701,8 @@ printf("pushing mem arg %d of %d (in reg %x) to [sp + %d]... ", i, numMemArgs, p
                                  pushToMemory[i].argRegister);
       codeGen->stopUsingRegister(aReg);
 #ifdef DEBUG_ARM_LINKAGE
-printf("done\n"); fflush(stdout);
+      printf("done\n");
+      fflush(stdout);
 #endif
       }
    //Returns the size of parameter buffers allocated on stack

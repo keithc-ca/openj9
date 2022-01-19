@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -62,18 +62,18 @@ class TR_StringPeepholes : public TR::Optimization
    void genFlush(TR::TreeTop *, TR::Node *node);
    enum StringpeepholesMethods
       {
-	   SPH_BigDecimal_SMAAMSS,
-	   SPH_BigDecimal_SMSS,
-	   SPH_BigDecimal_AAMSS,
-	   SPH_BigDecimal_MSS,
-	   START_STRING_METHODS, //separator
+      SPH_BigDecimal_SMAAMSS,
+      SPH_BigDecimal_SMSS,
+      SPH_BigDecimal_AAMSS,
+      SPH_BigDecimal_MSS,
+      START_STRING_METHODS, //separator
        SPH_String_init_SC, //_initSymRef
-	   SPH_String_init_SS, //_initSymRef1
-	   SPH_String_init_SSS, //_initSymRef2
-	   SPH_String_init_SI, //_initSymRef3
-	   SPH_String_init_AIIZ, //_initSymRef4
-	   SPH_String_init_ISISS, //_initSymRef7
-	   END_STRINGPEEPHOLES_METHODS
+      SPH_String_init_SS, //_initSymRef1
+      SPH_String_init_SSS, //_initSymRef2
+      SPH_String_init_SI, //_initSymRef3
+      SPH_String_init_AIIZ, //_initSymRef4
+      SPH_String_init_ISISS, //_initSymRef7
+      END_STRINGPEEPHOLES_METHODS
       };
 
    TR::SymbolReference **optSymRefs;

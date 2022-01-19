@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -93,7 +93,6 @@ TR::InterProceduralAnalyzer::InterProceduralAnalyzer(TR::Compilation * c, bool t
       (TR_LinkHead<TR_ClassExtendCheck> *)
          trMemory()->allocateHeapMemory(sizeof(TR_LinkHead<TR_ClassExtendCheck>) * (CLASSHASHTABLE_SIZE + 1));
    memset(_classesThatShouldNotBeNewlyExtendedHT, 0, sizeof(TR_LinkHead<TR_ClassExtendCheck>) * (CLASSHASHTABLE_SIZE + 1));
-
    }
 
 
@@ -104,7 +103,6 @@ TR::InterProceduralAnalyzer::perform()
    }
 
 
-
 bool TR::InterProceduralAnalyzer::capableOfPeekingVirtualCalls()
    {
    if (comp()->performVirtualGuardNOPing() &&
@@ -112,7 +110,6 @@ bool TR::InterProceduralAnalyzer::capableOfPeekingVirtualCalls()
       return true;
    return false;
    }
-
 
 
 List<OMR::RuntimeAssumption> *TR::InterProceduralAnalyzer::analyzeCall(TR::Node *callNode)
@@ -307,7 +304,7 @@ List<OMR::RuntimeAssumption> *TR::InterProceduralAnalyzer::analyzeCallGraph(TR::
       if (classInfo)
          {
          TR_ScratchList<TR_PersistentClassInfo> subClasses(trMemory());
-	 TR_ClassQueries::getSubClasses(classInfo, subClasses, fe());
+         TR_ClassQueries::getSubClasses(classInfo, subClasses, fe());
          if (trace())
             traceMsg(comp(), "Number of subclasses = %d\n", subClasses.getSize());
          TR_ScratchList<TR_ResolvedMethod> subMethods(trMemory());
@@ -519,7 +516,7 @@ List<OMR::RuntimeAssumption> *TR::InterProceduralAnalyzer::analyzeMethod(TR::Nod
 
       if (trace())
          {
-	 //comp()->setVisitCount(1);
+         //comp()->setVisitCount(1);
          for (TR::TreeTop *tt = resolvedMethodSymbol->getFirstTreeTop(); tt; tt = tt->getNextTreeTop())
             comp()->getDebug()->print(comp()->getOutFile(), tt);
          //comp()->setVisitCount(visitCount);
@@ -699,7 +696,6 @@ bool TR::InterProceduralAnalyzer::isOnPeekingStack(TR_ResolvedMethod *method)
    }
 
 
-
 bool TR::InterProceduralAnalyzer::alreadyPeekedMethod(TR_ResolvedMethod *method, bool *success, TR::PriorPeekInfo **priorPeek)
    {
    ListIterator<TR::PriorPeekInfo> priorPeekedMethodsIt(&_successfullyPeekedMethods);
@@ -730,7 +726,6 @@ bool TR::InterProceduralAnalyzer::alreadyPeekedMethod(TR_ResolvedMethod *method,
    }
 
 
-
 bool
 TR::InterProceduralAnalyzer::addClassThatShouldNotBeLoaded(char *name, int32_t len)
    {
@@ -756,9 +751,6 @@ TR::InterProceduralAnalyzer::addClassThatShouldNotBeLoaded(char *name, int32_t l
 
    return true;
    }
-
-
-
 
 
 bool
@@ -840,8 +832,6 @@ bool TR::InterProceduralAnalyzer::addSingleClassThatShouldNotBeNewlyExtended(TR_
    }
 
 
-
-
 bool
 TR::InterProceduralAnalyzer::addWrittenGlobal(TR::SymbolReference *symRef)
    {
@@ -895,8 +885,6 @@ TR::InterProceduralAnalyzer::addWrittenGlobal(TR::SymbolReference *symRef)
    }
 
 
-
-
 bool
 TR::InterProceduralAnalyzer::addMethodThatShouldNotBeNewlyOverridden(TR_OpaqueMethodBlock *method)
    {
@@ -910,6 +898,3 @@ TR::InterProceduralAnalyzer::addMethodThatShouldNotBeNewlyOverridden(TR_OpaqueMe
    //
    return true;
    }
-
-
-

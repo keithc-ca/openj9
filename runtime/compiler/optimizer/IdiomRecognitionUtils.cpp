@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -1111,7 +1111,7 @@ createOP2(TR::Compilation *comp, TR::ILOpCodes op2, TR::Node* ch1, TR::Node* ch2
                }
             break;
          default:
-         	break;
+            break;
          }
       }
    if (!done) op2Node = TR::Node::create(op2, 2, ch1, ch2);
@@ -1594,4 +1594,3 @@ findAndOrReplaceNodesWithMatchingSymRefNumber(TR::Node *curNode, TR::Node *targe
       }
    return isFound;
    }
-

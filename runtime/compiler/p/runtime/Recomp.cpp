@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2020 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -61,15 +61,15 @@ TR_PersistentJittedBodyInfo *J9::Recompilation::getJittedBodyInfoFromPC(void *st
       int32_t  toSnippet;
 
       if ((binst & 0xFF830000) == 0x41800000)   // blt snippet
-	 {
-	 toSnippet = ((binst<<16) & 0xFFFC0000)>>16;
-	 }
+         {
+         toSnippet = ((binst<<16) & 0xFFFC0000)>>16;
+         }
       else
-	 {
+         {
          branchLocation = (int32_t *)((int8_t *)branchLocation + 4);
          binst = *branchLocation;
          toSnippet = ((binst<<6) & 0xFFFFFF00)>>6;
-	 }
+         }
       return(*(TR_PersistentJittedBodyInfo **)((int8_t *)branchLocation + toSnippet + 4));
       }
    return NULL;
@@ -115,14 +115,14 @@ void J9::Recompilation::fixUpMethodCode(void *startPC)
 
       // Other thread might try to do the same thing at the same time.
       while((preserved & 0xff000000) != 0x4b000000)
-	 {
-	 if (_tr_try_lock(jitEntry, preserved, newEntry))
-	    {
-              ppcCodeSync((uint8_t *)jitEntry, 4);
-              break;
-	    }
-           preserved = *jitEntry;
-	 }
+         {
+         if (_tr_try_lock(jitEntry, preserved, newEntry))
+            {
+            ppcCodeSync((uint8_t *)jitEntry, 4);
+            break;
+            }
+         preserved = *jitEntry;
+         }
       }
    }
 
@@ -142,11 +142,11 @@ void J9::Recompilation::methodHasBeenRecompiled(void *oldStartPC, void *newStart
       intptr_t helperAddress = (intptr_t)runtimeHelperValue(TR_PPCcountingPatchCallSite);
       if (!TR::Compiler->target.cpu.isTargetWithinIFormBranchRange(helperAddress, (intptr_t)patchAddr) ||
           TR::Options::getCmdLineOptions()->getOption(TR_StressTrampolines))
-	 {
+         {
          helperAddress = TR::CodeCacheManager::instance()->findHelperTrampoline(TR_PPCcountingPatchCallSite, (void *)patchAddr);
          TR_ASSERT_FATAL(TR::Compiler->target.cpu.isTargetWithinIFormBranchRange(helperAddress, (intptr_t)patchAddr),
                          "Helper address is out of range");
-	 }
+         }
 
       newInstr = 0x48000001 | ((helperAddress - (intptr_t)patchAddr) & 0x03FFFFFC);
       *patchAddr = newInstr;
@@ -161,11 +161,11 @@ void J9::Recompilation::methodHasBeenRecompiled(void *oldStartPC, void *newStart
       intptr_t helperAddress = (intptr_t)runtimeHelperValue(TR_PPCsamplingPatchCallSite);
       if (!TR::Compiler->target.cpu.isTargetWithinIFormBranchRange(helperAddress, (intptr_t)patchAddr) ||
           TR::Options::getCmdLineOptions()->getOption(TR_StressTrampolines))
-	 {
+         {
          helperAddress = TR::CodeCacheManager::instance()->findHelperTrampoline(TR_PPCsamplingPatchCallSite, (void *)patchAddr);
          TR_ASSERT_FATAL(TR::Compiler->target.cpu.isTargetWithinIFormBranchRange(helperAddress, (intptr_t)patchAddr),
                          "Helper address is out of range");
-	 }
+         }
 
       newInstr = 0x48000001 | ((helperAddress - (intptr_t)patchAddr) & 0x03FFFFFC);
       *patchAddr = newInstr;
@@ -244,10 +244,10 @@ void J9::Recompilation::methodCannotBeRecompiled(void *oldStartPC, TR_FrontEnd *
       // Make sure that we do not profile any longer in there
       TR_PersistentProfileInfo *profileInfo = bodyInfo->getProfileInfo();
       if (profileInfo)
-	 {
-	 profileInfo->setProfilingFrequency(INT_MAX);
-	 profileInfo->setProfilingCount(-1);
-	 }
+         {
+         profileInfo->setProfilingFrequency(INT_MAX);
+         profileInfo->setProfilingCount(-1);
+         }
       }
    else
       {
@@ -311,15 +311,15 @@ void fixupMethodInfoAddressInCodeCache(void *startPC, void *bodyInfo)
       int32_t  toSnippet;
 
       if ((binst & 0xFF830000) == 0x41800000)   // blt snippet
-	 {
-	 toSnippet = ((binst<<16) & 0xFFFC0000)>>16;
-	 }
+         {
+         toSnippet = ((binst<<16) & 0xFFFC0000)>>16;
+         }
       else
-	 {
+         {
          branchLocation = (int32_t *)((int8_t *)branchLocation + 4);
          binst = *branchLocation;
          toSnippet = ((binst<<6) & 0xFFFFFF00)>>6;
-	 }
+         }
       *(void **)((int8_t *)branchLocation + toSnippet + 4) = bodyInfo;
       }
    return;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -180,7 +180,7 @@ TR_J9ByteCodeIterator::findFloatingPointInstruction()
             break;
             }
          default:
-         	break;
+            break;
          }
    return -1;
    }
@@ -306,7 +306,7 @@ TR_J9ByteCodeIterator::printByteCode()
          printJumpIndex(next4BytesSigned());
          break;
       default:
-      	break;
+         break;
       }
    }
 
@@ -846,4 +846,3 @@ TR::ILOpCodes TR_J9ByteCodeIterator::_fcmplOps[] = { TR::iffcmpeq, TR::iffcmpneu
 TR::ILOpCodes TR_J9ByteCodeIterator::_fcmpgOps[] = { TR::iffcmpeq, TR::iffcmpneu, TR::iffcmplt,  TR::iffcmpgeu, TR::iffcmpgtu, TR::iffcmple  };
 TR::ILOpCodes TR_J9ByteCodeIterator::_dcmplOps[] = { TR::ifdcmpeq, TR::ifdcmpneu, TR::ifdcmpltu, TR::ifdcmpge,  TR::ifdcmpgt,  TR::ifdcmpleu };
 TR::ILOpCodes TR_J9ByteCodeIterator::_dcmpgOps[] = { TR::ifdcmpeq, TR::ifdcmpneu, TR::ifdcmplt,  TR::ifdcmpgeu, TR::ifdcmpgtu, TR::ifdcmple  };
-

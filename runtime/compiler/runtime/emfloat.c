@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2016 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -25,248 +25,245 @@
 #include "emfloat.h"
 #include "j9protos.h"
 
-
-
 /* NOTE: arguments reversed to all helpers! */
 #ifdef ZAURUS
 FLOAT_RESULT jitMathHelperFloatAddFloat(float arg1, float arg2)
-{
-	float floatResult = helperCFloatPlusFloat(arg1, arg2);
+   {
+   float floatResult = helperCFloatPlusFloat(arg1, arg2);
    return *(FLOAT_RESULT*)&floatResult;
-}
+   }
 
 FLOAT_RESULT jitMathHelperFloatSubtractFloat(float arg1, float arg2)
-{
-	float floatResult = helperCFloatMinusFloat(arg1, arg2);
+   {
+   float floatResult = helperCFloatMinusFloat(arg1, arg2);
    return *(FLOAT_RESULT*)&floatResult;
-}
+   }
 
 FLOAT_RESULT jitMathHelperFloatMultiplyFloat(float arg1, float arg2)
-{
-	float floatResult = helperCFloatMultiplyFloat(arg1, arg2);
-	return *(FLOAT_RESULT*)&floatResult;
-}
+   {
+   float floatResult = helperCFloatMultiplyFloat(arg1, arg2);
+   return *(FLOAT_RESULT*)&floatResult;
+   }
 
 FLOAT_RESULT jitMathHelperFloatDivideFloat(float arg1, float arg2)
-{
-	float floatResult = helperCFloatDivideFloat(arg1, arg2);
-	return *(FLOAT_RESULT*)&floatResult;
-}
+   {
+   float floatResult = helperCFloatDivideFloat(arg1, arg2);
+   return *(FLOAT_RESULT*)&floatResult;
+   }
 
 FLOAT_RESULT jitMathHelperFloatRemainderFloat(float arg1, float arg2)
-{
-	float floatResult = helperCFloatRemainderFloat(arg1, arg2);
-	return *(FLOAT_RESULT*)&floatResult;
-}
+   {
+   float floatResult = helperCFloatRemainderFloat(arg1, arg2);
+   return *(FLOAT_RESULT*)&floatResult;
+   }
 
 DOUBLE_RESULT jitMathHelperDoubleAddDouble(double arg1, double arg2)
-{
-	double doubleResult = helperCDoublePlusDouble(arg1, arg2);
-	return *(DOUBLE_RESULT*)&doubleResult;
-}
+   {
+   double doubleResult = helperCDoublePlusDouble(arg1, arg2);
+   return *(DOUBLE_RESULT*)&doubleResult;
+   }
 
 DOUBLE_RESULT jitMathHelperDoubleSubtractDouble(double arg1, double arg2)
-{
-	double doubleResult = helperCDoubleMinusDouble(arg1, arg2);
-	return *(DOUBLE_RESULT*)&doubleResult;
-}
+   {
+   double doubleResult = helperCDoubleMinusDouble(arg1, arg2);
+   return *(DOUBLE_RESULT*)&doubleResult;
+   }
 
 DOUBLE_RESULT jitMathHelperDoubleMultiplyDouble(double arg1, double arg2)
-{
-	double doubleResult = helperCDoubleMultiplyDouble(arg1, arg2);
-	return *(DOUBLE_RESULT*)&doubleResult;
-}
+   {
+   double doubleResult = helperCDoubleMultiplyDouble(arg1, arg2);
+   return *(DOUBLE_RESULT*)&doubleResult;
+   }
 
 DOUBLE_RESULT jitMathHelperDoubleDivideDouble(double arg1, double arg2)
-{
-	double doubleResult = helperCDoubleDivideDouble(arg1, arg2);
-	return *(DOUBLE_RESULT*)&doubleResult;
-}
+   {
+   double doubleResult = helperCDoubleDivideDouble(arg1, arg2);
+   return *(DOUBLE_RESULT*)&doubleResult;
+   }
 
 DOUBLE_RESULT jitMathHelperDoubleRemainderDouble(double arg1, double arg2)
-{
-	double doubleResult = helperCDoubleRemainderDouble(arg1, arg2);
-	return *(DOUBLE_RESULT*)&doubleResult;
-}
+   {
+   double doubleResult = helperCDoubleRemainderDouble(arg1, arg2);
+   return *(DOUBLE_RESULT*)&doubleResult;
+   }
 
 FLOAT_RESULT jitMathHelperConvertDoubleToFloat(double arg1)
-{
-	float floatResult = helperCConvertDoubleToFloat(arg1);
-	return *(FLOAT_RESULT*)&floatResult;
-}
+   {
+   float floatResult = helperCConvertDoubleToFloat(arg1);
+   return *(FLOAT_RESULT*)&floatResult;
+   }
 
 DOUBLE_RESULT jitMathHelperConvertFloatToDouble(float arg1)
-{
-	double doubleResult = helperCConvertFloatToDouble(arg1);
-	return *(DOUBLE_RESULT*)&doubleResult;
-}
+   {
+   double doubleResult = helperCConvertFloatToDouble(arg1);
+   return *(DOUBLE_RESULT*)&doubleResult;
+   }
 
 FLOAT_RESULT jitMathHelperConvertIntToFloat(INT_ARG arg1)
-{
-	float floatResult = helperCConvertIntegerToFloat(arg1);
-	return *(FLOAT_RESULT*)&floatResult;
-}
+   {
+   float floatResult = helperCConvertIntegerToFloat(arg1);
+   return *(FLOAT_RESULT*)&floatResult;
+   }
 
 DOUBLE_RESULT jitMathHelperConvertIntToDouble(INT_ARG arg1)
-{
-	double doubleResult = helperCConvertIntegerToDouble(arg1);
-	return *(DOUBLE_RESULT*)&doubleResult;
-}
+   {
+   double doubleResult = helperCConvertIntegerToDouble(arg1);
+   return *(DOUBLE_RESULT*)&doubleResult;
+   }
 
 FLOAT_RESULT jitMathHelperConvertLongToFloat(LONG_ARG arg1)
-{
-	float floatResult = helperCConvertLongToFloat(arg1);
-	return *(FLOAT_RESULT*)&floatResult;
-}
+   {
+   float floatResult = helperCConvertLongToFloat(arg1);
+   return *(FLOAT_RESULT*)&floatResult;
+   }
 
 DOUBLE_RESULT jitMathHelperConvertLongToDouble(LONG_ARG arg1)
-{
-	double doubleResult = helperCConvertLongToDouble(arg1);
-	return *(DOUBLE_RESULT*)&doubleResult;
-}
+   {
+   double doubleResult = helperCConvertLongToDouble(arg1);
+   return *(DOUBLE_RESULT*)&doubleResult;
+   }
 #endif
 
 FLOAT_RESULT jitMathHelperFloatNegate(float arg1)
-{
+   {
    U_32 result = (*(U_32 *)&arg1) ^ 0x80000000;
    return *(FLOAT_RESULT*)&result;
-}
+   }
 
 DOUBLE_RESULT jitMathHelperDoubleNegate(double arg1)
-{
-	DOUBLE_RESULT result;
-	helperNegateDouble(&arg1, (double*)&result);
-	return result;
-}
+   {
+   DOUBLE_RESULT result;
+   helperNegateDouble(&arg1, (double*)&result);
+   return result;
+   }
 
 /* NOTE: ??U comparators return 1 if either argument is NaN.
     Other non-U versions return 0 if either argument is NaN
 */
-int jitMathHelperFloatCompareEQ(float arg1, float arg2) 
-{
-	return helperCFloatCompareFloat(arg1, arg2) == 0;
-}
+int jitMathHelperFloatCompareEQ(float arg1, float arg2)
+   {
+   return helperCFloatCompareFloat(arg1, arg2) == 0;
+   }
 
-int jitMathHelperFloatCompareEQU(float arg1, float arg2) 
-{	
-	int result = helperCFloatCompareFloat(arg1, arg2);
-	return result == 0 || result == -2;
-}
+int jitMathHelperFloatCompareEQU(float arg1, float arg2)
+   {
+   int result = helperCFloatCompareFloat(arg1, arg2);
+   return result == 0 || result == -2;
+   }
 
-int jitMathHelperFloatCompareNE(float arg1, float arg2) 
-{
-	int result = helperCFloatCompareFloat(arg1, arg2);
-	return result != -2 && result != 0;
-}
+int jitMathHelperFloatCompareNE(float arg1, float arg2)
+   {
+   int result = helperCFloatCompareFloat(arg1, arg2);
+   return result != -2 && result != 0;
+   }
 
-int jitMathHelperFloatCompareNEU(float arg1, float arg2) 
-{
-	return helperCFloatCompareFloat(arg1, arg2) != 0;
-}
+int jitMathHelperFloatCompareNEU(float arg1, float arg2)
+   {
+   return helperCFloatCompareFloat(arg1, arg2) != 0;
+   }
 
-int jitMathHelperFloatCompareLT(float arg1, float arg2) 
-{
-	return helperCFloatCompareFloat(arg1, arg2) == -1;
-}
+int jitMathHelperFloatCompareLT(float arg1, float arg2)
+   {
+   return helperCFloatCompareFloat(arg1, arg2) == -1;
+   }
 
-int jitMathHelperFloatCompareLTU(float arg1, float arg2) 
-{
-	return helperCFloatCompareFloat(arg1, arg2) < 0;
-}
+int jitMathHelperFloatCompareLTU(float arg1, float arg2)
+   {
+   return helperCFloatCompareFloat(arg1, arg2) < 0;
+   }
 
-int jitMathHelperFloatCompareLE(float arg1, float arg2) 
-{
-	int result = helperCFloatCompareFloat(arg1, arg2);
-	return result == 0 || result == -1;
-}
+int jitMathHelperFloatCompareLE(float arg1, float arg2)
+   {
+   int result = helperCFloatCompareFloat(arg1, arg2);
+   return result == 0 || result == -1;
+   }
 
-int jitMathHelperFloatCompareLEU(float arg1, float arg2) 
-{
-	return helperCFloatCompareFloat(arg1, arg2) <= 0;
-}
+int jitMathHelperFloatCompareLEU(float arg1, float arg2)
+   {
+   return helperCFloatCompareFloat(arg1, arg2) <= 0;
+   }
 
-int jitMathHelperFloatCompareGT(float arg1, float arg2) 
-{
-	return helperCFloatCompareFloat(arg1, arg2) > 0;
-}
+int jitMathHelperFloatCompareGT(float arg1, float arg2)
+   {
+   return helperCFloatCompareFloat(arg1, arg2) > 0;
+   }
 
-int jitMathHelperFloatCompareGTU(float arg1, float arg2) 
-{
-	int result = helperCFloatCompareFloat(arg1, arg2);
-	return result == 1 || result == -2;
-}
+int jitMathHelperFloatCompareGTU(float arg1, float arg2)
+   {
+   int result = helperCFloatCompareFloat(arg1, arg2);
+   return result == 1 || result == -2;
+   }
 
-int jitMathHelperFloatCompareGE(float arg1, float arg2) 
-{
-	return helperCFloatCompareFloat(arg1, arg2) >= 0;
-}
+int jitMathHelperFloatCompareGE(float arg1, float arg2)
+   {
+   return helperCFloatCompareFloat(arg1, arg2) >= 0;
+   }
 
-int jitMathHelperFloatCompareGEU(float arg1, float arg2) 
-{
-	return helperCFloatCompareFloat(arg1, arg2) != -1;
-}
+int jitMathHelperFloatCompareGEU(float arg1, float arg2)
+   {
+   return helperCFloatCompareFloat(arg1, arg2) != -1;
+   }
 
-int jitMathHelperDoubleCompareEQ(double arg1, double arg2) 
-{
-	return helperCDoubleCompareDouble(arg1, arg2) == 0;
-}
+int jitMathHelperDoubleCompareEQ(double arg1, double arg2)
+   {
+   return helperCDoubleCompareDouble(arg1, arg2) == 0;
+   }
 
-int jitMathHelperDoubleCompareEQU(double arg1, double arg2) 
-{
-	int result = helperCDoubleCompareDouble(arg1, arg2);
-	return result == 0 || result == -2;
-}
+int jitMathHelperDoubleCompareEQU(double arg1, double arg2)
+   {
+   int result = helperCDoubleCompareDouble(arg1, arg2);
+   return result == 0 || result == -2;
+   }
 
-int jitMathHelperDoubleCompareNE(double arg1, double arg2) 
-{
-	int result = helperCDoubleCompareDouble(arg1, arg2);
-	return result != -2 && result != 0;
-}
+int jitMathHelperDoubleCompareNE(double arg1, double arg2)
+   {
+   int result = helperCDoubleCompareDouble(arg1, arg2);
+   return result != -2 && result != 0;
+   }
 
-int jitMathHelperDoubleCompareNEU(double arg1, double arg2) 
-{
-	return helperCDoubleCompareDouble(arg1, arg2) != 0;
-}
+int jitMathHelperDoubleCompareNEU(double arg1, double arg2)
+   {
+   return helperCDoubleCompareDouble(arg1, arg2) != 0;
+   }
 
-int jitMathHelperDoubleCompareLT(double arg1, double arg2) 
-{
-	return helperCDoubleCompareDouble(arg1, arg2) == -1;
-}
+int jitMathHelperDoubleCompareLT(double arg1, double arg2)
+   {
+   return helperCDoubleCompareDouble(arg1, arg2) == -1;
+   }
 
-int jitMathHelperDoubleCompareLTU(double arg1, double arg2) 
-{
-	return helperCDoubleCompareDouble(arg1, arg2) < 0;
-}
+int jitMathHelperDoubleCompareLTU(double arg1, double arg2)
+   {
+   return helperCDoubleCompareDouble(arg1, arg2) < 0;
+   }
 
-int jitMathHelperDoubleCompareLE(double arg1, double arg2) 
-{
-	int result = helperCDoubleCompareDouble(arg1, arg2);
-	return result == 0 || result == -1;
-}
+int jitMathHelperDoubleCompareLE(double arg1, double arg2)
+   {
+   int result = helperCDoubleCompareDouble(arg1, arg2);
+   return result == 0 || result == -1;
+   }
 
-int jitMathHelperDoubleCompareLEU(double arg1, double arg2) 
-{
-	return helperCDoubleCompareDouble(arg1, arg2) <= 0;
-}
+int jitMathHelperDoubleCompareLEU(double arg1, double arg2)
+   {
+   return helperCDoubleCompareDouble(arg1, arg2) <= 0;
+   }
 
-int jitMathHelperDoubleCompareGT(double arg1, double arg2) 
-{
-	return helperCDoubleCompareDouble(arg1, arg2) > 0;
-}
+int jitMathHelperDoubleCompareGT(double arg1, double arg2)
+   {
+   return helperCDoubleCompareDouble(arg1, arg2) > 0;
+   }
 
-int jitMathHelperDoubleCompareGTU(double arg1, double arg2) 
-{
-	int result = helperCDoubleCompareDouble(arg1, arg2);
-	return result == -2 || result == 1;
-}
+int jitMathHelperDoubleCompareGTU(double arg1, double arg2)
+   {
+   int result = helperCDoubleCompareDouble(arg1, arg2);
+   return result == -2 || result == 1;
+   }
 
-int jitMathHelperDoubleCompareGE(double arg1, double arg2) 
-{
-	return helperCDoubleCompareDouble(arg1, arg2) >= 0;
-}
+int jitMathHelperDoubleCompareGE(double arg1, double arg2)
+   {
+   return helperCDoubleCompareDouble(arg1, arg2) >= 0;
+   }
 
-int jitMathHelperDoubleCompareGEU(double arg1, double arg2) 
-{
-	return helperCDoubleCompareDouble(arg1, arg2) != -1;
-}
-
+int jitMathHelperDoubleCompareGEU(double arg1, double arg2)
+   {
+   return helperCDoubleCompareDouble(arg1, arg2) != -1;
+   }

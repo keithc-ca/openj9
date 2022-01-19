@@ -127,7 +127,7 @@ J9::ObjectModel::areValueBasedMonitorChecksEnabled()
    if (auto stream = TR::CompilationInfo::getStream())
       {
       auto *vmInfo = TR::compInfoPT->getClientData()->getOrCacheVMInfo(stream);
-	   return J9_ARE_ANY_BITS_SET(vmInfo->_extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_VALUE_BASED_EXCEPTION | J9_EXTENDED_RUNTIME2_VALUE_BASED_WARNING);
+      return J9_ARE_ANY_BITS_SET(vmInfo->_extendedRuntimeFlags2, J9_EXTENDED_RUNTIME2_VALUE_BASED_EXCEPTION | J9_EXTENDED_RUNTIME2_VALUE_BASED_WARNING);
       }
 #endif /* defined(J9VM_OPT_JITSERVER) */
 
@@ -519,16 +519,16 @@ uintptr_t
 J9::ObjectModel::offsetOfContiguousDataAddrField()
    {
    return compressObjectReferences()
-		? offsetof(J9IndexableObjectContiguousCompressed, dataAddr)
-		: offsetof(J9IndexableObjectContiguousFull, dataAddr);
+      ? offsetof(J9IndexableObjectContiguousCompressed, dataAddr)
+      : offsetof(J9IndexableObjectContiguousFull, dataAddr);
    }
 
 uintptr_t
 J9::ObjectModel::offsetOfDiscontiguousDataAddrField()
    {
    return compressObjectReferences()
-		? offsetof(J9IndexableObjectDiscontiguousCompressed, dataAddr)
-		: offsetof(J9IndexableObjectDiscontiguousFull, dataAddr);
+      ? offsetof(J9IndexableObjectDiscontiguousCompressed, dataAddr)
+      : offsetof(J9IndexableObjectDiscontiguousFull, dataAddr);
    }
 #endif /* TR_TARGET_64BIT */
 
@@ -664,8 +664,8 @@ J9::ObjectModel::usesDiscontiguousArraylets()
    return _usesDiscontiguousArraylets;
    }
 
-int32_t 
-J9::ObjectModel::arrayletLeafSize() 
+int32_t
+J9::ObjectModel::arrayletLeafSize()
    {
 #if defined(J9VM_OPT_JITSERVER)
    if (auto stream = TR::CompilationInfo::getStream())
@@ -678,7 +678,7 @@ J9::ObjectModel::arrayletLeafSize()
    }
 
 int32_t
-J9::ObjectModel::arrayletLeafLogSize() 
+J9::ObjectModel::arrayletLeafLogSize()
    {
 #if defined(J9VM_OPT_JITSERVER)
    if (auto stream = TR::CompilationInfo::getStream())

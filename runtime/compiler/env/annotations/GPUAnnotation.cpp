@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2019 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -100,7 +100,7 @@ void TR_SharedMemoryAnnotations::loadAnnotations(TR::Compilation *comp)
          if (annotationsData)
             {
             data = (U_8 *)(annotationsData + 1);
-	        NEXT_U16(numAnnotations, data);
+            NEXT_U16(numAnnotations, data);
             }
 
          for (int i= 0; i < numAnnotations; i++)
@@ -200,7 +200,7 @@ void TR_SharedMemoryAnnotations::setParmNum(TR::Compilation *comp, TR::SymbolRef
           (*lit)._fieldSigLength == fieldSigLength &&
           strncmp((*lit)._fieldSig, fieldSig, fieldSigLength) == 0)
          {
-    	 (*lit).setParmNum(num);
+         (*lit).setParmNum(num);
          return;
          }
       }
@@ -212,40 +212,40 @@ void TR_SharedMemoryAnnotations::setParmNum(TR::Compilation *comp, TR::SymbolRef
 
 bool currentMethodHasFpreductionAnnotation(TR::Compilation *comp, bool trace)
    {
-    J9ROMMethod * romMethod = static_cast<TR_J9VM *>(comp->fej9())->getROMMethodFromRAMMethod((J9Method *)comp->getCurrentMethod()->getPersistentIdentifier());
+   J9ROMMethod * romMethod = static_cast<TR_J9VM *>(comp->fej9())->getROMMethodFromRAMMethod((J9Method *)comp->getCurrentMethod()->getPersistentIdentifier());
 
-    U_32 * annotationsData = getMethodAnnotationsDataFromROMMethod(romMethod);
+   U_32 * annotationsData = getMethodAnnotationsDataFromROMMethod(romMethod);
 
-    J9Class * clazz = (J9Class *)comp->getCurrentMethod()->containingClass();
-    J9ROMClass *romCl = clazz->romClass;
+   J9Class * clazz = (J9Class *)comp->getCurrentMethod()->containingClass();
+   J9ROMClass *romCl = clazz->romClass;
 
-         U_16 numAnnotations = 0;
-         U_8 *data = NULL;
-         if (annotationsData)
-            {
-            data = (U_8 *)(annotationsData + 1);
-	        NEXT_U16(numAnnotations, data);
-            }
+   U_16 numAnnotations = 0;
+   U_8 *data = NULL;
+   if (annotationsData)
+      {
+      data = (U_8 *)(annotationsData + 1);
+      NEXT_U16(numAnnotations, data);
+      }
 
-         if (trace) traceMsg(comp, "current method has %d annotations %p\n", numAnnotations, annotationsData);
+   if (trace) traceMsg(comp, "current method has %d annotations %p\n", numAnnotations, annotationsData);
 
-         for (int i= 0; i < numAnnotations; i++)
-            {
-            U_16 typeIndex;
-            NEXT_U16(typeIndex, data);
+   for (int i= 0; i < numAnnotations; i++)
+      {
+      U_16 typeIndex;
+      NEXT_U16(typeIndex, data);
 
-            int32_t len;
-            char * str = getNameFromCP(len, typeIndex, romCl);
+      int32_t len;
+      char * str = getNameFromCP(len, typeIndex, romCl);
 
-            if (trace) traceMsg(comp, "found annotation %.*s\n",  len, str);
+      if (trace) traceMsg(comp, "found annotation %.*s\n",  len, str);
 
-            if (len == 44
-                && strncmp(str, "Lorg/apache/spark/sql/execution/fpreduction;", len) == 0)
-               {
-               if (trace) traceMsg(comp, "current method has @fpreduction annotation\n");
-               return true;
-               }
-            }
+      if (len == 44
+           && strncmp(str, "Lorg/apache/spark/sql/execution/fpreduction;", len) == 0)
+        {
+        if (trace) traceMsg(comp, "current method has @fpreduction annotation\n");
+        return true;
+        }
+   }
 
-    return false;
+   return false;
    }

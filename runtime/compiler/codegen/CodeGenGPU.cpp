@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -2254,7 +2254,7 @@ J9::CodeGenerator::dumpNVVMIR(
        {
        if ((*lit).getSize() > 0)
           ir.print("@%.*s = internal addrspace(3) global [%d x %s] zeroinitializer, align 8\n",
-        		  (*lit).getFieldNameLength(), (*lit).getFieldName(), (*lit).getSize(),
+                     (*lit).getFieldNameLength(), (*lit).getFieldName(), (*lit).getSize(),
                      getTypeNameFromSignature((*lit).getFieldSig(), (*lit).getFieldSigLength()));
        }
 

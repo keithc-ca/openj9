@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -154,7 +154,7 @@ J9::CodeGenerator::freeVariableSizeSymRef(
          symRef->getReferenceNumber(),self()->getDebug()->getName(sym),
          sym->isSingleUse()?", isSingleUse=true":"",freeAddressTakenSymbol?", freeAddressTakenSymbol=true":"",sym->isAddressTaken()?", symAddrTaken=true":"");
    TR_ASSERT(!(std::find(_variableSizeSymRefFreeList.begin(), _variableSizeSymRefFreeList.end(), symRef) != _variableSizeSymRefFreeList.end())
-		   ,"symRef #%d has already been freed\n",symRef->getReferenceNumber());
+           ,"symRef #%d has already been freed\n",symRef->getReferenceNumber());
    if (sym->isAddressTaken() && !freeAddressTakenSymbol)
       {
       if (self()->traceBCDCodeGen())
@@ -195,9 +195,9 @@ J9::CodeGenerator::getFreeVariableSizeSymRef(int32_t byteLength)
    {
    TR::SymbolReference *biggestSymRef;
    if(_variableSizeSymRefFreeList.empty())
-	   return NULL;
+       return NULL;
    else
-	   biggestSymRef = _variableSizeSymRefFreeList.front();
+       biggestSymRef = _variableSizeSymRefFreeList.front();
 
    TR::SymbolReference *previous = NULL;
    TR::SymbolReference *savedPrevious = NULL;
@@ -225,18 +225,18 @@ J9::CodeGenerator::getFreeVariableSizeSymRef(int32_t byteLength)
                }
             TR::SymbolReference *symRef = *i;
             if(previous == NULL)
-            	_variableSizeSymRefFreeList.pop_front();
+                _variableSizeSymRefFreeList.pop_front();
             else
             {
-            	auto foundIt = std::find(_variableSizeSymRefFreeList.begin(), _variableSizeSymRefFreeList.end(), previous);
-            	if(foundIt != _variableSizeSymRefFreeList.end())
-            	{
-            		++foundIt;
-            		_variableSizeSymRefFreeList.erase(foundIt);   // pops head if previous==NULL
-            	}
+                auto foundIt = std::find(_variableSizeSymRefFreeList.begin(), _variableSizeSymRefFreeList.end(), previous);
+                if(foundIt != _variableSizeSymRefFreeList.end())
+                {
+                    ++foundIt;
+                    _variableSizeSymRefFreeList.erase(foundIt);   // pops head if previous==NULL
+                }
             }
             TR_ASSERT(!(std::find(_variableSizeSymRefFreeList.begin(), _variableSizeSymRefFreeList.end(), (*i)) != _variableSizeSymRefFreeList.end())
-            		,"shouldn't find symRef #%d as it was just removed\n",(*i)->getReferenceNumber());
+                    ,"shouldn't find symRef #%d as it was just removed\n",(*i)->getReferenceNumber());
             return symRef;
             }
          else if ((*i)->getSymbol()->getSize() > biggestSymRef->getSymbol()->getSize())
@@ -258,18 +258,18 @@ J9::CodeGenerator::getFreeVariableSizeSymRef(int32_t byteLength)
    if (self()->traceBCDCodeGen() && biggestSymRef)
       traceMsg(self()->comp(),"\t\tremove free symRef #%d (%s) from list, previous is %p\n",biggestSymRef->getReferenceNumber(),self()->getDebug()->getName(biggestSymRef->getSymbol()),previous ? previous:(void *)9999);
    if(biggestPrevious == NULL)
-	   _variableSizeSymRefFreeList.pop_front();
+       _variableSizeSymRefFreeList.pop_front();
    else
    {
-	   auto foundIt = std::find(_variableSizeSymRefFreeList.begin(), _variableSizeSymRefFreeList.end(), biggestPrevious);
-	   if(foundIt != _variableSizeSymRefFreeList.end())
-	   {
-		   auto nextIt = ++foundIt;
-		   _variableSizeSymRefFreeList.remove(*nextIt);   // pops head if previous==NULL
-	   }
+       auto foundIt = std::find(_variableSizeSymRefFreeList.begin(), _variableSizeSymRefFreeList.end(), biggestPrevious);
+       if(foundIt != _variableSizeSymRefFreeList.end())
+       {
+           auto nextIt = ++foundIt;
+           _variableSizeSymRefFreeList.remove(*nextIt);   // pops head if previous==NULL
+       }
    }
    TR_ASSERT(!biggestSymRef || !(std::find(_variableSizeSymRefFreeList.begin(), _variableSizeSymRefFreeList.end(), biggestSymRef) != _variableSizeSymRefFreeList.end())
-		   ,"shouldn't find biggestSymRef #%d as it was just removed\n",biggestSymRef->getReferenceNumber());
+           ,"shouldn't find biggestSymRef #%d as it was just removed\n",biggestSymRef->getReferenceNumber());
    return biggestSymRef;
    }
 
@@ -279,13 +279,13 @@ J9::CodeGenerator::checkForUnfreedVariableSizeSymRefs()
    bool foundUnfreedSlot = false;
    for (auto i = _variableSizeSymRefAllocList.begin(); i != _variableSizeSymRefAllocList.end(); ++i)
       {
-	  bool found = (std::find(_variableSizeSymRefFreeList.begin(), _variableSizeSymRefFreeList.end(), (*i)) != _variableSizeSymRefFreeList.end());
+      bool found = (std::find(_variableSizeSymRefFreeList.begin(), _variableSizeSymRefFreeList.end(), (*i)) != _variableSizeSymRefFreeList.end());
       if (!found)
          {
          TR_ASSERT((*i)->getSymbol()->isVariableSizeSymbol(),"symRef #%d must contain a variable size symbol\n",(*i)->getReferenceNumber());
          if (self()->traceBCDCodeGen())
             traceMsg(self()->comp(),"Variable size symRef #%d (%s) has not been freed (symbol refCount is %d)\n",
-            		(*i)->getReferenceNumber(),self()->getDebug()->getName((*i)->getSymbol()),(*i)->getSymbol()->getVariableSizeSymbol()->getReferenceCount());
+                    (*i)->getReferenceNumber(),self()->getDebug()->getName((*i)->getSymbol()),(*i)->getSymbol()->getVariableSizeSymbol()->getReferenceCount());
          foundUnfreedSlot = true;
          }
       }

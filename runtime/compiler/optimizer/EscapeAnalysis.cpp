@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -1803,7 +1803,7 @@ Candidate *TR_EscapeAnalysis::createCandidateIfValid(TR::Node *node, TR_OpaqueCl
                // Can't do anything with these yet
                break;
             default:
-            	break;
+               break;
             }
 
          TR::Recompilation *recomp        = comp()->getRecompilationInfo();
@@ -2130,7 +2130,7 @@ void TR_EscapeAnalysis::checkDefsAndUses()
                   }
                }
             default:
-            	break;
+               break;
             }
          }
       }
@@ -4543,8 +4543,8 @@ void TR_EscapeAnalysis::checkEscapeViaNonCall(TR::Node *node, TR::NodeChecklist&
 
             // PR 93460
             if (node->getSymbolReference()->getSymbol()->isAuto() &&
-				node->getSymbol()->castToAutoSymbol()->isPinningArrayPointer())
-            	restrictCandidates(node->getFirstChild(), node, MakeContiguous);
+                node->getSymbol()->castToAutoSymbol()->isPinningArrayPointer())
+                restrictCandidates(node->getFirstChild(), node, MakeContiguous);
 
             // Handle escapes via store into a parameter for a called method
             // (this is conservative, but hopefully it doesn't happen too often)

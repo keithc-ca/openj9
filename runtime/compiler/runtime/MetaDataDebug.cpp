@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -203,12 +203,12 @@ TR_Debug::print(J9JITExceptionTable * data, TR_ResolvedMethod * feMethod, bool f
          callSiteCursor += sizeof(TR_InlinedCallSite);
 
          if (inlinedCallSite->_byteCodeInfo.isSameReceiver())
-	    {
+            {
             trfprintf(_file, "liveMonitor mask: ");
-	    uint8_t * maskBits = callSiteCursor;
-	    printStackMapInfo(maskBits, sa->getNumberOfSlotsMapped(), 0, offsetInfo);
+            uint8_t * maskBits = callSiteCursor;
+            printStackMapInfo(maskBits, sa->getNumberOfSlotsMapped(), 0, offsetInfo);
             trfprintf(_file, "\n");
-	    }
+            }
 
          callSiteCursor += j9StackAtlas->numberOfMapBytes;
          }
@@ -466,17 +466,17 @@ TR_Debug::printMapInfo(uintptr_t startPC, uint8_t * mapBits, int32_t numberOfSlo
          if(!nummaps)
             trfprintf(_file,"\n");
 
-	 // check is there's live monitor meta data and if so, bump the pointers.
-	 // todo: print out the live monitor meta data
-	 //
+         // check is there's live monitor meta data and if so, bump the pointers.
+         // todo: print out the live monitor meta data
+         //
          if (*(mapBits - 1) & 128)
-	    {
+            {
             if(!nummaps)
                trfprintf(_file, "liveMonitor map: ");
-	    printStackMapInfo(mapBits, numberOfSlotsMapped, sizeOfStackAtlas, offsetInfo, nummaps);
-	    if(!nummaps)
-          trfprintf(_file,"\n");
-	    }
+            printStackMapInfo(mapBits, numberOfSlotsMapped, sizeOfStackAtlas, offsetInfo, nummaps);
+            if(!nummaps)
+               trfprintf(_file,"\n");
+            }
 
          if (_comp->isAlignStackMaps())
             {
@@ -504,29 +504,29 @@ TR_Debug::printStackMapInfo(
       {
       U_8 descriptionByte = *mapBits++;
       if (sizeOfStackAtlas)
-	 *sizeOfStackAtlas = *sizeOfStackAtlas + sizeof(U_8);
+         *sizeOfStackAtlas = *sizeOfStackAtlas + sizeof(U_8);
       for (int32_t l = 0; l < 8; l++)
-	 if (bits < numberOfSlotsMapped)
-	    {
-	    if(!nummaps)
-          trfprintf(_file, "%d", (descriptionByte & 0x1 ? 1 : 0));
-	    if (descriptionByte & 0x1)
-	       collectedOffsets[bits] = 1;
-	    descriptionByte = descriptionByte >> 1;
-	    bits++;
-	    }
+         if (bits < numberOfSlotsMapped)
+            {
+            if (!nummaps)
+               trfprintf(_file, "%d", (descriptionByte & 0x1 ? 1 : 0));
+            if (descriptionByte & 0x1)
+               collectedOffsets[bits] = 1;
+            descriptionByte = descriptionByte >> 1;
+            bits++;
+            }
       }
    if (offsetInfo != NULL)
       {
       if(!nummaps)
          trfprintf(_file,"\t{ ");
       for (int32_t i = 0; i < numberOfSlotsMapped; i++)
-	 {
-	 if (collectedOffsets[i] && !nummaps)
-	    {
-	    trfprintf(_file, "%d ", offsetInfo[i]);
-	    }
-	 }
+         {
+         if (collectedOffsets[i] && !nummaps)
+            {
+            trfprintf(_file, "%d ", offsetInfo[i]);
+            }
+         }
       if(!nummaps)
          trfprintf(_file,"}");
       }
@@ -584,5 +584,3 @@ TR_Debug::printByteCodeStack(int32_t parentStackIndex, uint16_t byteCodeIndex, c
    }
 
 // copied from jit.dev/rossa.cpp - needed to link on WinCE
-
-

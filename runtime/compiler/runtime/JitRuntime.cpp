@@ -550,7 +550,7 @@ void J9FASTCALL _jitProfileBigDecimalValue(uintptr_t value, uintptr_t bigdecimal
    bool readValues = false;
    if (value)
       {
-	  uintptr_t objectClass = TR::Compiler->om.compressObjectReferences() ? ((J9ObjectCompressed*)value)->clazz : ((J9ObjectFull*)value)->clazz;
+      uintptr_t objectClass = TR::Compiler->om.compressObjectReferences() ? ((J9ObjectCompressed*)value)->clazz : ((J9ObjectFull*)value)->clazz;
       if ((objectClass & (UDATA)(-J9_REQUIRED_CLASS_ALIGNMENT)) == bigdecimalj9class)
          {
          readValues = true;

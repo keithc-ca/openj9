@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2000, 2021 IBM Corp. and others
+ * Copyright (c) 2000, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -2216,8 +2216,8 @@ J9::CodeGenerator::doInstructionSelection()
          TR::SymbolReference *symRef;
          while (it != _variableSizeSymRefPendingFreeList.end())
             {
-        	//Element is removed within freeVariableSizeSymRef. Need a reference to next element
-        	auto next = it;
+            //Element is removed within freeVariableSizeSymRef. Need a reference to next element
+            auto next = it;
             ++next;
             TR_ASSERT((*it)->getSymbol()->isVariableSizeSymbol(),"symRef #%d must contain a variable size symbol\n",(*it)->getReferenceNumber());
             auto *sym = (*it)->getSymbol()->getVariableSizeSymbol();
@@ -2226,11 +2226,11 @@ J9::CodeGenerator::doInstructionSelection()
                {
                if (sym->getNodeToFreeAfter())
                   traceMsg(self()->comp(),"pending free temps : looking at symRef #%d (%s) refCount %d sym->getNodeToFreeAfter() %p ttNode %p (find sym in list %d)\n",
-                		  (*it)->getReferenceNumber(),self()->getDebug()->getName(sym),sym->getReferenceCount(),
+                          (*it)->getReferenceNumber(),self()->getDebug()->getName(sym),sym->getReferenceCount(),
                      sym->getNodeToFreeAfter(),ttNode,found);
                else
                   traceMsg(self()->comp(),"pending free temps : looking at symRef #%d (%s) refCount %d (find sym in list %d)\n",
-                		  (*it)->getReferenceNumber(),self()->getDebug()->getName(sym),sym->getReferenceCount(),found);
+                          (*it)->getReferenceNumber(),self()->getDebug()->getName(sym),sym->getReferenceCount(),found);
                }
             if (!sym->isAddressTaken() && !found)
                {
@@ -4714,8 +4714,8 @@ J9::CodeGenerator::generateCatchBlockBBStartPrologue(
 void
 J9::CodeGenerator::registerAssumptions()
    {
-   for(auto it = self()->getJNICallSites().begin();
-		it != self()->getJNICallSites().end(); ++it)
+   for (auto it = self()->getJNICallSites().begin();
+            it != self()->getJNICallSites().end(); ++it)
       {
       TR_OpaqueMethodBlock *method = (*it)->getKey()->getPersistentIdentifier();
       TR::Instruction *i = (*it)->getValue();
