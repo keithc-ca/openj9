@@ -114,6 +114,9 @@ mainlineLanguageIsC(void)
 		if (3 == language) {
 			result = TRUE;
 		}
+		fprintf(stderr, "mainlineLanguageIsC: language=%d\n", language);
+	} else {
+		fprintf(stderr, "mainlineLanguageIsC: bad cedb(%p)\n", cedb);
 	}
 
 	return result;
@@ -593,7 +596,6 @@ captureCommandLine(void)
 		}
 	}
 #elif defined(J9ZOS390) /* defined(AIXPPC) */
-#pragma convlit(suspend)
 	/*
 	 * First, make sure the mainline language is C/C++ which uses parameter passing
 	 * style 3 as described by [1]; other mainlines may use different styles.
@@ -602,16 +604,25 @@ captureCommandLine(void)
 	 */
 	if (mainlineLanguageIsC()) {
 		void *plist = __osplist;
+		fprintf(stderr, "captureCommandLine: plist=%p\n", plist);
 		if (NULL != plist) {
 			const struct arg_list *args = *(const struct arg_list **)plist;
-			uint32_t argc = args->argc;
+			uint32_t argc = 0;
 			uint32_t i = 0;
 			size_t length = 0;
 			char *buffer = NULL;
 
+			fprintf(stderr, "captureCommandLine: args=%p\n", args);
+			argc = args->argc;
+			fprintf(stderr, "captureCommandLine: argc=%u\n", argc);
+
 			for (i = 0; i < argc; ++i) {
+				fprintf(stderr, "captureCommandLine: args->string[%u]=%p\n", i, args->string[i]);
 				length += args->string[i]->length;
 			}
+			fprintf(stderr, "captureCommandLine: length=%u\n", length);
+
+#pragma convlit(suspend)
 
 			buffer = malloc(length);
 			if (NULL != buffer) {
