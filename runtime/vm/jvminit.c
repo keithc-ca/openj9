@@ -110,6 +110,46 @@
 #include <sys/systemcfg.h> /* for isPPC64bit() */
 #endif /* AIXPPC && !J9OS_I5 */
 
+#if defined(AIXPPC)
+#include <procinfo.h>
+#include <sys/types.h>
+#include <unistd.h>
+#endif /* defined(AIXPPC) */
+
+#if defined(J9ZOS390)
+#include "atoe.h"
+#include <stdlib.h>
+
+struct arg_string
+{
+	uint32_t length; /* length of value, including NUL terminator */
+	char value[];
+};
+
+struct arg_list
+{
+	uint32_t argc; /* number of command-line arguments */
+	uint32_t envc; /* number of environment variables */
+	const struct arg_string *string[];  /* command-line arguments */
+};
+#endif /* defined(J9ZOS390) */
+
+#if defined(LINUX)
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#endif /* defined(LINUX) */
+
+#if defined(OSX)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif /* defined(OSX) */
+
+#if defined(WIN32)
+#include <processenv.h>
+#include <stdlib.h>
+#endif /* defined(WIN32) */
+
 J9_EXTERN_BUILDER_SYMBOL(cInterpreter);
 
 /* Generic rounding macro - result is a UDATA */
@@ -6613,6 +6653,335 @@ xlogret:
 	return rc;
 }
 
+#if defined(J9ZOS390)
+/*
+ * These offsets and constants are found in "Language Environment Vendor Interfaces", downloaded from
+ * https://www.ibm.com/servers/resourcelink/svc00100.nsf/pages/zosV2R4SA380688/$file/ceev100_v2r4.pdf
+ */
+#if defined(J9VM_ENV_DATA64)
+#define OFFSET_CAA_CEDB 0x348
+#define OFFSET_CEDB_LANG 0x18
+#else /* defined(J9VM_ENV_DATA64) */
+#define OFFSET_CAA_CEDB 0x218
+#define OFFSET_CEDB_LANG 0x10
+#endif /* defined(J9VM_ENV_DATA64) */
+
+/* An enclave data block should begin with this eye-catcher. */
+#pragma convlit(suspend)
+static const char cedb_eye[4] = "CEDB";
+#pragma convlit(resume)
+
+/*
+ * Determine whether the mainline language is C/C++.
+ */
+static BOOLEAN
+mainlineLanguageIsC(void)
+{
+	BOOLEAN result = FALSE;
+	/* Locate the common anchor area. */
+	const char *caa = (const char *)_gtca();
+	/* Fetch the pointer to the C/C++ environment data block. */
+	const char *cedb = *(const char * const *)(caa + OFFSET_CAA_CEDB);
+
+	/* Do some basic checking of the cedb pointer. */
+	if ((NULL != cedb) && (0 == memcmp(cedb, cedb_eye, sizeof(cedb_eye)))) {
+		int16_t language = *(const int16_t *)(cedb + OFFSET_CEDB_LANG);
+
+		/* The code for C/C++ is 3. */
+		if (3 == language) {
+			result = TRUE;
+		}
+		fprintf(stderr, "mainlineLanguageIsC: language=%d\n", language);
+	} else {
+		fprintf(stderr, "mainlineLanguageIsC: bad cedb(%p)\n", cedb);
+	}
+
+	return result;
+}
+#endif /* defined(J9ZOS390) */
+
+/*
+ * Attempt to update or remove the value of OPENJ9_JAVA_COMMAND_LINE in the
+ * environment. Passing NULL is equivalent to providing an empty string which
+ * indicates that the environment variable should be removed. The function
+ * returns whether the change was successfully applied.
+ *
+ * @param value the value to be stored; "" or NULL if the variable should be removed
+ *
+ * @return TRUE if successful, FALSE otherwise
+ */
+#if defined(J9ZOS390)
+static BOOLEAN
+storeCommandLine(const char *value)
+{
+#define PREFIX "OPENJ9_JAVA_COMMAND_LINE="
+
+	BOOLEAN result = FALSE;
+
+	if (NULL == value) {
+		if (0 == putenv(PREFIX)) {
+			result = TRUE;
+		}
+		fprintf(stderr, "storeCommandLine(clear) %s\n", result ? "succeeded" : "failed");
+	} else {
+		size_t size = LITERAL_STRLEN(PREFIX) + strlen(value) + 1;
+		char *buffer = malloc(size);
+
+		if (NULL != buffer) {
+			strcpy(buffer, PREFIX);
+			strcat(buffer, value);
+			if (0 == putenv(buffer)) {
+				result = TRUE;
+			}
+			fprintf(stderr, "storeCommandLine() %s: '%s'\n", result ? "succeeded" : "failed", value);
+			free(buffer);
+		} else {
+			fprintf(stderr, "storeCommandLine() malloc() failed\n");
+		}
+	}
+
+	return result;
+
+#undef PREFIX
+}
+#elif defined(WIN32) /* defined(J9ZOS390) */
+static BOOLEAN
+storeCommandLine(const wchar_t *value)
+{
+	return 0 == _wputenv_s(L"OPENJ9_JAVA_COMMAND_LINE", (NULL != value) ? value : L"");
+}
+#else /* defined(J9ZOS390) */
+static BOOLEAN
+storeCommandLine(const char *value)
+{
+	return 0 == setenv("OPENJ9_JAVA_COMMAND_LINE", (NULL != value) ? value : "", 1 /* overwrite */);
+}
+#endif /* defined(WIN32) */
+
+/*
+ * Attempt to capture the command line of this process in the environment
+ * variable 'OPENJ9_JAVA_COMMAND_LINE'. If the command line is not available,
+ * try to remove that variable to avoid possibly incorrect information.
+ */
+static void
+captureCommandLine(void)
+{
+	BOOLEAN captured = FALSE;
+
+#if defined(AIXPPC)
+	long int bufferSize = sysconf(_SC_ARG_MAX);
+
+	if (bufferSize > 0) {
+		char *buffer = malloc(bufferSize);
+
+		if (NULL != buffer) {
+#if defined(J9VM_ENV_DATA64)
+			struct procsinfo64 info;
+#else /* defined(J9VM_ENV_DATA64) */
+			struct procsinfo info;
+#endif /* defined(J9VM_ENV_DATA64) */
+
+			memset(&info, '\0', sizeof(info));
+			info.pi_pid = getpid();
+
+			if (0 == getargs(&info, sizeof(info), buffer, bufferSize)) {
+				char *cursor = buffer;
+
+				/* replace the internal NULs with spaces */
+				for (;; ++cursor) {
+					if ('\0' == *cursor) {
+						if ('\0' == cursor[1]) {
+							/* the list ends with two NUL characters */
+							break;
+						}
+						*cursor = ' ';
+					}
+				}
+
+				captured = storeCommandLine(buffer);
+			}
+
+			free(buffer);
+		}
+	}
+#elif defined(J9ZOS390) /* defined(AIXPPC) */
+	/*
+	 * First, make sure the mainline language is C/C++ which uses parameter passing
+	 * style 3 as described by [1]; other mainlines may use different styles.
+	 *
+	 * [1] https://www.ibm.com/docs/en/zos/2.4.0?topic=formats-c-c-parameter-passing-considerations
+	 */
+	if (mainlineLanguageIsC()) {
+		void *plist = __osplist;
+		fprintf(stderr, "captureCommandLine: plist=%p\n", plist);
+		if (NULL != plist) {
+			const struct arg_list *args = *(const struct arg_list **)plist;
+			uint32_t argc = 0;
+			uint32_t i = 0;
+			size_t length = 0;
+			char *buffer = NULL;
+
+			fprintf(stderr, "captureCommandLine: args=%p\n", args);
+			argc = args->argc;
+			fprintf(stderr, "captureCommandLine: argc=%u\n", argc);
+
+			for (i = 0; i < argc; ++i) {
+				fprintf(stderr, "captureCommandLine: args->string[%u]=%p\n", i, args->string[i]);
+				length += args->string[i]->length;
+			}
+			fprintf(stderr, "captureCommandLine: length=%u\n", length);
+
+			buffer = malloc(length);
+			if (NULL != buffer) {
+				char *cursor = buffer;
+
+				for (i = 0; i < argc; ++i) {
+					const struct arg_string *arg = args->string[i];
+					if (0 != i) {
+						*cursor = ' ';
+						cursor += 1;
+					}
+					/* translate argument from EBCDIC to ASCII */
+					sysTranslate(arg->value, arg->length - 1, e2a_tab, cursor);
+					cursor += arg->length - 1;
+				}
+
+				*cursor = '\0';
+
+				captured = storeCommandLine(buffer);
+				free(buffer);
+			}
+		}
+	}
+#elif defined(LINUX) /* defined(AIXPPC) */
+	int fd = open("/proc/self/cmdline", O_RDONLY, 0);
+
+	if (fd >= 0) {
+		char *buffer = NULL;
+		size_t length = 0;
+		for (;;) {
+			char small_buffer[512];
+			ssize_t count = read(fd, small_buffer, sizeof(small_buffer));
+			if (count <= 0) {
+				break;
+			}
+			length += (size_t)count;
+		}
+		if (length < 2) {
+			goto done;
+		}
+		/* final NUL is already included in length */
+		buffer = malloc(length);
+		if (NULL == buffer) {
+			goto done;
+		}
+		if ((off_t)-1 == lseek(fd, 0, SEEK_SET)) {
+			goto done;
+		}
+		if (read(fd, buffer, length) != length) {
+			goto done;
+		}
+		/* replace the internal NULs with spaces */
+		for (length -= 2;; length -= 1) {
+			if (0 == length) {
+				break;
+			}
+			if ('\0' == buffer[length]) {
+				buffer[length] = ' ';
+			}
+		}
+		captured = storeCommandLine(buffer);
+done:
+		if (NULL != buffer) {
+			free(buffer);
+		}
+		close(fd);
+	}
+#elif defined(OSX) /* defined(AIXPPC) */
+	int argmax = 0;
+	size_t length = 0;
+	int mib[3];
+
+	/* query the argument space limit */
+	mib[0] = CTL_KERN;
+	mib[1] = KERN_ARGMAX;
+	length = sizeof(argmax);
+	if (0 == sysctl(mib, 2, &argmax, &length, NULL, 0)) {
+		char *buffer = malloc(argmax);
+
+		if (NULL != buffer) {
+			int argc = 0;
+			int pid = getpid();
+
+			/* query the argument count */
+			mib[0] = CTL_KERN;
+			mib[1] = KERN_PROCARGS2;
+			mib[2] = pid;
+			length = argmax;
+			if ((argmax >= sizeof(argc)) && (0 == sysctl(mib, 3, buffer, &length, NULL, 0))) {
+				memcpy(&argc, buffer, sizeof(argc));
+
+				/* retrieve the arguments */
+				mib[0] = CTL_KERN;
+				mib[1] = KERN_PROCARGS;
+				mib[2] = pid;
+				length = argmax;
+				if (0 == sysctl(mib, 3, buffer, &length, NULL, 0)) {
+					char *cursor = buffer;
+					char *start = NULL;
+					char *limit = buffer + length;
+
+					for (; (cursor < limit) && ('\0' != *cursor); ++cursor) {
+						/* skip past the program path */
+					}
+
+					for (; (cursor < limit) && ('\0' == *cursor); ++cursor) {
+						/* skip past the padding after the program path */
+					}
+
+					/*
+					 * remember the start of the first argument (this is the beginning
+					 * of argv[0] which is often the same as the path we skipped above)
+					 */
+					start = cursor;
+
+					/* replace the internal NULs with spaces */
+					for (; cursor < limit; ++cursor) {
+						if ('\0' == *cursor) {
+							argc -= 1;
+							if (0 == argc) {
+								break;
+							}
+							*cursor = ' ';
+						}
+					}
+
+					captured = storeCommandLine(buffer);
+				}
+			}
+
+			free(buffer);
+		}
+	}
+#elif defined(WIN32) /* defined(AIXPPC) */
+	const wchar_t *commandLine = GetCommandLineW();
+
+	if (NULL != commandLine) {
+		captured = storeCommandLine(commandLine);
+	}
+#endif /* defined(AIXPPC) */
+
+	if (!captured) {
+		/*
+		 * If we were unable to find the command line or store it in the
+		 * environment, try to remove any existing value (which is unlikely
+		 * to be correct). It's not fatal if this fails, so don't bother
+		 * checking.
+		 */
+		storeCommandLine(NULL);
+	}
+}
+
 static UDATA
 protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 {
@@ -6739,6 +7108,8 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 	}
 
 	/* At this point, the compressed/full determination has been made */
+
+	captureCommandLine();
 
 	J9RASInitialize(vm);
 
