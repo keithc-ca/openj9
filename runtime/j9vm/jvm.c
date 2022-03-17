@@ -542,7 +542,19 @@ storeCommandLine(const char *value)
 #if defined(J9ZOS390)
 #pragma convlit(suspend)
 #endif /* defined(J9ZOS390) */
-	return 0 == setenv("OPENJ9_JAVA_COMMAND_LINE", (NULL != value) ? value : "", 1 /* overwrite */);
+	fprintf(stderr, "storeCommandLine('%s')\n", (NULL != value) ? value : "");
+	int rc = setenv("OPENJ9_JAVA_COMMAND_LINE", (NULL != value) ? value : "", 1 /* overwrite */);
+	fprintf(stderr, "storeCommandLine: setenv() returned %d\n", rc);
+	if (0 == rc) {
+		const char *get = getenv("OPENJ9_JAVA_COMMAND_LINE");
+
+		if (NULL == get) {
+			fprintf(stderr, "storeCommandLine: getenv() returned NULL\n");
+		} else {
+			fprintf(stderr, "storeCommandLine: getenv() returned '%s'\n", get);
+		}
+	}
+	return 0 == rc;
 #if defined(J9ZOS390)
 #pragma convlit(resume)
 #endif /* defined(J9ZOS390) */
