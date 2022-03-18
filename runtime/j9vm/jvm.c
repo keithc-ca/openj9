@@ -553,7 +553,7 @@ storeCommandLine(const char *value)
 			if (0 == putenv(buffer)) {
 				result = TRUE;
 			}
-			fprintf(stderr, "storeCommandLine:clear %s\n", value, result ? "succeeded" : "failed");
+			fprintf(stderr, "storeCommandLine(%s) %s\n", value, result ? "succeeded" : "failed");
 			free(buffer);
 		} else {
 			fprintf(stderr, "storeCommandLine() malloc() failed\n");
