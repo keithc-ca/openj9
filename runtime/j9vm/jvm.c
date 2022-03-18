@@ -75,6 +75,7 @@
 #endif /* defined(AIXPPC) */
 
 #if defined(J9ZOS390)
+#include "atoe.h"
 #include <stdlib.h>
 
 /*
@@ -529,36 +530,51 @@ static const J9SignalMapping signalMap[] = {
  *
  * @return TRUE if successful, FALSE otherwise
  */
-#if defined(WIN32)
+#if defined(J9ZOS390)
+static BOOLEAN
+storeCommandLine(const char *value)
+{
+#define PREFIX "OPENJ9_JAVA_COMMAND_LINE="
+
+	BOOLEAN result = FALSE;
+
+	if (NULL == value) {
+		if (0 == putenv(PREFIX)) {
+			result = TRUE;
+		}
+		fprintf(stderr, "storeCommandLine[clear] %s\n", result ? "succeeded" : "failed");
+	} else {
+		size_t size = LITERAL_STRLEN(PREFIX) + strlen(value) + 1;
+		char *buffer = malloc(size);
+
+		if (NULL != buffer) {
+			strcpy(buffer, PREFIX);
+			strcat(buffer, value);
+			if (0 == putenv(buffer)) {
+				result = TRUE;
+			}
+			fprintf(stderr, "storeCommandLine:clear %s\n", value, result ? "succeeded" : "failed");
+			free(buffer);
+		} else {
+			fprintf(stderr, "storeCommandLine() malloc() failed\n");
+		}
+	}
+
+	return result;
+
+#undef PREFIX
+}
+#elif defined(WIN32) /* defined(J9ZOS390) */
 static BOOLEAN
 storeCommandLine(const wchar_t *value)
 {
 	return 0 == _wputenv_s(L"OPENJ9_JAVA_COMMAND_LINE", (NULL != value) ? value : L"");
 }
-#else /* defined(WIN32) */
+#else /* defined(J9ZOS390) */
 static BOOLEAN
 storeCommandLine(const char *value)
 {
-#if defined(J9ZOS390)
-#pragma convlit(suspend)
-#endif /* defined(J9ZOS390) */
-	static const char OPENJ9_JAVA_COMMAND_LINE[] = "OPENJ9_JAVA_COMMAND_LINE";
-#if defined(J9ZOS390)
-#pragma convlit(resume)
-#endif /* defined(J9ZOS390) */
-	fprintf(stderr, "storeCommandLine('%s')\n", (NULL != value) ? value : "");
-	int rc = setenv(OPENJ9_JAVA_COMMAND_LINE, (NULL != value) ? value : "", 1 /* overwrite */);
-	fprintf(stderr, "storeCommandLine: setenv() returned %d\n", rc);
-	if (0 == rc) {
-		const char *get = getenv(OPENJ9_JAVA_COMMAND_LINE);
-
-		if (NULL == get) {
-			fprintf(stderr, "storeCommandLine: getenv() returned NULL\n");
-		} else {
-			fprintf(stderr, "storeCommandLine: getenv() returned '%s'\n", get);
-		}
-	}
-	return 0 == rc;
+	return 0 == setenv("OPENJ9_JAVA_COMMAND_LINE", (NULL != value) ? value : "", 1 /* overwrite */);
 }
 #endif /* defined(WIN32) */
 
@@ -635,8 +651,6 @@ captureCommandLine(void)
 			}
 			fprintf(stderr, "captureCommandLine: length=%u\n", length);
 
-#pragma convlit(suspend)
-
 			buffer = malloc(length);
 			if (NULL != buffer) {
 				char *cursor = buffer;
@@ -647,7 +661,8 @@ captureCommandLine(void)
 						*cursor = ' ';
 						cursor += 1;
 					}
-					memcpy(cursor, arg->value, arg->length - 1);
+					/* translate argument from EBCDIC to ASCII */
+					sysTranslate(arg->value, arg->length - 1, e2a_tab, cursor);
 					cursor += arg->length - 1;
 				}
 
@@ -658,7 +673,6 @@ captureCommandLine(void)
 			}
 		}
 	}
-#pragma convlit(resume)
 #elif defined(LINUX) /* defined(AIXPPC) */
 	int fd = open("/proc/self/cmdline", O_RDONLY, 0);
 
@@ -1989,7 +2003,7 @@ JNI_CreateJavaVM_impl(JavaVM **pvm, void **penv, void *vm_args, BOOLEAN isJITSer
 		return JNI_ERR;
 	}
 #endif /* defined(J9ZTPF) */
-	captureCommandLine();
+
 	/*
 	 * Linux uses LD_LIBRARY_PATH
 	 * z/OS uses LIBPATH
@@ -2093,6 +2107,8 @@ JNI_CreateJavaVM_impl(JavaVM **pvm, void **penv, void *vm_args, BOOLEAN isJITSer
 
 	/* no tracing for this function, since it's unlikely to be used once the VM is running and the trace engine is initialized */
 	preloadLibraries();
+
+	captureCommandLine();
 
 #ifdef WIN32
 	if (GetCurrentDirectoryW(J9_MAX_PATH, unicodeTemp) == 0) {
