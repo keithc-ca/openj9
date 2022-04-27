@@ -370,8 +370,13 @@ public final class System {
 		/*[ENDIF] JAVA_SPEC_VERSION >= 18 */
 		/*[ENDIF] PLATFORM-mz31|PLATFORM-mz64 */
 		/* consoleDefaultCharset must be initialized before calling getCharset() */
+		/*[IF JAVA_SPEC_VERSION >= 19]*/
+		Charset stdoutCharset = getCharset(props.getProperty("stdout.encoding"), false); //$NON-NLS-1$
+		Charset stderrCharset = getCharset(props.getProperty("stderr.encoding"), false); //$NON-NLS-1$
+		/*[ELSE] JAVA_SPEC_VERSION >= 19 */
 		Charset stdoutCharset = getCharset(props.getProperty("sun.stdout.encoding"), false); //$NON-NLS-1$
 		Charset stderrCharset = getCharset(props.getProperty("sun.stderr.encoding"), false); //$NON-NLS-1$
+		/*[ENDIF] JAVA_SPEC_VERSION >= 19 */
 		/*[ELSE] JAVA_SPEC_VERSION >= 11 */
 		Charset consoleCharset = Charset.defaultCharset();
 		String stdoutCharset = getCharsetName(props.getProperty("sun.stdout.encoding"), consoleCharset); //$NON-NLS-1$
