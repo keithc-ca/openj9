@@ -47,7 +47,7 @@ changequote(`[',`]')dnl
 #define dlsym dllqueryfn
 #endif /* defined(J9ZOS390) */
 
-#define DEBUG_REDIRECTOR 0
+#define DEBUG_REDIRECTOR 1
 
 include(helpers.m4)
 
