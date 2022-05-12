@@ -51,6 +51,10 @@
 #include "omriarv64.h"
 #endif /* defined(J9ZOS39064) */
 
+/* The names of the public and private JVM shared libraries. */
+#define EXTERNAL_VM_NAME "jvm"
+#define INTERNAL_VM_NAME "j9jvm"
+
 extern void lookupJVMFunctions(void *vmdll);
 
 typedef jint (JNICALL *CreateVM)(JavaVM**, void**, void*);
@@ -80,12 +84,6 @@ static HINSTANCE j9vm_dllHandle = (HINSTANCE)0;
 #define J9_MAX_PATH PATH_MAX
 static void *j9vm_dllHandle = NULL;
 #endif /* defined(WIN32) */
-/* define a size for the buffer which will hold the directory name containing the libjvm.so */
-#define J9_VM_DIR_LENGTH 32
-
-/* The names of the public and private JVM shared libraries. */
-#define EXTERNAL_VM_NAME "jvm"
-#define INTERNAL_VM_NAME "j9jvm"
 
 /*
  * Keep this structure synchronized with gc_policy_name table in parseGCPolicy()
@@ -136,13 +134,16 @@ typedef enum gc_policy {
 
 static J9StringBuffer* getjvmBin(BOOLEAN removeSubdir);
 static void chooseJVM(JavaVMInitArgs *args, char *retBuffer, size_t bufferLength);
+#if defined(J9ZOS390)
 static void addToLibpath(const char *dir);
+#endif /* defined(J9ZOS390) */
 static J9StringBuffer *findDir(const char *libraryDir);
 
-static J9StringBuffer* jvmBufferCat(J9StringBuffer* buffer, const char* string);
-static J9StringBuffer* jvmBufferEnsure(J9StringBuffer* buffer, UDATA len);
-static char* jvmBufferData(J9StringBuffer* buffer);
-static void jvmBufferFree(J9StringBuffer* buffer);
+static J9StringBuffer *jvmBufferAppend(J9StringBuffer *buffer, const char *string, UDATA len);
+static J9StringBuffer *jvmBufferCat(J9StringBuffer *buffer, const char *string);
+static J9StringBuffer *jvmBufferEnsure(J9StringBuffer *buffer, UDATA len);
+static char *jvmBufferData(J9StringBuffer *buffer);
+static void jvmBufferFree(J9StringBuffer *buffer);
 static BOOLEAN parseGCPolicy(char *buffer, int *value);
 #define MIN_GROWTH 128
 
@@ -200,51 +201,42 @@ removeSuffix(char *string, const char *suffix)
 }
 #endif /* (JAVA_SPEC_VERSION == 8) || defined(AIXPPC) */
 
+#if defined(J9ZOS390)
 static void
 addToLibpath(const char *dir)
 {
-#if defined(J9ZOS390)
-	char *oldPath, *newPath;
-	int rc, newSize;
-	char *putenvPath;
-	int putenvSize;
-	int putenvErrno;
+	char *oldPath = NULL;
+	int rc = 0;
+	char *putenvPath = NULL;
+	int putenvSize = 0;
+	int putenvErrno = 0;
 
-	if (NULL == dir) {
-		return;
-	}
-
-	if (dir[0] == '\0') {
+	if ((NULL == dir) || ('\0' == *dir)) {
 		return;
 	}
 
 	oldPath = getenv("LIBPATH");
-	DBG_MSG(("\nLIBPATH before = %s\n", oldPath ? oldPath : "<empty>"));
+	DBG_MSG(("\nLIBPATH before = %s\n", (NULL != oldPath) ? oldPath : "<empty>"));
 
-	newSize = ((NULL != oldPath) ? strlen(oldPath) : 0) + strlen(dir) + 2; /* 1 for :, 1 for \0 terminator */
-	newPath = malloc(newSize);
+	putenvSize = strlen("LIBPATH=")
+					+ ((NULL != oldPath) ? (strlen(oldPath) + 1) : 0) /* 1 for : */
+					+ strlen(dir)
+					+ 1; /* 1 for \0 terminator */
 
-	if (NULL == newPath) {
-		fprintf(stderr, "addToLibpath malloc(%d) 1 failed, aborting\n", newSize);
-		abort();
-	}
-
-	/* prepend the new path */
-	strcpy(newPath, dir);
-	if (NULL != oldPath) {
-		strcat(newPath, ":");
-		strcat(newPath, oldPath);
-	}
-
-	putenvSize = newSize + strlen("LIBPATH=");
 	putenvPath = malloc(putenvSize);
-	if (NULL ==putenvPath) {
+	if (NULL == putenvPath) {
 		fprintf(stderr, "addToLibpath malloc(%d) 2 failed, aborting\n", putenvSize);
 		abort();
 	}
 
-	strcpy(putenvPath,"LIBPATH=");
-	strcat(putenvPath, newPath);
+	strcpy(putenvPath, "LIBPATH=");
+	/* prepend the new path */
+	strcat(putenvPath, dir);
+	if (NULL != oldPath) {
+		strcat(putenvPath, ":");
+		strcat(putenvPath, oldPath);
+	}
+
 	rc = putenv(putenvPath);
 	putenvErrno = errno;
 	free(putenvPath);
@@ -252,14 +244,13 @@ addToLibpath(const char *dir)
 #if defined(DEBUG)
 	printf("\nLIBPATH after = %s\n", getenv("LIBPATH"));
 #endif /* defined(DEBUG) */
-	free(newPath);
 
-	if (rc != 0) {
+	if (0 != rc) {
 		fprintf(stderr, "addToLibpath putenv(%s) failed: %s\n", putenvPath, strerror(putenvErrno));
 		abort();
 	}
-#endif /* defined(J9ZOS390) */
 }
+#endif /* defined(J9ZOS390) */
 
 void
 freeGlobals(void)
@@ -730,26 +721,29 @@ jint JNICALL
 JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args)
 {
 	char *envOptions = NULL;
-	jint result;
-	int i;
+	jint result = 0;
+	int i = 0;
 	jint openedLibraries = 0;
-	char namedVM[J9_VM_DIR_LENGTH];
+	char namedVM[32];
 
 #if defined(J9ZOS390)
-	/* since we need to perform some output and look up env vars, we will require the a2e library to be initialized.  This will happen again, when the VM is
-		actually initialized, but the iconv_init call uses a static flag to make sure that it is only initialized once, so this is safe */
+	/* Since we need to perform some output and look up env vars, we will require
+	 * the a2e library to be initialized.  This will happen again, when the VM is
+	 * actually initialized, but the iconv_init() call uses a static flag to make
+	 * sure that it is only initialized once, so this is safe.
+	 */
 	iconv_init();
 #endif
 
 	/* no tracing for this function, since it's unlikely to be used once the VM is running and the trace engine is initialized */
-	args = (JavaVMInitArgs *)malloc( sizeof( JavaVMInitArgs) );
+	args = (JavaVMInitArgs *)malloc(sizeof(JavaVMInitArgs));
 	args->version = ((JavaVMInitArgs *)vm_args)->version;
 	args->nOptions = ((JavaVMInitArgs *)vm_args)->nOptions;
 	args->options = ((JavaVMInitArgs *)vm_args)->options;
 	args->ignoreUnrecognized = ((JavaVMInitArgs *)vm_args)->ignoreUnrecognized;
 
-	memset(namedVM, 0, J9_VM_DIR_LENGTH);
-	chooseJVM(args, namedVM, J9_VM_DIR_LENGTH);
+	memset(namedVM, 0, sizeof(namedVM));
+	chooseJVM(args, namedVM, sizeof(namedVM));
 
 	envOptions = getenv(ENVVAR_OPENJ9_JAVA_OPTIONS);
 	if (NULL == envOptions) {
@@ -773,18 +767,20 @@ JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args)
 
 	openedLibraries = openLibraries(namedVM);
 
-	if(openedLibraries == JNI_ERR) {
+	if (JNI_ERR == openedLibraries) {
 		fprintf(stdout, "Failed to find VM - aborting\n");
 		exit(-1);
 	}
 
 #if defined(LINUXPPC) && !defined(LINUXPPC64)
 	/*
-		This is a work-around for a segfault on shut-down on old LinuxPPC GlibC variants (ie:  2.2.5 - where this was observed)
-		The core problem may be a VM bug since this library is finalized 3 times when once is expected but it looks like a GlibC
-			bug after first-pass investigation.  More investigation will be required when time permits.
-		Refer to CMVC 103003 for the background of this work-around.
-	*/
+	 * This is a work-around for a segfault on shut-down on old LinuxPPC
+	 * GlibC variants (e.g.: 2.2.5 - where this was observed).  The core
+	 * problem may be a VM bug since this library is finalized 3 times
+	 * when once is expected but it looks like a GlibC bug after first-pass
+	 * investigation.  More investigation will be required when time permits.
+	 * Refer to CMVC 103003 for the background of this work-around.
+	 */
 	dlopen("libjava.so", RTLD_NOW);
 #endif
 
@@ -798,7 +794,7 @@ JNI_CreateJavaVM(JavaVM **pvm, void **penv, void *vm_args)
 	fflush(stdout);
 #endif /* defined(DEBUG) */
 
-	if (result == JNI_OK) {
+	if (JNI_OK == result) {
 		globalVM = *pvm;
 /* TODO - intercept shutdown
 		JavaVM * vm = (JavaVM*)BFUjavaVM;
@@ -838,9 +834,11 @@ JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs)
 
 #if defined(J9ZOS390)
 	/**
-	 * Since any code that looks at strings will fail without iconv_init and testing on z/OS is somewhat inconvenient, this
-	 * call to initialize the a2e library has been added to the beginning of all the exposed entry points in the file.  A static
-	 * in iconv_init ensures that only the first init call actually is honoured.
+	 * Since any code that looks at strings will fail without iconv_init and
+	 * testing on z/OS is somewhat inconvenient, this call to initialize the
+	 * a2e library has been added to the beginning of all the exposed entry
+	 * points in the file.  A static in iconv_init() ensures that only the
+	 * first init call actually is honoured.
 	 */
 	iconv_init();
 #endif
@@ -848,21 +846,20 @@ JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs)
 	if (NULL != globalGetVMs) {
 		result = globalGetVMs(vmBuf, bufLen, nVMs);
 	} else {
-		/* if this is NULL, then no VM has been started yet.  This implies we should return 0 */
+		/* If this is NULL, then no VM has been started yet.  This implies we should return 0 */
 		/* below logic pulled from jniinv.c JNI_GetCreatedJavaVMs */
-#if defined (LINUXPPC64) || (defined (AIXPPC) && defined (PPC64)) || defined (J9ZOS39064)
-		/* there was a bug in Sovereign VMs on these platforms where jsize was defined to
-		 * be 64-bits, rather than the 32-bits required by the JNI spec. Provide backwards
-		 * compatibility if the JAVA_JSIZE_COMPAT environment variable is set
+#if defined(LINUXPPC64) || (defined(AIXPPC) && defined(PPC64)) || defined(J9ZOS39064)
+		/* There was a bug in Sovereign VMs on these platforms where jsize was defined to
+		 * be 64 bits, rather than the 32 bits required by the JNI spec. Provide backwards
+		 * compatibility if the JAVA_JSIZE_COMPAT environment variable is set.
 		 */
-		if (getenv("JAVA_JSIZE_COMPAT")) {
-			*(jlong*)nVMs = (jlong)0;
-		} else {
+		if (NULL != getenv("JAVA_JSIZE_COMPAT")) {
+			*(jlong *)nVMs = (jlong)0;
+		} else
+#endif /* defined(LINUXPPC64) || (defined(AIXPPC) && defined(PPC64)) || defined(J9ZOS39064) */
+		{
 			*nVMs = 0;
 		}
-#else
-		*nVMs = 0;
-#endif
 	}
 
 	return result;
@@ -898,7 +895,7 @@ JNI_GetDefaultJavaVMInitArgs(void *vm_args)
 	iconv_init();
 #endif
 
-	if(globalInitArgs) {
+	if (NULL != globalInitArgs) {
 		return globalInitArgs(vm_args);
 	} else {
 		jint jniVersion = ((JavaVMInitArgs *)vm_args)->version;
@@ -924,7 +921,7 @@ JNI_GetDefaultJavaVMInitArgs(void *vm_args)
 	}
 }
 
-#define strsubdir(subdir) (isPackagedWithSubdir((subdir)) ? (subdir) : NULL)
+#define strsubdir(subdir) (isPackagedWithSubdir(subdir) ? (subdir) : NULL)
 
 /*
  * Returns the subdirectory name if a compressed references VM is included in the package containing the redirector
@@ -1060,7 +1057,7 @@ openLibraries(const char *libraryDir)
 	/* Polluting LIBPATH causes grief for exec()ed child processes. Don't do it unless necessary. */
 #if defined(J9ZOS390)
 	addToLibpath(jvmBufferData(buffer));
-#endif
+#endif /* defined(J9ZOS390) */
 
 	/* add the DLL name */
 #if defined(WIN32)
@@ -1124,16 +1121,15 @@ openLibraries(const char *libraryDir)
  * MUST be terminated with a DIR_SLASH_CHAR.
  */
 #if defined(WIN32)
-static J9StringBuffer*
+static J9StringBuffer *
 getjvmBin(BOOLEAN removeSubdir)
 {
 	J9StringBuffer *buffer = NULL;
-	wchar_t unicodeDLLName[J9_MAX_PATH + 1] = {0}; /*extra character is added to check if path is truncated by GetModuleFileNameW()*/
-	DWORD unicodeDLLNameLength = 0;
+	wchar_t unicodeDLLName[J9_MAX_PATH + 1]; /* extra room to detect if path is truncated by GetModuleFileNameW() */
 	char result[J9_MAX_PATH];
+	DWORD unicodeDLLNameLength = GetModuleFileNameW(GetModuleHandle(EXTERNAL_VM_NAME), unicodeDLLName, J9_MAX_PATH + 1);
 
-	unicodeDLLNameLength = GetModuleFileNameW(GetModuleHandle(EXTERNAL_VM_NAME), unicodeDLLName, (J9_MAX_PATH + 1));
-	/* Don't use truncated path */
+	/* don't use a truncated path */
 	if (unicodeDLLNameLength > (DWORD)J9_MAX_PATH) {
 		fprintf(stderr, "ERROR: cannot determine JAVA home directory\n");
 		abort();
@@ -1183,15 +1179,18 @@ static J9StringBuffer *
 getjvmBin(BOOLEAN removeSubdir)
 {
 	J9StringBuffer *buffer = NULL;
-	struct ld_info *linfo, *linfop;
-	int             linfoSize, rc;
-	char           *myAddress, *filename, *membername;
+	struct ld_info *linfo = NULL;
+	struct ld_info *linfop = NULL;
+	int linfoSize = 0;
+	char *myAddress = NULL;
+	char *filename = NULL;
+	char *membername = NULL;
 
 	/* get loader information */
 	linfoSize = 1024;
 	linfo = malloc(linfoSize);
 	for (;;) {
-		rc = loadquery(L_GETINFO, linfo, linfoSize);
+		int rc = loadquery(L_GETINFO, linfo, linfoSize);
 		if (rc != -1) {
 			break;
 		}
@@ -1204,10 +1203,10 @@ getjvmBin(BOOLEAN removeSubdir)
 	for (linfop = linfo;;) {
 		char *textorg  = (char *)linfop->ldinfo_textorg;
 		char *textend  = textorg + (unsigned long)linfop->ldinfo_textsize;
-		if (myAddress >=textorg && (myAddress < textend)) {
+		if ((textorg <= myAddress) && (myAddress < textend)) {
 			break;
 		}
-		if (!linfop->ldinfo_next) {
+		if (0 == linfop->ldinfo_next) {
 			abort();
 		}
 		linfop = (struct ld_info *)((char *)linfop + linfop->ldinfo_next);
@@ -1241,105 +1240,95 @@ getjvmBin(BOOLEAN removeSubdir)
 /* Moved from jvm.c
  * TODO: Move into a util library
  */
-int
-isFileInDir(char *dir, char *file)
+static BOOLEAN
+isFileInDir(const char *startOfDir, const char *endOfDir, const char *fileName)
 {
-	int   l;
-	char *fullpath;
-	FILE *f;
+	size_t dirLen = endOfDir - startOfDir;
+	size_t pathLen = 0;
+	char *fullpath = NULL;
+	FILE *file = NULL;
 
-	/* Construct 'full' path */
-	if (dir[strlen(dir) - 1] == DIR_SLASH_CHAR) {
+	/* construct 'full' path */
+	if ((dirLen > 0) && (DIR_SLASH_CHAR == startOfDir[dirLen - 1])) {
 		/* remove trailing DIR_SLASH_CHAR */
-		dir[strlen(dir) - 1] = '\0';
+		dirLen -= 1;
 	}
 
-	l = strlen(dir) + strlen(file) + 2; /* 2= '/' + null char */
-	fullpath = malloc(l);
-	strcpy(fullpath, dir);
-	fullpath[strlen(dir)] = DIR_SLASH_CHAR;
-	strcpy(fullpath + strlen(dir) + 1, file);
+	pathLen = dirLen + strlen(fileName) + 2; /* 2= '/' + null char */
+	fullpath = malloc(pathLen);
+	memcpy(fullpath, startOfDir, dirLen);
+	fullpath[dirLen] = DIR_SLASH_CHAR;
+	strcpy(fullpath + dirLen + 1, fileName);
 
-	/* See if file exists - use fopen() for portability */
-	f = fopen(fullpath, "rb");
-	if (NULL != f) {
-		fclose(f);
+	/* see if fileName exists - use fopen() for portability */
+	file = fopen(fullpath, "rb");
+	free(fullpath);
+	if (NULL != file) {
+		fclose(file);
 	}
-	return NULL != f;
+	return NULL != file;
 }
 
-J9StringBuffer*
-findDirContainingFile(J9StringBuffer *buffer, char *paths, char pathSeparator, char *fileToFind)
+static J9StringBuffer *
+findDirContainingFile(J9StringBuffer *buffer, const char *paths, char pathSeparator, const char *fileToFind)
 {
-	char *startOfDir, *endOfDir;
-	int   isEndOfPaths, foundIt;
+	const char *startOfDir = paths;
+	const char *endOfDir = paths;
 
-	/* Copy input as it is modified */
-	paths = strdup(paths);
-	if (!paths) {
-		return NULL;
-	}
-
-	/* Search each dir in the list for fileToFind */
-	startOfDir = endOfDir = paths;
-	for (isEndOfPaths=FALSE, foundIt=FALSE; !foundIt && !isEndOfPaths; endOfDir++) {
-		isEndOfPaths = endOfDir[0] == '\0';
-		if (isEndOfPaths || (endOfDir[0] == pathSeparator)) {
-			endOfDir[0] = '\0';
-			if (strlen(startOfDir) && isFileInDir(startOfDir, fileToFind)) {
-				foundIt = TRUE;
-				/*strcpy(result, startOfDir);*/
-				buffer = jvmBufferCat(buffer, startOfDir);
-			}
-			startOfDir = endOfDir + 1;
+	/* search each dir in the list for fileToFind */
+	for (;; ++endOfDir) {
+		if (('\0' != *endOfDir) && (pathSeparator != *endOfDir)) {
+			continue;
 		}
+		if (endOfDir == startOfDir) {
+			if ('\0' == *endOfDir) {
+				break;
+			} else {
+				/* skip empty entry */
+			}
+		} else if (isFileInDir(startOfDir, endOfDir, fileToFind)) {
+			return jvmBufferAppend(buffer, startOfDir, endOfDir - startOfDir);
+		}
+		startOfDir = endOfDir + 1;
 	}
-	free(paths); /* from strdup() */
-	/*return foundIt;*/
 
-	if (!foundIt) {
-		fprintf(stderr, "ERROR: cannot determine JAVA home directory");
-		abort();
-	}
-	return buffer;
+	fprintf(stderr, "ERROR: cannot determine JAVA home directory");
+	abort();
+	return NULL;
 }
 
-J9StringBuffer*
-findDirUplevelToDirContainingFile(J9StringBuffer *buffer, char *pathEnvar, char pathSeparator, char *fileInPath, int upLevels)
+static J9StringBuffer *
+findDirUplevelToDirContainingFile(J9StringBuffer *buffer, const char *pathEnvar, char pathSeparator, const char *fileInPath)
 {
 	/* Get the list of paths */
-	char *paths = getenv(pathEnvar);
+	const char *paths = getenv(pathEnvar);
 	if (NULL == paths) {
 		return NULL;
 	}
 
 	/* find the directory */
-	if (buffer = findDirContainingFile(buffer, paths, pathSeparator, fileInPath)) {
-		/* Now move upLevel to it - this may not work for directories of the form
-		 * /xxx/yyy/..      ... and so on.
-		 * If that is a problem, could always use /.. to move up.
-		 */
-		for (; upLevels > 0; upLevels--) {
-			truncatePath(jvmBufferData(buffer), FALSE);
-		}
-		/* the above loop destroyed the last DIR_SLASH_CHAR so re-add it */
+	buffer = findDirContainingFile(buffer, paths, pathSeparator, fileInPath);
+	if (NULL != buffer) {
 		buffer = jvmBufferCat(buffer, "/");
 	}
 
 	return buffer;
 }
 
-static J9StringBuffer*
+static J9StringBuffer *
 getjvmBin(BOOLEAN removeSubdir)
 {
-	J9StringBuffer *buffer = NULL;
-
-	/* assumes LIBPATH points to where libjvm.so can be found */
 #if defined(J9ZOS390)
-	buffer = findDirUplevelToDirContainingFile(buffer, "LIBPATH", ':', "libjvm.so", 0);
-#else
-	buffer = findDirUplevelToDirContainingFile(buffer, "LD_LIBRARY_PATH", ':', "libjvm" J9PORT_LIBRARY_SUFFIX, 0);
-#endif
+	const char *envVarName = "LIBPATH";
+#else /* defined(J9ZOS390) */
+	const char *envVarName = "LD_LIBRARY_PATH";
+#endif /* defined(J9ZOS390) */
+	/* assumes LIBPATH or LD_LIBRARY_PATH points to where redirector can be found */
+	J9StringBuffer *buffer = findDirUplevelToDirContainingFile(
+			buffer,
+			envVarName,
+			':',
+			"lib" EXTERNAL_VM_NAME J9PORT_LIBRARY_SUFFIX);
 
 	if (NULL != buffer) {
 		if (removeSubdir) {
@@ -1355,13 +1344,13 @@ getjvmBin(BOOLEAN removeSubdir)
 #endif /* defined(J9ZOS390) || defined(J9ZTPF) */
 
 static J9StringBuffer *
-jvmBufferCat(J9StringBuffer* buffer, const char* string)
+jvmBufferAppend(J9StringBuffer *buffer, const char *string, UDATA len)
 {
-	UDATA len = strlen(string);
-
 	buffer = jvmBufferEnsure(buffer, len);
-	if (buffer) {
-		strcat(buffer->data, string);
+	if (NULL != buffer) {
+		char * end = buffer->data + strlen(buffer->data);
+		memcpy(end, string, len);
+		end[len] = '\0';
 		buffer->remaining -= len;
 	}
 
@@ -1369,41 +1358,44 @@ jvmBufferCat(J9StringBuffer* buffer, const char* string)
 }
 
 static J9StringBuffer *
-jvmBufferEnsure(J9StringBuffer* buffer, UDATA len)
+jvmBufferCat(J9StringBuffer *buffer, const char *string)
 {
-	if (buffer == NULL) {
-		UDATA newSize = len > MIN_GROWTH ? len : MIN_GROWTH;
-		buffer = (J9StringBuffer*) malloc( newSize + 1 + sizeof(UDATA)); /* 1 for null terminator */
+	return jvmBufferAppend(buffer, string, strlen(string));
+}
+
+static J9StringBuffer *
+jvmBufferEnsure(J9StringBuffer *buffer, UDATA len)
+{
+	if (NULL == buffer) {
+		UDATA newSize = (len > MIN_GROWTH) ? len : MIN_GROWTH;
+		buffer = (J9StringBuffer *)malloc(sizeof(UDATA) + newSize + 1); /* 1 for null terminator */
 		if (buffer != NULL) {
 			buffer->remaining = newSize;
 			buffer->data[0] = '\0';
 		}
-		return buffer;
-	}
-
-	if (len > buffer->remaining) {
-		UDATA newSize = len > MIN_GROWTH ? len : MIN_GROWTH;
-		const char* bufData = (const char*)buffer->data;
-		J9StringBuffer* new = (J9StringBuffer*) malloc(strlen(bufData) + newSize + sizeof(UDATA) + 1 );
-		if (new) {
-			new->remaining = newSize;
-			strcpy(new->data, bufData);
+	} else if (len > buffer->remaining) {
+		UDATA newSize = (len > MIN_GROWTH) ? len : MIN_GROWTH;
+		const char *bufData = (const char *)buffer->data;
+		J9StringBuffer *newBuffer = (J9StringBuffer *)malloc(sizeof(UDATA) + strlen(bufData) + newSize + 1);
+		if (NULL != newBuffer) {
+			newBuffer->remaining = newSize;
+			strcpy(newBuffer->data, bufData);
 		}
 		free(buffer);
-		return new;
+		buffer = newBuffer;
 	}
 
 	return buffer;
 }
 
 static char *
-jvmBufferData(J9StringBuffer* buffer)
+jvmBufferData(J9StringBuffer *buffer)
 {
-	return buffer ? buffer->data : NULL;
+	return (NULL != buffer) ? buffer->data : NULL;
 }
 
 static void
-jvmBufferFree(J9StringBuffer* buffer)
+jvmBufferFree(J9StringBuffer *buffer)
 {
 	if (NULL != buffer) {
 		free(buffer);
