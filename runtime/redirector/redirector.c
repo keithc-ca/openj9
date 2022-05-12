@@ -118,11 +118,9 @@ typedef enum gc_policy {
 #include "atoe.h"
 #include <stdlib.h>
 #include <errno.h>
-#define dlsym   dllqueryfn
-#define dlopen(a,b)     dllload(a)
+#define dlsym dllqueryfn
+#define dlopen(a, b) dllload(a)
 #define dlclose dllfree
-#define getj9bin        getj9binZOS
-#define J9FSTAT fstat
 #endif /* defined(J9ZOS390) */
 
 #if !defined(PATH_MAX)
@@ -1131,7 +1129,7 @@ getjvmBin(BOOLEAN removeSubdir)
 
 	/* don't use a truncated path */
 	if (unicodeDLLNameLength > (DWORD)J9_MAX_PATH) {
-		fprintf(stderr, "ERROR: cannot determine JAVA home directory\n");
+		fprintf(stderr, "ERROR: cannot determine JAVA home directory (redirector)\n");
 		abort();
 	}
 
@@ -1159,7 +1157,7 @@ getjvmBin(BOOLEAN removeSubdir)
 	int rc = dladdr((void *)getjvmBin, &libraryInfo);
 
 	if (0 == rc) {
-		fprintf(stderr, "ERROR: cannot determine JAVA home directory\n");
+		fprintf(stderr, "ERROR: cannot determine JAVA home directory (redirector)\n");
 		abort();
 	}
 	buffer = jvmBufferCat(NULL, libraryInfo.dli_fname);
@@ -1292,7 +1290,7 @@ findDirContainingFile(J9StringBuffer *buffer, const char *paths, char pathSepara
 		startOfDir = endOfDir + 1;
 	}
 
-	fprintf(stderr, "ERROR: cannot determine JAVA home directory");
+	fprintf(stderr, "ERROR: cannot determine JAVA home directory (redirector)\n");
 	abort();
 	return NULL;
 }

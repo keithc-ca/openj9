@@ -1121,7 +1121,30 @@ getj9bin()
 	/* misnamed - returns the directory that the jvm DLL is found in, NOT the directory that the J9 VM itself is in. */
 
 	J9StringBuffer *result = NULL;
-#if (defined(LINUX) && !defined(J9ZTPF)) || defined(OSX)
+#if defined(J9ZOS390) || defined(J9ZTPF)
+	int foundPosition = 0;
+
+	/* assumes LIBPATH (or LD_LIBRARY_PATH for z/TPF) points to where all libjvm.so can be found */
+	while (0 != (foundPosition = findDirUplevelToDirContainingFile(&result, LD_ENV_PATH, ':', "libjvm.so", 0, foundPosition))) {
+		/* now screen to see if match is the right libjvm.so - it needs to have a j9vm DLL either in this dir, or in the parent. */
+		DBG_MSG(("found a libjvm.so at offset %d - looking at elem: %s\n", foundPosition, jvmBufferData(result)));
+
+		/* first try this dir - this will be true for 'vm in subdir' cases, and is the likely Java 6 case as of SR1. */
+		if (isFileInDir(jvmBufferData(result), "lib" J9_VM_DLL_NAME J9PORT_LIBRARY_SUFFIX)) {
+			return result;
+		}
+
+		truncatePath(jvmBufferData(result));
+
+		/* trying parent */
+		if (isFileInDir(jvmBufferData(result), "lib" J9_VM_DLL_NAME J9PORT_LIBRARY_SUFFIX)) {
+			return result;
+		}
+	}
+
+	fprintf(stderr, "ERROR: cannot determine JAVA home directory\n");
+	abort();
+#elif defined(LINUX) || defined(OSX)
 	Dl_info libraryInfo;
 	int rc = dladdr((void *)getj9bin, &libraryInfo);
 
@@ -1133,31 +1156,6 @@ getj9bin()
 	result = jvmBufferCat(NULL, libraryInfo.dli_fname);
 	/* remove libjvm.so */
 	truncatePath(jvmBufferData(result));
-#elif defined(J9ZOS390) || defined(J9ZTPF)
-#define VMDLL_NAME J9_VM_DLL_NAME
-
-	int foundPosition = 0;
-
-	/* assumes LIBPATH (or LD_LIBRARY_PATH for z/TPF) points to where all libjvm.so can be found */
-	while(foundPosition = findDirUplevelToDirContainingFile(&result, LD_ENV_PATH, ':', "libjvm.so", 0, foundPosition)) {
-		/* now screen to see if match is the right libjvm.so - it needs to have a j9vm DLL either in this dir, or in the parent. */
-		DBG_MSG(("found a libjvm.so at offset %d - looking at elem: %s\n", foundPosition, result));
-
-		/* first try this dir - this will be true for 'vm in subdir' cases, and is the likely Java 6 case as of SR1. */
-		if (isFileInDir(jvmBufferData(result), "lib" VMDLL_NAME J9PORT_LIBRARY_SUFFIX)) {
-			return result;
-		}
-
-		truncatePath(jvmBufferData(result));
-
-		/* trying parent */
-		if (isFileInDir(jvmBufferData(result), "lib" VMDLL_NAME J9PORT_LIBRARY_SUFFIX)) {
-			return result;
-		}
-	}
-
-	fprintf(stderr, "ERROR: cannot determine JAVA home directory\n");
-	abort();
 
 #else /* must be AIX / RS6000 */
 	struct ld_info *linfo, *linfop;
@@ -1310,7 +1308,7 @@ preloadLibraries(void)
 
 	if (NULL == lastDirName) {
 		fprintf(stderr, "Preload libraries failed to find a valid J9 binary location\n" );
-		exit( -1 ); /* failed */
+		exit(-1); /* failed */
 	}
 
 	if (0 == strcmp(lastDirName + 1, "classic")) {
@@ -1337,7 +1335,7 @@ preloadLibraries(void)
 	jvmDLLNameBuffer = jvmBufferCat(jvmDLLNameBuffer, vmDllName);
 	jvmDLLNameBuffer = jvmBufferCat(jvmDLLNameBuffer, J9PORT_LIBRARY_SUFFIX);
 
-	if(-1 != stat (jvmBufferData(jvmDLLNameBuffer), &statBuf)) {
+	if (-1 != stat(jvmBufferData(jvmDLLNameBuffer), &statBuf)) {
 		jvmInSubdir = TRUE;
 	} else {
 		jvmInSubdir = FALSE;
@@ -1349,7 +1347,7 @@ preloadLibraries(void)
 	jrebinBuffer = NULL;
 
 	/* set up jre bin based on result of subdir knowledge */
-	if(jvmInSubdir) {
+	if (jvmInSubdir) {
 		jrebinBuffer = jvmBufferCat(NULL, jvmBufferData(j9binBuffer));
 		truncatePath(jvmBufferData(jrebinBuffer));
 	} else {
@@ -1385,13 +1383,13 @@ preloadLibraries(void)
 	omrsigDLL = preloadLibrary("omrsig", TRUE);
 	if (NULL == omrsigDLL) {
 		fprintf(stderr, "libomrsig failed to load: omrsig\n" );
-		exit( -1 ); /* failed */
+		exit(-1); /* failed */
 	}
 
 	vmDLL = preloadLibrary(vmDllName, TRUE);
 	if (NULL == vmDLL) {
 		fprintf(stderr,"libjvm.so failed to load: %s\n", vmDllName);
-		exit( -1 );	/* failed */
+		exit(-1); /* failed */
 	}
 
 	globalCreateVM = (CreateVM) dlsym (vmDLL, CREATE_JAVA_VM_ENTRYPOINT );
@@ -1399,7 +1397,7 @@ preloadLibraries(void)
 	if ((NULL == globalCreateVM) || (NULL == globalGetVMs)) {
 		dlclose(vmDLL);
 		fprintf(stderr,"libjvm.so failed to load: global entrypoints not found\n");
-		exit( -1 );	/* failed */
+		exit(-1); /* failed */
 	}
 	j9vm_dllHandle = vmDLL;
 
@@ -1407,18 +1405,18 @@ preloadLibraries(void)
 	/* pre-load libjava.so for IMBZOS functions */
 	javaDLL = preloadLibrary("java", FALSE);
 	if (!javaDLL) {
-	   fprintf(stderr,"libjava.dll failed to load: %s\n", "java");
-	   exit( -1 );     /* failed */
+		fprintf(stderr,"libjava.dll failed to load: %s\n", "java");
+		exit(-1); /* failed */
 	}
 	globalGetStringPlatform = (pGetStringPlatform) dlsym (javaDLL,  "IBMZOS_GetStringPlatform");
 	globalGetStringPlatformLength = (pGetStringPlatformLength) dlsym (javaDLL,  "IBMZOS_GetStringPlatformLength");
 	globalNewStringPlatform = (pNewStringPlatform) dlsym (javaDLL,  "IBMZOS_NewStringPlatform");
 	global_a2e_vsprintf = (p_a2e_vsprintf) dlsym (javaDLL,  "IBMZOS_a2e_vsprintf");
 	if (!globalGetStringPlatform || !globalGetStringPlatformLength || !globalNewStringPlatform || !global_a2e_vsprintf) {
-	   dlclose(vmDLL);
-	   dlclose(javaDLL);
-	   fprintf(stderr,"libjava.dll failed to load: global entrypoints not found\n");
-	   exit( -1 );     /* failed */
+		dlclose(vmDLL);
+		dlclose(javaDLL);
+		fprintf(stderr,"libjava.dll failed to load: global entrypoints not found\n");
+		exit(-1); /* failed */
 	}
 	java_dllHandle = javaDLL;
 #endif
@@ -1445,7 +1443,7 @@ preloadLibraries(void)
 #endif
 		dlclose(threadDLL);
 		fprintf(stderr,"libjvm.so failed to load: thread library entrypoints not found\n");
-		exit( -1 );	/* failed */
+		exit(-1); /* failed */
 	}
 	portDLL = preloadLibrary(J9_PORT_DLL_NAME, TRUE);
 	portInitLibrary = (PortInitLibrary) dlsym (portDLL, "j9port_init_library");
@@ -1458,15 +1456,13 @@ preloadLibraries(void)
 #endif
 		dlclose(threadDLL);
 		dlclose(portDLL);
-		fprintf(stderr,"libjvm.so failed to load: %s entrypoints not found\n", J9_PORT_DLL_NAME);
-		exit( -1 );	/* failed */
+		fprintf(stderr, "libjvm.so failed to load: %s entrypoints not found\n", J9_PORT_DLL_NAME);
+		exit(-1); /* failed */
 	}
 
 	return TRUE;
 }
 #endif /* defined(J9UNIX) || defined(J9ZOS390) */
-
-
 
 
 int jio_fprintf(FILE * stream, const char * format, ...) {
@@ -1988,7 +1984,7 @@ JNI_CreateJavaVM_impl(JavaVM **pvm, void **penv, void *vm_args, BOOLEAN isJITSer
 #if defined(AIXPPC) || defined(J9ZOS390)
 	libpathValue = getenv(ENV_LIBPATH);
 	if (NULL != libpathValue) {
-		size_t pathLength = strlen(libpathValue) +1;
+		size_t pathLength = strlen(libpathValue) + 1;
 		char *envTemp = malloc(pathLength);
 		if (NULL == envTemp) {
 			result = JNI_ERR;
@@ -1997,7 +1993,7 @@ JNI_CreateJavaVM_impl(JavaVM **pvm, void **penv, void *vm_args, BOOLEAN isJITSer
 		strcpy(envTemp, libpathValue);
 		libpathValue = envTemp;
 	}
-#endif
+#endif /* defined(AIXPPC) || defined(J9ZOS390) */
 #if defined(J9UNIX)
 	ldLibraryPathValue = getenv(ENV_LD_LIB_PATH);
 	if (NULL != ldLibraryPathValue) {
@@ -2022,8 +2018,8 @@ JNI_CreateJavaVM_impl(JavaVM **pvm, void **penv, void *vm_args, BOOLEAN isJITSer
 	Xj9BreakPoint("jvm");
 	/* Force iSeries create JVM flow */
 	if (Xj9IleCreateJavaVmCalled() == 0) {
-	    result = Xj9CallIleCreateJavaVm(pvm, penv, vm_args);
-	    goto exit;
+		result = Xj9CallIleCreateJavaVm(pvm, penv, vm_args);
+		goto exit;
 	}
 #endif
 
@@ -2512,7 +2508,9 @@ JNI_GetCreatedJavaVMs(JavaVM **vmBuf, jsize bufLen, jsize *nVMs)
  *	DLL: jvm
  */
 
-jint JNICALL JNI_GetDefaultJavaVMInitArgs(void *vm_args) {
+jint JNICALL
+JNI_GetDefaultJavaVMInitArgs(void *vm_args)
+{
 	jint requestedVersion = ((JavaVMInitArgs *)vm_args)->version;
 
 	switch (requestedVersion) {
@@ -2641,8 +2639,9 @@ JNI_a2e_vsprintf(char *target, const char *format, va_list args)
 }
 #endif /* J9ZOS390 */
 
-
-int isFileInDir(char *dir, char *file){
+int
+isFileInDir(char *dir, char *file)
+{
 	size_t length, dirLength;
 	char *fullpath = NULL;
 	FILE *f = NULL;
@@ -2650,10 +2649,10 @@ int isFileInDir(char *dir, char *file){
 
 	dirLength = strlen(dir);
 	/* Construct 'full' path */
-	if (dir[dirLength-1] == DIR_SEPARATOR) {
+	if (dir[dirLength - 1] == DIR_SEPARATOR) {
 		/* remove trailing '/' */
-		dir[dirLength-1] = '\0';
-		dirLength--;
+		dir[dirLength - 1] = '\0';
+		dirLength -= 1;
 	}
 
 	length = dirLength + strlen(file) + 2; /* 2= '/' + null char */
@@ -2661,7 +2660,7 @@ int isFileInDir(char *dir, char *file){
 	if (NULL != fullpath) {
 		strcpy(fullpath, dir);
 		fullpath[dirLength] = DIR_SEPARATOR;
-		strcpy(fullpath+dirLength+1, file);
+		strcpy(fullpath + dirLength + 1, file);
 
 		/* See if file exists - use fopen() for portability */
 		f = fopen(fullpath, "rb");
@@ -2679,20 +2678,22 @@ int isFileInDir(char *dir, char *file){
  * find directory containing a given file.
  * @returns 0 for not found, and a positive integer on success, which represents which path element the file was found in.
  **/
-int findDirContainingFile(J9StringBuffer **result, char *paths, char pathSeparator, char *fileToFind, int elementsToSkip) {
+static int
+findDirContainingFile(J9StringBuffer **result, char *paths, char pathSeparator, char *fileToFind, int elementsToSkip)
+{
 	char *startOfDir, *endOfDir, *pathsCopy;
 	int   isEndOfPaths, foundIt, count=elementsToSkip;
 
 	/* Copy input as it is modified */
 	paths = strdup(paths);
-	if (!paths) {
-		return FALSE;
+	if (NULL == paths) {
+		return 0;
 	}
 
 	pathsCopy = paths;
-	while(elementsToSkip--) {
+	while (0 != elementsToSkip--) {
 		pathsCopy = strchr(pathsCopy, pathSeparator);
-		if(pathsCopy) {
+		if (NULL != pathsCopy) {
 			pathsCopy++; /* advance past separator */
 		} else {
 			free(paths);
@@ -2702,8 +2703,7 @@ int findDirContainingFile(J9StringBuffer **result, char *paths, char pathSeparat
 
 	/* Search each dir in the list for fileToFind */
 	startOfDir = endOfDir = pathsCopy;
-	for (isEndOfPaths=FALSE, foundIt=FALSE; !foundIt && !isEndOfPaths; endOfDir++) {
-
+	for (isEndOfPaths = FALSE, foundIt = FALSE; !foundIt && !isEndOfPaths; endOfDir++) {
 		isEndOfPaths = endOfDir[0] == '\0';
 		if (isEndOfPaths || (endOfDir[0] == pathSeparator))  {
 			endOfDir[0] = '\0';
@@ -2715,28 +2715,28 @@ int findDirContainingFile(J9StringBuffer **result, char *paths, char pathSeparat
 				}
 				*result = jvmBufferCat(NULL, startOfDir);
 			}
-			startOfDir = endOfDir+1;
-			count+=1;
+			startOfDir = endOfDir + 1;
+			count += 1;
 		}
 	}
 
 	free(paths); /* from strdup() */
-	if(foundIt) {
+	if (foundIt) {
 		return count;
 	} else {
 		return 0;
 	}
 }
 
-
-
-int findDirUplevelToDirContainingFile(J9StringBuffer **result, char *pathEnvar, char pathSeparator, char *fileInPath, int upLevels, int elementsToSkip) {
-	char *paths;
-	int   rc;
+static int
+findDirUplevelToDirContainingFile(J9StringBuffer **result, char *pathEnvar, char pathSeparator, char *fileInPath, int upLevels, int elementsToSkip)
+{
+	char *paths = NULL;
+	int rc = 0;
 
 	/* Get the list of paths */
 	paths = getenv(pathEnvar);
-	if (!paths) {
+	if (NULL == paths) {
 		return FALSE;
 	}
 
@@ -2747,7 +2747,7 @@ int findDirUplevelToDirContainingFile(J9StringBuffer **result, char *pathEnvar, 
 		/aaa/bbb/..      ... and so on.
 		If that is a problem, could always use /.. to move up.
 	*/
-	if (rc) {
+	if (0 != rc) {
 		for (; upLevels > 0; upLevels--) {
 			truncatePath(jvmBufferData(*result));
 		}
