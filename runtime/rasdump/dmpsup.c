@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 1991, 2021 IBM Corp. and others
+ * Copyright (c) 1991, 2022 IBM Corp. and others
  *
  * This program and the accompanying materials are made available under
  * the terms of the Eclipse Public License 2.0 which accompanies this
@@ -1254,15 +1254,25 @@ static void
 initBackTrace(J9JavaVM *vm)
 {
 #if defined(LINUX) || defined(OSX)
-	J9PlatformThread threadInfo;
-	J9Heap *heap;
-	char backingStore[8096];
-	
 	PORT_ACCESS_FROM_JAVAVM(vm);
-	
+	char backingStore[8096];
 	/* Use a local heap so the memory used for the backtrace is freed automatically. */
-	heap = j9heap_create(backingStore, sizeof(backingStore), 0);
-	if( j9introspect_backtrace_thread(&threadInfo, heap, NULL) != 0 ) {
+	J9Heap *heap = j9heap_create(backingStore, sizeof(backingStore), 0);
+	ucontext_t context;
+	J9PlatformThread threadInfo;
+
+	memset(&context, 0, sizeof(context));
+	memset(&threadInfo, 0, sizeof(threadInfo));
+
+	/*
+	 * The implementation of j9introspect_backtrace_thread() examines its third
+	 * argument and threadInfo.context; if both are NULL the function returns
+	 * without actually triggering the necessary initialization. We supply a
+	 * dummy ucontext_t in threadInfo.context to avoid that short-circuit.
+	 */
+	threadInfo.context = &context;
+
+	if (j9introspect_backtrace_thread(&threadInfo, heap, NULL) != 0) {
 		j9introspect_backtrace_symbols(&threadInfo, heap);
 	}
 #endif /* defined(LINUX) || defined(OSX) */
