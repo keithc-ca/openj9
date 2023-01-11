@@ -1129,13 +1129,6 @@ Only available on zOS</description>
 			<require flag="jit_cHelpers"/>
 		</requires>
 	</flag>
-	<flag id="jit_newInstancePrototype">
-		<description>Controls whether the JIT will create per-class newInstanceImpl translations.</description>
-		<ifRemoved>newInstanceImpl is always called, never translated</ifRemoved>
-		<requires>
-			<require flag="interp_nativeSupport"/>
-		</requires>
-	</flag>
 	<flag id="jit_onStackReplacement">
 		<description>Controls whether On Stack Replacement (OSR) is enabled in the VM</description>
 		<ifRemoved>OSR is disabled</ifRemoved>
@@ -1166,7 +1159,6 @@ Only available on zOS</description>
 		</requires>
 		<precludes>
 			<preclude flag="jit_fullSpeedDebug"/>
-			<preclude flag="jit_newInstancePrototype"/>
 		</precludes>
 	</flag>
 	<flag id="jit_supportsDirectJNI">
