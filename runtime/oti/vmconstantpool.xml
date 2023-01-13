@@ -153,7 +153,10 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0 WITH Classpath-excepti
 	<classref name="org/eclipse/openj9/criu/JVMCheckpointException" flags="opt_criuSupport"/>
 	<classref name="org/eclipse/openj9/criu/JVMRestoreException" flags="opt_criuSupport"/>
 
-	<!-- Class references needed to support Foreign Linker API. -->
+	<!--
+	Class references needed to support Foreign Linker API. Note the use of flags="opt_openjdkFfi" which
+	is not enabled in stdinit.c:computeJCLRuntimeFlags(): these classes should not be loaded prematurely.
+	-->
 	<classref name="openj9/internal/foreign/abi/InternalDowncallHandler" flags="opt_openjdkFfi" versions="16-"/>
 	<classref name="openj9/internal/foreign/abi/InternalUpcallHandler" flags="opt_openjdkFfi" versions="16-"/>
 	<classref name="openj9/internal/foreign/abi/UpcallMHMetaData" flags="opt_openjdkFfi" versions="16-"/>

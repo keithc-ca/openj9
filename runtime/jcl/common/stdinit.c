@@ -83,6 +83,12 @@ computeJCLRuntimeFlags(J9JavaVM *vm)
 	flags |= JCL_RTFLAG_OPT_METHOD_HANDLE_COMMON;
 #endif /* defined(J9VM_OPT_METHOD_HANDLE_COMMON) */
 
+	/*
+	 * JCL_RTFLAG_OPT_OPENJDK_FFI is intentionally not set here.
+	 * The classes in vmconstantpool.xml marked with flags="opt_openjdkFfi"
+	 * should not be loaded prematurely.
+	 */
+
 #if defined(J9VM_OPT_OPENJDK_METHODHANDLE)
 	flags |= JCL_RTFLAG_OPT_OPENJDK_METHODHANDLE;
 #endif /* defined(J9VM_OPT_OPENJDK_METHODHANDLE) */
