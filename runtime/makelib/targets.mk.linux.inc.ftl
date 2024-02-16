@@ -254,12 +254,14 @@ ifdef j9vm_uma_gnuDebugSymbols
   <#if uma.spec.processor.x86 || uma.spec.processor.amd64>
     ASFLAGS += --gdwarf2
   </#if>
-
-  # Tell gcc to use DWARF version 4, not 5 (which is the default for compiler
-  # versions 11+). All GNU compiler versions, that might reasonably be used,
-  # understand these options, so this doesn't need to check the compiler version.
-  CFLAGS   += -gdwarf-4
-  CXXFLAGS += -gdwarf-4
+  <#if uma.spec.processor.aarch64>
+    # For aarch64, tell gcc to use DWARF version 4, not 5 (which is the compiler
+    # default for versions 11+). All GNU compiler versions, that might reasonably
+    # be used, understand these options, so this doesn't need to check the compiler
+    # version.
+    CFLAGS   += -gdwarf-4
+    CXXFLAGS += -gdwarf-4
+  </#if>
 endif
 
 <#if uma.spec.processor.x86 || uma.spec.processor.amd64 || uma.spec.processor.riscv64>
