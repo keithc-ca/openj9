@@ -113,7 +113,7 @@ ifndef UMA_DO_NOT_OPTIMIZE_CCODE
     <#if uma.spec.processor.amd64 || uma.spec.processor.riscv64>
       UMA_OPTIMIZATION_CFLAGS += -O3 -fno-strict-aliasing
     <#elseif uma.spec.processor.x86>
-      UMA_OPTIMIZATION_CFLAGS += -O3 -fno-strict-aliasing -march=pentium4 -mtune=prescott -mpreferred-stack-boundary=4
+      UMA_OPTIMIZATION_CFLAGS += -O3 -fno-strict-aliasing -march=x86-64 -mtune=prescott -mpreferred-stack-boundary=4
     <#elseif uma.spec.processor.arm>
       UMA_OPTIMIZATION_CFLAGS += -g -O3 -fno-strict-aliasing $(ARM_ARCH_FLAGS) -Wno-unused-but-set-variable
     <#elseif uma.spec.processor.ppc>
@@ -139,7 +139,7 @@ ifndef UMA_DO_NOT_OPTIMIZE_CCODE
     <#if uma.spec.processor.amd64 || uma.spec.processor.riscv64>
       UMA_OPTIMIZATION_CXXFLAGS += -O3 -fno-strict-aliasing
     <#elseif uma.spec.processor.x86>
-      UMA_OPTIMIZATION_CXXFLAGS += -O3 -fno-strict-aliasing -march=pentium4 -mtune=prescott -mpreferred-stack-boundary=4
+      UMA_OPTIMIZATION_CXXFLAGS += -O3 -fno-strict-aliasing -march=x86-64 -mtune=prescott -mpreferred-stack-boundary=4
     <#elseif uma.spec.processor.arm>
       UMA_OPTIMIZATION_CXXFLAGS += -g -O3 -fno-strict-aliasing $(ARM_ARCH_FLAGS) -Wno-unused-but-set-variable
     <#elseif uma.spec.processor.ppc>

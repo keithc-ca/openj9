@@ -93,7 +93,7 @@ define({SHORT_JMP},{short})
 
 define({FILE_START},{
 	.intel_syntax noprefix
-	.arch pentium4
+	.arch x86-64
 	.text
 })
 
