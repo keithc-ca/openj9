@@ -144,40 +144,6 @@ j9sysinfo_get_processing_capacity(struct J9PortLibrary *portLibrary)
 	return omrsysinfo_get_number_CPUs_by_type(J9PORT_CPU_ONLINE) * 100;
 }
 
-intptr_t
-j9sysinfo_get_processor_description(struct J9PortLibrary *portLibrary, J9ProcessorDesc *desc)
-{
-	intptr_t rc = -1;
-	Trc_PRT_sysinfo_get_processor_description_Entered(desc);
-	
-	if (NULL != desc) {
-		memset(desc, 0, sizeof(J9ProcessorDesc));
-		rc = getX86Description(portLibrary, desc);
-	}
-	
-	Trc_PRT_sysinfo_get_processor_description_Exit(rc);
-	return rc;
-}
-
-BOOLEAN
-j9sysinfo_processor_has_feature(struct J9PortLibrary *portLibrary, J9ProcessorDesc *desc, uint32_t feature)
-{
-	BOOLEAN rc = FALSE;
-	Trc_PRT_sysinfo_processor_has_feature_Entered(desc, feature);
-
-	if ((NULL != desc)
-	&& (feature < (J9PORT_SYSINFO_FEATURES_SIZE * 32))
-	) {
-		uint32_t featureIndex = feature / 32;
-		uint32_t featureShift = feature % 32;
-
-		rc = J9_ARE_ALL_BITS_SET(desc->features[featureIndex], 1 << featureShift);
-	}
-
-	Trc_PRT_sysinfo_processor_has_feature_Exit((uintptr_t)rc);
-	return rc;
-}
-
 int32_t
 j9sysinfo_get_hw_info(struct J9PortLibrary *portLibrary, uint32_t infoType,
 	char * buf, uint32_t bufLen)

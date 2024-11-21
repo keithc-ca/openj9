@@ -401,16 +401,6 @@ typedef enum J9ProcessorArchitecture {
 
 } J9ProcessorArchitecture;
 
-/* Holds processor type and features used with j9sysinfo_get_processor_description
- * and j9sysinfo_processor_has_feature
- */
-#define J9PORT_SYSINFO_FEATURES_SIZE 5
-typedef struct J9ProcessorDesc {
-	J9ProcessorArchitecture processor;
-	J9ProcessorArchitecture physicalProcessor;
-	uint32_t features[J9PORT_SYSINFO_FEATURES_SIZE];
-} J9ProcessorDesc;
-
 /* PowerPC features
  * Auxiliary Vector Hardware Capability (AT_HWCAP) features for PowerPC.
  */
