@@ -133,36 +133,6 @@ j9sysinfo_get_processing_capacity(struct J9PortLibrary *portLibrary)
 }
 
 /**
- * Determine CPU type and features.
- *
- * @param[in] portLibrary The port library.
- * @param[out] desc pointer to the struct that will contain the CPU type and features.
- *              - desc will still be initialized if there is a failure.
- *
- * @return 0 on success, -1 on failure
- */
-intptr_t
-j9sysinfo_get_processor_description(struct J9PortLibrary *portLibrary, J9ProcessorDesc *desc)
-{
-	return -1;
-}
-
-/**
- * Determine if a CPU feature is present.
- *
- * @param[in] portLibrary The port library.
- * @param[in] desc The struct that will contain the CPU type and features.
- * @param[in] feature The feature to check (see j9port.h for list of features J9PORT_{PPC,S390,PPC}_FEATURE_*)
- *
- * @return TRUE if feature is present, FALSE otherwise.
- */
-BOOLEAN
-j9sysinfo_processor_has_feature(struct J9PortLibrary *portLibrary, J9ProcessorDesc *desc, uint32_t feature)
-{
-	return FALSE;
-}
-
-/**
  * Retrieve hardware information such as model. The information is returned in 
  * an ASCII string.
  *
