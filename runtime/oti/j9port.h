@@ -22,6 +22,7 @@
 
 #if !defined(OTI_J9PORT_H_)
 #define OTI_J9PORT_H_
+
 /* @ddr_namespace: map_to_type=J9PortLibrary */
 
 /* NOTE:  j9port_generated.h include is at the bottom of this file until its dependencies on this file can be relaxed */
@@ -337,19 +338,6 @@ typedef struct J9GuestMemoryUsage {
 	/* Maximum memory that has been allocated to the guest OS in MB */
 	int64_t maxMemLimit;
 } J9GuestMemoryUsage;
-
-/* s390 features
- * z/Architecture Principles of Operation 4-69
- * STORE FACILITY LIST EXTENDED (STFLE)
- */
-
-/* z14 facilities */
-
-/* STFLE bit 131 - Side-effect-access facility */
-#define J9PORT_S390_FEATURE_SIDE_EFFECT_ACCESS 131
-
-/* STFLE bit 133 - Guarded-storage facility */
-#define J9PORT_S390_FEATURE_GUARDED_STORAGE 133
 
 /* cache types */
 #define J9PORT_CACHEINFO_ICACHE 0x01
