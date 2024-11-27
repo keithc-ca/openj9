@@ -405,105 +405,14 @@ typedef enum J9ProcessorArchitecture {
  * z/Architecture Principles of Operation 4-69
  * STORE FACILITY LIST EXTENDED (STFLE)
  */
-#define J9PORT_S390_FEATURE_ESAN3      0 /* STFLE bit 0 */
-#define J9PORT_S390_FEATURE_ZARCH      1 /* STFLE bit 2 */
-#define J9PORT_S390_FEATURE_STFLE      2 /* STFLE bit 7 */
-#define J9PORT_S390_FEATURE_MSA        3 /* STFLE bit 17 */
-#define J9PORT_S390_FEATURE_DFP        6 /* STFLE bit 42 & 44 */
-#define J9PORT_S390_FEATURE_HPAGE      7
-#define J9PORT_S390_FEATURE_TE        10 /* STFLE bit 50 & 73 */
-#define J9PORT_S390_FEATURE_MSA_EXTENSION3                      11 /* STFLE bit 76 */
-#define J9PORT_S390_FEATURE_MSA_EXTENSION4                      12 /* STFLE bit 77 */
-
-#define J9PORT_S390_FEATURE_COMPARE_AND_SWAP_AND_STORE          32 + 0  /* STFLE bit 32 */
-#define J9PORT_S390_FEATURE_COMPARE_AND_SWAP_AND_STORE2         32 + 1  /* STFLE bit 33 */
-#define J9PORT_S390_FEATURE_EXECUTE_EXTENSIONS                  32 + 3  /* STFLE bit 35 */
-#define J9PORT_S390_FEATURE_FPE                                 32 + 9  /* STFLE bit 41 */
-
-#define J9PORT_S390_FEATURE_RI            64 + 0 /* STFLE bit 64 */
-
-/* z990 facilities */
-
-/* STFLE bit 19 - Long-displacement facility */
-#define J9PORT_S390_FEATURE_LONG_DISPLACEMENT 19
-
-/* z9 facilities */
-
-/* STFLE bit 21 - Extended-immediate facility */
-#define J9PORT_S390_FEATURE_EXTENDED_IMMEDIATE 21
-
-/* STFLE bit 22 - Extended-translation facility 3 */
-#define J9PORT_S390_FEATURE_EXTENDED_TRANSLATION_3 22
-
-/* STFLE bit 30 - ETF3-enhancement facility */
-#define J9PORT_S390_FEATURE_ETF3_ENHANCEMENT 30
-
-/* z10 facilities */
-
-/* STFLE bit 34 - General-instructions-extension facility */
-#define J9PORT_S390_FEATURE_GENERAL_INSTRUCTIONS_EXTENSIONS 34
-
-/* z196 facilities */
-
-/* STFLE bit 45 - High-word facility */
-#define J9PORT_S390_FEATURE_HIGH_WORD 45
-
-/* STFLE bit 45 - Load/store-on-condition facility 1 */
-#define J9PORT_S390_FEATURE_LOAD_STORE_ON_CONDITION_1 45
-
-/* zEC12 facilities */
-
-/* STFLE bit 49 - Miscellaneous-instruction-extension facility */
-#define J9PORT_S390_FEATURE_MISCELLANEOUS_INSTRUCTION_EXTENSION 49
-
-/* z13 facilities */
-
-/* STFLE bit 53 - Load/store-on-condition facility 2 */
-#define J9PORT_S390_FEATURE_LOAD_STORE_ON_CONDITION_2 53
-
-/* STFLE bit 53 - Load-and-zero-rightmost-byte facility */
-#define J9PORT_S390_FEATURE_LOAD_AND_ZERO_RIGHTMOST_BYTE 53
-
-/* STFLE bit 129 - Vector facility */
-#define J9PORT_S390_FEATURE_VECTOR_FACILITY 129
 
 /* z14 facilities */
-
-/* STFLE bit 58 - Miscellaneous-instruction-extensions facility 2 */
-#define J9PORT_S390_FEATURE_MISCELLANEOUS_INSTRUCTION_EXTENSION_2 58
-
-/* STFLE bit 59 - Semaphore-assist facility */
-#define J9PORT_S390_FEATURE_SEMAPHORE_ASSIST 59
 
 /* STFLE bit 131 - Side-effect-access facility */
 #define J9PORT_S390_FEATURE_SIDE_EFFECT_ACCESS 131
 
 /* STFLE bit 133 - Guarded-storage facility */
 #define J9PORT_S390_FEATURE_GUARDED_STORAGE 133
-
-/* STFLE bit 134 - Vector packed decimal facility */
-#define J9PORT_S390_FEATURE_VECTOR_PACKED_DECIMAL 134
-
-/* STFLE bit 135 - Vector enhancements facility 1 */
-#define J9PORT_S390_FEATURE_VECTOR_FACILITY_ENHANCEMENT_1 135
-
-/* STFLE bit 146 - Message-security-assist-extension-8 facility */
-#define J9PORT_S390_FEATURE_MSA_EXTENSION_8 146
-
-/* STFLE bit 57 - Message-security-assist-extension-5 facility */
-#define J9PORT_S390_FEATURE_MSA_EXTENSION_5 57
-
-/* z15 facilities */
-
-/* STFLE bit 61 - Miscellaneous-instruction-extensions facility 3 */ 
-#define J9PORT_S390_FEATURE_MISCELLANEOUS_INSTRUCTION_EXTENSION_3 61
-
-/* STFLE bit 148 - Vector enhancements facility 2 */
-#define J9PORT_S390_FEATURE_VECTOR_FACILITY_ENHANCEMENT_2 148
-
-/* STFLE bit 152 - Vector packed decimal enhancement facility */
-#define J9PORT_S390_FEATURE_VECTOR_PACKED_DECIMAL_ENHANCEMENT_FACILITY 152
-
 
 /*  Linux on Z features
  *  Auxiliary Vector Hardware Capability (AT_HWCAP) features for Linux on Z.
