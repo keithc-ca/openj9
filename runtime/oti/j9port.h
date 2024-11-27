@@ -401,45 +401,6 @@ typedef enum J9ProcessorArchitecture {
 
 } J9ProcessorArchitecture;
 
-/* PowerPC features
- * Auxiliary Vector Hardware Capability (AT_HWCAP) features for PowerPC.
- */
-#define J9PORT_PPC_FEATURE_32                    31 /* 32-bit mode.  */
-#define J9PORT_PPC_FEATURE_64                    30 /* 64-bit mode.  */
-#define J9PORT_PPC_FEATURE_601_INSTR             29 /* 601 chip, Old POWER ISA.  */
-#define J9PORT_PPC_FEATURE_HAS_ALTIVEC           28 /* SIMD/Vector Unit.  */
-#define J9PORT_PPC_FEATURE_HAS_FPU               27 /* Floating Point Unit.  */
-#define J9PORT_PPC_FEATURE_HAS_MMU               26 /* Memory Management Unit.  */
-#define J9PORT_PPC_FEATURE_HAS_4xxMAC            25 /* 4xx Multiply Accumulator.  */
-#define J9PORT_PPC_FEATURE_UNIFIED_CACHE         24 /* Unified I/D cache.  */
-#define J9PORT_PPC_FEATURE_HAS_SPE               23 /* Signal Processing ext.  */
-#define J9PORT_PPC_FEATURE_HAS_EFP_SINGLE        22 /* SPE Float.  */
-#define J9PORT_PPC_FEATURE_HAS_EFP_DOUBLE        21 /* SPE Double.  */
-#define J9PORT_PPC_FEATURE_NO_TB                 20 /* 601/403gx have no timebase.  */
-#define J9PORT_PPC_FEATURE_POWER4                19 /* POWER4 ISA 2.01.  */
-#define J9PORT_PPC_FEATURE_POWER5                18 /* POWER5 ISA 2.02.  */
-#define J9PORT_PPC_FEATURE_POWER5_PLUS           17 /* POWER5+ ISA 2.03.  */
-#define J9PORT_PPC_FEATURE_CELL_BE               16 /* CELL Broadband Engine */
-#define J9PORT_PPC_FEATURE_BOOKE                 15 /* ISA Embedded Category.  */
-#define J9PORT_PPC_FEATURE_SMT                   14 /* Simultaneous Multi-Threading.  */
-#define J9PORT_PPC_FEATURE_ICACHE_SNOOP          13
-#define J9PORT_PPC_FEATURE_ARCH_2_05             12 /* ISA 2.05.  */
-#define J9PORT_PPC_FEATURE_PA6T                  11 /* PA Semi 6T Core.  */
-#define J9PORT_PPC_FEATURE_HAS_DFP               10 /* Decimal FP Unit.  */
-#define J9PORT_PPC_FEATURE_POWER6_EXT             9 /* P6 + mffgpr/mftgpr.  */
-#define J9PORT_PPC_FEATURE_ARCH_2_06              8 /* ISA 2.06.  */
-#define J9PORT_PPC_FEATURE_HAS_VSX                7 /* P7 Vector Scalar Extension.  */
-#define J9PORT_PPC_FEATURE_PSERIES_PERFMON_COMPAT 6 /* Has ISA >= 2.05 PMU basic subset support.  */
-#define J9PORT_PPC_FEATURE_TRUE_LE                1 /* Processor in true Little Endian mode.  */
-#define J9PORT_PPC_FEATURE_PPC_LE                 0 /* Processor emulates Little Endian Mode.  */
-
-#define J9PORT_PPC_FEATURE_ARCH_2_07             32 + 31
-#define J9PORT_PPC_FEATURE_HTM                   32 + 30
-#define J9PORT_PPC_FEATURE_DSCR                  32 + 29
-#define J9PORT_PPC_FEATURE_EBB                   32 + 28
-#define J9PORT_PPC_FEATURE_ISEL                  32 + 27
-#define J9PORT_PPC_FEATURE_TAR                   32 + 26
-
 /* s390 features
  * z/Architecture Principles of Operation 4-69
  * STORE FACILITY LIST EXTENDED (STFLE)
