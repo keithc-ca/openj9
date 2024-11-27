@@ -271,10 +271,6 @@ static int32_t getCacheSize(J9PortLibrary *portLibrary, const int32_t cpu, const
 static BOOLEAN testSTFLE(struct J9PortLibrary *portLibrary, uint64_t stfleBit);
 #endif /* defined(S390) || defined(J9ZOS390) || defined(J9ZTPF) */
 
-#if (defined(LINUXPPC) || defined(AIXPPC))
-static J9ProcessorArchitecture mapPPCProcessor(const char *processorName);
-#endif /* (defined(LINUXPPC) || defined(AIXPPC)) */
-
 static int32_t getCacheLevels(struct J9PortLibrary *portLibrary, const int32_t cpu);
 static int32_t getCacheTypes(struct J9PortLibrary *portLibrary, const int32_t cpu, const int32_t level);
 static int32_t getCacheSize(struct J9PortLibrary *portLibrary,
@@ -415,62 +411,6 @@ j9sysinfo_get_processing_capacity(struct J9PortLibrary *portLibrary)
 	return omrsysinfo_get_number_CPUs_by_type(J9PORT_CPU_ONLINE) * 100;
 #endif
 }
-
-#if defined(LINUXPPC)
-/**
- * @internal
- * Maps a PPC processor string to the J9ProcessorArchitecture enum.
- *
- * @param[in] processorName
- *
- * @return A J9ProcessorArchitecture PROCESSOR_PPC_* found otherwise PROCESSOR_PPC_UNKNOWN.
- */
-static J9ProcessorArchitecture
-mapPPCProcessor(const char *processorName)
-{
-	J9ProcessorArchitecture rc = PROCESSOR_PPC_UNKNOWN;
-
-	if (0 == strncasecmp(processorName, "ppc403", 6)) {
-		rc = PROCESSOR_PPC_PWR403;
-	} else if (0 == strncasecmp(processorName, "ppc405", 6)) {
-		rc = PROCESSOR_PPC_PWR405;
-	} else if (0 == strncasecmp(processorName, "ppc440gp", 8)) {
-		rc = PROCESSOR_PPC_PWR440;
-	} else if (0 == strncasecmp(processorName, "ppc601", 6)) {
-		rc = PROCESSOR_PPC_PWR601;
-	} else if (0 == strncasecmp(processorName, "ppc603", 6)) {
-		rc = PROCESSOR_PPC_PWR603;
-	} else if (0 == strncasecmp(processorName, "ppc604", 6)) {
-		rc = PROCESSOR_PPC_PWR604;
-	} else if (0 == strncasecmp(processorName, "ppc7400", 7)) {
-		rc = PROCESSOR_PPC_PWR603;
-	} else if (0 == strncasecmp(processorName, "ppc750", 6)) {
-		rc = PROCESSOR_PPC_7XX;
-	} else if (0 == strncasecmp(processorName, "rs64", 4)) {
-		rc = PROCESSOR_PPC_PULSAR;
-	} else if (0 == strncasecmp(processorName, "ppc970", 6)) {
-		rc = PROCESSOR_PPC_GP;
-	} else if (0 == strncasecmp(processorName, "power3", 6)) {
-		rc = PROCESSOR_PPC_PWR630;
-	} else if (0 == strncasecmp(processorName, "power4", 6)) {
-		rc = PROCESSOR_PPC_GP;
-	} else if (0 == strncasecmp(processorName, "power5", 6)) {
-		rc = PROCESSOR_PPC_GR;
-	} else if (0 == strncasecmp(processorName, "power6", 6)) {
-		rc = PROCESSOR_PPC_P6;
-	} else if (0 == strncasecmp(processorName, "power7", 6)) {
-		rc = PROCESSOR_PPC_P7;
-	} else if (0 == strncasecmp(processorName, "power8", 6)) {
-		rc = PROCESSOR_PPC_P8;
-	} else if (0 == strncasecmp(processorName, "power9", 6)) {
-		rc = PROCESSOR_PPC_P9;
-	} else if (0 == strncasecmp(processorName, "power10", 7)) {
-		rc = PROCESSOR_PPC_P10;
-	}
-
-	return rc;
-}
-#endif /* defined(LINUXPPC) */
 
 #if (defined(S390) || defined(J9ZOS390))
 
