@@ -414,30 +414,6 @@ typedef enum J9ProcessorArchitecture {
 /* STFLE bit 133 - Guarded-storage facility */
 #define J9PORT_S390_FEATURE_GUARDED_STORAGE 133
 
-/*  Linux on Z features
- *  Auxiliary Vector Hardware Capability (AT_HWCAP) features for Linux on Z.
- *  Obtained from: https://github.com/torvalds/linux/blob/050cdc6c9501abcd64720b8cc3e7941efee9547d/arch/s390/include/asm/elf.h#L94-L109.
- *  If new facility support is required, then it must be defined there (and here), before we can check for it consistently.
- *
- *  The linux kernel will use the defines in the above link to set HWCAP features. This is done inside "setup_hwcaps(void)" routine found
- *  in arch/s390/kernel/setup.c in the linux kernel source tree.
- */
-#define J9PORT_HWCAP_S390_ESAN3     0x1
-#define J9PORT_HWCAP_S390_ZARCH     0x2
-#define J9PORT_HWCAP_S390_STFLE     0x4
-#define J9PORT_HWCAP_S390_MSA       0x8
-#define J9PORT_HWCAP_S390_LDISP     0x10
-#define J9PORT_HWCAP_S390_EIMM      0x20
-#define J9PORT_HWCAP_S390_DFP       0x40
-#define J9PORT_HWCAP_S390_HPAGE     0x80
-#define J9PORT_HWCAP_S390_ETF3EH    0x100
-#define J9PORT_HWCAP_S390_HIGH_GPRS 0x200
-#define J9PORT_HWCAP_S390_TE        0x400
-#define J9PORT_HWCAP_S390_VXRS      0x800
-#define J9PORT_HWCAP_S390_VXRS_BCD  0x1000
-#define J9PORT_HWCAP_S390_VXRS_EXT  0x2000
-#define J9PORT_HWCAP_S390_GS        0x4000
-
 /* x86 features
  * INTEL INSTRUCTION SET REFERENCE, A-M
  * 3-170 Vol. 2A Table 3-21. More on Feature Information Returned in the EDX Register
