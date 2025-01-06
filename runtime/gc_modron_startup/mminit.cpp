@@ -3038,7 +3038,7 @@ gcInitializeDefaults(J9JavaVM* vm)
 		if (LOADED == (FIND_DLL_TABLE_ENTRY(J9_JIT_DLL_NAME)->loadFlags & LOADED)) {
 			/* Check for supported hardware. */
 			OMRPORT_ACCESS_FROM_J9PORT(PORTLIB);
-			OMRProcessorDesc  processorDesc;
+			OMRProcessorDesc processorDesc;
 			omrsysinfo_get_processor_description(&processorDesc);
 			bool hwSupported = omrsysinfo_processor_has_feature(&processorDesc, OMR_FEATURE_S390_GUARDED_STORAGE)
 							&& omrsysinfo_processor_has_feature(&processorDesc, OMR_FEATURE_S390_SIDE_EFFECT_ACCESS);

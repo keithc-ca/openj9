@@ -937,9 +937,9 @@ Java_jdk_internal_misc_Unsafe_isWritebackEnabled(JNIEnv *env, jclass clazz)
 	J9JavaVM *vm = currentThread->javaVM;
 	if (vm->dCacheLineSize > 0) {
 		switch (vm->cpuCacheWritebackCapabilities) {
-		case OMR_FEATURE_X86_CLWB:
 		case OMR_FEATURE_X86_CLFLUSHOPT:
 		case OMR_FEATURE_X86_CLFSH:
+		case OMR_FEATURE_X86_CLWB:
 			result = JNI_TRUE;
 			break;
 		default:

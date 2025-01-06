@@ -45,7 +45,7 @@
  * @return the classpathSeparator character.
  */
 uint16_t
-j9sysinfo_get_classpathSeparator(struct J9PortLibrary *portLibrary )
+j9sysinfo_get_classpathSeparator(struct J9PortLibrary *portLibrary)
 {
 	return ';';
 }
@@ -161,22 +161,23 @@ j9sysinfo_get_hw_info(struct J9PortLibrary *portLibrary, uint32_t infoType,
  * @param [in]  cacheType which type of cache level to query.
  * @return cache descriptor
  */
-static CACHE_DESCRIPTOR const*
+static CACHE_DESCRIPTOR const *
 findCacheForTypeAndLevel(struct J9PortLibrary *portLibrary,
 	SYSTEM_LOGICAL_PROCESSOR_INFORMATION *procInfoPtr,
-	uint32_t procInfoLength, int32_t const cacheLevel,  const int32_t cacheType)
+	uint32_t procInfoLength, int32_t const cacheLevel, const int32_t cacheType)
 {
 	SYSTEM_LOGICAL_PROCESSOR_INFORMATION *cursor = procInfoPtr;
 	CACHE_DESCRIPTOR *cacheDesc = NULL;
-	SYSTEM_LOGICAL_PROCESSOR_INFORMATION *endInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *) (((U_8 *) procInfoPtr) + procInfoLength);
+	SYSTEM_LOGICAL_PROCESSOR_INFORMATION *endInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)(((U_8 *)procInfoPtr) + procInfoLength);
 
-	while ((NULL == cacheDesc)  && (cursor < endInfo)) {
+	while ((NULL == cacheDesc) && (cursor < endInfo)) {
 		CACHE_DESCRIPTOR *temp = &(cursor->Cache);
 		if ((temp->Level == cacheLevel) && (temp->LineSize > 0)) {
 			switch (temp->Type)  {
 			case CacheUnified: {
 				if (J9_ARE_ANY_BITS_SET(cacheType,
-					J9PORT_CACHEINFO_DCACHE | J9PORT_CACHEINFO_ICACHE | J9PORT_CACHEINFO_UCACHE)) {
+					J9PORT_CACHEINFO_DCACHE | J9PORT_CACHEINFO_ICACHE | J9PORT_CACHEINFO_UCACHE)
+				) {
 					cacheDesc = temp;
 				}
 				break;
@@ -221,7 +222,7 @@ getCacheTypes(struct J9PortLibrary *portLibrary, SYSTEM_LOGICAL_PROCESSOR_INFORM
 {
 	SYSTEM_LOGICAL_PROCESSOR_INFORMATION *cursor = procInfoPtr;
 	uint32_t result = 0;
-	SYSTEM_LOGICAL_PROCESSOR_INFORMATION *endInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *) (((U_8 *) procInfoPtr) + procInfoLength);
+	SYSTEM_LOGICAL_PROCESSOR_INFORMATION *endInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)(((U_8 *)procInfoPtr) + procInfoLength);
 
 	while (cursor < endInfo) {
 		CACHE_DESCRIPTOR *temp = &(cursor->Cache);
@@ -267,7 +268,7 @@ getCacheLevels(struct J9PortLibrary *portLibrary, SYSTEM_LOGICAL_PROCESSOR_INFOR
 {
 	SYSTEM_LOGICAL_PROCESSOR_INFORMATION *cursor = procInfoPtr;
 	uint32_t result = 0;
-	SYSTEM_LOGICAL_PROCESSOR_INFORMATION *endInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *) (((U_8 *) procInfoPtr) + procInfoLength);
+	SYSTEM_LOGICAL_PROCESSOR_INFORMATION *endInfo = (SYSTEM_LOGICAL_PROCESSOR_INFORMATION *)(((U_8 *)procInfoPtr) + procInfoLength);
 
 	while (cursor < endInfo) {
 		CACHE_DESCRIPTOR *temp = &(cursor->Cache);
@@ -280,7 +281,7 @@ getCacheLevels(struct J9PortLibrary *portLibrary, SYSTEM_LOGICAL_PROCESSOR_INFOR
 }
 
 int32_t
-j9sysinfo_get_cache_info(struct J9PortLibrary *portLibrary, const J9CacheInfoQuery * query)
+j9sysinfo_get_cache_info(struct J9PortLibrary *portLibrary, const J9CacheInfoQuery *query)
 {
 	OMRPORT_ACCESS_FROM_J9PORT(portLibrary);
 	int32_t result = J9PORT_ERROR_SYSINFO_NOT_SUPPORTED;
@@ -289,15 +290,17 @@ j9sysinfo_get_cache_info(struct J9PortLibrary *portLibrary, const J9CacheInfoQue
 	DWORD procInfoLength = sizeof(procInfoBuff);
 
 	Trc_PRT_sysinfo_get_cache_info_enter(query->cmd, query->cpu, query->level, query->cacheType);
-	if ((1 == query->level) && J9_ARE_ANY_BITS_SET(query->cacheType, J9PORT_CACHEINFO_DCACHE) &&
-		(J9PORT_CACHEINFO_QUERY_LINESIZE == query->cmd) && (PPG_sysL1DCacheLineSize > 0)) {
+	if ((1 == query->level)
+		&& J9_ARE_ANY_BITS_SET(query->cacheType, J9PORT_CACHEINFO_DCACHE)
+		&& (J9PORT_CACHEINFO_QUERY_LINESIZE == query->cmd) && (PPG_sysL1DCacheLineSize > 0)
+	) {
 		return PPG_sysL1DCacheLineSize;
 	}
 	if (!GetLogicalProcessorInformation(
 		procInfoPtr,
 		&procInfoLength)
 		&& (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
-		) {
+	) {
 		procInfoPtr = omrmem_allocate_memory(procInfoLength, OMRMEM_CATEGORY_PORT_LIBRARY);
 		Trc_PRT_sysinfo_get_cache_info_allocate(procInfoLength);
 
@@ -307,7 +310,7 @@ j9sysinfo_get_cache_info(struct J9PortLibrary *portLibrary, const J9CacheInfoQue
 		if (!GetLogicalProcessorInformation(
 			procInfoPtr,
 			&procInfoLength)
-			) {
+		) {
 			if (procInfoBuff != procInfoPtr) {
 				omrmem_free_memory(procInfoPtr);
 			}
@@ -317,7 +320,7 @@ j9sysinfo_get_cache_info(struct J9PortLibrary *portLibrary, const J9CacheInfoQue
 
 	switch (query->cmd) {
 	case J9PORT_CACHEINFO_QUERY_LINESIZE: {
-		CACHE_DESCRIPTOR const* cacheDesc = findCacheForTypeAndLevel(portLibrary,
+		CACHE_DESCRIPTOR const *cacheDesc = findCacheForTypeAndLevel(portLibrary,
 			procInfoPtr,
 			procInfoLength,
 			query->level,
@@ -328,7 +331,7 @@ j9sysinfo_get_cache_info(struct J9PortLibrary *portLibrary, const J9CacheInfoQue
 	}
 	break;
 	case J9PORT_CACHEINFO_QUERY_CACHESIZE: {
-		CACHE_DESCRIPTOR const* cacheDesc = findCacheForTypeAndLevel(portLibrary, procInfoPtr, procInfoLength,
+		CACHE_DESCRIPTOR const *cacheDesc = findCacheForTypeAndLevel(portLibrary, procInfoPtr, procInfoLength,
 			query->level,
 			query->cacheType);
 		if (NULL != cacheDesc) {
@@ -349,8 +352,10 @@ j9sysinfo_get_cache_info(struct J9PortLibrary *portLibrary, const J9CacheInfoQue
 	if (procInfoBuff != procInfoPtr) {
 		omrmem_free_memory(procInfoPtr);
 	}
-	if ((1 == query->level) && J9_ARE_ANY_BITS_SET(query->cacheType, J9PORT_CACHEINFO_DCACHE) &&
-		(J9PORT_CACHEINFO_QUERY_LINESIZE == query->cmd)) {
+	if ((1 == query->level)
+		&& J9_ARE_ANY_BITS_SET(query->cacheType, J9PORT_CACHEINFO_DCACHE)
+		&& (J9PORT_CACHEINFO_QUERY_LINESIZE == query->cmd)
+	) {
 		PPG_sysL1DCacheLineSize = result;
 	}
 	Trc_PRT_sysinfo_get_cache_info_exit(result);

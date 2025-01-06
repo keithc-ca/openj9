@@ -33,7 +33,4 @@
 extern void
 getX86CPUID(uint32_t leaf, uint32_t *cpuInfo);
 
-extern void
-getX86CPUIDext(uint32_t leaf, uint32_t subleaf, uint32_t *cpuInfo);
-
 #endif /* SYSINFOHELPERS_H_ */
