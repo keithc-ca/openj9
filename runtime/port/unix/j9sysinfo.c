@@ -1047,7 +1047,7 @@ j9sysinfo_get_cache_info(struct J9PortLibrary *portLibrary, const J9CacheInfoQue
 			result = 64;
 		}
 	}
-#endif /* defined(OSX) *?
+#endif /* defined(OSX) */
 	Trc_PRT_sysinfo_get_cache_info_exit(result);
 	return result;
 }
