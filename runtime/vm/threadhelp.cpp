@@ -107,7 +107,7 @@ monitorWaitImpl(J9VMThread *vmThread, j9object_t object, I_64 millis, I_32 nanos
 		J9VMTHREAD_SET_BLOCKINGENTEROBJECT(vmThread, vmThread, object);
 		object = NULL;
 		/* Set j.l.Thread status to WAITING. */
-		U_64 oldState = J9_ARE_ANY_BITS_SET(thrstate, J9_PUBLIC_FLAGS_THREAD_TIMED)
+		U_32 oldState = J9_ARE_ANY_BITS_SET(thrstate, J9_PUBLIC_FLAGS_THREAD_TIMED)
 				? VM_VMHelpers::setThreadState(vmThread, J9VMTHREAD_STATE_WAITING_TIMED)
 				: VM_VMHelpers::setThreadState(vmThread, J9VMTHREAD_STATE_WAITING);
 		internalReleaseVMAccessSetStatus(vmThread, thrstate);
@@ -186,7 +186,7 @@ threadSleepImpl(J9VMThread *vmThread, I_64 millis, I_32 nanos)
 		if (0 == rc) {
 			TRIGGER_J9HOOK_VM_SLEEP(javaVM->hookInterface, vmThread, millis, nanos);
 			/* Set j.l.Thread status to SLEEPING. */
-			U_64 oldState = VM_VMHelpers::setThreadState(vmThread, J9VMTHREAD_STATE_SLEEPING);
+			U_32 oldState = VM_VMHelpers::setThreadState(vmThread, J9VMTHREAD_STATE_SLEEPING);
 			internalReleaseVMAccessSetStatus(vmThread, J9_PUBLIC_FLAGS_THREAD_SLEEPING);
 			rc = timeCompensationHelper(vmThread, HELPER_TYPE_THREAD_SLEEP, NULL, millis, nanos);
 			internalAcquireVMAccessClearStatus(vmThread, J9_PUBLIC_FLAGS_THREAD_SLEEPING);

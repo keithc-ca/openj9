@@ -2276,11 +2276,10 @@ exit:
 		indicateAsyncMessagePending(targetThread);
 	}
 
-
-	static U_64
-	setThreadState(J9VMThread *currentThread, U_64 state)
+	static U_32
+	setThreadState(J9VMThread *currentThread, U_32 state)
 	{
-		U_64 oldState = 0;
+		U_32 oldState = 0;
 #if JAVA_SPEC_VERSION >= 19
 		j9object_t receiverObject = currentThread->carrierThreadObject;
 		if (NULL != receiverObject) {
