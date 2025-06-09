@@ -547,62 +547,71 @@ JCL_OnUnload(J9JavaVM *vm, void *reserved)
 }
 
 IDATA
-checkJCL(J9VMThread *vmThread, U_8 *dllValue, U_8 *jclConfig, UDATA j9Version, UDATA jclVersion)
+checkJCL(J9VMThread *vmThread, const U_8 *dllValue, const U_8 *jclConfig, U_32 j9Version, U_32 jclVersion)
 {
-	J9JavaVM * vm = vmThread->javaVM;
+	J9JavaVM *vm = vmThread->javaVM;
 	PORT_ACCESS_FROM_JAVAVM(vm);
-	char jclName[9];
-	UDATA j9V, jclV;
+	U_32 j9V = 0;
+	U_32 jclV = 0;
 
-	/* If jclConfig is NULL or jclVersion is -1, then we didn't find the fields in java.lang.Class. Make sure the dllValue and jclConfig match. */
-	if ((jclConfig == NULL) || (jclVersion == (UDATA)-1) || (memcmp(jclConfig, dllValue, 8))) {
-		/* Incompatible class library */
+	/* If jclConfig is NULL or jclVersion is -1, then we didn't find the fields
+	 * in java.lang.Class. Make sure the dllValue and jclConfig match.
+	 * */
+	if ((NULL == jclConfig) || (0 == ~jclVersion) || (0 != memcmp(jclConfig, dllValue, 8))) {
+		/* Incompatible class library. */
 		j9nls_printf(PORTLIB, J9NLS_ERROR | J9NLS_BEGIN_MULTI_LINE, J9NLS_JCL_INCOMPATIBLE_CL);
-		if (jclConfig != NULL) {
-#ifdef J9VM_ENV_LITTLE_ENDIAN
-			jclName [0] = jclConfig[7];
-			jclName [1] = jclConfig[6];
-			jclName [2] = jclConfig[5];
-			jclName [3] = jclConfig[4];
-			jclName [4] = jclConfig[3];
-			jclName [5] = jclConfig[2];
-			jclName [6] = jclConfig[1];
-			jclName [7] = jclConfig[0];
-#else
-			jclName [0] = jclConfig[0];
-			jclName [1] = jclConfig[1];
-			jclName [2] = jclConfig[2];
-			jclName [3] = jclConfig[3];
-			jclName [4] = jclConfig[4];
-			jclName [5] = jclConfig[5];
-			jclName [6] = jclConfig[6];
-			jclName [7] = jclConfig[7];
-#endif
-			jclName [8] = '\0';
-			/* Try running with -jcl:%s */
-			j9nls_printf(PORTLIB, J9NLS_INFO | J9NLS_END_MULTI_LINE, J9NLS_JCL_TRY_JCL, jclName);
-			return 2;
-		} else {
+		if (NULL == jclConfig) {
 			/* Try running with -jcl:%s */
 			j9nls_printf(PORTLIB, J9NLS_INFO | J9NLS_END_MULTI_LINE, J9NLS_JCL_NOTJ9);
 			return 1;
+		} else {
+			char jclName[9];
+#if defined(J9VM_ENV_LITTLE_ENDIAN)
+			jclName[0] = jclConfig[7];
+			jclName[1] = jclConfig[6];
+			jclName[2] = jclConfig[5];
+			jclName[3] = jclConfig[4];
+			jclName[4] = jclConfig[3];
+			jclName[5] = jclConfig[2];
+			jclName[6] = jclConfig[1];
+			jclName[7] = jclConfig[0];
+#else /* defined(J9VM_ENV_LITTLE_ENDIAN) */
+			jclName[0] = jclConfig[0];
+			jclName[1] = jclConfig[1];
+			jclName[2] = jclConfig[2];
+			jclName[3] = jclConfig[3];
+			jclName[4] = jclConfig[4];
+			jclName[5] = jclConfig[5];
+			jclName[6] = jclConfig[6];
+			jclName[7] = jclConfig[7];
+#endif /* defined(J9VM_ENV_LITTLE_ENDIAN) */
+			jclName[8] = '\0';
+			/* Try running with -jcl:%s */
+			j9nls_printf(PORTLIB, J9NLS_INFO | J9NLS_END_MULTI_LINE, J9NLS_JCL_TRY_JCL, jclName);
+			return 2;
 		}
 	}
 
-	/* Last, compare the versions */
-	if((jclV = jclVersion & 0xffff) != (j9V = j9Version & 0xffff)) {
-		/* Incompatible class library version: JCL %x, VM %x */
+	/* Last, compare the versions. */
+	jclV = jclVersion & 0xffff;
+	j9V = j9Version & 0xffff;
+	if (jclV != j9V) {
+		/* Incompatible class library version: JCL %x, VM %x. */
 		j9nls_printf(PORTLIB, J9NLS_ERROR, J9NLS_JCL_INCOMPATIBLE_CL_VERSION, jclV, j9V);
 		return 3;
 	}
-	if((jclV = jclVersion & 0xff0000) < (j9V = j9Version & 0xff0000)) {
-		/* Incompatible class library version: expected JCL v%i, found v%i */
-		j9nls_printf(PORTLIB, J9NLS_ERROR, J9NLS_JCL_INCOMPATIBLE_CL_VERSION_JCL, j9V >> 16, jclV >> 16);
+	jclV = (jclVersion >> 16) & 0xff;
+	j9V = (j9Version >> 16) & 0xff;
+	if (jclV != j9V) {
+		/* Incompatible class library version: expected JCL v%i, found v%i. */
+		j9nls_printf(PORTLIB, J9NLS_ERROR, J9NLS_JCL_INCOMPATIBLE_CL_VERSION_JCL, j9V, jclV);
 		return 4;
 	}
-	if((jclV = jclVersion & 0xff000000) > (j9V = j9Version & 0xff000000)) {
-		/* Incompatible class library version: requires VM v%i, found v%i */
-		j9nls_printf(PORTLIB, J9NLS_ERROR, J9NLS_JCL_INCOMPATIBLE_CL_VERSION_VM, jclV >> 24, j9V >> 24);
+	jclV = (jclVersion >> 24) & 0xff;
+	j9V = (j9Version >> 24) & 0xff;
+	if (jclV != j9V) {
+		/* Incompatible class library version: requires VM v%i, found v%i. */
+		j9nls_printf(PORTLIB, J9NLS_ERROR, J9NLS_JCL_INCOMPATIBLE_CL_VERSION_VM, jclV, j9V);
 		return 5;
 	}
 

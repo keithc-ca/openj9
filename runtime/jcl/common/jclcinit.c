@@ -46,18 +46,14 @@
 
 /* The vm version which must match the JCL.
  * It has the format 0xAABBCCCC
- *	AA - vm version, BB - jcl version, CCCC - main version
+ * AA - vm version, BB - jcl version, CCCC - main version
  * CCCC must match exactly with the JCL
  * Up the vm version (AA) when adding natives
  * BB is the required level of JCL to run the vm
  */
 #define JCL_VERSION 0x06040270
 
-extern void *jclConfig;
-
-static UDATA
-doJCLCheck(J9JavaVM *vm, J9Class *j9VMInternalsClass);
-
+extern const U_64 jclConfig;
 
 /*
 	Calculate the value for java.vm.info (and java.fullversion) system/vm properties.
@@ -357,30 +353,42 @@ jint initializeKnownClasses(J9JavaVM* vm, U_32 runtimeFlags)
 	return JNI_OK;
 }
 
-
 static UDATA
 doJCLCheck(J9JavaVM *vm, J9Class *j9VMInternalsClass)
 {
 	J9VMThread *vmThread = vm->mainThread;
 	J9InternalVMFunctions *vmFuncs = vm->internalVMFunctions;
-	J9ROMStaticFieldShape *jclField;
-	U_8 *cConfigPtr;
-	U_8 *jclConfigPtr = NULL;
-	UDATA jclVersion = -1;
+	J9ROMStaticFieldShape *jclField = NULL;
+	const U_8 *cConfigPtr = (const U_8 *)&jclConfig; /* the jcl specified by the DLL */
+	const U_8 *jclConfigPtr = NULL;
+	U_32 jclVersion = ~(U_32)0;
 
 	/* get the jcl specified by the class library (i.e. java.lang.J9VMInternals) */
-	vmFuncs->staticFieldAddress(vmThread, j9VMInternalsClass, (U_8*)"j9Config", sizeof("j9Config") - 1, (U_8*)"J", 1, NULL, (UDATA *)&jclField, J9_RESOLVE_FLAG_NO_THROW_ON_FAIL, NULL);
-	if (jclField != NULL) {
-		jclConfigPtr = (U_8 *)&jclField->initialValue;
+	vmFuncs->staticFieldAddress(
+			vmThread,
+			j9VMInternalsClass,
+			(U_8 *)"j9Config", LITERAL_STRLEN("j9Config"),
+			(U_8 *)"J", LITERAL_STRLEN("J"),
+			NULL,
+			(UDATA *)&jclField,
+			J9_RESOLVE_FLAG_NO_THROW_ON_FAIL,
+			NULL);
+	if (NULL != jclField) {
+		jclConfigPtr = (const U_8 *)&jclField->initialValue;
 		/* get the jcl version from the class library (i.e. java.lang.J9VMInternals) */
-		vmFuncs->staticFieldAddress(vmThread, j9VMInternalsClass, (U_8*)"j9Version", sizeof("j9Version") - 1, (U_8*)"I", 1, NULL, (UDATA *)&jclField, J9_RESOLVE_FLAG_NO_THROW_ON_FAIL, NULL);
-		if (jclField != NULL) {
+		vmFuncs->staticFieldAddress(
+				vmThread,
+				j9VMInternalsClass,
+				(U_8 *)"j9Version", LITERAL_STRLEN("j9Version"),
+				(U_8 *)"I", LITERAL_STRLEN("I"),
+				NULL,
+				(UDATA *)&jclField,
+				J9_RESOLVE_FLAG_NO_THROW_ON_FAIL,
+				NULL);
+		if (NULL != jclField) {
 			jclVersion = jclField->initialValue;
 		}
 	}
-
-	/* get the jcl specified by the DLL */
-	cConfigPtr = (U_8 *)&jclConfig;
 
 	/* check the values and report any errors */
 	return checkJCL(vmThread, cConfigPtr, jclConfigPtr, JCL_VERSION, jclVersion);

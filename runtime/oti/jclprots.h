@@ -767,7 +767,7 @@ jint JCL_OnUnload (J9JavaVM* vm, void* reserved);
 jint standardPreconfigure ( JavaVM *jvm);
 void
 internalInitializeJavaLangClassLoader (JNIEnv * env);
-IDATA checkJCL (J9VMThread * vmThread, U_8* dllValue, U_8* jclConfig, UDATA j9Version, UDATA jclVersion);
+IDATA checkJCL(J9VMThread *vmThread, const U_8 *dllValue, const U_8 *jclConfig, U_32 j9Version, U_32 jclVersion);
 jint
 completeInitialization (J9JavaVM * vm);
 jint standardInit ( J9JavaVM *vm, char* dllName);

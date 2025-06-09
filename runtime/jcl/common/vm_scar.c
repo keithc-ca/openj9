@@ -83,7 +83,7 @@ char *iniBootpath = NULL;
 
 #endif
 
-const U_64 jclConfig = J9CONST64(0x7363617237306200);		/* 'scar70b' */
+const U_64 jclConfig = J9CONST64(0x7363617237306200); /* 'scar70b' */
 
 #if defined(WIN32)
 #define J9_AWTPRINTERJOB_VALUE	"sun.awt.windows.WPrinterJob"
