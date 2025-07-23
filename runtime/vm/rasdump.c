@@ -47,20 +47,24 @@
 
 #define RAS_NETWORK_WARNING_TIME 60000
 
-static omr_error_t primordialTriggerDumpAgents (struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags, struct J9RASdumpEventData *eventData);
-static omr_error_t primordialSeekDumpAgent (struct J9JavaVM *vm, struct J9RASdumpAgent **agentPtr, J9RASdumpFn dumpFn);
-static omr_error_t primordialInsertDumpAgent (struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+static omr_error_t primordialTriggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags, struct J9RASdumpEventData *eventData);
+static omr_error_t primordialSeekDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent **agentPtr, J9RASdumpFn dumpFn);
+static omr_error_t primordialInsertDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
 static omr_error_t primordialTriggerOneOffDump(struct J9JavaVM *vm, char *optionString, char *caller, char *fileName, size_t fileNameLength);
-static omr_error_t primordialSetDumpOption (struct J9JavaVM *vm, char *optionString);
-static omr_error_t primordialResetDumpOption (struct J9JavaVM *vm);
-static omr_error_t primordialRemoveDumpAgent (struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
-static omr_error_t primordialQueryVmDump(struct J9JavaVM *vm, int buffer_size, void* options_buffer, int* data_size);
+static omr_error_t primordialSetDumpOption(struct J9JavaVM *vm, char *optionString);
+static omr_error_t primordialResetDumpOption(struct J9JavaVM *vm);
+static omr_error_t primordialRemoveDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+static omr_error_t primordialQueryVmDump(struct J9JavaVM *vm, int buffer_size, void *options_buffer, int *data_size);
+static omr_error_t primordialValidateIEATDumpSettings(struct J9JavaVM *vm, char **badLabels);
+#if defined(J9VM_OPT_CRIU_SUPPORT)
+static IDATA primordialCriuReloadXDumpAgents(struct J9JavaVM *vm, struct J9VMInitArgs *j9vm_args);
+#endif /* defined(J9VM_OPT_CRIU_SUPPORT) */
 
-void J9RASInitialize (J9JavaVM* javaVM);
-void J9RASShutdown (J9JavaVM* javaVM);
-void J9RASCheckDump(J9JavaVM* javaVM);
+void J9RASInitialize(J9JavaVM *javaVM);
+void J9RASShutdown(J9JavaVM *javaVM);
+void J9RASCheckDump(J9JavaVM *javaVM);
 void populateRASNetData (J9JavaVM *javaVM, J9RAS *rasStruct);
-static J9RAS* allocateRASStruct(J9JavaVM *javaVM);
+static J9RAS *allocateRASStruct(J9JavaVM *javaVM);
 
 JNIEXPORT struct {
 	union {
@@ -85,7 +89,11 @@ primordialDumpFacade = {
 	primordialTriggerDumpAgents,
 	primordialSetDumpOption,
 	primordialResetDumpOption,
-	primordialQueryVmDump
+	primordialQueryVmDump,
+	primordialValidateIEATDumpSettings,
+#if defined(J9VM_OPT_CRIU_SUPPORT)
+	primordialCriuReloadXDumpAgents,
+#endif /* defined(J9VM_OPT_CRIU_SUPPORT) */
 };
 
 static omr_error_t
@@ -93,7 +101,7 @@ primordialTriggerOneOffDump(struct J9JavaVM *vm, char *optionString, char *calle
 {
 	PORT_ACCESS_FROM_JAVAVM(vm);
 
-	if (strcmp(optionString, "console") == 0 ) {
+	if (0 == strcmp(optionString, "console")) {
 		printThreadInfo(vm, currentVMThread(vm), NULL, TRUE);
 	} else {
 		j9nls_printf(PORTLIB, J9NLS_WARNING, J9NLS_VM_MISSING_DUMP_DLL_TRIGGERONEOFFDUMP, optionString, J9_RAS_DUMP_DLL_NAME);
@@ -136,8 +144,8 @@ static omr_error_t
 primordialTriggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags, struct J9RASdumpEventData *eventData)
 {
 	UDATA state = 0;
-	 
-	if (!self){
+
+	if (NULL == self) {
 		/* ensure that this thread is attached to the VM */
 		JavaVMAttachArgs attachArgs;
 
@@ -148,14 +156,14 @@ primordialTriggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA 
 		vm->internalVMFunctions->AttachCurrentThreadAsDaemon((JavaVM *)vm, (void **)&self, &attachArgs);
 		state = PRIMORDIAL_DUMP_ATTACHED_THREAD;
 	}
-	
-	if ( (eventFlags & J9RAS_DUMP_ON_GP_FAULT) ) {
+
+	if (J9_ARE_ANY_BITS_SET(eventFlags, J9RAS_DUMP_ON_GP_FAULT)) {
 		gpThreadDump( vm, self );
-	} else if ( (eventFlags & J9RAS_DUMP_ON_USER_SIGNAL) ) {
+	} else if (J9_ARE_ANY_BITS_SET(eventFlags, J9RAS_DUMP_ON_USER_SIGNAL)) {
 		printThreadInfo(vm, self, NULL, TRUE);
 	}
-	
-	if (state & PRIMORDIAL_DUMP_ATTACHED_THREAD) {
+
+	if (J9_ARE_ANY_BITS_SET(state, PRIMORDIAL_DUMP_ATTACHED_THREAD)) {
 		/* if the thread was attached in this function, detach it */
 		(*((JavaVM *)vm))->DetachCurrentThread((JavaVM *)vm);
 	}
@@ -184,12 +192,12 @@ primordialResetDumpOption(struct J9JavaVM *vm)
 }
 
 static omr_error_t
-primordialQueryVmDump(struct J9JavaVM *vm, int buffer_size, void* options_buffer, int* data_size)
+primordialQueryVmDump(struct J9JavaVM *vm, int buffer_size, void *options_buffer, int *data_size)
 {
 	PORT_ACCESS_FROM_JAVAVM(vm);
 
 	j9nls_printf(PORTLIB, J9NLS_WARNING, J9NLS_VM_MISSING_DUMP_DLL_QUERYVMDUMP, J9_RAS_DUMP_DLL_NAME);
-	
+
 	/* set data_size to zero and don't update the buffer */
 	if (NULL != data_size) {
 		*data_size = 0;
@@ -198,7 +206,31 @@ primordialQueryVmDump(struct J9JavaVM *vm, int buffer_size, void* options_buffer
 	return OMR_ERROR_NONE;
 }
 
-IDATA 
+static omr_error_t
+primordialValidateIEATDumpSettings(struct J9JavaVM *vm, char **badLabels)
+{
+	PORT_ACCESS_FROM_JAVAVM(vm);
+
+	j9nls_printf(PORTLIB, J9NLS_WARNING, J9NLS_VM_MISSING_DUMP_DLL_VALIDATE_IEATDUMP, J9_RAS_DUMP_DLL_NAME);
+
+	if (NULL != badLabels) {
+		*badLabels = NULL;
+	}
+
+	return OMR_ERROR_NONE;
+}
+
+static IDATA
+primordialCriuReloadXDumpAgents(struct J9JavaVM *vm, struct J9VMInitArgs *j9vm_args)
+{
+	PORT_ACCESS_FROM_JAVAVM(vm);
+
+	j9nls_printf(PORTLIB, J9NLS_WARNING, J9NLS_VM_MISSING_DUMP_DLL_CRIU_RELOAD_AGENTS, J9_RAS_DUMP_DLL_NAME);
+
+	return 0;
+}
+
+IDATA
 gpThreadDump(struct J9JavaVM *vm, struct J9VMThread *currentThread)
 {
 	/* basic thread dump code copied (almost) verbatim from gphandle.c ... */
@@ -209,20 +241,20 @@ gpThreadDump(struct J9JavaVM *vm, struct J9VMThread *currentThread)
 	U_32 numThreadsDumped = 0;
 
 	/* should dump all VMs in multi-VM */
-	if (vm) {
+	if (NULL != vm) {
 		firstThread = currentThread;
-		if (firstThread == NULL) {
+		if (NULL == firstThread) {
 			firstThread = vm->mainThread;
 		} else {
 			gpThread = 1;
 		}
 	}
 
-	if (firstThread) {
+	if (NULL != firstThread) {
 		PORT_ACCESS_FROM_PORT(vm->portLibrary);
 		currentThread = firstThread;
 		do {
-			if (currentThread->threadObject) {
+			if (NULL != currentThread->threadObject) {
 				j9object_t threadObject = currentThread->threadObject;
 #if JAVA_SPEC_VERSION >= 19
 				UDATA priority = 0;
@@ -236,7 +268,7 @@ gpThreadDump(struct J9JavaVM *vm, struct J9VMThread *currentThread)
 				UDATA priority = vm->internalVMFunctions->getJavaThreadPriority(vm, currentThread);
 				UDATA isDaemon = J9VMJAVALANGTHREAD_ISDAEMON(currentThread, threadObject);
 #endif /* JAVA_SPEC_VERSION >= 19 */
-				char* name = getOMRVMThreadName(currentThread->omrVMThread);
+				char *name = getOMRVMThreadName(currentThread->omrVMThread);
 
 				j9tty_printf(
 					PORTLIB,
@@ -253,8 +285,8 @@ gpThreadDump(struct J9JavaVM *vm, struct J9VMThread *currentThread)
 			dumpStackTrace(currentThread);
 			gpThread = 0;
 			currentThread = currentThread->linkNext;
-			numThreadsDumped ++;
-		} while (currentThread != firstThread && numThreadsDumped <= numThreads);
+			numThreadsDumped += 1;
+		} while ((currentThread != firstThread) && (numThreadsDumped <= numThreads));
 	}
 
 	return JNI_OK;
@@ -270,7 +302,7 @@ configureRasDump(J9JavaVM *vm)
 }
 
 void
-J9RASInitialize(J9JavaVM* javaVM)
+J9RASInitialize(J9JavaVM *javaVM)
 {
 #if defined(OSX)
 	char **environ = *_NSGetEnviron();
@@ -285,7 +317,7 @@ J9RASInitialize(J9JavaVM* javaVM)
 	J9RAS *rasStruct = allocateRASStruct(javaVM);
 
 	memset(rasStruct, 0, sizeof(J9RAS));
-	strcpy((char*)rasStruct->eyecatcher, "J9VMRAS");
+	strcpy((char *)rasStruct->eyecatcher, "J9VMRAS");
 	rasStruct->bitpattern1 = 0xaa55aa55;
 	rasStruct->bitpattern2 = 0xaa55aa55;
 	rasStruct->version = J9RASVersion;
@@ -302,11 +334,11 @@ J9RASInitialize(J9JavaVM* javaVM)
 	/* provide a link to the C runtime provided list of environment variables */
 #if defined(WIN32) || defined(WIN64)
 	rasStruct->environment = GetEnvironmentStringsA();
-#elif defined(J9ZTPF)
+#elif defined(J9ZTPF) /* defined(WIN32) || defined(WIN64) */
 	/* z/TPF will not dump static storage so use malloc. */
 	rasStruct->environment = j9mem_allocate_memory32(sizeof(void *), J9MEM_CATEGORY_VM);
 	*((char ***)(rasStruct->environment)) = atoe_environ();
-#else
+#else /* defined(J9ZTPF) */
 	rasStruct->environment = GLOBAL_DATA(environ);
 #endif /* defined(WIN32) || defined(WIN64) */
 
@@ -351,7 +383,8 @@ J9RASInitialize(J9JavaVM* javaVM)
 }
 
 void
-j9rasSetServiceLevel(J9JavaVM *vm, const char *runtimeVersion) {
+j9rasSetServiceLevel(J9JavaVM *vm, const char *runtimeVersion)
+{
 	/*
 	 * This creates one of the following two strings (the latter if runtimeVersion is not NULL).
 	 *   JRE 1.8.0 Linux amd64-64
@@ -429,10 +462,10 @@ j9rasSetServiceLevel(J9JavaVM *vm, const char *runtimeVersion) {
 #define USE_STATIC_RAS_STRUCT
 #endif /* defined(J9ZOS390) || (defined(AIXPPC) && !defined(J9VM_ENV_DATA64)) */
 
-static J9RAS*
+static J9RAS *
 allocateRASStruct(J9JavaVM *javaVM)
 {
-	J9RAS* candidate = (J9RAS*)GLOBAL_DATA(_j9ras_);
+	J9RAS *candidate = (J9RAS *)GLOBAL_DATA(_j9ras_);
 	/*
 	 * z/OS: For zOS we need to use the _j9ras_ symbol because a zOS dump may contain more than one JVM
 	 * in a single address space, and going in via the eyecatcher would not allow us to
@@ -450,9 +483,9 @@ allocateRASStruct(J9JavaVM *javaVM)
 
 		J9PortVmemParams params;
 		J9PortVmemIdentifier identifier;
-		J9AllocatedRAS* result = NULL;
-		UDATA pageSize;
-		UDATA roundedSize;
+		J9AllocatedRAS *result = NULL;
+		UDATA pageSize = 0;
+		UDATA roundedSize = 0;
 
 		PORT_ACCESS_FROM_JAVAVM(javaVM);
 
@@ -477,7 +510,7 @@ allocateRASStruct(J9JavaVM *javaVM)
 		params.options = J9PORT_VMEM_ALLOC_DIR_BOTTOM_UP;
 #if defined(J9ZTPF)
 		params.options |= J9PORT_VMEM_ZTPF_USE_31BIT_MALLOC;
-#endif
+#endif /* defined(J9ZTPF) */
 		params.category = OMRMEM_CATEGORY_VM;
 
 		result = j9vmem_reserve_memory_ex(&identifier, &params);
@@ -490,12 +523,14 @@ allocateRASStruct(J9JavaVM *javaVM)
 	return candidate;
 }
 
-void J9RelocateRASData(J9JavaVM* javaVM) {
+void
+J9RelocateRASData(J9JavaVM *javaVM)
+{
 	/* See comments for allocateRASStruct concerning compressed references and z/OS */
 #if !defined(USE_STATIC_RAS_STRUCT)
 	if (ALLOCATE_RAS_DATA_IN_SUBALLOCATOR && J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
 		PORT_ACCESS_FROM_JAVAVM(javaVM);
-		J9RAS * result = j9mem_allocate_memory32(sizeof(J9RAS), OMRMEM_CATEGORY_VM);
+		J9RAS *result = j9mem_allocate_memory32(sizeof(J9RAS), OMRMEM_CATEGORY_VM);
 
 		if (NULL != result) {
 			memcpy(result, (J9RAS*)GLOBAL_DATA(_j9ras_), sizeof(J9RAS));
@@ -508,7 +543,7 @@ void J9RelocateRASData(J9JavaVM* javaVM) {
 }
 
 static void
-freeRASStruct(J9JavaVM *javaVM, J9RAS* rasStruct)
+freeRASStruct(J9JavaVM *javaVM, J9RAS *rasStruct)
 {
 #if !defined(USE_STATIC_RAS_STRUCT)
 	if (rasStruct != GLOBAL_DATA(_j9ras_)) { /* dynamic allocation may have failed */
@@ -517,14 +552,14 @@ freeRASStruct(J9JavaVM *javaVM, J9RAS* rasStruct)
 		if (ALLOCATE_RAS_DATA_IN_SUBALLOCATOR && J9JAVAVM_COMPRESS_OBJECT_REFERENCES(javaVM)) {
 			j9mem_free_memory32(rasStruct);
 		} else {
-			J9AllocatedRAS* allocatedStruct = (J9AllocatedRAS*)rasStruct;
+			J9AllocatedRAS *allocatedStruct = (J9AllocatedRAS *)rasStruct;
 			J9PortVmemIdentifier identifier;
 
-#ifdef J9ZTPF
+#if defined(J9ZTPF)
 			/* Release malloc'd pointer holding environ pointer which allows jdmpview to */
 			/* reference it because static storage isn't dumped. */
 			j9mem_free_memory32(rasStruct->environment);
-#endif
+#endif /* defined(J9ZTPF) */
 
 			memcpy(&identifier, &allocatedStruct->vmemid, sizeof(identifier));
 			j9vmem_free_memory(allocatedStruct, sizeof(J9AllocatedRAS), &identifier);
@@ -583,22 +618,22 @@ populateRASNetData(J9JavaVM *javaVM, J9RAS *rasStruct)
 	startTime = omrtime_hires_clock();
 
 	/* get the host name and IP addresses */
-	if (0 != omrsysinfo_get_hostname((char*)rasStruct->hostname,  sizeof(rasStruct->hostname) )) {
+	if (0 != omrsysinfo_get_hostname((char *)rasStruct->hostname,  sizeof(rasStruct->hostname) )) {
 		/* error so null the buffer so we don't try to work with it on the other side */
 		memset(rasStruct->hostname, 0, sizeof(rasStruct->hostname));
 	}
 	/* ensure that the string is properly terminated */
-	rasStruct->hostname[sizeof(rasStruct->hostname)-1] = '\0';
+	rasStruct->hostname[sizeof(rasStruct->hostname) - 1] = '\0';
 
 #if defined(J9OS_I5)
 	/* set AI_ADDRCONFIG(0x08) to fix low performance of inactive ipv6 resolving */
-	j9sock_getaddrinfo_create_hints( &hints, (I_16) J9ADDR_FAMILY_UNSPEC, 0, J9PROTOCOL_FAMILY_UNSPEC, 0x08 ); 
-#else
+	j9sock_getaddrinfo_create_hints(&hints, (I_16)J9ADDR_FAMILY_UNSPEC, 0, J9PROTOCOL_FAMILY_UNSPEC, 0x08);
+#else /* defined(J9OS_I5) */
 	/* create the hints structure for both IPv4 and IPv6 */
-	j9sock_getaddrinfo_create_hints( &hints, (I_16) J9ADDR_FAMILY_UNSPEC, 0, J9PROTOCOL_FAMILY_UNSPEC, 0 );
-#endif
+	j9sock_getaddrinfo_create_hints(&hints, (I_16)J9ADDR_FAMILY_UNSPEC, 0, J9PROTOCOL_FAMILY_UNSPEC, 0);
+#endif /* defined(J9OS_I5) */
 	/* rasStruct->hostname can't simply be localhost since that is always 127.0.0.1 */
-	if (0 !=  j9sock_getaddrinfo((char*)rasStruct->hostname, hints, &addrinfo )) {
+	if (0 != j9sock_getaddrinfo((char *)rasStruct->hostname, hints, &addrinfo)) {
 		/* error so null the buffer so we don't try to work with it on the other side */
 		memset(rasStruct->ipAddresses, 0, sizeof(rasStruct->ipAddresses));
 	} else {
@@ -614,7 +649,7 @@ populateRASNetData(J9JavaVM *javaVM, J9RAS *rasStruct)
 			U_8 addressType = 0;
 			I_32 bytesToCopy = 0;
 
-			j9sock_getaddrinfo_family(&addrinfo, &family, i );
+			j9sock_getaddrinfo_family(&addrinfo, &family, i);
 			bytesToCopy = (J9ADDR_FAMILY_AFINET4 == family) ? J9SOCK_INADDR_LEN : J9SOCK_INADDR6_LEN;
 			addressType = (J9ADDR_FAMILY_AFINET4 == family) ? 4 : 6;
 			if ((binaryIPCursor + 1 + bytesToCopy) < sizeof(rasStruct->ipAddresses)) {
@@ -627,7 +662,7 @@ populateRASNetData(J9JavaVM *javaVM, J9RAS *rasStruct)
 			}
 		}
 		/* free mem */
-		j9sock_freeaddrinfo( &addrinfo );
+		j9sock_freeaddrinfo(&addrinfo);
 	}
 
 	endTime = omrtime_hires_clock();
@@ -638,13 +673,12 @@ populateRASNetData(J9JavaVM *javaVM, J9RAS *rasStruct)
 }
 
 /**
- * Function J9RASCheckDump(), implementation for -Xcheck:dump support
- * 
+ * Function J9RASCheckDump(), implementation for -Xcheck:dump support.
+ *
  * @param J9JavaVM* javaVM, JVM top-level structure pointer
- * @returns void
  */
 void
-J9RASCheckDump(J9JavaVM* javaVM)
+J9RASCheckDump(J9JavaVM *javaVM)
 {
 #if defined(LINUX) || defined(AIXPPC)
 	IDATA rc = 0;
@@ -657,7 +691,7 @@ J9RASCheckDump(J9JavaVM* javaVM)
 
 	/* Check the UNIX core-size hard ulimit */
 	rc = j9sysinfo_get_limit(J9PORT_RESOURCE_CORE_FILE | J9PORT_LIMIT_HARD, &limit);
-	if (rc == J9PORT_LIMIT_LIMITED) {
+	if (J9PORT_LIMIT_LIMITED == rc) {
 		/* Issue NLS message warning, with force routing to syslog as well */
 		j9nls_printf(PORTLIB, J9NLS_WARNING | J9NLS_VITAL, J9NLS_VM_CHECK_DUMP_ULIMIT, limit);
 	}
@@ -665,37 +699,36 @@ J9RASCheckDump(J9JavaVM* javaVM)
 #if defined(LINUX)
 	/* Check if /proc/sys/kernel/core_pattern is set. */
 	fd = j9file_open("/proc/sys/kernel/core_pattern", EsOpenRead, 0);
-	if (fd != -1) {
+	if (-1 != fd) {
 		/* Files in /proc report length as 0 but we don't expect the contents to be more than 1 line. */
 		char buf[80];
-		char* read = NULL;
-		read = j9file_read_text(fd, &buf[0], 80);
-		if( read == &buf[0] ) {
+		char *read = j9file_read_text(fd, &buf[0], sizeof(buf));
+		if (read == &buf[0]) {
 			size_t bufLen = 0;
-			char *cursor;
+			char *cursor = NULL;
 			/* Make sure the string is only one line and null terminated. */
-			for( bufLen = 0; bufLen < 80; bufLen++) {
-				if( read[bufLen] == '\n') {
+			for (bufLen = 0; bufLen < sizeof(buf); bufLen++) {
+				if ('\n' == read[bufLen]) {
 					read[bufLen] = '\0';
 					break;
 				}
 			}
-			buf[79] = '\0';
-			if( buf[0] == '|') {
+			buf[sizeof(buf) - 1] = '\0';
+			if ('|' == buf[0]) {
 				/* Check for core dumps being piped to an external program. */
 				j9nls_printf(PORTLIB, J9NLS_WARNING | J9NLS_VITAL, J9NLS_VM_CHECK_DUMP_COREPATTERN_PIPE, buf);
-			} else if( buf[0] != '\0') {
+			} else if ('\0' != buf[0]) {
 				/* Check for core dumps being renamed via % format specifiers. */
 				cursor = &buf[0];
-				while( *cursor !='\0' ) {
+				while ('\0' != *cursor) {
 					/* % means a replacement char unless it's followed by another % */
-					if( *cursor == '%' ) {
+					if ('%' == *cursor) {
 						/* Found a %, issue a warning if it's not followed by % or the end of the string.*/
 						cursor++;
-						if( *cursor != '\0' && *cursor != '%' ) {
+						if (('\0' != *cursor) && ('%' != *cursor)) {
 							j9nls_printf(PORTLIB, J9NLS_WARNING | J9NLS_VITAL, J9NLS_VM_CHECK_DUMP_COREPATTERN_FORMAT, buf);
 							break; /* Found one specifier, don't worry about any others. */
-						} else if( *cursor != '\0' ) {
+						} else if ('\0' != *cursor) {
 							cursor++; /* Skip over a %% */
 						}
 					} else {
@@ -706,16 +739,14 @@ J9RASCheckDump(J9JavaVM* javaVM)
 		}
 		j9file_close(fd);
 	}
-#endif
+#endif /* defined(LINUX) */
 #if defined(AIXPPC)
-
 	/* Check the AIX fullcore setting */
 	rc = j9sysinfo_get_limit(J9PORT_RESOURCE_CORE_FLAGS, &limit);
-	if (rc == J9PORT_LIMIT_LIMITED) {
+	if (J9PORT_LIMIT_LIMITED == rc) {
 		/* Issue NLS message warning, with force routing to syslog as well */
 		j9nls_printf(PORTLIB, J9NLS_WARNING | J9NLS_VITAL, J9NLS_VM_CHECK_DUMP_FULLCORE);
 	}
-
-#endif
-#endif
+#endif /* defined(AIXPPC) */
+#endif /* defined(LINUX) || defined(AIXPPC) */
 }

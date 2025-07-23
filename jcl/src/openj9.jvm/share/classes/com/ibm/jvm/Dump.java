@@ -1,4 +1,4 @@
-/*[INCLUDE-IF Sidecar18-SE]*/
+/*[INCLUDE-IF JAVA_SPEC_VERSION >= 8]*/
 /*
  * Copyright IBM Corp. and others 2006
  *
@@ -20,8 +20,9 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.jvm;
+
+import java.util.stream.Stream;
 
 import openj9.management.internal.DumpConfigurationUnavailableExceptionBase;
 import openj9.management.internal.InvalidDumpOptionExceptionBase;
@@ -777,6 +778,23 @@ public class Dump {
 		}
 	}
 
+	/**
+	 * Validate the JVM current system dump settings.
+	 *
+	 * @return an array of strings, representing distinct invalid dump label templates
+	 *
+	 * This is only meaningful for Java 11 or newer and only on z/OS.
+	 */
+	public static String[] validateIEATDumpSettings() {
+		String invalid = validateIEATDumpSettingsImpl();
+
+		if ((invalid == null) || invalid.isEmpty()) {
+			return new String[0];
+		}
+
+		return Stream.of(invalid.split(",")).sorted().distinct().toArray(String[]::new); //$NON-NLS-1$
+	}
+
 	private static native int JavaDumpImpl();
 	private static native int HeapDumpImpl();
 	private static native int SnapDumpImpl();
@@ -786,4 +804,5 @@ public class Dump {
 	private static native void resetDumpOptionsImpl() throws DumpConfigurationUnavailableExceptionBase;
 	private static native String triggerDumpsImpl(String dumpOptions, String event) throws InvalidDumpOptionExceptionBase;
 	private static native boolean isToolDump(String dumpOptions);
+	private static native String validateIEATDumpSettingsImpl();
 }

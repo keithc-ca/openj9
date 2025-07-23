@@ -386,3 +386,46 @@ raiseExceptionFor(JNIEnv *env, omr_error_t result)
 		break;
 	}
 }
+
+/*
+ * Validate system dump settings.
+ */
+jstring JNICALL
+Java_com_ibm_jvm_Dump_validateIEATDumpSettingsImpl(JNIEnv *env, jclass clazz)
+{
+	jstring result = NULL;
+	J9JavaVM *vm = ((J9VMThread *)env)->javaVM;
+	PORT_ACCESS_FROM_JAVAVM(vm);
+	char *badLabels = NULL;
+	omr_error_t rc = vm->j9rasDumpFunctions->validateIEATDumpSettings(vm, &badLabels);
+
+	if (OMR_ERROR_NONE != rc) {
+		jclass exceptionClass = NULL;
+
+		switch (rc) {
+		case OMR_ERROR_INTERNAL:
+			exceptionClass = (*env)->FindClass(env, "openj9/management/internal/InvalidDumpOptionExceptionBase");
+			if (NULL != exceptionClass) {
+				(*env)->ThrowNew(env, exceptionClass, "Error validating dump options");
+			}
+			/* Just return if we can't load the exception class. */
+			break;
+		case OMR_ERROR_OUT_OF_NATIVE_MEMORY:
+			exceptionClass = (*env)->FindClass(env, "java/lang/OutOfMemoryError");
+			if (NULL != exceptionClass) {
+				(*env)->ThrowNew(env, exceptionClass, "Out of memory validating dump options");
+			}
+			/* Just return if we can't load the exception class. */
+			break;
+		default:
+			Assert_JCL_unreachable();
+			break;
+		}
+	} else if (NULL != badLabels) {
+		result = (*env)->NewStringUTF(env, badLabels);
+	}
+
+	j9mem_free_memory(badLabels);
+
+	return result;
+}

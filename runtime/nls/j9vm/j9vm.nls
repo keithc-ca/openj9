@@ -75,7 +75,7 @@ J9NLS_VM_MALFORMED_XSERVICE_ERROR_STR.user_response=Examine -Xservice option and
 J9NLS_VM_OPTIONS_FILE_NOT_FOUND_STR=Options file not found
 # START NON-TRANSLATABLE
 J9NLS_VM_OPTIONS_FILE_NOT_FOUND_STR.explanation=The JVM could not open a file that contained extra command line options.
-J9NLS_VM_OPTIONS_FILE_NOT_FOUND_STR.system_action=The JVM will ignore the failure continue.
+J9NLS_VM_OPTIONS_FILE_NOT_FOUND_STR.system_action=The JVM will ignore the failure and continue.
 J9NLS_VM_OPTIONS_FILE_NOT_FOUND_STR.user_response=Correct the issue with the options file, either location or permissions, or remove the reference to the options file from the command line.
 # END NON-TRANSLATABLE
 
@@ -2499,4 +2499,22 @@ J9NLS_VM_CLASS_LOADING_ERROR_INVISIBLE_SUPERCLASS_OR_INTERFACE_JAVA11_PLUS.sampl
 J9NLS_VM_CLASS_LOADING_ERROR_INVISIBLE_SUPERCLASS_OR_INTERFACE_JAVA11_PLUS.explanation=The specified class or interface is not visible
 J9NLS_VM_CLASS_LOADING_ERROR_INVISIBLE_SUPERCLASS_OR_INTERFACE_JAVA11_PLUS.system_action=The JVM will throw an IllegalAccessError.
 J9NLS_VM_CLASS_LOADING_ERROR_INVISIBLE_SUPERCLASS_OR_INTERFACE_JAVA11_PLUS.user_response=Contact the provider of the classfile for a corrected version.
+# END NON-TRANSLATABLE
+
+# validateIEATDumpSettings is the name of an API. It should not be translated.
+J9NLS_VM_MISSING_DUMP_DLL_VALIDATE_IEATDUMP=validateIEATDumpSettings requires %s
+# START NON-TRANSLATABLE
+J9NLS_VM_MISSING_DUMP_DLL_VALIDATE_IEATDUMP.sample_input_1=j9dmp29
+J9NLS_VM_MISSING_DUMP_DLL_VALIDATE_IEATDUMP.explanation=An internal VM function called via the Dump.validateIEATDumpSettings() API has failed because the required DLL has not been loaded.
+J9NLS_VM_MISSING_DUMP_DLL_VALIDATE_IEATDUMP.system_action=Dump validation is not performed.
+J9NLS_VM_MISSING_DUMP_DLL_VALIDATE_IEATDUMP.user_response=Check whether the JVM dump functions have been disabled via the -Xdump:none option.
+# END NON-TRANSLATABLE
+
+# criuReloadXDumpAgents is the name of an API. It should not be translated.
+J9NLS_VM_MISSING_DUMP_DLL_CRIU_RELOAD_AGENTS=criuReloadXDumpAgents requires %s
+# START NON-TRANSLATABLE
+J9NLS_VM_MISSING_DUMP_DLL_CRIU_RELOAD_AGENTS.sample_input_1=j9dmp29
+J9NLS_VM_MISSING_DUMP_DLL_CRIU_RELOAD_AGENTS.explanation=A call to internal VM function criuReloadXDumpAgents() has failed because the required DLL has not been loaded.
+J9NLS_VM_MISSING_DUMP_DLL_CRIU_RELOAD_AGENTS.system_action=The JVM will ignore the failure and continue.
+J9NLS_VM_MISSING_DUMP_DLL_CRIU_RELOAD_AGENTS.user_response=Check whether the JVM dump functions have been disabled via the -Xdump:none option.
 # END NON-TRANSLATABLE

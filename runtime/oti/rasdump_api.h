@@ -367,6 +367,17 @@ setDumpOption(struct J9JavaVM *vm, char *optionString);
 omr_error_t
 resetDumpOptions(struct J9JavaVM *vm);
 
+/**
+ * @brief Validate currently configured system dump labels.
+ *
+ * @param vm [in] VM pointer
+ * @param badLabels [out] if non-null, a pointer to a comma-separated list
+ *     of bad dump labels is returned; the caller is expected to free this storage
+ * @return omr_error_t OMR_ERROR_NONE on success;
+ *     OMR_ERROR_INTERNAL or OMR_ERROR_OUT_OF_NATIVE_MEMORY if there was a problem
+ */
+omr_error_t
+validateIEATDumpSettings(struct J9JavaVM *vm, char **badLabels);
 
 /* ---------------- trigger.c ---------------- */
 
