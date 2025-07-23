@@ -386,3 +386,15 @@ raiseExceptionFor(JNIEnv *env, omr_error_t result)
 		break;
 	}
 }
+
+/*
+ * Validate system dump settings.
+ */
+jint JNICALL
+Java_com_ibm_jvm_Dump_validateIEATDumpSettingsImpl(JNIEnv *env, jclass clazz)
+{
+	J9JavaVM *vm = ((J9VMThread *)env)->javaVM;
+	omr_error_t rc = vm->j9rasDumpFunctions->validateIEATDumpSettings(vm);
+
+	return omrErrorCodeToJniErrorCode(rc);
+}

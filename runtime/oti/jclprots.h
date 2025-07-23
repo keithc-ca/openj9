@@ -465,6 +465,8 @@ jstring JNICALL
 Java_com_ibm_jvm_Dump_triggerDumpsImpl (JNIEnv *env, jclass clazz, jstring opts, jstring event);
 jboolean JNICALL
 Java_com_ibm_jvm_Dump_isToolDump (JNIEnv *, jclass, jstring);
+jint JNICALL
+Java_com_ibm_jvm_Dump_validateIEATDumpSettingsImpl(JNIEnv *env, jclass clazz);
 
 
 /* log.c */

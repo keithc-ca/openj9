@@ -39,6 +39,10 @@ else()
 	set(OMR_ZOS_COMPILE_TARGET "zOSV2R3" CACHE STRING "")
 	set(OMR_ZOS_COMPILE_ARCHITECTURE 10 CACHE STRING "")
 	set(OMR_ZOS_COMPILE_TUNE 12 CACHE STRING "")
+
+	# Enable IEATDUMP filename validation support in OMR.
+	# Note: This requires a build system running z/OS 2.4 or newer.
+	set(OMR_TDUMP_VALIDATION ON CACHE BOOL "")
 endif()
 set(OMR_ZOS_LINK_COMPAT ${OMR_ZOS_COMPILE_TARGET} CACHE STRING "")
 

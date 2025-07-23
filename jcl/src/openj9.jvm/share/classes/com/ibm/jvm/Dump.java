@@ -1,4 +1,4 @@
-/*[INCLUDE-IF Sidecar18-SE]*/
+/*[INCLUDE-IF JAVA_SPEC_VERSION >= 8]*/
 /*
  * Copyright IBM Corp. and others 2006
  *
@@ -777,6 +777,15 @@ public class Dump {
 		}
 	}
 
+	/**
+	 * Validate the JVM current system dump settings.
+	 *
+	 * This is only meaningful for Java 11 or newer and only on z/OS.
+	 */
+	public static int validateIEATDumpSettings() {
+		return validateIEATDumpSettingsImpl();
+	}
+
 	private static native int JavaDumpImpl();
 	private static native int HeapDumpImpl();
 	private static native int SnapDumpImpl();
@@ -786,4 +795,5 @@ public class Dump {
 	private static native void resetDumpOptionsImpl() throws DumpConfigurationUnavailableExceptionBase;
 	private static native String triggerDumpsImpl(String dumpOptions, String event) throws InvalidDumpOptionExceptionBase;
 	private static native boolean isToolDump(String dumpOptions);
+	private static native int validateIEATDumpSettingsImpl();
 }

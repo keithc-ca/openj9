@@ -367,6 +367,13 @@ setDumpOption(struct J9JavaVM *vm, char *optionString);
 omr_error_t
 resetDumpOptions(struct J9JavaVM *vm);
 
+/**
+ * @brief
+ * @param *vm
+ * @return omr_error_t
+ */
+omr_error_t
+validateIEATDumpSettings(struct J9JavaVM *vm);
 
 /* ---------------- trigger.c ---------------- */
 

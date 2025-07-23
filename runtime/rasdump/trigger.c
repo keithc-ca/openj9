@@ -802,7 +802,10 @@ dumpLabel(struct J9JavaVM *vm, J9RASdumpAgent *agent, J9RASdumpContext *context,
 
 	j9str_set_time_tokens(stringTokens, now);
 
-	seqNum += 1; /* Atomicity guaranteed as we are inside the dumpLabelTokensMutex */
+	/* Don't increment the sequence number when only validation is occurring. */
+	if (J9RAS_DUMP_ON_VALIDATION == (context->eventFlags & J9RAS_DUMP_ON_VALIDATION)) {
+		seqNum += 1; /* Atomicity guaranteed as we are inside the dumpLabelTokensMutex */
+	}
 
 	if (0 != j9str_set_token(stringTokens, "seq", "%04u", seqNum)) {
 		omrthread_monitor_exit(dump_storage->dumpLabelTokensMutex);
