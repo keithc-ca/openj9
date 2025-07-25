@@ -245,10 +245,10 @@ jint JNICALL
 Java_com_ibm_j9_zostest_ZosNativesTest_ifaSwitchTest6(JNIEnv *env, jclass clazz)
 {
 	PORT_ACCESS_FROM_ENV(env);
-	jboolean isCopy; /* dummy variable */
+	jboolean isCopy = JNI_FALSE; /* dummy variable */
 	jthrowable ex = NULL;
 	jchar *buffer_str = NULL;
-	jchar *string_chars = NULL;
+	const jchar *string_chars = NULL;
 	jstring testStr = NULL;
 
 	j9tty_printf(PORTLIB, "Java_com_ibm_j9_zostest_TestZosNatives_ifaSwitchTest6 is starting\n");
