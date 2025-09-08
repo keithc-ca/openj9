@@ -824,3 +824,21 @@ UtModuleInfo.containerModule = required
 UtModuleInfo.count = required
 UtModuleInfo.name = required
 UtModuleInfo.namelength = required
+
+// Non-existent (and unused) fields to exercise generation of bitfield accessors.
+BitfieldHolder.s8a = I8:1
+BitfieldHolder.s8b = I8:1
+BitfieldHolder.s16a = I16:1
+BitfieldHolder.s16b = I16:1
+BitfieldHolder.s32a = I32:1
+BitfieldHolder.s32b = I32:1
+BitfieldHolder.s64a = I64:1
+BitfieldHolder.s64b = I64:1
+BitfieldHolder.u8a = U8:1
+BitfieldHolder.u8b = U8:1
+BitfieldHolder.u16a = U16:1
+BitfieldHolder.u16b = U16:1
+BitfieldHolder.u32a = U32:1
+BitfieldHolder.u32b = U32:1
+BitfieldHolder.u64a = U64:1
+BitfieldHolder.u64b = U64:1
