@@ -102,9 +102,7 @@ public abstract class ClassLoader {
 	private final static String DELEGATING_CL = "sun.reflect.DelegatingClassLoader"; //$NON-NLS-1$
 	/*[ENDIF] JAVA_SPEC_VERSION >= 9 */
 	private boolean isDelegatingCL = false;
-	/*[IF JAVA_SPEC_VERSION > 8]*/
 	private static boolean applicationClassLoaderInited;
-	/*[ENDIF] JAVA_SPEC_VERSION > 8 */
 
 	/*
 	 * This is the application ClassLoader
@@ -430,18 +428,17 @@ private ClassLoader(Void staticMethodHolder, String classLoaderName, ClassLoader
 	specialLoaderInited = (bootstrapClassLoader != null);
 /*[ENDIF] JAVA_SPEC_VERSION == 8 */
 	if (specialLoaderInited) {
-/*[IF JAVA_SPEC_VERSION > 8]*/
-		/*
-		 * Assuming the 3rd classloader initialized is application class loader as the order
-		 * to initialize builtin class loaders is defined in the static block of
-		 * openjdk/src/java.base/share/classes/jdk/internal/loader/ClassLoaders.java.
-		 */
 		if (!applicationClassLoaderInited) {
+			/*[IF JAVA_SPEC_VERSION > 8]*/
+			/*
+			 * Assuming the 3rd classloader initialized is application class loader as the order
+			 * to initialize builtin class loaders is defined in the static block of
+			 * openjdk/src/java.base/share/classes/jdk/internal/loader/ClassLoaders.java.
+			 */
+			/*[ENDIF] JAVA_SPEC_VERSION > 8 */
 			assignImmortalClassLoader(VM.J9_CLASSLOADER_TYPE_APP, isParallelCapable);
 			applicationClassLoaderInited = true;
-		} else
-/*[ENDIF] JAVA_SPEC_VERSION > 8 */
-		{
+		} else {
 			if (!lazyClassLoaderInit) {
 				VM.initializeClassLoader(this, VM.J9_CLASSLOADER_TYPE_OTHERS, isParallelCapable);
 			}
@@ -2665,7 +2662,6 @@ static NativeLibraries nativeLibrariesFor(ClassLoader loader) {
 }
 /*[ENDIF] JAVA_SPEC_VERSION >= 24 */
 
-/*[IF JAVA_SPEC_VERSION > 8]*/
 /**
  * Assign immortal class loaders for restore run.
  *
@@ -2682,6 +2678,5 @@ private final void assignImmortalClassLoader(int id, boolean isParallelCapable) 
 		VM.initializeClassLoader(this, id, isParallelCapable);
 	}
 }
-/*[ENDIF] JAVA_SPEC_VERSION > 8 */
 
 }
