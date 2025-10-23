@@ -348,27 +348,27 @@ done:
  * @param userData Opaque data pointer passed to the callback function.
  * @param pruneConstructors Non-zero if constructors should be pruned from the stack trace.
  * @param sizeOfWalkstateCache Non-zero if exception is walkstate cache instead of exception object.
- * 								Indicatest the size of cache.
+ *                             Indicates the size of cache.
  * @return The number of times the callback function was invoked.
  *
  * @note Assumes VM access
  **/
 UDATA
-iterateStackTraceImpl(J9VMThread * vmThread, j9object_t* exception, callback_func_t callback, void * userData, UDATA pruneConstructors, UDATA skipHiddenFrames, UDATA sizeOfWalkstateCache, BOOLEAN exceptionIsJavaObject)
+iterateStackTraceImpl(J9VMThread *vmThread, j9object_t *exception, callback_func_t callback, void *userData, UDATA pruneConstructors, UDATA skipHiddenFrames, UDATA sizeOfWalkstateCache, BOOLEAN exceptionIsJavaObject)
 {
-	J9JavaVM * vm = vmThread->javaVM;
+	J9JavaVM *vm = vmThread->javaVM;
 	UDATA totalEntries = 0;
 	void *walkback = NULL;
 
 	if (exceptionIsJavaObject) {
-		walkback = J9VMJAVALANGTHROWABLE_WALKBACK(vmThread, (*exception));
+		walkback = J9VMJAVALANGTHROWABLE_WALKBACK(vmThread, J9_JNI_UNWRAP_REFERENCE(exception));
 	} else {
 		walkback = exception;
 	}
 
-	/* Note that exceptionAddr might be a pointer into the current thread's stack, so no java code is allowed to run
-	   (nothing which could cause the stack to grow).
-	*/
+	/* Note that exception might be a pointer into the current thread's stack,
+	 * so no java code is allowed to run (nothing which could cause the stack to grow).
+	 */
 
 	if (walkback) {
 		U_32 arraySize = 0;
@@ -381,10 +381,10 @@ iterateStackTraceImpl(J9VMThread * vmThread, j9object_t* exception, callback_fun
 		if (exceptionIsJavaObject) {
 			arraySize = J9INDEXABLEOBJECT_SIZE(vmThread, walkback);
 
-			/* A zero terminates the stack trace - search backwards through the array to determine the correct size */
+			/* A zero terminates the stack trace - search backwards through the array to determine the correct size. */
 
-			while ((arraySize != 0) && (J9JAVAARRAYOFUDATA_LOAD(vmThread, walkback, arraySize-1)) == 0) {
-				--arraySize;
+			while ((0 != arraySize) && (0 == J9JAVAARRAYOFUDATA_LOAD(vmThread, walkback, arraySize - 1))) {
+				arraySize -= 1;
 			}
 		} else {
 			arraySize = (U_32)sizeOfWalkstateCache;
@@ -395,22 +395,22 @@ iterateStackTraceImpl(J9VMThread * vmThread, j9object_t* exception, callback_fun
 		while (currentElement != arraySize) {
 			/* write as for or move currentElement++ to very end */
 			UDATA methodPC = 0;
-			J9ROMMethod * romMethod = NULL;
+			J9ROMMethod *romMethod = NULL;
 			J9ROMClass *romClass = NULL;
 			UDATA lineNumber = 0;
-			J9UTF8 * fileName = NULL;
+			J9UTF8 *fileName = NULL;
 			J9ClassLoader *classLoader = NULL;
 			J9Class *ramClass = NULL;
 			UDATA frameType = J9VM_STACK_FRAME_INTERPRETER;
 #ifdef J9VM_INTERP_NATIVE_SUPPORT
-			J9JITExceptionTable * metaData = NULL;
+			J9JITExceptionTable *metaData = NULL;
 			UDATA inlineDepth = 0;
-			void * inlinedCallSite = NULL;
-			void * inlineMap = NULL;
-			J9JITConfig * jitConfig = vm->jitConfig;
+			void *inlinedCallSite = NULL;
+			void *inlineMap = NULL;
+			J9JITConfig *jitConfig = vm->jitConfig;
 
 			if (exceptionIsJavaObject) {
-				methodPC = J9JAVAARRAYOFUDATA_LOAD(vmThread, J9VMJAVALANGTHROWABLE_WALKBACK(vmThread, (*exception)), currentElement);
+				methodPC = J9JAVAARRAYOFUDATA_LOAD(vmThread, walkback, currentElement);
 			} else {
 				methodPC = ((UDATA *)exception)[currentElement];
 			}
@@ -435,8 +435,8 @@ iterateStackTraceImpl(J9VMThread * vmThread, j9object_t* exception, callback_fun
 			if ((callback != NULL) || pruneConstructors || skipHiddenFrames) {
 #ifdef J9VM_INTERP_NATIVE_SUPPORT
 				if (metaData) {
-					J9Method *ramMethod;
-					UDATA isSameReceiver;
+					J9Method *ramMethod = NULL;
+					UDATA isSameReceiver = FALSE;
 inlinedEntry:
 					/* Check for metadata unload */
 					if (NULL == metaData->ramMethod) {

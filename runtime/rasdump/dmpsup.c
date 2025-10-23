@@ -256,13 +256,17 @@ abortHandler(int sig, siginfo_t *siginfo, void *context)
 			omr_error_t rc = OMR_ERROR_NONE;
 			J9RASdumpEventData eventData = { 0 };
 #if !defined(WIN32)
+			char *processName = NULL;
 			eventData.siPid = siginfo->si_pid;
 			if (0 != eventData.siPid) {
-				eventData.detailData = omrsysinfo_get_process_name(eventData.siPid);
+				processName = omrsysinfo_get_process_name(eventData.siPid);
+				eventData.detailData = processName;
 			}
 #endif /* !defined(WIN32) */
 			rc = J9DMP_TRIGGER(cachedVM, vmThread, J9RAS_DUMP_ON_ABORT_SIGNAL, &eventData);
-			j9mem_free_memory(eventData.detailData);
+#if !defined(WIN32)
+			j9mem_free_memory(processName);
+#endif /* !defined(WIN32) */
 			if (OMR_ERROR_NONE == rc) {
 
 #if defined(J9ZOS390)
@@ -270,7 +274,7 @@ abortHandler(int sig, siginfo_t *siginfo, void *context)
 					triggerAbend();
 					/* unreachable */
 				}
-#endif
+#endif /* defined(J9ZOS390) */
 
 				/* RAS dump agents triggered OK, call exit not abort to avoid extra OS dumps, defect 148334 */
 				j9exit_shutdown_and_exit(1);
