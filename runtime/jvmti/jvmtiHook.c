@@ -2269,12 +2269,12 @@ jvmtiHookFramePop(J9HookInterface** hook, UDATA eventNum, void* eventData, void*
 
 
 static void
-jvmtiHookExceptionCatch(J9HookInterface** hook, UDATA eventNum, void* eventData, void* userData)
+jvmtiHookExceptionCatch(J9HookInterface **hook, UDATA eventNum, void *eventData, void *userData)
 {
-	J9VMExceptionCatchEvent * data = eventData;
-	J9JVMTIEnv * j9env = userData;
+	J9VMExceptionCatchEvent *data = eventData;
+	J9JVMTIEnv *j9env = userData;
 	jvmtiEventExceptionCatch callback = j9env->callbacks.ExceptionCatch;
-	J9VMThread * currentThread = data->currentThread;
+	J9VMThread *currentThread = data->currentThread;
 
 	Trc_JVMTI_jvmtiHookExceptionCatch_Entry();
 
@@ -2284,12 +2284,12 @@ jvmtiHookExceptionCatch(J9HookInterface** hook, UDATA eventNum, void* eventData,
 
 	if ((NULL != callback) && shouldPostEvent(currentThread, NULL)) {
 		j9object_t exception = data->exception;
-		J9JavaVM * vm = currentThread->javaVM;
-		jthread threadRef;
-		UDATA hadVMAccess;
-		J9StackWalkState walkState;
-		J9Method * catchMethod;
-		IDATA catchLocation;
+		J9JavaVM *vm = currentThread->javaVM;
+		jthread threadRef = NULL;
+		UDATA hadVMAccess = 0;
+		J9StackWalkState walkState = { 0 };
+		J9Method *catchMethod = NULL;
+		IDATA catchLocation = 0;
 		UDATA javaOffloadOldState = 0;
 
 		/* Find the catching frame */
@@ -2304,7 +2304,7 @@ jvmtiHookExceptionCatch(J9HookInterface** hook, UDATA eventNum, void* eventData,
 
 		if (prepareForEvent(j9env, currentThread, currentThread, JVMTI_EVENT_EXCEPTION_CATCH, &threadRef, &hadVMAccess, TRUE, (exception == NULL) ? 0 : 1, &javaOffloadOldState)) {
 			jmethodID catchMethodID;
-			j9object_t * exceptionRef = (j9object_t*) currentThread->arg0EA;
+			j9object_t *exceptionRef = (j9object_t *)currentThread->arg0EA;
 
 			if (exception != NULL) {
 				*exceptionRef = exception;

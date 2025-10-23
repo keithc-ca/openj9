@@ -120,8 +120,8 @@ typedef struct J9RASdumpContext {
 
 typedef struct J9RASdumpEventData {
 	UDATA detailLength;
-	char* detailData;
-	j9object_t* exceptionRef;
+	const char *detailData;
+	jobject exceptionRef;
 	U_64 siPid;
 } J9RASdumpEventData;
 

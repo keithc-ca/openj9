@@ -209,7 +209,7 @@ parseAllocationRange(char *range, UDATA *min, UDATA *max)
 static J9RASdumpMatchResult
 matchesObjectAllocationFilter(J9RASdumpEventData *eventData, char *filter)
 {
-	char *message = eventData->detailData;
+	const char *message = eventData->detailData;
 	char *msgPtr = NULL;
 	UDATA msgValue = 0;
 	char msgText[20];
@@ -252,7 +252,7 @@ matchesObjectAllocationFilter(J9RASdumpEventData *eventData, char *filter)
 static J9RASdumpMatchResult
 matchesSlowExclusiveEnterFilter(J9RASdumpEventData *eventData, char *filter)
 {
-	char *message = eventData->detailData;
+	const char *message = eventData->detailData;
 	char *msgPtr = NULL;
 	IDATA msgValue = 0;
 	char msgText[20];
@@ -301,8 +301,8 @@ matchesSlowExclusiveEnterFilter(J9RASdumpEventData *eventData, char *filter)
 static J9RASdumpMatchResult
 matchesVMShutdownFilter(J9RASdumpEventData *eventData, char *filter)
 {
-	char *message = eventData->detailData;
-	IDATA value;
+	char *message = (char *)eventData->detailData;
+	IDATA value = 0;
 
 	/* Numeric range comparison? */
 	if (*message != '#') {
@@ -344,8 +344,10 @@ static J9RASdumpMatchResult
 matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDATA eventFlags, char *filter, char *subFilter)
 {
 	PORT_ACCESS_FROM_VMC(vmThread);
-	char *message = eventData->detailData;
+	const char *message = eventData->detailData;
 	UDATA nbytes = eventData->detailLength;
+	jobject exception = eventData->exceptionRef;
+	j9object_t exceptionRef = NULL;
 	UDATA buflen = 0;
 	char *buf = NULL;
 	const char *needleString = NULL;
@@ -353,8 +355,7 @@ matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDAT
 	U_32 matchFlag = 0;
 	UDATA retCode = J9RAS_DUMP_NO_MATCH;
 
-	if ((NULL != eventData->exceptionRef) && (NULL != filter)) {
-		j9object_t exception = *((j9object_t *) eventData->exceptionRef);
+	if ((NULL != exception) && (NULL != filter)) {
 		char *hashSignInFilter = NULL;
 		char *stackOffsetFilter = NULL;
 		struct ExceptionStackFrame throwSite;
@@ -364,7 +365,9 @@ matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDAT
 		throwSite.callStackOffset = 0;
 		throwSite.desiredOffset = 0;
 
-		/* Filter an exception event on throw/catch site if the new filter syntax is used */
+		exceptionRef = J9_JNI_UNWRAP_REFERENCE(exception);
+
+		/* Filter an exception event on throw/catch site if the new filter syntax is used. */
 		hashSignInFilter = strrchr(filter, '#');
 		if (NULL != hashSignInFilter) {
 			hashSignInFilter++;
@@ -387,13 +390,19 @@ matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDAT
 					}
 				}
 			} else {
-				/* For other events, walk the stack to find the desired frame */
-				vmThread->javaVM->internalVMFunctions->iterateStackTrace(vmThread, (j9object_t*) eventData->exceptionRef, countExceptionStackFrame, &throwSite, TRUE, FALSE);
+				/* For other events, walk the stack to find the desired frame. */
+				vmThread->javaVM->internalVMFunctions->iterateStackTrace(
+						vmThread,
+						&exceptionRef,
+						countExceptionStackFrame,
+						&throwSite,
+						TRUE,
+						FALSE);
 			}
 		}
 
 		if (throwSite.romClass && throwSite.romMethod) {
-			J9UTF8 *exceptionClassName = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exception)->romClass);
+			J9UTF8 *exceptionClassName = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exceptionRef)->romClass);
 			J9UTF8 *throwClassName  = J9ROMCLASS_CLASSNAME(throwSite.romClass);
 			J9UTF8 *throwMethodName = J9ROMMETHOD_NAME(throwSite.romMethod);
 
@@ -429,7 +438,7 @@ matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDAT
 		nbytes  = buflen;
 	}
 
-	/* Apply standard text filter */
+	/* Apply standard text filter. */
 	if (filter && parseWildcard(filter, strlen(filter), &needleString, &needleLength, &matchFlag) == 0) {
 		if (wildcardMatch(matchFlag, needleString, needleLength, message, nbytes)) {
 			retCode = J9RAS_DUMP_MATCH;
@@ -453,8 +462,8 @@ matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDAT
 		/* Assume the sub-filter will not match. If the exception doesn't have a message, it can't match. */
 		retCode = J9RAS_DUMP_NO_MATCH;
 
-		if ((NULL != eventData->exceptionRef) && (NULL != *eventData->exceptionRef)) {
-			j9object_t emessage = J9VMJAVALANGTHROWABLE_DETAILMESSAGE(vmThread, *eventData->exceptionRef);
+		if (NULL != exceptionRef) {
+			j9object_t emessage = J9VMJAVALANGTHROWABLE_DETAILMESSAGE(vmThread, exceptionRef);
 
 			if (NULL != emessage) {
 				char stackBuffer[256];
@@ -918,18 +927,18 @@ triggerOneOffDump(struct J9JavaVM *vm, char *optionString, char *caller, char *f
 omr_error_t
 triggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags, struct J9RASdumpEventData *eventData)
 {
-	J9RASdumpQueue *queue;
+	J9RASdumpQueue *queue = NULL;
 
-	/* we lock the dump configuration here so that the agent and setting queues can't be
-	 * changed underneath us while we're producing the dumps
+	/* Lock the dump configuration here so that the agent and setting queues can't be
+	 * changed underneath us while we're producing the dumps.
 	 */
 	lockConfigForUse();
 
 	/*
 	 * Sanity check
 	 */
-	if ( FIND_DUMP_QUEUE(vm, queue) ) {
-		J9RASdumpAgent *node;
+	if (FIND_DUMP_QUEUE(vm, queue)) {
+		J9RASdumpAgent *node = NULL;
 		PORT_ACCESS_FROM_JAVAVM(vm);
 		U_32 dumpTaken = 0;
 		U_32 printed = 0;
@@ -939,19 +948,16 @@ triggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags
 
 		U_64 now = j9time_current_time_millis();
 
-		UDATA detailLength = eventData ? eventData->detailLength : 0;
-		char *detailData = detailLength ? eventData->detailData : "";
+		UDATA detailLength = (NULL != eventData) ? eventData->detailLength : 0;
+		const char *detailData = (0 != detailLength) ? eventData->detailData : "";
 		char detailBuf[J9_MAX_DUMP_DETAIL_LENGTH + 1];
 
-		J9RASdumpContext context;
+		J9RASdumpContext context = { 0 };
 
 		context.javaVM = vm;
 		context.onThread = self;
 		context.eventFlags = eventFlags;
 		context.eventData = eventData;
-		context.dumpList = NULL;
-		context.dumpListSize = 0;
-		context.dumpListIndex = 0;
 
 		if (detailLength > J9_MAX_DUMP_DETAIL_LENGTH) {
 			detailLength = J9_MAX_DUMP_DETAIL_LENGTH;
@@ -961,9 +967,9 @@ triggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags
 		detailBuf[detailLength] = '\0';
 
 		/* Scan the dump agents first to see if we need to provide a dump list for tool agents */
-		for ( node = queue->agents; node != NULL; node = node->nextPtr ) {
-			if ( eventFlags & node->eventMask ) {
-				if ( node->dumpFn == doToolDump ) {
+		for (node = queue->agents; NULL != node; node = node->nextPtr) {
+			if (eventFlags & node->eventMask) {
+				if (node->dumpFn == doToolDump) {
 					toolDumpFound = TRUE;
 				} else {
 					/* count number of agents for this event, not including tool dumps themselves */
@@ -978,16 +984,16 @@ triggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags
 		}
 		if (toolDumpFound && (dumpAgentCount > 0)) {
 			/* there is a tool dump, so allocate a buffer for the list of dump labels. Need to account for the \t separators and \0 */
-			context.dumpListSize = ((J9_MAX_DUMP_PATH +1) * dumpAgentCount) + 1;
+			context.dumpListSize = ((J9_MAX_DUMP_PATH + 1) * dumpAgentCount) + 1;
 			context.dumpList = j9mem_allocate_memory(context.dumpListSize, OMRMEM_CATEGORY_VM);
-			if (context.dumpList) {
+			if (NULL != context.dumpList) {
 				memset(context.dumpList, 0, context.dumpListSize);
 			}
 		}
 
-		/* Trigger agents for this event, in priority order */
-		for ( node = queue->agents; node != NULL; node = node->nextPtr ) {
-			if ( eventFlags & node->eventMask ) {
+		/* Trigger agents for this event, in priority order. */
+		for (node = queue->agents; NULL != node; node = node->nextPtr) {
+			if (eventFlags & node->eventMask) {
 
 				/* NOTE: we allow trigger on filter mismatch (ie. exception text filter applied to vmstop exit code) */
 				if (NULL == eventData || matchesFilter(self, eventData, eventFlags, node->detailFilter, node->subFilter) != J9RAS_DUMP_NO_MATCH) {
@@ -1019,22 +1025,26 @@ triggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags
 								/* If there are more details about the event, print them.
 								 * During abort event detailData is empty string - skip the abort event.
 								 */
-								if (('\0' != *detailData) && (NULL != eventData->exceptionRef) && (NULL != *eventData->exceptionRef)) {
-									j9object_t emessage = J9VMJAVALANGTHROWABLE_DETAILMESSAGE(self, *eventData->exceptionRef);
-									if (NULL != emessage) {
-										char stackBuffer[256];
-										UDATA extraDetailLength = 0;
-										char *extraDetail = self->javaVM->internalVMFunctions->copyStringToUTF8WithMemAlloc(self, emessage,
-												J9_STR_NULL_TERMINATE_RESULT, "", 0, stackBuffer,
-												sizeof(stackBuffer), &extraDetailLength);
-										if (NULL != extraDetail) {
-											j9nls_printf(PORTLIB, J9NLS_INFO | J9NLS_STDERR | J9NLS_VITAL,
-													J9NLS_DMP_PROCESSING_DETAILED_EVENT_TIME, mapDumpEvent(eventFlags),
-													detailLength, detailData, extraDetailLength, extraDetail, dateStamp);
-											if (stackBuffer != extraDetail) {
-												j9mem_free_memory(extraDetail);
+								if (('\0' != *detailData) && (NULL != eventData->exceptionRef)) {
+									j9object_t exceptionRef = J9_JNI_UNWRAP_REFERENCE(eventData->exceptionRef);
+
+									if (NULL != exceptionRef) {
+										j9object_t emessage = J9VMJAVALANGTHROWABLE_DETAILMESSAGE(self, exceptionRef);
+										if (NULL != emessage) {
+											char stackBuffer[256];
+											UDATA extraDetailLength = 0;
+											char *extraDetail = self->javaVM->internalVMFunctions->copyStringToUTF8WithMemAlloc(
+													self, emessage, J9_STR_NULL_TERMINATE_RESULT, "", 0, stackBuffer,
+													sizeof(stackBuffer), &extraDetailLength);
+											if (NULL != extraDetail) {
+												j9nls_printf(PORTLIB, J9NLS_INFO | J9NLS_STDERR | J9NLS_VITAL,
+														J9NLS_DMP_PROCESSING_DETAILED_EVENT_TIME, mapDumpEvent(eventFlags),
+														detailLength, detailData, extraDetailLength, extraDetail, dateStamp);
+												if (stackBuffer != extraDetail) {
+													j9mem_free_memory(extraDetail);
+												}
+												printed = 1;
 											}
-											printed = 1;
 										}
 									}
 								}
@@ -1046,7 +1056,7 @@ triggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags
 							}
 						}
 
-						runDumpAgent(vm,node,&context,&state,detailBuf,now);
+						runDumpAgent(vm, node, &context, &state ,detailBuf, now);
 						dumpTaken = 1;
 					}
 				}
@@ -1082,7 +1092,7 @@ triggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags
 			}
 		}
 
-		if (context.dumpList) {
+		if (NULL != context.dumpList) {
 			j9mem_free_memory(context.dumpList);
 		}
 
@@ -1294,33 +1304,31 @@ rasDumpHookClassLoad(J9HookInterface** hookInterface, UDATA eventNum, void* even
 		&dumpData);
 }
 
-
-
 static void
-rasDumpHookExceptionThrow(J9HookInterface** hookInterface, UDATA eventNum, void* eventData, void* userData)
+rasDumpHookExceptionThrow(J9HookInterface **hookInterface, UDATA eventNum, void *eventData, void *userData)
 {
 	J9VMExceptionThrowEvent *data = eventData;
-	J9VMThread* vmThread = data->currentThread;
-	J9JavaVM * vm = vmThread->javaVM;
+	J9VMThread *vmThread = data->currentThread;
+	J9JavaVM *vm = vmThread->javaVM;
 	j9object_t exception = data->exception;
-	jobject globalRef = vm->internalVMFunctions->j9jni_createGlobalRef((JNIEnv *) vmThread, exception, JNI_FALSE);
+	jobject globalRef = vm->internalVMFunctions->j9jni_createGlobalRef((JNIEnv *)vmThread, exception, JNI_FALSE);
 
 	if (NULL != globalRef) {
-		J9UTF8* className = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exception)->romClass);
+		const J9UTF8 *className = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exception)->romClass);
 		J9RASdumpEventData dumpData = { 0 };
 
 		dumpData.detailLength = J9UTF8_LENGTH(className);
-		dumpData.detailData = (char *)J9UTF8_DATA(className);
-		dumpData.exceptionRef = (j9object_t*) globalRef;
+		dumpData.detailData = (const char *)J9UTF8_DATA(className);
+		dumpData.exceptionRef = globalRef;
 
 		vm->j9rasDumpFunctions->triggerDumpAgents(
-			vm,
-			vmThread,
-			J9RAS_DUMP_ON_EXCEPTION_THROW,
-			&dumpData);
+				vm,
+				vmThread,
+				J9RAS_DUMP_ON_EXCEPTION_THROW,
+				&dumpData);
 
-		data->exception = *((j9object_t*) globalRef);
-		vm->internalVMFunctions->j9jni_deleteGlobalRef((JNIEnv *) vmThread, globalRef, JNI_FALSE);
+		data->exception = J9_JNI_UNWRAP_REFERENCE(globalRef);
+		vm->internalVMFunctions->j9jni_deleteGlobalRef((JNIEnv *)vmThread, globalRef, JNI_FALSE);
 	}
 }
 
@@ -1329,18 +1337,18 @@ static void
 rasDumpHookExceptionCatch(J9HookInterface** hookInterface, UDATA eventNum, void* eventData, void* userData)
 {
 	J9VMExceptionCatchEvent *data = eventData;
-	J9VMThread* vmThread = data->currentThread;
-	J9JavaVM * vm = vmThread->javaVM;
+	J9VMThread *vmThread = data->currentThread;
+	J9JavaVM *vm = vmThread->javaVM;
 	j9object_t exception = data->exception;
 	jobject globalRef = vm->internalVMFunctions->j9jni_createGlobalRef((JNIEnv *) vmThread, exception, JNI_FALSE);
 
 	if (NULL != globalRef) {
-		J9UTF8* className = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exception)->romClass);
+		const J9UTF8 *className = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exception)->romClass);
 		J9RASdumpEventData dumpData = { 0 };
 
 		dumpData.detailLength = J9UTF8_LENGTH(className);
-		dumpData.detailData = (char *)J9UTF8_DATA(className);
-		dumpData.exceptionRef = (j9object_t*) globalRef;
+		dumpData.detailData = (const char *)J9UTF8_DATA(className);
+		dumpData.exceptionRef = globalRef;
 
 		vm->j9rasDumpFunctions->triggerDumpAgents(
 			vm,
@@ -1348,7 +1356,7 @@ rasDumpHookExceptionCatch(J9HookInterface** hookInterface, UDATA eventNum, void*
 			J9RAS_DUMP_ON_EXCEPTION_CATCH,
 			&dumpData);
 
-		data->exception = *((j9object_t*) globalRef);
+		data->exception = J9_JNI_UNWRAP_REFERENCE(globalRef);
 		vm->internalVMFunctions->j9jni_deleteGlobalRef((JNIEnv *) vmThread, globalRef, JNI_FALSE);
 	}
 }
@@ -1358,13 +1366,13 @@ static void
 rasDumpHookThreadStart(J9HookInterface** hookInterface, UDATA eventNum, void* eventData, void* userData)
 {
 	J9VMThreadStartedEvent *data = eventData;
-	J9VMThread* vmThread = data->currentThread;
+	J9VMThread *vmThread = data->currentThread;
 
 	vmThread->javaVM->j9rasDumpFunctions->triggerDumpAgents(
-		vmThread->javaVM,
-		vmThread,
-		J9RAS_DUMP_ON_THREAD_START,
-		NULL);
+			vmThread->javaVM,
+			vmThread,
+			J9RAS_DUMP_ON_THREAD_START,
+			NULL);
 }
 
 
@@ -1400,26 +1408,26 @@ static void
 rasDumpHookExceptionDescribe(J9HookInterface** hookInterface, UDATA eventNum, void* eventData, void* userData)
 {
 	J9VMExceptionDescribeEvent *data = eventData;
-	J9VMThread* vmThread = data->currentThread;
-	J9JavaVM * vm = vmThread->javaVM;
+	J9VMThread *vmThread = data->currentThread;
+	J9JavaVM *vm = vmThread->javaVM;
 	j9object_t exception = data->exception;
 	jobject globalRef = vm->internalVMFunctions->j9jni_createGlobalRef((JNIEnv *) vmThread, exception, JNI_FALSE);
 
 	if (NULL != globalRef) {
-		J9UTF8* className = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exception)->romClass);
+		const J9UTF8 *className = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exception)->romClass);
 		J9RASdumpEventData dumpData = { 0 };
 
 		dumpData.detailLength = J9UTF8_LENGTH(className);
-		dumpData.detailData = (char *)J9UTF8_DATA(className);
-		dumpData.exceptionRef = (j9object_t*) globalRef;
+		dumpData.detailData = (const char *)J9UTF8_DATA(className);
+		dumpData.exceptionRef = globalRef;
 
 		vm->j9rasDumpFunctions->triggerDumpAgents(
-			vm,
-			vmThread,
-			J9RAS_DUMP_ON_EXCEPTION_DESCRIBE,
-			&dumpData);
+				vm,
+				vmThread,
+				J9RAS_DUMP_ON_EXCEPTION_DESCRIBE,
+				&dumpData);
 
-		data->exception = *((j9object_t*) globalRef);
+		data->exception = J9_JNI_UNWRAP_REFERENCE(globalRef);
 		vm->internalVMFunctions->j9jni_deleteGlobalRef((JNIEnv *) vmThread, globalRef, JNI_FALSE);
 	}
 }
@@ -1556,18 +1564,18 @@ static void
 rasDumpHookExceptionSysthrow(J9HookInterface** hookInterface, UDATA eventNum, void* eventData, void* userData)
 {
 	J9VMExceptionThrowEvent *data = eventData;
-	J9VMThread* vmThread = data->currentThread;
-	J9JavaVM * vm = vmThread->javaVM;
-	J9Object* exception = data->exception;
-	jobject globalRef = vm->internalVMFunctions->j9jni_createGlobalRef((JNIEnv *) vmThread, exception, JNI_FALSE);
+	J9VMThread *vmThread = data->currentThread;
+	J9JavaVM *vm = vmThread->javaVM;
+	J9Object *exception = data->exception;
+	jobject globalRef = vm->internalVMFunctions->j9jni_createGlobalRef((JNIEnv *)vmThread, exception, JNI_FALSE);
 
 	if (NULL != globalRef) {
-		J9UTF8* className = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exception)->romClass);
+		const J9UTF8 *className = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exception)->romClass);
 		J9RASdumpEventData dumpData = { 0 };
 
 		dumpData.detailLength = J9UTF8_LENGTH(className);
-		dumpData.detailData = (char *)J9UTF8_DATA(className);
-		dumpData.exceptionRef = (J9Object **) globalRef;
+		dumpData.detailData = (const char *)J9UTF8_DATA(className);
+		dumpData.exceptionRef = globalRef;
 
 		vm->j9rasDumpFunctions->triggerDumpAgents(
 				vm,
@@ -1575,8 +1583,8 @@ rasDumpHookExceptionSysthrow(J9HookInterface** hookInterface, UDATA eventNum, vo
 				J9RAS_DUMP_ON_EXCEPTION_SYSTHROW,
 				&dumpData);
 
-		data->exception = *((J9Object **) globalRef);
-		vm->internalVMFunctions->j9jni_deleteGlobalRef((JNIEnv *) vmThread, globalRef, JNI_FALSE);
+		data->exception = J9_JNI_UNWRAP_REFERENCE(globalRef);
+		vm->internalVMFunctions->j9jni_deleteGlobalRef((JNIEnv *)vmThread, globalRef, JNI_FALSE);
 	}
 }
 
