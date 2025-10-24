@@ -1674,10 +1674,10 @@ jvmtiHookBreakpoint(J9HookInterface** hook, UDATA eventNum, void* eventData, voi
 static void
 jvmtiHookExceptionThrow(J9HookInterface** hook, UDATA eventNum, void* eventData, void* userData)
 {
-	J9VMExceptionThrowEvent * data = eventData;
-	J9JVMTIEnv * j9env = userData;
+	J9VMExceptionThrowEvent *data = eventData;
+	J9JVMTIEnv *j9env = userData;
 	jvmtiEventException callback = j9env->callbacks.Exception;
-	J9VMThread * currentThread = data->currentThread;
+	J9VMThread *currentThread = data->currentThread;
 
 	Trc_JVMTI_jvmtiHookExceptionThrow_Entry();
 
@@ -1687,14 +1687,14 @@ jvmtiHookExceptionThrow(J9HookInterface** hook, UDATA eventNum, void* eventData,
 
 	if ((NULL != callback) && shouldPostEvent(currentThread, NULL)) {
 		j9object_t exception = data->exception;
-		J9JavaVM * vm = currentThread->javaVM;
-		jthread threadRef;
-		UDATA hadVMAccess;
-		J9StackWalkState walkState;
-		J9Method * throwMethod;
-		IDATA throwLocation;
-		J9Method * catchMethod;
-		IDATA catchLocation;
+		J9JavaVM *vm = currentThread->javaVM;
+		jthread threadRef = NULL;
+		UDATA hadVMAccess = 0;
+		J9StackWalkState walkState = { 0 };
+		J9Method *throwMethod = NULL;
+		IDATA throwLocation = 0;
+		J9Method *catchMethod = NULL;
+		IDATA catchLocation = 0;
 		UDATA javaOffloadOldState = 0;
 
 		/* Find the thrower */
@@ -1716,26 +1716,26 @@ jvmtiHookExceptionThrow(J9HookInterface** hook, UDATA eventNum, void* eventData,
 		/* Find the catcher, if any */
 
 		exception = (j9object_t) vm->internalVMFunctions->walkStackForExceptionThrow(currentThread, exception, TRUE);
-		switch((UDATA) currentThread->stackWalkState->userData3) {
-			case J9_EXCEPT_SEARCH_JIT_HANDLER:
-				catchMethod = vm->jitConfig->jitGetExceptionCatcher(currentThread, currentThread->stackWalkState->userData2, currentThread->stackWalkState->jitInfo, &catchLocation);
-				break;
+		switch ((UDATA) currentThread->stackWalkState->userData3) {
+		case J9_EXCEPT_SEARCH_JIT_HANDLER:
+			catchMethod = vm->jitConfig->jitGetExceptionCatcher(currentThread, currentThread->stackWalkState->userData2, currentThread->stackWalkState->jitInfo, &catchLocation);
+			break;
 
-			case J9_EXCEPT_SEARCH_JAVA_HANDLER:
-				catchMethod =  currentThread->stackWalkState->method;
-				catchLocation = (IDATA) currentThread->stackWalkState->userData1;
-				break;
+		case J9_EXCEPT_SEARCH_JAVA_HANDLER:
+			catchMethod =  currentThread->stackWalkState->method;
+			catchLocation = (IDATA) currentThread->stackWalkState->userData1;
+			break;
 
-			default:
-				catchMethod = NULL;
-				catchLocation = 0;
-				break;
+		default:
+			catchMethod = NULL;
+			catchLocation = 0;
+			break;
 		}
 
 		if (prepareForEvent(j9env, currentThread, currentThread, JVMTI_EVENT_EXCEPTION, &threadRef, &hadVMAccess, TRUE, 1, &javaOffloadOldState)) {
-			jmethodID throwMethodID;
-			jmethodID catchMethodID;
-			j9object_t * exceptionRef = (j9object_t*) currentThread->arg0EA;
+			jmethodID throwMethodID = NULL;
+			jmethodID catchMethodID = NULL;
+			j9object_t *exceptionRef = (j9object_t *)currentThread->arg0EA;
 
 			*exceptionRef = exception;
 			throwMethodID = getCurrentMethodID(currentThread, throwMethod);

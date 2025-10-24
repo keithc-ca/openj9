@@ -347,7 +347,7 @@ matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDAT
 	const char *message = eventData->detailData;
 	UDATA nbytes = eventData->detailLength;
 	jobject exception = eventData->exceptionRef;
-	j9object_t exceptionRef = NULL;
+	j9object_t exceptionObject = NULL;
 	UDATA buflen = 0;
 	char *buf = NULL;
 	const char *needleString = NULL;
@@ -365,7 +365,7 @@ matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDAT
 		throwSite.callStackOffset = 0;
 		throwSite.desiredOffset = 0;
 
-		exceptionRef = J9_JNI_UNWRAP_REFERENCE(exception);
+		exceptionObject = J9_JNI_UNWRAP_REFERENCE(exception);
 
 		/* Filter an exception event on throw/catch site if the new filter syntax is used. */
 		hashSignInFilter = strrchr(filter, '#');
@@ -393,7 +393,7 @@ matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDAT
 				/* For other events, walk the stack to find the desired frame. */
 				vmThread->javaVM->internalVMFunctions->iterateStackTrace(
 						vmThread,
-						&exceptionRef,
+						&exceptionObject,
 						countExceptionStackFrame,
 						&throwSite,
 						TRUE,
@@ -402,7 +402,7 @@ matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDAT
 		}
 
 		if (throwSite.romClass && throwSite.romMethod) {
-			J9UTF8 *exceptionClassName = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exceptionRef)->romClass);
+			J9UTF8 *exceptionClassName = J9ROMCLASS_CLASSNAME(J9OBJECT_CLAZZ(vmThread, exceptionObject)->romClass);
 			J9UTF8 *throwClassName  = J9ROMCLASS_CLASSNAME(throwSite.romClass);
 			J9UTF8 *throwMethodName = J9ROMMETHOD_NAME(throwSite.romMethod);
 
@@ -462,8 +462,8 @@ matchesExceptionFilter(J9VMThread *vmThread, J9RASdumpEventData *eventData, UDAT
 		/* Assume the sub-filter will not match. If the exception doesn't have a message, it can't match. */
 		retCode = J9RAS_DUMP_NO_MATCH;
 
-		if (NULL != exceptionRef) {
-			j9object_t emessage = J9VMJAVALANGTHROWABLE_DETAILMESSAGE(vmThread, exceptionRef);
+		if (NULL != exceptionObject) {
+			j9object_t emessage = J9VMJAVALANGTHROWABLE_DETAILMESSAGE(vmThread, exceptionObject);
 
 			if (NULL != emessage) {
 				char stackBuffer[256];
@@ -1056,7 +1056,7 @@ triggerDumpAgents(struct J9JavaVM *vm, struct J9VMThread *self, UDATA eventFlags
 							}
 						}
 
-						runDumpAgent(vm, node, &context, &state ,detailBuf, now);
+						runDumpAgent(vm, node, &context, &state, detailBuf, now);
 						dumpTaken = 1;
 					}
 				}
@@ -1563,10 +1563,10 @@ rasDumpHookClassesUnload(J9HookInterface** hookInterface, UDATA eventNum, void* 
 static void
 rasDumpHookExceptionSysthrow(J9HookInterface** hookInterface, UDATA eventNum, void* eventData, void* userData)
 {
-	J9VMExceptionThrowEvent *data = eventData;
+	J9VMExceptionSysThrowEvent *data = eventData;
 	J9VMThread *vmThread = data->currentThread;
 	J9JavaVM *vm = vmThread->javaVM;
-	J9Object *exception = data->exception;
+	j9object_t exception = data->exception;
 	jobject globalRef = vm->internalVMFunctions->j9jni_createGlobalRef((JNIEnv *)vmThread, exception, JNI_FALSE);
 
 	if (NULL != globalRef) {

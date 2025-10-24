@@ -362,8 +362,10 @@ iterateStackTraceImpl(J9VMThread *vmThread, j9object_t *exception, callback_func
 
 	if (exceptionIsJavaObject) {
 		walkback = J9VMJAVALANGTHROWABLE_WALKBACK(vmThread, J9_JNI_UNWRAP_REFERENCE(exception));
+		fprintf(stderr, "iterateStackTraceImpl: java walkback: %p -> %p\n", exception, walkback);
 	} else {
 		walkback = exception;
+		fprintf(stderr, "iterateStackTraceImpl: non-java walkback: %p\n", walkback);
 	}
 
 	/* Note that exception might be a pointer into the current thread's stack,

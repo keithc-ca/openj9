@@ -112,6 +112,7 @@ Fast_java_lang_Throwable_fillInStackTrace(J9VMThread *currentThread, j9object_t 
 			}
 			freeStackWalkCaches(currentThread, walkState);
 recursiveOOM:
+			fprintf(stderr, "%s:%d set walkback = %p\n", __FILE__, __LINE__, walkback);
 			J9VMJAVALANGTHROWABLE_SET_WALKBACK(currentThread, receiver, walkback);
 			J9VMJAVALANGTHROWABLE_SET_STACKTRACE(currentThread, receiver, NULL);
 		}

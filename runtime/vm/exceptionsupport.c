@@ -50,7 +50,7 @@ static void internalSetCurrentExceptionWithCause(J9VMThread *currentThread, UDAT
 #define HOOK_METHOD_TYPE(walkState)	 ( 0 )
 #endif
 
-void  
+void
 setCurrentExceptionUTF(J9VMThread * vmThread, UDATA exceptionNumber, const char * detailUTF)
 {
 	j9object_t detailString = NULL;
@@ -72,7 +72,7 @@ setCurrentExceptionUTF(J9VMThread * vmThread, UDATA exceptionNumber, const char 
 
 
 
-void  
+void
 setCurrentExceptionNLS(J9VMThread * vmThread, UDATA exceptionNumber, U_32 moduleName, U_32 messageNumber)
 {
 	PORT_ACCESS_FROM_VMC(vmThread);
@@ -151,8 +151,8 @@ setCurrentExceptionNLSWithArgs(J9VMThread * vmThread, U_32 nlsModule, U_32 nlsID
 	setCurrentExceptionUTF(vmThread, exceptionIndex, msgChars);
 	j9mem_free_memory(msgChars);
 }
-	
-static UDATA   
+
+static UDATA
 decompStackHeadSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 {
 	if (((UDATA *) walkState->userData1) == walkState->bp) {
@@ -161,47 +161,47 @@ decompStackHeadSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 	}
 
 	return J9_STACKWALK_KEEP_ITERATING;
-} 
-	
+}
 
-/** 
+
+/**
  * \brief	Correct the decompilation stack of the passed in walkState
- * 
- * @param currentThread		current thread 
- * @param walkState			stack walk state to be fixed 
+ *
+ * @param currentThread		current thread
+ * @param walkState			stack walk state to be fixed
  * @param rewalkAllWalkedFrames  set to true in order to rewalk the same amount of frames as upto the frame of the exceptionHandlerSearch that called us
  * @return 					none
- *      
+ *
  *	The <code>exceptionHandlerSearch</code> function issues various events that
  *	might call user callbacks such as jvmti pop frame event. Prior to the
  *	callback we release vm access which in turn might cause our thread being
  *	marked for decompilation (for example if a jvmti agent single steps or sets/removes
  *	a breakpoint). The passed in walkState->decompilationStack will not always be valid
- *	when we come back. 
+ *	when we come back.
  *
- *  if (rewalkAllWalkedFrames == FALSE) 
+ *  if (rewalkAllWalkedFrames == FALSE)
  *		This function walks the top two frames to determine the right decompilation stack head
- *		and use it to update the passed in walkState->decompilationStack. We do this when we had 
+ *		and use it to update the passed in walkState->decompilationStack. We do this when we had
  *      to dropToCurrentFrame prior to issuing an event (read: releasing access which might result
- *      in class loading, calling out to any jvmti agent which expect the stack to be in the correct shape, 
- *      hence we dropToCurrentFrame so that we match what they expect to see instead of having any 
- *      leftover/special frames ontop). We only need to walk 2 frames to figure out the correct 
+ *      in class loading, calling out to any jvmti agent which expect the stack to be in the correct shape,
+ *      hence we dropToCurrentFrame so that we match what they expect to see instead of having any
+ *      leftover/special frames ontop). We only need to walk 2 frames to figure out the correct
  *      decompilation side-stack head.
  *  else
  *      In case that the exceptionHandlerSearch stack walk iterator was used for a stack walk ment
  *      to simply walk the stack and find the catch frame (ie no frame dropping involved). Once we reacquire
- *      access, we must re-walk the stack for at least as many frames as to reach the catch frame. 
- * 
+ *      access, we must re-walk the stack for at least as many frames as to reach the catch frame.
+ *
  */
 
 static void
 syncDecompilationStackAfterReleasingVMAccess(J9VMThread *currentThread, J9StackWalkState *walkState, UDATA rewalkAllWalkedFrames)
 {
 #ifdef J9VM_JIT_FULL_SPEED_DEBUG
-	if (J9_FSD_ENABLED(currentThread->javaVM)) {	
+	if (J9_FSD_ENABLED(currentThread->javaVM)) {
 		J9StackWalkState ws;
 
-		/* Stack walk 2 frames in order to initialize ws.decompilationStack */ 
+		/* Stack walk 2 frames in order to initialize ws.decompilationStack */
 
 		ws.skipCount = 0;
 		ws.walkThread = walkState->walkThread;
@@ -222,7 +222,7 @@ syncDecompilationStackAfterReleasingVMAccess(J9VMThread *currentThread, J9StackW
 
 		walkState->decompilationStack = ws.decompilationStack;
 	}
-#endif	
+#endif
 }
 
 /*
@@ -251,7 +251,7 @@ methodBeingTraced(J9JavaVM *vm, J9Method *method)
 		5) walkState->userData4 is the thrown class (input)
 */
 
-UDATA   
+UDATA
 exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 {
 	J9JavaVM * vm = walkState->walkThread->javaVM;
@@ -327,7 +327,7 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 						 * 1) The native method is guaranteed to be the top frame
 						 * 2) The stack must be left alone to ensure consistency of the JNI refs and stack frame flags
 						 */
-	
+
 						PUSH_OBJECT_IN_SPECIAL_FRAME(currentThread, walkState->restartException);
 						tempWalkState.previous = currentThread->stackWalkState;
 						currentThread->stackWalkState = &tempWalkState;
@@ -339,9 +339,9 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 						}
 						currentThread->stackWalkState = tempWalkState.previous;
 						walkState->restartException = POP_OBJECT_IN_SPECIAL_FRAME(currentThread);
-#ifdef J9VM_JIT_FULL_SPEED_DEBUG						
+#ifdef J9VM_JIT_FULL_SPEED_DEBUG
 						walkState->decompilationStack = walkState->walkThread->decompilationStack;
-#endif									
+#endif
 					}
 				}
 
@@ -385,7 +385,7 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 						currentThread->stackWalkState = tempWalkState.previous;
 						walkState->restartException = POP_OBJECT_IN_SPECIAL_FRAME(currentThread);
 						syncDecompilationStackAfterReleasingVMAccess(currentThread, walkState, FALSE);
-					}				
+					}
 				}
 #endif
 			} else
@@ -456,7 +456,7 @@ exceptionHandlerSearch(J9VMThread *currentThread, J9StackWalkState *walkState)
 
 
 
-UDATA  
+UDATA
 isExceptionTypeCaughtByHandler(J9VMThread *currentThread, J9Class *thrownExceptionClass, J9ConstantPool *constantPool, UDATA handlerIndex, J9StackWalkState *walkState)
 {
 	J9Class * caughtExceptionClass;
@@ -490,7 +490,7 @@ isExceptionTypeCaughtByHandler(J9VMThread *currentThread, J9Class *thrownExcepti
 		} else {
 			syncDecompilationStackAfterReleasingVMAccess(currentThread, walkState, TRUE);
 		}
-		
+
 		/* If we were unable to load the class, then we can only say that the exception is not caught */
 
 		if (caughtExceptionClass == NULL) {
@@ -513,7 +513,7 @@ isExceptionTypeCaughtByHandler(J9VMThread *currentThread, J9Class *thrownExcepti
 }
 
 
-void  
+void
 setCurrentException(J9VMThread *currentThread, UDATA exceptionNumber, UDATA *detailMessage)
 {
 	setCurrentExceptionWithUtfCause(currentThread, exceptionNumber, detailMessage, NULL, NULL);
@@ -523,48 +523,45 @@ setCurrentException(J9VMThread *currentThread, UDATA exceptionNumber, UDATA *det
  * Creates exception with its cause and detailed message
  *
  * @param currentThread
- * @param exceptionNumber    
- * @param detailMessage         
- * @param cause 
- * 
+ * @param exceptionNumber
+ * @param detailMessage
+ * @param cause
+ *
  */
 static void
 internalSetCurrentExceptionWithCause(J9VMThread *currentThread, UDATA exceptionNumber, UDATA *detailMessage, const char *utfMessage, j9object_t cause)
 {
-	UDATA index = 0;
-	UDATA * preservedMessage = NULL;
+	UDATA *preservedMessage = NULL;
 	UDATA resetOutOfMemory = 0;
 	j9object_t exception = NULL;
-	J9Class * exceptionClass = NULL;
-	UDATA constructorIndex = 0;
+	J9Class *exceptionClass = NULL;
+	UDATA index = exceptionNumber & J9_EXCEPTION_INDEX_MASK;
+	UDATA constructorIndex = exceptionNumber & J9_EX_CTOR_TYPE_MASK;
 	UDATA exceptionFlags = 0;
-
-	index = exceptionNumber & J9_EXCEPTION_INDEX_MASK;
-	constructorIndex = exceptionNumber & J9_EX_CTOR_TYPE_MASK;
 
 	Trc_VM_setCurrentException_Entry(currentThread, index, constructorIndex, detailMessage);
 
-	/* Clear the current exception so that it doesn't get re-triggered while loading more exception classes */
+	/* Clear the current exception so that it doesn't get re-triggered while loading more exception classes. */
 
 	currentThread->currentException = NULL;
 	currentThread->privateFlags &= ~J9_PRIVATE_FLAGS_REPORT_EXCEPTION_THROW;
 
-	/* Preserve cause object */
+	/* Preserve cause object. */
 
 	PUSH_OBJECT_IN_SPECIAL_FRAME(currentThread, cause);
 
-	/* Preserve the detail message object (if it is an object) */
+	/* Preserve the detail message object (if it is an object). */
 
 	switch (constructorIndex) {
-		case J9_EX_CTOR_INT:
-		case J9_EX_CTOR_CLASS_CLASS:
-			preservedMessage = NULL;
-			break;
-		default:
-			preservedMessage = detailMessage;
-			break;
+	case J9_EX_CTOR_INT:
+	case J9_EX_CTOR_CLASS_CLASS:
+		preservedMessage = NULL;
+		break;
+	default:
+		preservedMessage = detailMessage;
+		break;
 	}
-	PUSH_OBJECT_IN_SPECIAL_FRAME(currentThread, (j9object_t) preservedMessage);
+	PUSH_OBJECT_IN_SPECIAL_FRAME(currentThread, (j9object_t)preservedMessage);
 
 	if (J9VMCONSTANTPOOL_JAVALANGUNSUPPORTEDCLASSVERSIONERROR == index) {
 		J9JavaVM *vm = currentThread->javaVM;
@@ -579,8 +576,8 @@ internalSetCurrentExceptionWithCause(J9VMThread *currentThread, UDATA exceptionN
 #ifdef J9VM_INTERP_GROWABLE_STACKS
 	/*  If we are throwing StackOverflowError for the first time in this thread, grow the stack once more */
 
-	if (index == J9VMCONSTANTPOOL_JAVALANGSTACKOVERFLOWERROR) {
-		J9JavaVM * vm = currentThread->javaVM;
+	if (J9VMCONSTANTPOOL_JAVALANGSTACKOVERFLOWERROR == index) {
+		J9JavaVM *vm = currentThread->javaVM;
 		UDATA stackSize = vm->stackSize + OMR_MAX(J9_STACK_OVERFLOW_AND_HEADER_SIZE, vm->stackSizeIncrement);
 
 		if (currentThread->stackObject->size < stackSize) {
@@ -599,57 +596,54 @@ internalSetCurrentExceptionWithCause(J9VMThread *currentThread, UDATA exceptionN
 	}
 	currentThread->privateFlags |= exceptionFlags;
 
-	/* Handle OutOfMemory specially
+	/* Handle OutOfMemory specially.
 	 *
 	 * To prevent recursion of OOM being called, following three states are in effect.
 	 *
-	 * OOM_STATE_1 = First OOM. Construct OOM. Set currentThread->privateFlags |= J9_PRIVATE_FLAGS_OUT_OF_MEMORY
+	 * OOM_STATE_1 = First OOM. Construct OOM. Set currentThread->privateFlags |= J9_PRIVATE_FLAGS_OUT_OF_MEMORY.
 	 * OOM_STATE_2 = Already throwing OOM. Use cached OOM and call exception constructor (internalSendExceptionConstructor)
-	 * 				 and set currentThread->privateFlags |= J9_PRIVATE_FLAGS_FINAL_CALL_OUT_OF_MEMORY
+	 *               and set currentThread->privateFlags |= J9_PRIVATE_FLAGS_FINAL_CALL_OUT_OF_MEMORY.
 	 * OOM_STATE_3 = Already throwing cached OOM. Skip calling the constructor and just throw the exception.
-	 *
 	 */
 
 	resetOutOfMemory = FALSE;
 	currentThread->privateFlags &= ~J9_PRIVATE_FLAGS_FILL_EXISTING_TRACE;
-	if (index == J9VMCONSTANTPOOL_JAVALANGOUTOFMEMORYERROR) {
-		J9JavaVM * vm = currentThread->javaVM;
+	if (J9VMCONSTANTPOOL_JAVALANGOUTOFMEMORYERROR == index) {
+		J9JavaVM *vm = currentThread->javaVM;
 
-		/* If java.lang.Class has not yet been loaded, don't try to allocate the exception - just bail */
+		/* If java.lang.Class has not yet been loaded, don't try to allocate the exception - just bail. */
 
-		if (J9VMJAVALANGCLASS_OR_NULL(vm) == NULL) {
+		if (NULL == J9VMJAVALANGCLASS_OR_NULL(vm)) {
 			Trc_VM_setCurrentException_ClassNotLoaded(currentThread);
 			Assert_VM_fatalOOM();
 			/* Execution never reaches this point */
 		}
 
 		if (J9_EVENT_IS_HOOKED(vm->hookInterface, J9HOOK_VM_RESOURCE_EXHAUSTED)) {
-			UDATA resourceTypes;
-				
-			/* The caller might have specified OOM exception type bits */
-			resourceTypes = exceptionNumber & J9_EX_OOM_TYPE_MASK;
+			/* The caller might have specified OOM exception type bits. */
+			UDATA resourceTypes = exceptionNumber & J9_EX_OOM_TYPE_MASK;
 
-			/* No bits specified, we are dealing with a regular Java Heap OOM */
-			if (resourceTypes == 0) {
-				resourceTypes = J9_EX_OOM_JAVA_HEAP;  	
+			/* No bits specified, we are dealing with a regular Java Heap OOM. */
+			if (0 == resourceTypes) {
+				resourceTypes = J9_EX_OOM_JAVA_HEAP;
 			}
 
 			ALWAYS_TRIGGER_J9HOOK_VM_RESOURCE_EXHAUSTED(vm->hookInterface, currentThread, resourceTypes, utfMessage);
-		}			
+		}
 
 		/* OOM_STATE_2 : If we're already throwing OutOfMemory, use the cached Throwable */
 		if (currentThread->privateFlags & J9_PRIVATE_FLAGS_OUT_OF_MEMORY) {
-			j9object_t walkback;
+			j9object_t walkback = NULL;
 
 throwOutOfMemory:
 			exception = currentThread->outOfMemoryError;
-			if (exception == NULL) {
+			if (NULL == exception) {
 				Trc_VM_setCurrentException_NoCachedOOM(currentThread);
 				Assert_VM_fatalOOM();
-				/* Execution never reaches this point */
+				/* Execution never reaches this point. */
 			}
 
-			/* Check whether we are in OOM_STATE_2 or OOM_STATE_3 */
+			/* Check whether we are in OOM_STATE_2 or OOM_STATE_3. */
 			if (currentThread->privateFlags & J9_PRIVATE_FLAGS_FINAL_CALL_OUT_OF_MEMORY) {
 				/* OOM_STATE_3 */
 				currentThread->currentException = exception;
@@ -657,24 +651,24 @@ throwOutOfMemory:
 				DROP_OBJECT_IN_SPECIAL_FRAME(currentThread); /* cause */
 				goto done;
 			}
-			
+
 			/* OOM_STATE_2 */
 			currentThread->privateFlags |= J9_PRIVATE_FLAGS_FINAL_CALL_OUT_OF_MEMORY;
-			
-			/* If there's a walkback object in the Throwable, zero it */
+
+			/* If there's a walkback object in the Throwable, zero it. */
 
 			exceptionClass = J9OBJECT_CLAZZ(currentThread, exception);
 			walkback = J9VMJAVALANGTHROWABLE_WALKBACK(currentThread, exception);
 
-			if (walkback != NULL) {
-				U_32 i;
+			if (NULL != walkback) {
+				U_32 i = 0;
 
 				for (i = 0; i < J9INDEXABLEOBJECT_SIZE(currentThread, walkback); i++) {
 					J9JAVAARRAYOFUDATA_STORE(currentThread, walkback, i, 0);
-				} 
+				}
 				currentThread->privateFlags |= J9_PRIVATE_FLAGS_FILL_EXISTING_TRACE;
 			}
-						
+
 			goto sendConstructor;
 		}
 		/* OOM_STATE_1 */
@@ -682,66 +676,66 @@ throwOutOfMemory:
 		resetOutOfMemory = TRUE;
 	}
 
-	/* Get the class of the exception, loading the class if necessary.  
-	 * Fetch known class fatal exits if the class cannot be found. 
-     */
+	/* Get the class of the exception, loading the class if necessary.
+	 * Fetch known class fatal exits if the class cannot be found.
+	 */
 	exceptionClass = internalFindKnownClass(currentThread, index, J9_FINDKNOWNCLASS_FLAG_INITIALIZE | J9_FINDKNOWNCLASS_FLAG_NON_FATAL);
-	if (exceptionClass == NULL) {
+	if (NULL == exceptionClass) {
 		Trc_VM_setCurrentException_UnableToLoadExceptionClass(currentThread);
 		DROP_OBJECT_IN_SPECIAL_FRAME(currentThread); /* preservedMessage */
 		DROP_OBJECT_IN_SPECIAL_FRAME(currentThread); /* cause */
 		/* Exception class could not be loaded/initialized - there should be an exception pending now, if not, throw OOM */
-		if (currentThread->currentException == NULL) {
+		if (NULL == currentThread->currentException) {
 			Trc_VM_setCurrentException_NoExceptionPending(currentThread);
 			setHeapOutOfMemoryError(currentThread);
 		}
 		goto done;
 	}
 
-	/* Make an instance of the exception class */
+	/* Make an instance of the exception class. */
 
 	exception = currentThread->javaVM->memoryManagerFunctions->J9AllocateObject(
-		currentThread, exceptionClass, J9_GC_ALLOCATE_OBJECT_NON_INSTRUMENTABLE);
-	if (exception == NULL) {
+			currentThread, exceptionClass, J9_GC_ALLOCATE_OBJECT_NON_INSTRUMENTABLE);
+	if (NULL == exception) {
 		Trc_VM_setCurrentException_UnableToAllocateException(currentThread);
 		goto throwOutOfMemory;
 	}
 
-	/* Construct the exception */
+	/* Construct the exception. */
 
 sendConstructor:
 	switch (constructorIndex) {
-		case J9_EX_CTOR_INT:
-		case J9_EX_CTOR_CLASS_CLASS:
-			break;
-		default:
-			detailMessage = *((UDATA **) (currentThread->sp));
-			break;
+	case J9_EX_CTOR_INT:
+	case J9_EX_CTOR_CLASS_CLASS:
+		break;
+	default:
+		detailMessage = *(UDATA **)(currentThread->sp);
+		break;
 	}
 
-	/* Look up and call the exception constructor */
+	/* Look up and call the exception constructor. */
 
-	*((j9object_t*) (currentThread->sp)) = exception;
-	internalSendExceptionConstructor(currentThread, exceptionClass, exception, (j9object_t) detailMessage, constructorIndex);
+	*(j9object_t *)(currentThread->sp) = exception;
+	internalSendExceptionConstructor(currentThread, exceptionClass, exception, (j9object_t)detailMessage, constructorIndex);
 	currentThread->privateFlags &= ~J9_PRIVATE_FLAGS_FILL_EXISTING_TRACE;
 	exception = POP_OBJECT_IN_SPECIAL_FRAME(currentThread); /* preservedMessage */
 
-	/* Retrieve the cause, and if it's not NULL, set it in the exception */
+	/* Retrieve the cause, and if it's not NULL, set it in the exception. */
 
 	cause = POP_OBJECT_IN_SPECIAL_FRAME(currentThread); /* cause */
-	if (currentThread->currentException == NULL) {
-		if (cause != NULL) {
-			sendInitCause(currentThread, (j9object_t) exception, cause);
-			exception = (j9object_t) currentThread->returnValue; /* initCause returns the receiver */
+	if (NULL == currentThread->currentException) {
+		if (NULL != cause) {
+			sendInitCause(currentThread, exception, cause);
+			exception = (j9object_t)currentThread->returnValue; /* initCause returns the receiver */
 		}
 	} else {
 		Trc_VM_setCurrentException_ExceptionDuringConstructor(currentThread);
 	}
 
-	/* If no exception occurred during construction, report systhrow for the new exception */
+	/* If no exception occurred during construction, report systhrow for the new exception. */
 
-	if (currentThread->currentException == NULL) {
-		j9object_t localException = (j9object_t) exception;
+	if (NULL == currentThread->currentException) {
+		j9object_t localException = exception;
 
 		TRIGGER_J9HOOK_VM_EXCEPTION_SYSTHROW(currentThread->javaVM->hookInterface, currentThread, localException);
 		currentThread->currentException = localException;
@@ -751,7 +745,7 @@ sendConstructor:
 	}
 
 done:
-	/* Reset the recursion-prevention flags */
+	/* Reset the recursion-prevention flags. */
 
 	if (resetOutOfMemory) {
 		currentThread->privateFlags &= ~J9_PRIVATE_FLAGS_OUT_OF_MEMORY;
@@ -771,9 +765,9 @@ typedef struct J9RedirectedSetCurrentExceptionWithCauseArgs {
 } J9RedirectedSetCurrentExceptionWithCauseArgs;
 
 /**
- * This is an helper function to call internalSetCurrentExceptionWithCause indirectly from gpProtectAndRun function.
- * 
- * @param entryArg	Argument structure (J9RedirectedSetCurrentExceptionWithCauseArgs).
+ * This is a helper function to call internalSetCurrentExceptionWithCause indirectly from gpProtectAndRun function.
+ *
+ * @param entryArg Argument structure (J9RedirectedSetCurrentExceptionWithCauseArgs).
  */
 static UDATA
 gpProtectedSetCurrentExceptionWithCause(void *entryArg)
@@ -782,19 +776,18 @@ gpProtectedSetCurrentExceptionWithCause(void *entryArg)
 
 	internalSetCurrentExceptionWithCause(args->currentThread, args->exceptionNumber, args->detailMessage, args->utfMessage, args->cause);
 
-	return 0;					/* return value required to conform to port library definition */
+	return 0; /* return value required to conform to port library definition */
 }
 
 /**
- * This function makes sure that call to "internalSetCurrentExceptionWithCause" is gpProtected
+ * This function makes sure that call to "internalSetCurrentExceptionWithCause" is gpProtected.
  *
  * @param currentThread
- * @param exceptionNumber    
- * @param detailMessage         
- * @param cause  
- *
+ * @param exceptionNumber
+ * @param detailMessage
+ * @param cause
  */
-void  
+void
 setCurrentExceptionWithCause(J9VMThread *currentThread, UDATA exceptionNumber, UDATA *detailMessage, j9object_t cause)
 {
 	setCurrentExceptionWithUtfCause(currentThread, exceptionNumber, detailMessage, NULL, cause);
@@ -815,11 +808,10 @@ setCurrentExceptionWithUtfCause(J9VMThread *currentThread, UDATA exceptionNumber
 		handlerArgs.cause = cause;
 
 		gpProtectAndRun(gpProtectedSetCurrentExceptionWithCause, (JNIEnv *)currentThread, &handlerArgs);
-
 	}
 }
 
-j9object_t   
+j9object_t
 walkStackForExceptionThrow(J9VMThread * currentThread, j9object_t exception, UDATA walkOnly)
 {
 	J9StackWalkState * walkState = currentThread->stackWalkState;
@@ -844,7 +836,7 @@ walkStackForExceptionThrow(J9VMThread * currentThread, j9object_t exception, UDA
 	return walkState->restartException;
 }
 
-void  
+void
 setClassCastException(J9VMThread *currentThread, J9Class * instanceClass, J9Class * castClass)
 {
 	J9ClassCastParms detailMessage;
@@ -863,7 +855,7 @@ setNegativeArraySizeException(J9VMThread *currentThread, I_32 size)
 	setCurrentExceptionUTF(currentThread, J9VMCONSTANTPOOL_JAVALANGNEGATIVEARRAYSIZEEXCEPTION, buffer);
 }
 
-void  
+void
 setClassLoadingConstraintError(J9VMThread * currentThread, J9ClassLoader * initiatingLoader, J9Class * existingClass)
 {
 	PORT_ACCESS_FROM_VMC(currentThread);
@@ -902,7 +894,7 @@ setClassLoadingConstraintError(J9VMThread * currentThread, J9ClassLoader * initi
 	j9mem_free_memory(msg);
 }
 
-void  
+void
 setClassLoadingConstraintSignatureError(J9VMThread *currentThread, J9ClassLoader *loader1, J9Class *class1, J9ClassLoader *loader2, J9Class *class2, J9Class *exceptionClass, U_8 *methodName, UDATA methodNameLength, U_8 *signature, UDATA signatureLength)
 {
 	PORT_ACCESS_FROM_VMC(currentThread);
@@ -965,7 +957,7 @@ setClassLoadingConstraintSignatureError(J9VMThread *currentThread, J9ClassLoader
 }
 
 
-void  
+void
 setClassLoadingConstraintOverrideError(J9VMThread *currentThread, J9UTF8 *newClassNameUTF, J9ClassLoader *loader1, J9UTF8 *class1NameUTF, J9ClassLoader *loader2, J9UTF8 *class2NameUTF, J9UTF8 *exceptionClassNameUTF, U_8 *methodName, UDATA methodNameLength, U_8 *signature, UDATA signatureLength)
 {
 	PORT_ACCESS_FROM_VMC(currentThread);
@@ -1077,7 +1069,7 @@ setNativeBindOutOfMemoryError(J9VMThread * currentThread, J9Method * method)
 }
 
 
-void  
+void
 setRecursiveBindError(J9VMThread * currentThread, J9Method * method)
 {
 	char * msg = nlsMessageForMethod(currentThread, method, J9NLS_VM_RECURSIVE_BIND);
@@ -1088,7 +1080,7 @@ setRecursiveBindError(J9VMThread * currentThread, J9Method * method)
 }
 
 
-void  
+void
 setNativeNotFoundError(J9VMThread * currentThread, J9Method * method)
 {
 	j9object_t detailMessage = methodToString(currentThread, method);
@@ -1098,7 +1090,7 @@ setNativeNotFoundError(J9VMThread * currentThread, J9Method * method)
 }
 
 
-void  
+void
 setHeapOutOfMemoryError(J9VMThread * currentThread)
 {
 	PORT_ACCESS_FROM_VMC(currentThread);
@@ -1109,14 +1101,14 @@ setHeapOutOfMemoryError(J9VMThread * currentThread)
 }
 
 
-void  
+void
 setArrayIndexOutOfBoundsException(J9VMThread * currentThread, IDATA index)
 {
 	setCurrentException(currentThread, J9_EX_CTOR_INT + J9VMCONSTANTPOOL_JAVALANGARRAYINDEXOUTOFBOUNDSEXCEPTION, (UDATA*)(UDATA)index);
 }
 
 
-void  
+void
 setNativeOutOfMemoryError(J9VMThread * vmThread, U_32 moduleName, U_32 messageNumber)
 {
 	PORT_ACCESS_FROM_VMC(vmThread);
@@ -1134,7 +1126,7 @@ setNativeOutOfMemoryError(J9VMThread * vmThread, U_32 moduleName, U_32 messageNu
 	setCurrentExceptionUTF(vmThread, J9_EX_OOM_OS_HEAP | J9VMCONSTANTPOOL_JAVALANGOUTOFMEMORYERROR, msg);
 }
 
-void  
+void
 setIncompatibleClassChangeErrorForDefaultConflict(J9VMThread * vmThread, J9Method *method)
 {
 	PORT_ACCESS_FROM_VMC(vmThread);
@@ -1171,7 +1163,7 @@ setIncompatibleClassChangeErrorForDefaultConflict(J9VMThread * vmThread, J9Metho
 	j9mem_free_memory(msg);
 }
 
-void  
+void
 setIllegalAccessErrorNonPublicInvokeInterface(J9VMThread *vmThread, J9Method *method)
 {
 	PORT_ACCESS_FROM_VMC(vmThread);
@@ -1208,7 +1200,7 @@ setIllegalAccessErrorNonPublicInvokeInterface(J9VMThread *vmThread, J9Method *me
 	j9mem_free_memory(msg);
 }
 
-void  
+void
 setThreadForkOutOfMemoryError(J9VMThread * vmThread, U_32 moduleName, U_32 messageNumber)
 {
 	PORT_ACCESS_FROM_VMC(vmThread);
@@ -1220,7 +1212,7 @@ setThreadForkOutOfMemoryError(J9VMThread * vmThread, U_32 moduleName, U_32 messa
 }
 
 
-jint  
+jint
 initializeHeapOOMMessage(J9VMThread *currentThread)
 {
 	J9JavaVM * vm = currentThread->javaVM;
@@ -1235,14 +1227,14 @@ initializeHeapOOMMessage(J9VMThread *currentThread)
 
 		if (NULL != globalRef) {
 			vm->heapOOMStringRef = (j9object_t*)globalRef;
-			result = JNI_OK;			
+			result = JNI_OK;
 		}
 	}
 	return result;
 }
 
 
-void  
+void
 setIllegalAccessErrorFinalFieldSet(J9VMThread *currentThread, UDATA isStatic, J9ROMClass *romClass, J9ROMFieldShape *field, J9ROMMethod *romMethod)
 {
 	PORT_ACCESS_FROM_VMC(currentThread);
