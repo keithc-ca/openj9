@@ -1899,7 +1899,7 @@ createCachedOutOfMemoryError(J9VMThread * currentThread, j9object_t threadObject
 		if (walkback == NULL) {
 			outOfMemoryError = NULL;
 		} else {
-			fprintf(stderr, "%s:%d set walkback = %p\n", __FILE__, __LINE__, walkback);
+			fprintf(stderr, "%s:%d set walkback(%p) = %p\n", __FILE__, __LINE__, outOfMemoryError, walkback);
 			J9VMJAVALANGTHROWABLE_SET_WALKBACK(currentThread, outOfMemoryError, walkback);
 		}
 	}

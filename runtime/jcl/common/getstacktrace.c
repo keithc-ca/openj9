@@ -172,7 +172,7 @@ createStackTraceThrowable(J9VMThread *currentThread, const UDATA *frames, UDATA 
 		goto fail_outOfMemory;
 	}
 	walkback = (j9array_t)POP_OBJECT_IN_SPECIAL_FRAME(currentThread);
-	fprintf(stderr, "%s:%d set walkback = %p\n", __FILE__, __LINE__, walkback);
+	fprintf(stderr, "%s:%d set walkback(%p) = %p\n", __FILE__, __LINE__, throwable, walkback);
 	J9VMJAVALANGTHROWABLE_SET_WALKBACK(currentThread, throwable, walkback);
 
 	/* Return the result - any pending exception will be checked by the caller and the result discarded */

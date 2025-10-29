@@ -53,12 +53,13 @@ Fast_java_lang_Throwable_fillInStackTrace(J9VMThread *currentThread, j9object_t 
 			 * has a stack trace.  In the out of memory case, there is a bit indicating that we should
 			 * explicitly override this behaviour, since we've precached the stack trace array.
 			 */
+			fprintf(stderr, "%s:%d walkback(%p) -> %p\n", __FILE__, __LINE__, receiver, walkback);
 			if ((NULL == walkback) || (currentThread->privateFlags & J9_PRIVATE_FLAGS_FILL_EXISTING_TRACE)) {
 				walkFlags |= J9_STACKWALK_HIDE_EXCEPTION_FRAMES;
 				walkState->restartException = receiver;
 			}
 			walkState->flags = walkFlags;
-			walkState->skipCount = 1;	/* skip the INL frame */
+			walkState->skipCount = 1; /* skip the INL frame */
 #if JAVA_SPEC_VERSION >= 15
 			J9Class *receiverClass = J9OBJECT_CLAZZ(currentThread, receiver);
 			if (J9VMJAVALANGNULLPOINTEREXCEPTION_OR_NULL(vm) == receiverClass) {
@@ -112,7 +113,7 @@ Fast_java_lang_Throwable_fillInStackTrace(J9VMThread *currentThread, j9object_t 
 			}
 			freeStackWalkCaches(currentThread, walkState);
 recursiveOOM:
-			fprintf(stderr, "%s:%d set walkback = %p\n", __FILE__, __LINE__, walkback);
+			fprintf(stderr, "%s:%d set walkback(%p) = %p\n", __FILE__, __LINE__, receiver, walkback);
 			J9VMJAVALANGTHROWABLE_SET_WALKBACK(currentThread, receiver, walkback);
 			J9VMJAVALANGTHROWABLE_SET_STACKTRACE(currentThread, receiver, NULL);
 		}

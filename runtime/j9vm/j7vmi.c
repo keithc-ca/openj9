@@ -495,7 +495,7 @@ JVM_FillInStackTrace(JNIEnv* env, jobject throwable)
 		vmfns->freeStackWalkCaches(currentThread, walkState);
 
 setThrowableSlots:
-		fprintf(stderr, "%s:%d set walkback = %p\n", __FILE__, __LINE__, result);
+		fprintf(stderr, "%s:%d set walkback(%p) = %p\n", __FILE__, __LINE__, unwrappedThrowable, result);
 		J9VMJAVALANGTHROWABLE_SET_WALKBACK(currentThread, unwrappedThrowable, result);
 		J9VMJAVALANGTHROWABLE_SET_STACKTRACE(currentThread, unwrappedThrowable, NULL);
 	}

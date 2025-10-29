@@ -3549,7 +3549,7 @@ done:
 recursiveOOM:
 				restoreInternalNativeStackFrame(REGISTER_ARGS);
 				receiver = *(j9object_t*)_sp;
-				fprintf(stderr, "%s:%d set walkback = %p\n", __FILE__, __LINE__, walkback);
+				fprintf(stderr, "%s:%d set walkback(%p) = %p\n", __FILE__, __LINE__, receiver, walkback);
 				J9VMJAVALANGTHROWABLE_SET_WALKBACK(_currentThread, receiver, walkback);
 				J9VMJAVALANGTHROWABLE_SET_STACKTRACE(_currentThread, receiver, NULL);
 			}
