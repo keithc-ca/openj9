@@ -437,8 +437,10 @@ J9AllocateObject(J9VMThread *vmThread, J9Class *clazz, uintptr_t allocateFlags)
 			if (LN_HAS_LOCKWORD(vmThread, objectPtr)) {
 				j9objectmonitor_t initialLockword = VM_ObjectMonitor::getInitialLockword(vmThread->javaVM, clazz);
 				if (0 != initialLockword) {
+					UDATA offset = J9VMJAVALANGTHROWABLE_WALKBACK_OFFSET(vmThread);
 					j9objectmonitor_t *lockEA = J9OBJECT_MONITOR_EA(vmThread, objectPtr);
-					J9_STORE_LOCKWORD(vmThread, lockEA, initialLockword);
+					fprintf(stderr, "store_lockword: objectd=%p, lockEA=%p walkback offset=%lu\n", objectPtr, lockEA, offset);
+					J9_STORE_LOCKWORD(vmThread, lockEA, initialLockword); // !!!
 				}
 			}
 		}
