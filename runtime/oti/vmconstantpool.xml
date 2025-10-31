@@ -21,6 +21,23 @@ OpenJDK Assembly Exception [2].
 SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
 -->
 <vmconstantpool>
+	<classref name="java/lang/Object"/>
+	<classref name="java/lang/StackTraceElement"/>
+	<classref name="java/lang/String"/>
+	<classref name="java/lang/Throwable" flags="interp_hotCodeReplacement"/>
+
+	<!--
+	!! Fields of Throwable need to be resolved early so that any exceptions that might be
+	!! thrown during the VM startup sequence have access to their final offsets so macros
+	!! like J9VMJAVALANGTHROWABLE_*_STACKTRACE and J9VMJAVALANGTHROWABLE_*_WALKBACK work
+	!! as expected in places like Throwable.fillInStackTrace() and iterateStackTrace().
+	-->
+	<fieldref class="java/lang/Throwable" name="cause" signature="Ljava/lang/Throwable;"/>
+	<fieldref class="java/lang/Throwable" name="detailMessage" signature="Ljava/lang/String;"/>
+	<fieldref class="java/lang/Throwable" name="disableWritableStackTrace" signature="Z"/>
+	<fieldref class="java/lang/Throwable" name="stackTrace" signature="[Ljava/lang/StackTraceElement;"/>
+	<fieldref class="java/lang/Throwable" name="walkback" signature="Ljava/lang/Object;"/>
+
 	<classref name="java/lang/ArrayStoreException"/>
 	<classref name="java/lang/ClassCastException"/>
 	<classref name="java/lang/IdentityException" flags="opt_valhallaValueTypes"/>
@@ -45,8 +62,6 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-ex
 	<classref name="java/lang/NoSuchFieldError"/>
 	<classref name="java/lang/NoClassDefFoundError"/>
 	<classref name="java/lang/ArrayIndexOutOfBoundsException"/>
-	<classref name="java/lang/Object"/>
-	<classref name="java/lang/String"/>
 	<classref name="java/lang/String$StringCompressionFlag"/>
 	<classref name="java/lang/Class"/>
 	<classref name="java/lang/IllegalThreadStateException"/>
@@ -58,7 +73,6 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-ex
 	<classref name="java/lang/ThreadGroup"/>
 	<classref name="java/lang/InterruptedException"/>
 	<classref name="java/lang/ClassNotFoundException"/>
-	<classref name="java/lang/Throwable" flags="interp_hotCodeReplacement"/>
 	<classref name="com/ibm/oti/vm/ReflectObjectInvalidException" flags="opt_reflect"/>
 	<classref name="java/lang/StringIndexOutOfBoundsException"/>
 	<classref name="java/lang/ThreadDeath"/>
@@ -85,7 +99,6 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-ex
 	<classref name="java/lang/ClassCircularityError"/>
 	<classref name="java/lang/VerifyError"/>
 	<classref name="java/lang/ClassFormatError"/>
-	<classref name="java/lang/StackTraceElement"/>
 	<classref name="java/lang/StackWalker$StackFrameImpl"/>
 	<classref name="java/lang/InternalConstantPool"/>
 	<classref name="java/lang/ExceptionInInitializerError"/>
@@ -276,11 +289,6 @@ SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-ex
 	<fieldref class="java/lang/VirtualThread" name="onWaitingList" signature="Z" versions="24-"/>
 	<fieldref class="java/lang/VirtualThread" name="timeout" signature="J" versions="24-"/>
 
-	<fieldref class="java/lang/Throwable" name="cause" signature="Ljava/lang/Throwable;"/>
-	<fieldref class="java/lang/Throwable" name="detailMessage" signature="Ljava/lang/String;"/>
-	<fieldref class="java/lang/Throwable" name="walkback" signature="Ljava/lang/Object;"/>
-	<fieldref class="java/lang/Throwable" name="stackTrace" signature="[Ljava/lang/StackTraceElement;"/>
-	<fieldref class="java/lang/Throwable" name="disableWritableStackTrace" signature="Z"/>
 	<fieldref class="java/lang/ExceptionInInitializerError" name="exception" signature="Ljava/lang/Throwable;" versions="8-11"/>
 	<fieldref class="java/lang/Boolean" name="value" signature="Z"/>
 	<fieldref class="java/lang/Byte" name="value" signature="B"/>
