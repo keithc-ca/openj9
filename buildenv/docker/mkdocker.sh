@@ -324,6 +324,15 @@ fi
   echo "FROM $registry$dist:$version AS base"
 }
 
+install_gcc() {
+  local archive="gcc142.$arch.tar.xz"
+  echo "# Install gcc-14.2."
+  echo "RUN cd /usr/local \\"
+  echo " && $wget_O $archive 'https://ci.adoptium.net/userContent/gcc/$archive' \\"
+  echo " && tar -xJf $archive \\"
+  echo " && rm -f $archive"
+}
+
 install_centos_packages() {
 if [ $version = 6 ] ; then
   echo "RUN sed -i -e 's|mirrorlist|#mirrorlist|' \\"
@@ -424,21 +433,7 @@ fi
   echo " && cd .. \\"
   echo " && rm -rf autoconf.tar.gz autoconf-$autoconf_version"
   echo ""
-  echo "# Install gcc-7.5."
-  echo "RUN cd /usr/local \\"
-  echo " && $wget_O gcc-7.tar.xz 'https://ci.adoptopenjdk.net/userContent/gcc/gcc750+ccache.$arch.tar.xz' \\"
-  echo " && tar -xJf gcc-7.tar.xz --strip-components=1 \\"
-  echo " && ln -sf ../local/bin/gcc-7.5 /usr/bin/gcc \\"
-  echo " && ln -sf ../local/bin/g++-7.5 /usr/bin/g++ \\"
-  echo " && ln -sf gcc /usr/bin/cc \\"
-  echo " && ln -sf g++ /usr/bin/c++ \\"
-  echo " && rm -f gcc-7.tar.xz"
-  echo ""
-  echo "# Install gcc-11.2."
-  echo "RUN cd /usr/local \\"
-  echo " && $wget_O gcc-11.tar.xz 'https://ci.adoptopenjdk.net/userContent/gcc/gcc112.$arch.tar.xz' \\"
-  echo " && tar -xJf gcc-11.tar.xz \\"
-  echo " && rm -f gcc-11.tar.xz"
+  install_gcc
   echo ""
   local ant_version=1.10.5
   echo "# Install ant."
@@ -549,19 +544,6 @@ if [ $criu != no ] && [ $version != 20.04 ] ; then
 fi
   echo "    curl \\"
   echo "    file \\"
-if [ $version = 18.04 ] ; then
-  echo "    g++-8 \\"
-  echo "    gcc-8 \\"
-elif [ $version = 20.04 ] ; then
-  echo "    g++-10 \\"
-  echo "    gcc-10 \\"
-elif [ $version = 22.04 ] ; then
-  echo "    g++-11 \\"
-  echo "    gcc-11 \\"
-else
-  echo "    g++-13 \\"
-  echo "    gcc-13 \\"
-fi
   echo "    gdb \\"
   echo "    git \\"
   echo "    libasound2-dev \\"
@@ -614,6 +596,8 @@ fi
   echo "    python3-protobuf \\"
 fi
   echo " && rm -rf /var/lib/apt/lists/*"
+  echo ""
+  install_gcc
 }
 
 install_packages() {
