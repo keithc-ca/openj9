@@ -117,7 +117,7 @@ J9AllocateObjectNoGC(J9VMThread *vmThread, J9Class *clazz, uintptr_t allocateFla
 
 				/* Do sanity check: size of actually allocated Mixed object should match requested */
 				uintptr_t requestedBytes = mixedOAM.getAllocateDescription()->getContiguousBytes();
-				Assert_GC_true_with_message4(env, allocatedBytes == requestedBytes,
+				Assert_GC_true_with_message(env, allocatedBytes == requestedBytes,
 						"J9AllocateObjectNoGC: Object %p, requested %zu bytes, but read %zu, MM_MixedObjectAllocationModel %p\n",
 						objectPtr, requestedBytes, allocatedBytes, &mixedOAM);
 
@@ -359,7 +359,7 @@ J9AllocateIndexableObjectNoGC(J9VMThread *vmThread, J9Class *clazz, uint32_t num
 
 				/* Do sanity check: size of actually allocated Indexable object should match requested */
 				uintptr_t requestedBytes = indexableOAM.getAllocateDescription()->getContiguousBytes();
-				Assert_GC_true_with_message4(env, allocatedBytes == requestedBytes,
+				Assert_GC_true_with_message(env, allocatedBytes == requestedBytes,
 						"J9AllocateIndexableObjectNoGC: Object %p, requested %zu bytes, but read %zu, MM_IndexableObjectAllocationModel %p\n",
 						objectPtr, requestedBytes, allocatedBytes, &indexableOAM);
 			}
@@ -415,7 +415,7 @@ J9AllocateObject(J9VMThread *vmThread, J9Class *clazz, uintptr_t allocateFlags)
 
 			/* Do sanity check: size of actually allocated Mixed object should match requested */
 			uintptr_t requestedBytes = mixedOAM.getAllocateDescription()->getContiguousBytes();
-			Assert_GC_true_with_message4(env, allocatedBytes == requestedBytes,
+			Assert_GC_true_with_message(env, allocatedBytes == requestedBytes,
 					"J9AllocateObject: Object %p, requested %zu bytes, but read %zu, MM_MixedObjectAllocationModel %p\n",
 					objectPtr, requestedBytes, allocatedBytes, &mixedOAM);
 
@@ -579,7 +579,7 @@ J9AllocateIndexableObject(J9VMThread *vmThread, J9Class *clazz, uint32_t numberO
 
 			/* Do sanity check: size of actually allocated Indexable object should match requested */
 			uintptr_t requestedBytes = indexableOAM.getAllocateDescription()->getContiguousBytes();
-			Assert_GC_true_with_message4(env, allocatedBytes == requestedBytes,
+			Assert_GC_true_with_message(env, allocatedBytes == requestedBytes,
 					"J9AllocateIndexableObject: Object %p, requested %zu bytes, but read %zu, MM_IndexableObjectAllocationModel %p\n",
 					objectPtr, requestedBytes, allocatedBytes, &indexableOAM);
 		}

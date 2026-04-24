@@ -315,7 +315,7 @@ MM_GCExtensions::releaseNativesForContinuationObject(MM_EnvironmentBase* env, j9
 		 * last unmounted continuation Object is marked as "dead", but the related J9VMContinuation has not been freed up.
 		 */
 		if (!VM_ContinuationHelpers::isFinished(continuationState)) {
-			Assert_GC_true_with_message2(env, (NULL == continuation), "Continuation expected to be NULL, but it is %p, from Continuation object %p\n", continuation, objectPtr);
+			Assert_GC_true_with_message(env, (NULL == continuation), "Continuation expected to be NULL, but it is %p, from Continuation object %p\n", continuation, objectPtr);
 		}
 	} else {
 		getJavaVM()->internalVMFunctions->freeContinuation(vmThread, objectPtr, TRUE);

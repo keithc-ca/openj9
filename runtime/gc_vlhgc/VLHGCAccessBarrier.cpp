@@ -287,14 +287,14 @@ MM_VLHGCAccessBarrier::indexableDataDisplacement(J9StackWalkState *walkState, J9
 	J9IndexableObject *objectToCheckAdjacency = NULL;
 
 	if (srcRegion->_compactData._shouldCompact) {
-		Assert_GC_true_with_message3(env, !srcRegion->_copyForwardData._evacuateSet, "Evac set for compact src region %p src obj %p dst obj%p\n", srcRegion, src, dst);
+		Assert_GC_true_with_message(env, !srcRegion->_copyForwardData._evacuateSet, "Evac set for compact src region %p src obj %p dst obj%p\n", srcRegion, src, dst);
 		/* Moved by sliding compact - source may be overwritten. */
 		objectToCheckAdjacency = dst;
 	} else if (srcRegion->_copyForwardData._evacuateSet) {
 		/* Moved (or still being moved) by copy-forward - destination may not be fully copied yet. */
 		objectToCheckAdjacency = src;
 	} else {
-		Assert_GC_true_with_message3(env, false, "Neither evac nor compact set src region %p src obj %p dst obj%p\n", srcRegion, src, dst);
+		Assert_GC_true_with_message(env, false, "Neither evac nor compact set src region %p src obj %p dst obj%p\n", srcRegion, src, dst);
 	}
 
 	if (_extensions->indexableObjectModel.isDataAdjacentToHeader(objectToCheckAdjacency))
