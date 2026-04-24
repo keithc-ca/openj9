@@ -336,14 +336,14 @@ install_gcc() {
 if true ; then
   echo " && true"
   echo "RUN rm -f /usr/bin/cc /usr/bin/gcc /usr/bin/g++"
-  echo "RUN ln -s /usr/local/gcc-$gcc_major/bin/gcc-$gcc_major /usr/bin/gcc"
-  echo "RUN ln -s /usr/local/gcc-$gcc_major/bin/g++-$gcc_major /usr/bin/g++"
+  echo "RUN ln -s /usr/local/gcc${gcc_major}/bin/gcc-${gcc_major} /usr/bin/gcc"
+  echo "RUN ln -s /usr/local/gcc${gcc_major}/bin/g++-${gcc_major} /usr/bin/g++"
   echo "RUN ln -s /usr/bin/gcc /usr/bin/cc"
 else
   echo " && rm -f /usr/bin/cc /usr/bin/gcc /usr/bin/g++ \\"
   echo " && ln -s gcc /usr/bin/cc \\"
-  echo " && ln -s /usr/local/gcc-$gcc_major/bin/gcc-$gcc_major /usr/bin/gcc \\"
-  echo " && ln -s /usr/local/gcc-$gcc_major/bin/g++-$gcc_major /usr/bin/g++"
+  echo " && ln -s /usr/local/gcc${gcc_major}/bin/gcc-${gcc_major} /usr/bin/gcc \\"
+  echo " && ln -s /usr/local/gcc${gcc_major}/bin/g++-${gcc_major} /usr/bin/g++"
 fi
 }
 
