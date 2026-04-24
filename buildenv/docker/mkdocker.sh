@@ -333,6 +333,7 @@ install_gcc() {
   echo " && tar -xJf $gcc_archive \\"
   echo " && rm -f $gcc_archive \\"
   echo " && rm -f /usr/bin/gcc /usr/bin/g++ \\"
+  echo " && ln -s gcc /usr/bin/cc \\"
   echo " && ln -s /usr/local/gcc-$gcc_version/bin/gcc-$gcc_version /usr/bin/gcc \\"
   echo " && ln -s /usr/local/gcc-$gcc_version/bin/g++-$gcc_version /usr/bin/g++"
 }
