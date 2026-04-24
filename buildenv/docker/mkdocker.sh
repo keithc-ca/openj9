@@ -325,8 +325,17 @@ fi
 }
 
 install_gcc() {
-  local gcc_major=14
-  local gcc_minor=2
+  local gcc_major
+  local gcc_minor
+  if [ $dist/$version = centos/6 ] ; then
+    # CentOS version 6 comes with an older glibc that won't work with gcc 14.
+    gcc_major=11
+    gcc_minor=2
+  else
+    gcc_major=14
+    gcc_minor=2
+  fi
+
   local gcc_version=${gcc_major}.${gcc_minor}
   local gcc_archive=gcc${gcc_major}${gcc_minor}.$arch.tar.xz
   echo "# Install gcc-${gcc_version}."
