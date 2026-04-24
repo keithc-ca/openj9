@@ -325,12 +325,16 @@ fi
 }
 
 install_gcc() {
-  local archive="gcc142.$arch.tar.xz"
-  echo "# Install gcc-14.2."
+  local gcc_version=14.2
+  local gcc_archive=gcc${gcc_version//./}.$arch.tar.xz
+  echo "# Install gcc-$gcc_version."
   echo "RUN cd /usr/local \\"
-  echo " && $wget_O $archive 'https://ci.adoptium.net/userContent/gcc/$archive' \\"
-  echo " && tar -xJf $archive \\"
-  echo " && rm -f $archive"
+  echo " && $wget_O $gcc_archive 'https://ci.adoptium.net/userContent/gcc/$gcc_archive' \\"
+  echo " && tar -xJf $gcc_archive \\"
+  echo " && rm -f $gcc_archive \\"
+  echo " && rm -f /usr/bin/gcc /usr/bin/g++ \\"
+  echo " && ln -s /usr/local/gcc-$gcc_version/bin/gcc-$gcc_version /usr/bin/gcc \\"
+  echo " && ln -s /usr/local/gcc-$gcc_version/bin/g++-$gcc_version /usr/bin/g++"
 }
 
 install_centos_packages() {
