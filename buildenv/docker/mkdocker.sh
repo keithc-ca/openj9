@@ -327,8 +327,9 @@ fi
 install_gcc() {
   local gcc_major=14
   local gcc_minor=2
+  local gcc_version=${gcc_major}.${gcc_minor}
   local gcc_archive=gcc${gcc_major}${gcc_minor}.$arch.tar.xz
-  echo "# Install gcc-${gcc_major}.${gcc_minor}."
+  echo "# Install gcc-${gcc_version}."
   echo "RUN cd /usr/local \\"
   echo " && $wget_O $gcc_archive 'https://ci.adoptium.net/userContent/gcc/$gcc_archive' \\"
   echo " && tar -xJf $gcc_archive \\"
@@ -336,14 +337,14 @@ install_gcc() {
 if true ; then
   echo " && true"
   echo "RUN rm -f /usr/bin/cc /usr/bin/gcc /usr/bin/g++"
-  echo "RUN ln -s /usr/local/gcc${gcc_major}/bin/gcc-${gcc_major} /usr/bin/gcc"
-  echo "RUN ln -s /usr/local/gcc${gcc_major}/bin/g++-${gcc_major} /usr/bin/g++"
+  echo "RUN ln -s /usr/local/gcc${gcc_major}/bin/gcc-${gcc_version} /usr/bin/gcc"
+  echo "RUN ln -s /usr/local/gcc${gcc_major}/bin/g++-${gcc_version} /usr/bin/g++"
   echo "RUN ln -s /usr/bin/gcc /usr/bin/cc"
 else
   echo " && rm -f /usr/bin/cc /usr/bin/gcc /usr/bin/g++ \\"
   echo " && ln -s gcc /usr/bin/cc \\"
-  echo " && ln -s /usr/local/gcc${gcc_major}/bin/gcc-${gcc_major} /usr/bin/gcc \\"
-  echo " && ln -s /usr/local/gcc${gcc_major}/bin/g++-${gcc_major} /usr/bin/g++"
+  echo " && ln -s /usr/local/gcc${gcc_major}/bin/gcc-${gcc_version} /usr/bin/gcc \\"
+  echo " && ln -s /usr/local/gcc${gcc_major}/bin/g++-${gcc_version} /usr/bin/g++"
 fi
 }
 
