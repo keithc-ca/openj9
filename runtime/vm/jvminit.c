@@ -3557,7 +3557,6 @@ consumeVMArgs(J9JavaVM* vm, J9VMInitArgs* j9vm_args)
 static jint
 modifyDllLoadTable(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 {
-	jint rc = 0;
 	J9VMDllLoadInfo* entry = NULL;
 	JavaVMInitArgs* vm_args = j9vm_args->actualVMArgs;
 	BOOLEAN xsnw = FALSE;
@@ -3958,9 +3957,8 @@ modifyDllLoadTable(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 	JVMINIT_VERBOSE_INIT_VM_TRACE(vm, "IFA support required... whacking table\n");
 #endif /* defined(J9VM_OPT_JAVA_OFFLOAD_SUPPORT) */
 
-	rc = processXCheckOptions(vm, loadTable, j9vm_args);
 	JVMINIT_VERBOSE_INIT_TRACE_WORKING_SET(vm);
-	return rc;
+	return JNI_OK;
 }
 
 /* Process VM args that are order-dependent */
@@ -8033,6 +8031,10 @@ protectedInitializeJavaVM(J9PortLibrary* portLibrary, void * userData)
 	}
 
 	if (JNI_OK != (stageRC = runInitializationStage(vm, PORT_LIBRARY_GUARANTEED))) {
+		goto error;
+	}
+
+	if (JNI_OK != processXCheckOptions(vm, vm->dllLoadTable, vm->vmArgsArray)) {
 		goto error;
 	}
 
