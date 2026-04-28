@@ -269,15 +269,15 @@ J9VMI_Initialize(J9JavaVM* vm);
 
 /* ---------------- xcheck.c ---------------- */
 /**
-* @brief
-* Modify the DLL load table for shared libraries used by -Xcheck: options.
-* @param vm
-* @param loadTable
-* @param j9vm_args
-* @return void
-*/
+ * @brief
+ * Modify the DLL load table for shared libraries used by -Xcheck: options.
+ * @param vm
+ * @param loadTable
+ * @param j9vm_args
+ * @return 0 on success, non-zero if options prevent the JVM from continuing
+ */
 jint
-processXCheckOptions(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args);
+processXCheckOptions(J9JavaVM *vm, J9Pool *loadTable, J9VMInitArgs *j9vm_args);
 
 /* ---------------- statistics.c ---------------- */
 /**

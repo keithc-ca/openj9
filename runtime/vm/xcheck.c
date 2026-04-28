@@ -28,10 +28,10 @@
 
 static UDATA isVerboseJni(J9PortLibrary *portLibrary, J9VMInitArgs* j9vm_args, IDATA *verboseIndexPtr);
 static IDATA printXcheckUsage(J9JavaVM *vm);
-extern void J9RASCheckDump(J9JavaVM* javaVM);
+extern IDATA J9RASCheckDump(J9JavaVM *vm);
 
-jint 
-processXCheckOptions(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args) 
+jint
+processXCheckOptions(J9JavaVM *vm, J9Pool *loadTable, J9VMInitArgs *j9vm_args)
 {
 	jint rc = 0;
 	J9VMDllLoadInfo* entry = NULL;
@@ -41,7 +41,7 @@ processXCheckOptions(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 	IDATA helpIndex, memoryHelpIndex, memoryNoneIndex;
 	IDATA dumpIndex, dumpHelpIndex, dumpNoneIndex;
 
-    PORT_ACCESS_FROM_JAVAVM(vm);
+	PORT_ACCESS_FROM_JAVAVM(vm);
 
 	/*
 	 * Global options
@@ -165,11 +165,11 @@ processXCheckOptions(J9JavaVM * vm, J9Pool* loadTable, J9VMInitArgs* j9vm_args)
 	if (dumpHelpIndex > dumpNoneIndex) {
 		j9tty_err_printf("\nUsage: -Xcheck:dump\nRun JVM start-up checks for OS system dump settings\n\n");
 		rc = -1;
-	}
-
-	if (dumpIndex > dumpNoneIndex) {
+	} else if (dumpIndex > dumpNoneIndex) {
 		/* dump checking has been requested, do it now */
-		J9RASCheckDump(vm);
+		if (0 != J9RASCheckDump(vm)) {
+			rc = -1;
+		}
 	}
 
 	nohelpIndex = OMR_MAX(OMR_MAX(noneIndex, memoryHelpIndex), checkCPHelpIndex);

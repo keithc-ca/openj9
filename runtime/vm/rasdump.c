@@ -55,13 +55,17 @@ static omr_error_t primordialSetDumpOption (struct J9JavaVM *vm, char *optionStr
 static omr_error_t primordialResetDumpOption (struct J9JavaVM *vm);
 static omr_error_t primordialRemoveDumpAgent (struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
 static omr_error_t primordialQueryVmDump(struct J9JavaVM *vm, int buffer_size, void* options_buffer, int* data_size);
+static omr_error_t primordialPrintDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+#if defined(OMR_TDUMP_VALIDATION)
+static omr_error_t primordialValidateDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+#endif /* defined(OMR_TDUMP_VALIDATION) */
 #if defined(J9VM_OPT_CRIU_SUPPORT)
 static IDATA primordialCriuReloadXDumpAgents(struct J9JavaVM *vm, struct J9VMInitArgs *j9vm_args);
 #endif /* defined(J9VM_OPT_CRIU_SUPPORT) */
 
 void J9RASInitialize (J9JavaVM* javaVM);
 void J9RASShutdown (J9JavaVM* javaVM);
-void J9RASCheckDump(J9JavaVM* javaVM);
+IDATA J9RASCheckDump(J9JavaVM *javaVM);
 void populateRASNetData (J9JavaVM *javaVM, J9RAS *rasStruct);
 static J9RAS* allocateRASStruct(J9JavaVM *javaVM);
 
@@ -89,6 +93,10 @@ primordialDumpFacade = {
 	primordialSetDumpOption,
 	primordialResetDumpOption,
 	primordialQueryVmDump,
+	primordialPrintDumpAgent,
+#if defined(OMR_TDUMP_VALIDATION)
+	primordialValidateDumpAgent,
+#endif /* defined(OMR_TDUMP_VALIDATION) */
 #if defined(J9VM_OPT_CRIU_SUPPORT)
 	primordialCriuReloadXDumpAgents,
 #endif /* defined(J9VM_OPT_CRIU_SUPPORT) */
@@ -203,6 +211,28 @@ primordialQueryVmDump(struct J9JavaVM *vm, int buffer_size, void* options_buffer
 
 	return OMR_ERROR_NONE;
 }
+
+static omr_error_t
+primordialPrintDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent)
+{
+	PORT_ACCESS_FROM_JAVAVM(vm);
+
+	j9nls_printf(PORTLIB, J9NLS_WARNING, J9NLS_VM_MISSING_DUMP_DLL_PRINT_DUMP_AGENT, J9_RAS_DUMP_DLL_NAME);
+
+	return OMR_ERROR_NONE;
+}
+
+#if defined(OMR_TDUMP_VALIDATION)
+static omr_error_t
+primordialValidateDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent)
+{
+	PORT_ACCESS_FROM_JAVAVM(vm);
+
+	j9nls_printf(PORTLIB, J9NLS_WARNING, J9NLS_VM_MISSING_DUMP_DLL_VALIDATE_DUMP_AGENT, J9_RAS_DUMP_DLL_NAME);
+
+	return OMR_ERROR_NONE;
+}
+#endif /* defined(OMR_TDUMP_VALIDATION) */
 
 #if defined(J9VM_OPT_CRIU_SUPPORT)
 static IDATA
@@ -656,84 +686,107 @@ populateRASNetData(J9JavaVM *javaVM, J9RAS *rasStruct)
 }
 
 /**
- * Function J9RASCheckDump(), implementation for -Xcheck:dump support
- * 
+ * Function J9RASCheckDump(), implementation for -Xcheck:dump support.
+ *
  * @param J9JavaVM* javaVM, JVM top-level structure pointer
- * @returns void
+ * @return 0 on success, non-zero if the VM should not continue
  */
-void
-J9RASCheckDump(J9JavaVM* javaVM)
+IDATA
+J9RASCheckDump(J9JavaVM *javaVM)
 {
-#if defined(LINUX) || defined(AIXPPC)
+	IDATA result = 0;
+#if defined(AIXPPC) || defined(LINUX) || defined(OMR_TDUMP_VALIDATION)
+	PORT_ACCESS_FROM_JAVAVM(javaVM);
+#endif /* defined(AIXPPC) || defined(LINUX) || defined(OMR_TDUMP_VALIDATION) */
+#if defined(AIXPPC) || defined(LINUX)
 	IDATA rc = 0;
 	U_64 limit = 0;
 #if defined(LINUX)
-	IDATA fd = -1;
+	IDATA fd = 0;
 #endif /* defined(LINUX) */
 
-	PORT_ACCESS_FROM_JAVAVM(javaVM);
-
-	/* Check the UNIX core-size hard ulimit */
+	/* Check the UNIX core-size hard ulimit. */
 	rc = j9sysinfo_get_limit(J9PORT_RESOURCE_CORE_FILE | J9PORT_LIMIT_HARD, &limit);
-	if (rc == J9PORT_LIMIT_LIMITED) {
-		/* Issue NLS message warning, with force routing to syslog as well */
+	if (J9PORT_LIMIT_LIMITED == rc) {
+		/* Issue NLS message warning, with force routing to syslog as well. */
 		j9nls_printf(PORTLIB, J9NLS_WARNING | J9NLS_VITAL, J9NLS_VM_CHECK_DUMP_ULIMIT, limit);
 	}
+#endif /* defined(AIXPPC) || defined(LINUX) */
 
 #if defined(LINUX)
 	/* Check if /proc/sys/kernel/core_pattern is set. */
 	fd = j9file_open("/proc/sys/kernel/core_pattern", EsOpenRead, 0);
-	if (fd != -1) {
+	if (-1 != fd) {
 		/* Files in /proc report length as 0 but we don't expect the contents to be more than 1 line. */
 		char buf[80];
-		char* read = NULL;
-		read = j9file_read_text(fd, &buf[0], 80);
-		if( read == &buf[0] ) {
+		char *read = j9file_read_text(fd, buf, sizeof(buf));
+		if (buf == read) {
 			size_t bufLen = 0;
-			char *cursor;
-			/* Make sure the string is only one line and null terminated. */
-			for( bufLen = 0; bufLen < 80; bufLen++) {
-				if( read[bufLen] == '\n') {
+			/* Make sure the string is only one line and NUL-terminated. */
+			for (bufLen = 0; bufLen < sizeof(buf); bufLen++) {
+				if (read[bufLen] == '\n') {
 					read[bufLen] = '\0';
 					break;
 				}
 			}
-			buf[79] = '\0';
-			if( buf[0] == '|') {
+			buf[sizeof(buf) - 1] = '\0';
+			if ('|' == buf[0]) {
 				/* Check for core dumps being piped to an external program. */
 				j9nls_printf(PORTLIB, J9NLS_WARNING | J9NLS_VITAL, J9NLS_VM_CHECK_DUMP_COREPATTERN_PIPE, buf);
-			} else if( buf[0] != '\0') {
+			} else if ('\0' != buf[0]) {
 				/* Check for core dumps being renamed via % format specifiers. */
-				cursor = &buf[0];
-				while( *cursor !='\0' ) {
+				char *cursor = buf;
+				while ('\0' != *cursor) {
 					/* % means a replacement char unless it's followed by another % */
-					if( *cursor == '%' ) {
-						/* Found a %, issue a warning if it's not followed by % or the end of the string.*/
-						cursor++;
-						if( *cursor != '\0' && *cursor != '%' ) {
+					if ('%' == *cursor) {
+						/* Found a %, issue a warning if it's not followed by % or the end of the string. */
+						cursor += 1;
+						if (('\0' != *cursor) && ('%' != *cursor)) {
 							j9nls_printf(PORTLIB, J9NLS_WARNING | J9NLS_VITAL, J9NLS_VM_CHECK_DUMP_COREPATTERN_FORMAT, buf);
 							break; /* Found one specifier, don't worry about any others. */
-						} else if( *cursor != '\0' ) {
-							cursor++; /* Skip over a %% */
+						} else if ('\0' != *cursor) {
+							cursor += 1; /* Skip over a %%. */
 						}
 					} else {
-						cursor++;
+						cursor += 1;
 					}
 				}
 			}
 		}
 		j9file_close(fd);
 	}
-#endif
-#if defined(AIXPPC)
+#endif /* defined(LINUX) */
 
-	/* Check the AIX fullcore setting */
+#if defined(AIXPPC)
+	/* Check the AIX fullcore setting. */
 	rc = j9sysinfo_get_limit(J9PORT_RESOURCE_CORE_FLAGS, &limit);
-	if (rc == J9PORT_LIMIT_LIMITED) {
-		/* Issue NLS message warning, with force routing to syslog as well */
+	if (J9PORT_LIMIT_LIMITED == rc) {
+		/* Issue NLS message warning, with force routing to syslog as well. */
 		j9nls_printf(PORTLIB, J9NLS_WARNING | J9NLS_VITAL, J9NLS_VM_CHECK_DUMP_FULLCORE);
 	}
+#endif /* defined(AIXPPC) */
 
-#endif
-#endif
+#if defined(OMR_TDUMP_VALIDATION)
+	{
+		J9RASdumpFunctions *dumpFunctions = javaVM->j9rasDumpFunctions;
+		J9RASdumpAgent *agent = NULL;
+		BOOLEAN anyInvalid = FALSE;
+
+		while (OMR_ERROR_NONE == dumpFunctions->seekDumpAgent(javaVM, &agent, NULL)) {
+			omr_error_t error = dumpFunctions->validateDumpAgent(javaVM, agent);
+
+			if (OMR_ERROR_NONE != error) {
+				if (!anyInvalid) {
+					j9nls_printf(PORTLIB, J9NLS_ERROR | J9NLS_STDERR, J9NLS_VM_INVALID_DUMP_AGENTS);
+					anyInvalid = TRUE;
+					result = -1;
+				}
+
+				dumpFunctions->printDumpAgent(javaVM, agent);
+			}
+		}
+	}
+#endif /* defined(OMR_TDUMP_VALIDATION) */
+
+	return result;
 }

@@ -2720,13 +2720,13 @@ runDumpAgent(struct J9JavaVM *vm, J9RASdumpAgent * agent, J9RASdumpContext * con
 	omr_error_t retVal = OMR_ERROR_INTERNAL;
 
 	/* Convert the dump label template into an actual label, by expanding any tokens */
-	retVal = dumpLabel(vm, agent, context, label, J9_MAX_DUMP_PATH, &reqLen, timeNow);
+	retVal = dumpLabel(vm, agent, context, label, J9_MAX_DUMP_PATH, &reqLen, timeNow, TRUE);
 	if ((OMR_ERROR_OUT_OF_NATIVE_MEMORY == retVal) && (agent->dumpFn == doToolDump)) {
 		/* For tool agent only, support longer labels, as it's actually a complete tool command line */
 		label = j9mem_allocate_memory(reqLen, OMRMEM_CATEGORY_VM);
 		if (label) {
 			/* retry label template expansion with increased (allocated) memory */
-			retVal = dumpLabel(vm, agent, context, label, reqLen, &reqLen, timeNow);
+			retVal = dumpLabel(vm, agent, context, label, reqLen, &reqLen, timeNow, TRUE);
 		} else {
 			return OMR_ERROR_OUT_OF_NATIVE_MEMORY;
 		}
@@ -2958,6 +2958,37 @@ reportDumpRequest(struct J9PortLibrary* portLibrary, J9RASdumpContext * context,
 		}
 	}
 }
+
+#if defined(OMR_TDUMP_VALIDATION)
+omr_error_t
+validateDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent)
+{
+	omr_error_t retVal = OMR_ERROR_NONE;
+
+	/* validation currently only applies to "system" dump agents */
+	if (doSystemDump == agent->dumpFn) {
+		PORT_ACCESS_FROM_JAVAVM(vm);
+		UDATA reqLen = 0;
+		U_64 timeNow = j9time_current_time_millis();
+		J9RASdumpContext context;
+		char label[J9_MAX_DUMP_PATH];
+
+		memset(&context, 0, sizeof(context));
+		context.javaVM = vm;
+
+		/* convert the dump label template into an actual label, by expanding any tokens */
+		retVal = dumpLabel(vm, agent, &context, label, J9_MAX_DUMP_PATH, &reqLen, timeNow, FALSE);
+
+		if (OMR_ERROR_NONE == retVal) {
+			if (0 != j9dump_create(label, "IEATDUMP_VALIDATE", NULL)) {
+				retVal = OMR_ERROR_ILLEGAL_ARGUMENT;
+			}
+		}
+	}
+
+	return retVal;
+}
+#endif /* defined(OMR_TDUMP_VALIDATION) */
 
 static char *
 scanSubFilter(J9JavaVM *vm, const J9RASdumpSettings *settings, const char **cursor, UDATA *actionPtr)
