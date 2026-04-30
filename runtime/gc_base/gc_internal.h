@@ -33,10 +33,10 @@
 /*
  * This file defines extern "C" prototypes for C functions defined and used internally
  * in the GC module.
- * 
+ *
  * These are mostly used in the J9MemoryManagerFunctions function table definition
- * in gctable.c 
- * 
+ * in gctable.c
+ *
  * These prototypes were all moved here from j9protos.h as a first step in cleaning them up.
  * Many of these are still duplicated in other header files, and further clean up of this
  * file is required.
@@ -57,7 +57,6 @@ extern J9_CFUNC UDATA j9gc_incrementalUpdate_getCardSize(OMR_VM *omrVM);
 extern J9_CFUNC UDATA j9gc_incrementalUpdate_getCardTableShiftValue(OMR_VM *omrVM);
 extern J9_CFUNC UDATA j9gc_incrementalUpdate_getHeapBase(OMR_VM *omrVM);
 extern J9_CFUNC UDATA j9gc_incrementalUpdate_getCardTableVirtualStart(OMR_VM *omrVM);
-
 
 /* J9VMGCModronHLLPrototypeHolder */
 extern J9_CFUNC UDATA j9gc_objaccess_indexableReadU16(J9VMThread *vmThread, J9IndexableObject *srcObject, I_32 index, UDATA isVolatile);
@@ -123,9 +122,7 @@ extern J9_CFUNC UDATA j9gc_objaccess_staticCompareAndSwapObject(J9VMThread *vmTh
 extern J9_CFUNC UDATA j9gc_objaccess_mixedObjectCompareAndSwapInt(J9VMThread *vmThread, j9object_t destObject, UDATA offset, U_32 compareValue, U_32 swapValue);
 extern J9_CFUNC UDATA j9gc_objaccess_staticCompareAndSwapInt(J9VMThread *vmThread, J9Class *destClass, U_32 *destAddress, U_32 compareValue, U_32 swapValue);
 extern J9_CFUNC UDATA j9gc_objaccess_mixedObjectCompareAndSwapLong(J9VMThread *vmThread, j9object_t destObject, UDATA offset, U_64 compareValue, U_64 swapValue);
-extern J9_CFUNC UDATA j9gc_objaccess_mixedObjectCompareAndSwapLongSplit(J9VMThread *vmThread, J9Object *destObject, UDATA offset, U_32 compareValueSlot0, U_32 compareValueSlot1, U_32 swapValueSlot0, U_32 swapValueSlot1);
 extern J9_CFUNC UDATA j9gc_objaccess_staticCompareAndSwapLong(J9VMThread *vmThread, J9Class *destClass, U_64 *destAddress, U_64 compareValue, U_64 swapValue);
-extern J9_CFUNC UDATA j9gc_objaccess_staticCompareAndSwapLongSplit(J9VMThread *vmThread, J9Class *destClass, U_64 *destAddress, U_32 compareValueSlot0, U_32 compareValueSlot1, U_32 swapValueSlot0, U_32 swapValueSlot1);
 extern J9_CFUNC j9object_t j9gc_objaccess_compareAndExchangeObject(J9VMThread *vmThread, j9object_t destObject, j9object_t *destAddress, j9object_t compareObject, j9object_t swapObject);
 extern J9_CFUNC j9object_t j9gc_objaccess_staticCompareAndExchangeObject(J9VMThread *vmThread, J9Class *destClass, j9object_t *destAddress, j9object_t compareObject, j9object_t swapObject);
 #if defined(J9VM_OPT_VALHALLA_COMPACT_LAYOUTS)
@@ -163,7 +160,6 @@ extern J9_CFUNC void j9gc_objaccess_staticStoreObject(J9VMThread *vmThread, J9Cl
 extern J9_CFUNC void gcShutdownHeapManagement(J9JavaVM * vm);
 extern J9_CFUNC jvmtiIterationControl j9mm_iterate_regions(J9JavaVM *vm, J9PortLibrary *portLibrary, struct J9MM_IterateSpaceDescriptor *space, UDATA flags, jvmtiIterationControl(*func)(J9JavaVM *vm, struct J9MM_IterateRegionDescriptor *regionDesc, void *userData), void *userData);
 extern J9_CFUNC UDATA j9mm_find_region_for_pointer(J9JavaVM* javaVM, void *pointer, struct J9MM_IterateRegionDescriptor *regionDesc);
-extern J9_CFUNC void j9gc_objaccess_staticStoreU64Split(J9VMThread *vmThread, J9Class *clazz, U_64 *destSlot, U_32 valueSlot0, U_32 valueSlot1, UDATA isVolatile);
 extern J9_CFUNC UDATA j9gc_objaccess_compressedPointersShadowHeapTop(J9VMThread *vmThread);
 extern J9_CFUNC U_64 j9gc_objaccess_staticReadU64(J9VMThread *vmThread, J9Class *clazz, U_64 *srcSlot, UDATA isVolatile);
 extern J9_CFUNC IDATA j9gc_objaccess_indexableReadI8(J9VMThread *vmThread, J9IndexableObject *srcObject, I_32 index, UDATA isVolatile);
@@ -187,7 +183,6 @@ extern J9_CFUNC U_64 j9gc_get_sum_of_pauses(J9VMThread *vmThread);
 extern J9_CFUNC jint j9gc_register_jfr_hooks(J9JavaVM *javaVM);
 extern J9_CFUNC void j9gc_deregister_jfr_hooks(J9JavaVM *javaVM);
 extern J9_CFUNC UDATA j9gc_objaccess_compressedPointersShift(J9VMThread *vmThread);
-extern J9_CFUNC void j9gc_objaccess_indexableStoreU64Split(J9VMThread *vmThread, J9IndexableObject *destObject, I_32 index, U_32 valueSlot0, U_32 valueSlot1, UDATA isVolatile);
 extern J9_CFUNC void cleanupMutatorModelJava(J9VMThread* vmThread);
 extern J9_CFUNC j9object_t j9gc_objaccess_mixedObjectReadObject(J9VMThread *vmThread, j9object_t srcObject, UDATA offset, UDATA isVolatile);
 extern J9_CFUNC UDATA j9gc_get_objects_pending_finalization_count(J9JavaVM* vm);
@@ -238,7 +233,6 @@ extern J9_CFUNC struct J9HookInterface** j9gc_get_hook_interface(J9JavaVM *javaV
 extern J9_CFUNC struct J9HookInterface** j9gc_get_omr_hook_interface(OMR_VM *omrVM);
 extern J9_CFUNC void j9gc_objaccess_staticStoreU32(J9VMThread *vmThread, J9Class *clazz, U_32 *destSlot, U_32 value, UDATA isVolatile);
 extern J9_CFUNC IDATA initializeMutatorModelJava(J9VMThread* vmThread);
-extern J9_CFUNC void j9gc_objaccess_mixedObjectStoreU64Split(J9VMThread *vmThread, j9object_t destObject, UDATA offset, U_32 valueSlot0, U_32 valueSlot1, UDATA isVolatile);
 extern J9_CFUNC IDATA j9gc_objaccess_staticReadI32(J9VMThread *vmThread, J9Class *clazz, I_32 *srcSlot, UDATA isVolatile);
 extern J9_CFUNC void j9gc_objaccess_indexableStoreObject(J9VMThread *vmThread, J9IndexableObject *destObject, I_32 index, j9object_t value, UDATA isVolatile);
 extern J9_CFUNC UDATA j9gc_objaccess_staticReadU32(J9VMThread *vmThread, J9Class *clazz, U_32 *srcSlot, UDATA isVolatile);
@@ -298,7 +292,7 @@ extern J9_CFUNC BOOLEAN j9gc_reinitialize_for_restore(J9VMThread *vmThread, cons
 extern J9_CFUNC BOOLEAN gcReinitializeDefaultsForRestore(J9VMThread *vmThread);
 #endif /* defined(J9VM_OPT_CRIU_SUPPORT) */
 
-/* J9VMFinalizeSupport*/
+/* J9VMFinalizeSupport */
 extern J9_CFUNC void runFinalization(J9VMThread *vmThread);
 extern J9_CFUNC UDATA finalizeObjectCreated(J9VMThread *vmThread, j9object_t object);
 extern J9_CFUNC UDATA forceClassLoaderUnload(J9VMThread *vmThread, J9ClassLoader *classLoader);
@@ -327,7 +321,7 @@ extern J9_CFUNC BOOLEAN j9gc_get_cumulative_bytes_allocated_by_thread(J9VMThread
 extern J9_CFUNC BOOLEAN j9gc_get_cumulative_class_unloading_stats(J9VMThread *vmThread, UDATA *anonymous, UDATA *classes, UDATA *classloaders);
 
 #ifdef __cplusplus
-}
+} /* extern "C" */
 #endif
 
-#endif /*GC_INTERNAL_H_*/
+#endif /* !defined(GC_INTERNAL_H_) */

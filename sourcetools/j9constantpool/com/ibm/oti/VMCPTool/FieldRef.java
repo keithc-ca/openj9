@@ -141,7 +141,6 @@ public class FieldRef extends PrimaryItem implements Constants {
 		// j9gc_objaccess_mixedObjectStoreU64
 		// j9gc_objaccess_mixedObjectStoreObject
 		// j9gc_objaccess_mixedObjectStoreAddress
-		// j9gc_objaccess_mixedObjectStoreU64Split
 
 		// Arrays and objects take precedence over cast to support pointer compression
 		switch (((Alias) primary).nas.signature.data.charAt(0)) {
@@ -182,9 +181,6 @@ public class FieldRef extends PrimaryItem implements Constants {
 
 		// Otherwise just determine it from the signature
 		switch (((Alias) primary).nas.signature.data.charAt(0)) {
-		case '[':
-		case 'L':
-			return "OBJECT";
 		case 'J':
 			return "I64";
 		case 'D':

@@ -160,19 +160,6 @@ j9gc_objaccess_mixedObjectStoreI64(J9VMThread *vmThread, J9Object *destObject, U
 	barrier->mixedObjectStoreI64(vmThread, destObject, offset, value, 0 != isVolatile);
 }
 
-void 
-j9gc_objaccess_mixedObjectStoreU64Split(J9VMThread *vmThread, J9Object *destObject, UDATA delta, U_32 valueSlot0, U_32 valueSlot1, UDATA isVolatile)
-{
-	U_64 value64;
-	MM_ObjectAccessBarrier *barrier = MM_GCExtensions::getExtensions(vmThread)->accessBarrier;
-
-	/* This is endian-independent. valueSlot0 is always the low 4 bytes in memory */
-	*(U_32 *)&value64 = valueSlot0;
-	*(((U_32 *)&value64) + 1) = valueSlot1;
-
-	barrier->mixedObjectStoreU64(vmThread, destObject, delta, value64, 0 != isVolatile);
-}
-
 J9Object *
 j9gc_objaccess_indexableReadObject(J9VMThread *vmThread, J9IndexableObject *srcObject, I_32 index, UDATA isVolatile) {
 	MM_ObjectAccessBarrier *barrier = MM_GCExtensions::getExtensions(vmThread)->accessBarrier;
@@ -293,19 +280,6 @@ j9gc_objaccess_indexableStoreI64(J9VMThread *vmThread, J9IndexableObject *destOb
 	barrier->indexableStoreI64(vmThread, destObject, index, value, 0 != isVolatile);
 }
 
-void 
-j9gc_objaccess_indexableStoreU64Split(J9VMThread *vmThread, J9IndexableObject *destObject, I_32 index, U_32 valueSlot0, U_32 valueSlot1, UDATA isVolatile)
-{
-	U_64 value64;
-	MM_ObjectAccessBarrier *barrier = MM_GCExtensions::getExtensions(vmThread)->accessBarrier;
-
-	/* This is endian-independent. valueSlot0 is always the low 4 bytes in memory */
-	*(U_32 *)&value64 = valueSlot0;
-	*(((U_32 *)&value64) + 1) = valueSlot1;
-
-	barrier->indexableStoreU64(vmThread, destObject, index, value64, 0 != isVolatile);
-}
-
 J9Object *
 j9gc_objaccess_staticReadObject(J9VMThread *vmThread, J9Class *clazz, J9Object **srcSlot, UDATA isVolatile) {
 	MM_ObjectAccessBarrier *barrier = MM_GCExtensions::getExtensions(vmThread)->accessBarrier;
@@ -378,19 +352,6 @@ j9gc_objaccess_staticStoreI64(J9VMThread *vmThread, J9Class *clazz, I_64 *destSl
 	barrier->staticStoreI64(vmThread, clazz, destSlot, value, 0 != isVolatile);
 }
 
-void 
-j9gc_objaccess_staticStoreU64Split(J9VMThread *vmThread, J9Class *clazz, U_64 *destSlot, U_32 valueSlot0, U_32 valueSlot1, UDATA isVolatile)
-{
-	U_64 value64;
-	MM_ObjectAccessBarrier *barrier = MM_GCExtensions::getExtensions(vmThread)->accessBarrier;
-
-	/* This is endian-independent. valueSlot0 is always the low 4 bytes in memory */
-	*(U_32 *)&value64 = valueSlot0;
-	*(((U_32 *)&value64) + 1) = valueSlot1;
-
-	barrier->staticStoreU64(vmThread, clazz, destSlot, value64, 0 != isVolatile);
-}
-
 /**
  * Returns the displacement for the data of moved array object.
  * Used by the JIT, should only be called for off heap enabled cases,
@@ -415,8 +376,8 @@ j9gc_objaccess_indexableDataDisplacement(J9StackWalkState *walkState, J9Indexabl
 	return displacement;
 }
 
-/* TODO: After all array accesses in the VM have been made arraylet safe, 
- * it should be possible to delete this method + its associated ENVY and 
+/* TODO: After all array accesses in the VM have been made arraylet safe,
+ * it should be possible to delete this method + its associated ENVY and
  * ObjectAccessBarrier methods
  */
 U_8 *
@@ -434,7 +395,7 @@ j9gc_objaccess_getLockwordAddress(J9VMThread *vmThread, J9Object *object)
 }
 
 void
-j9gc_objaccess_storeObjectToInternalVMSlot(J9VMThread *vmThread, J9Object** destSlot, J9Object *value) 
+j9gc_objaccess_storeObjectToInternalVMSlot(J9VMThread *vmThread, J9Object** destSlot, J9Object *value)
 {
 	MM_ObjectAccessBarrier *barrier = MM_GCExtensions::getExtensions(vmThread)->accessBarrier;
 	barrier->storeObjectToInternalVMSlot(vmThread, destSlot, value);
@@ -500,49 +461,11 @@ j9gc_objaccess_mixedObjectCompareAndSwapLong(J9VMThread *vmThread, J9Object *des
 	return 0;
 }
 
-UDATA 
-j9gc_objaccess_mixedObjectCompareAndSwapLongSplit(J9VMThread *vmThread, J9Object *destObject, UDATA offset, U_32 compareValueSlot0, U_32 compareValueSlot1, U_32 swapValueSlot0, U_32 swapValueSlot1)
-{
-	U_64 compareValue64 = 0;
-	U_64 swapValue64 = 0;
-	MM_ObjectAccessBarrier *barrier = MM_GCExtensions::getExtensions(vmThread)->accessBarrier;
-
-	/* This is endian-independent. valueSlot0 is always the low 4 bytes in memory */
-	*(U_32 *)&compareValue64 = compareValueSlot0;
-	*(((U_32 *)&compareValue64) + 1) = compareValueSlot1;
-	*(U_32 *)&swapValue64 = swapValueSlot0;
-	*(((U_32 *)&swapValue64) + 1) = swapValueSlot1;
-
-	if (barrier->mixedObjectCompareAndSwapLong(vmThread, destObject, offset, compareValue64, swapValue64)) {
-		return 1;
-	}
-	return 0;
-}
-
 UDATA
 j9gc_objaccess_staticCompareAndSwapLong(J9VMThread *vmThread, J9Class *destClass, U_64 *destAddress, U_64 compareValue, U_64 swapValue)
 {
 	MM_ObjectAccessBarrier *barrier = MM_GCExtensions::getExtensions(vmThread)->accessBarrier;
 	if (barrier->staticCompareAndSwapLong(vmThread, destClass, destAddress, compareValue, swapValue)) {
-		return 1;
-	}
-	return 0;
-}
-
-UDATA 
-j9gc_objaccess_staticCompareAndSwapLongSplit(J9VMThread *vmThread, J9Class *destClass, U_64 *destAddress, U_32 compareValueSlot0, U_32 compareValueSlot1, U_32 swapValueSlot0, U_32 swapValueSlot1)
-{
-	U_64 compareValue64 = 0;
-	U_64 swapValue64 = 0;
-	MM_ObjectAccessBarrier *barrier = MM_GCExtensions::getExtensions(vmThread)->accessBarrier;
-
-	/* This is endian-independent. valueSlot0 is always the low 4 bytes in memory */
-	*(U_32 *)&compareValue64 = compareValueSlot0;
-	*(((U_32 *)&compareValue64) + 1) = compareValueSlot1;
-	*(U_32 *)&swapValue64 = swapValueSlot0;
-	*(((U_32 *)&swapValue64) + 1) = swapValueSlot1;
-
-	if (barrier->staticCompareAndSwapLong(vmThread, destClass, destAddress, compareValue64, swapValue64)) {
 		return 1;
 	}
 	return 0;
@@ -828,9 +751,8 @@ j9gc_weakRoot_readObjectVM(J9JavaVM *vm, j9object_t *srcAddress)
 	return *srcAddress;
 }
 
-
 void
-j9gc_objaccess_recentlyAllocatedObject(J9VMThread *vmThread, J9Object *dstObject) 
+j9gc_objaccess_recentlyAllocatedObject(J9VMThread *vmThread, J9Object *dstObject)
 {
 	MM_ObjectAccessBarrier *barrier = MM_GCExtensions::getExtensions(vmThread)->accessBarrier;
 	return barrier->recentlyAllocatedObject(vmThread, dstObject);
@@ -946,4 +868,3 @@ postUnmountContinuation(J9VMThread *vmThread, j9object_t object)
 }
 
 } /* extern "C" */
-
