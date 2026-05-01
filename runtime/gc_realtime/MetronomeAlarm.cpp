@@ -49,7 +49,7 @@
 #if defined(LINUX) && !defined(J9ZTPF)
 #include <linux/rtc.h>
 #include <sys/syscall.h>
-#include <sys/signal.h>
+#include <signal.h>
 #elif defined(J9ZTPF)
 #include <signal.h>
 #endif /* defined(LINUX) && !defined(J9ZTPF) */
