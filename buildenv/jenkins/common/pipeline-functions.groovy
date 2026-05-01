@@ -227,7 +227,7 @@ def build(BUILD_JOB_NAME, OPENJDK_REPO, OPENJDK_BRANCH, OPENJDK_SHA, OPENJ9_REPO
     }
 }
 
-def test(JOB_NAME, UPSTREAM_JOB_NAME, UPSTREAM_JOB_NUMBER, NODE, OPENJ9_REPO, OPENJ9_BRANCH, OPENJ9_SHA, VENDOR_TEST_REPOS, VENDOR_TEST_BRANCHES, VENDOR_TEST_SHAS, VENDOR_TEST_DIRS, USER_CREDENTIALS_ID, CUSTOMIZED_SDK_URL, ARTIFACTORY_CREDS, TEST_FLAG, BUILD_IDENTIFIER, ghprbGhRepository, ghprbActualCommit, GITHUB_SERVER, ADOPTOPENJDK_REPO, ADOPTOPENJDK_BRANCH, PARALLEL, extraTestLabels, keepReportDir, buildList, NUM_MACHINES, OPENJDK_REPO, OPENJDK_BRANCH, USE_TESTENV_PROPERTIES, GENERATE_JOBS, DYNAMIC_COMPILE) {
+def test(JOB_NAME, UPSTREAM_JOB_NAME, UPSTREAM_JOB_NUMBER, NODE, OPENJ9_REPO, OPENJ9_BRANCH, OPENJ9_SHA, VENDOR_TEST_REPOS, VENDOR_TEST_BRANCHES, VENDOR_TEST_SHAS, VENDOR_TEST_DIRS, USER_CREDENTIALS_ID, CUSTOMIZED_SDK_URL, ARTIFACTORY_CREDS, TEST_FLAG, BUILD_IDENTIFIER, ghprbGhRepository, ghprbActualCommit, GITHUB_SERVER, ADOPTOPENJDK_REPO, ADOPTOPENJDK_BRANCH, PARALLEL, extraTestLabels, keepReportDir, buildList, NUM_MACHINES, TEST_TIME, OPENJDK_REPO, OPENJDK_BRANCH, USE_TESTENV_PROPERTIES, GENERATE_JOBS, DYNAMIC_COMPILE) {
     stage ("${JOB_NAME}") {
         def testParams = []
         testParams.addAll([string(name: 'LABEL', value: NODE),
@@ -249,6 +249,7 @@ def test(JOB_NAME, UPSTREAM_JOB_NAME, UPSTREAM_JOB_NUMBER, NODE, OPENJ9_REPO, OP
             string(name: 'BUILD_IDENTIFIER', value: BUILD_IDENTIFIER),
             string(name: 'PARALLEL', value: PARALLEL),
             string(name: 'NUM_MACHINES', value: NUM_MACHINES),
+            string(name: 'TEST_TIME', value: TEST_TIME),
             booleanParam(name: 'USE_TESTENV_PROPERTIES', value: USE_TESTENV_PROPERTIES),
             booleanParam(name: 'GENERATE_JOBS', value: GENERATE_JOBS),
             booleanParam(name: 'DYNAMIC_COMPILE', value: DYNAMIC_COMPILE)])
@@ -438,27 +439,34 @@ def workflow(SDK_VERSION, SPEC, SHAS, OPENJDK_REPO, OPENJDK_BRANCH, OPENJ9_REPO,
 
             def PARALLEL = "None"
             def NUM_MACHINES = ""
+            def TEST_TIME = ""
             def DYNAMIC_COMPILE = false
             if (testJobName.contains("functional")) {
                 PARALLEL = "Dynamic"
-                NUM_MACHINES = "2"
+                TEST_TIME = "90"
                 if (!SPEC.contains("valhalla")) {
                     DYNAMIC_COMPILE = true
                 }
-            } else if (testJobName.contains("sanity.system") || testJobName.contains("extended.system") || testJobName.contains("sanity.openjdk")) {
+            } else if (testJobName.contains("sanity.system")) {
                 PARALLEL = "Dynamic"
-                NUM_MACHINES = "3"
+                TEST_TIME = "90"
+            } else if (testJobName.contains("extended.system")) {
+                PARALLEL = "Dynamic"
+                TEST_TIME = "90"
+            } else if (testJobName.contains("sanity.openjdk")) {
+                PARALLEL = "Dynamic"
+                TEST_TIME = "30"
             } else if (testJobName.contains("special.system")) {
                 PARALLEL = "Dynamic"
-                NUM_MACHINES = "5"
+                TEST_TIME = "90"
             } else if (testJobName.contains("external")) {
                 DYNAMIC_COMPILE = true
             } else if (testJobName.contains("sanity.jck")) {
                 PARALLEL = "Dynamic"
-                NUM_MACHINES = "4"
+                TEST_TIME = "90"
             } else if (testJobName.contains("extended.jck")) {
                 PARALLEL = "Dynamic"
-                NUM_MACHINES = "8"
+                TEST_TIME = "90"
             }
 
             // generate child test jobs
@@ -471,7 +479,7 @@ def workflow(SDK_VERSION, SPEC, SHAS, OPENJDK_REPO, OPENJDK_BRANCH, OPENJ9_REPO,
                 if (ARTIFACTORY_CREDS) {
                     cleanup_artifactory(ARTIFACTORY_MANUAL_CLEANUP, testJobName, ARTIFACTORY_SERVER, ARTIFACTORY_REPO, ARTIFACTORY_NUM_ARTIFACTS)
                 }
-                jobs[id] = test(testJobName, BUILD_JOB_NAME, jobs["build"].getNumber(), TEST_NODE, OPENJ9_REPO, OPENJ9_BRANCH, SHAS['OPENJ9'], VENDOR_TEST_REPOS, VENDOR_TEST_BRANCHES, VENDOR_TEST_SHAS, VENDOR_TEST_DIRS, USER_CREDENTIALS_ID, CUSTOMIZED_SDK_URL, ARTIFACTORY_CREDS, testFlag, BUILD_IDENTIFIER, ghprbGhRepository, ghprbActualCommit, GITHUB_SERVER, ADOPTOPENJDK_REPO, ADOPTOPENJDK_BRANCH, PARALLEL, extraTestLabels, keepReportDir, buildList, NUM_MACHINES, OPENJDK_REPO, OPENJDK_BRANCH, USE_TESTENV_PROPERTIES, GENERATE_JOBS, DYNAMIC_COMPILE)
+                jobs[id] = test(testJobName, BUILD_JOB_NAME, jobs["build"].getNumber(), TEST_NODE, OPENJ9_REPO, OPENJ9_BRANCH, SHAS['OPENJ9'], VENDOR_TEST_REPOS, VENDOR_TEST_BRANCHES, VENDOR_TEST_SHAS, VENDOR_TEST_DIRS, USER_CREDENTIALS_ID, CUSTOMIZED_SDK_URL, ARTIFACTORY_CREDS, testFlag, BUILD_IDENTIFIER, ghprbGhRepository, ghprbActualCommit, GITHUB_SERVER, ADOPTOPENJDK_REPO, ADOPTOPENJDK_BRANCH, PARALLEL, extraTestLabels, keepReportDir, buildList, NUM_MACHINES, TEST_TIME, OPENJDK_REPO, OPENJDK_BRANCH, USE_TESTENV_PROPERTIES, GENERATE_JOBS, DYNAMIC_COMPILE)
             }
         }
         if (params.AUTOMATIC_GENERATION != 'false') {
