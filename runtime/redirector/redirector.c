@@ -106,9 +106,9 @@ typedef enum gc_policy{
 
 #if defined(LINUX) || defined(OSX)
 /* defining _GNU_SOURCE allows the use of dladdr() in dlfcn.h */
-#ifndef _GNU_SOURCE
+#if !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
-#endif /* _GNU_SOURCE */
+#endif /* !defined(_GNU_SOURCE) */
 #define __USE_GNU 1
 #include <dlfcn.h>
 #endif

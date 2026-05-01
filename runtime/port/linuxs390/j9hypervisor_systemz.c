@@ -27,7 +27,9 @@
  */
 
 /* Needed for Dl_info structure and dladdr call */
+#if !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
+#endif /* !defined(_GNU_SOURCE) */
 #define __USE_GNU 1
 #include <dlfcn.h>
 #include <errno.h>

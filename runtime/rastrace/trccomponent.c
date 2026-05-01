@@ -21,9 +21,9 @@
  *******************************************************************************/
 
 /* _GNU_SOURCE forces GLIBC_2.0 sscanf/vsscanf/fscanf for RHEL5 compatibility */
-#if defined(LINUX) && !defined(J9ZTPF)
+#if defined(LINUX) && !defined(_GNU_SOURCE) && !defined(J9ZTPF)
 #define _GNU_SOURCE
-#endif /* defined(LINUX) && !defined(J9ZTPF) */
+#endif /* defined(LINUX) && !defined(_GNU_SOURCE) && !defined(J9ZTPF) */
 
 #include <limits.h>
 #include <string.h>

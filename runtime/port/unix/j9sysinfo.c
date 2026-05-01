@@ -30,9 +30,9 @@
 #define ENV_DEBUG
 #endif
 
-#if (defined(LINUX) || defined(OSX)) && !defined(J9ZTPF)
+#if (defined(LINUX) || defined(OSX)) && !defined(_GNU_SOURCE) && !defined(J9ZTPF)
 #define _GNU_SOURCE
-#endif /* (defined(LINUX) || defined(OSX)) && !defined(J9ZTPF) */
+#endif /* (defined(LINUX) || defined(OSX)) && !defined(_GNU_SOURCE) && !defined(J9ZTPF) */
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
