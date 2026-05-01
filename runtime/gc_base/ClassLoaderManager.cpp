@@ -391,7 +391,7 @@ MM_ClassLoaderManager::addDyingClassesToList(MM_EnvironmentBase *env, J9ClassLoa
 				if (setAll || !markMap->isBitSet(classObject)) {
 
 					/* with setAll all classes must be unmarked */
-					Assert_GC_true_with_message3(
+					Assert_GC_true_with_message(
 							env, !markMap->isBitSet(classObject),
 							"Class %p class object %p is discovered marked during unloading classloader %p\n",
 							clazz, classObject, classLoader);

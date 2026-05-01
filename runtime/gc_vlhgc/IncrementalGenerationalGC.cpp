@@ -1826,7 +1826,7 @@ MM_IncrementalGenerationalGC::assertTableClean(MM_EnvironmentVLHGC *env, Card ad
 			Card *highCard = _extensions->cardTable->heapAddrToCardAddr(env, region->getHighAddress());
 			for (Card *thisCard = lowCard; thisCard < highCard; thisCard++) {
 				Card cardValue = *thisCard;
-				Assert_GC_true_with_message2(env, ((additionalCleanState == cardValue) || (CARD_CLEAN == cardValue)), "The card %p is not clean, value %u\n", thisCard, cardValue);
+				Assert_GC_true_with_message(env, ((additionalCleanState == cardValue) || (CARD_CLEAN == cardValue)), "The card %p is not clean, value %u\n", thisCard, cardValue);
 			}
 		}
 	}

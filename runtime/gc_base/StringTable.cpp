@@ -529,7 +529,7 @@ storeLatin1ByteArrayhelper(J9VMThread *vmThread, U_8 *data, UDATA length, j9obje
 		U_16 unicode = 0;
 		UDATA consumed = VM_VMHelpers::decodeUTF8CharN(data, &unicode, length);
 
-		Assert_GC_true_with_message3(
+		Assert_GC_true_with_message(
 				MM_EnvironmentBase::getEnvironment(vmThread->omrVMThread), 0 != consumed,
 				"Invalid UTF8 character <%zx> at address %p, remaining length %zu\n",
 				(UDATA) *data, data, length);
@@ -678,7 +678,7 @@ j9gc_createJavaLangString(J9VMThread *vmThread, U_8 *data, UDATA length, UDATA s
 					U_16 unicode = 0;
 					UDATA consumed = VM_VMHelpers::decodeUTF8CharN(tempData, &unicode, tempLength);
 
-					Assert_GC_true_with_message4(
+					Assert_GC_true_with_message(
 							MM_EnvironmentBase::getEnvironment(vmThread->omrVMThread), 0 != consumed,
 							"Invalid UTF8 character <%zx> at address %p, remaining length %zu, string start address %p\n",
 							(UDATA) *tempData, tempData, tempLength, data);

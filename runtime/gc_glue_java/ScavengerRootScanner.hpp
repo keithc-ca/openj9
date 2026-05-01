@@ -135,7 +135,7 @@ public:
 		if (_scavenger->isHeapObject(*slotPtr) && !_extensions->heap->objectIsInGap(*slotPtr)) {
 			_scavenger->copyAndForwardThreadSlot(envStandard, slotPtr);
 		} else if (NULL != *slotPtr) {
-			Assert_GC_true_with_message4(envStandard, (vmthreaditerator_state_monitor_records == vmThreadIterator->getState()),
+			Assert_GC_true_with_message(envStandard, (vmthreaditerator_state_monitor_records == vmThreadIterator->getState()),
 					"Thread %p structures scan: slot %p has bad value %p, iterator state %d\n", vmThreadIterator->getVMThread(), slotPtr, *slotPtr, vmThreadIterator->getState());
 		}
 	}
