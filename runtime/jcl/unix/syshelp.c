@@ -96,20 +96,7 @@ char *getPlatformFileEncoding(JNIEnv * env, char *codepageProp, int propSize, in
 	PORT_ACCESS_FROM_ENV(env);
 #endif /* defined(LINUX) || defined(OSX) */
 
-#if defined(LINUX)
-	/*[PR 104520] Return EUC_JP when LC_CTYPE is not set, and the LANG environment variable is "ja" */
-	ctype = setlocale(LC_CTYPE, NULL);
-	if ((NULL == ctype) 
-		|| (0 == strcmp(ctype, "C"))
-		|| (0 == strcmp(ctype, "POSIX"))
-	) {
-		result = j9sysinfo_get_env("LANG", langProp, sizeof(langProp));
-		if ((0 == result) && (0 == strcmp(langProp, "ja"))) {
-			return "EUC-JP-LINUX";
-		}
-	}
-	codepage = nl_langinfo(_NL_CTYPE_CODESET_NAME);
-#elif defined(OSX)
+#if defined(OSX) || defined(OMR_OS_ALPINE)
 	/* LC_ALL overwrites LC_CTYPE or LANG;
 	 * LC_CTYPE applies to classification and conversion of characters, and to multibyte and wide characters;
 	 * LANG specifies the locale to use except as overridden by LC_CTYPE
@@ -139,9 +126,22 @@ char *getPlatformFileEncoding(JNIEnv * env, char *codepageProp, int propSize, in
 		}
 	}
 	return codepage;
-#else
+#elif defined(LINUX) /* defined(OSX) || defined(OMR_OS_ALPINE) */
+	/*[PR 104520] Return EUC_JP when LC_CTYPE is not set, and the LANG environment variable is "ja" */
+	ctype = setlocale(LC_CTYPE, NULL);
+	if ((NULL == ctype)
+		|| (0 == strcmp(ctype, "C"))
+		|| (0 == strcmp(ctype, "POSIX"))
+	) {
+		result = j9sysinfo_get_env("LANG", langProp, sizeof(langProp));
+		if ((0 == result) && (0 == strcmp(langProp, "ja"))) {
+			return "EUC-JP-LINUX";
+		}
+	}
+	codepage = nl_langinfo(_NL_CTYPE_CODESET_NAME);
+#else /* defined(LINUX) */
 	codepage = nl_langinfo(CODESET);
-#endif /* defined(LINUX) */
+#endif /* defined(OSX) || defined(OMR_OS_ALPINE) */
 
 	if (codepage == NULL || codepage[0] == '\0') {
 		codepage = "ISO8859_1";
