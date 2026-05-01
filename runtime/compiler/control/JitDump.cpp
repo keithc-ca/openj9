@@ -303,11 +303,11 @@ omr_error_t runJitdump(char *label, J9RASdumpContext *context, J9RASdumpAgent *a
                     deserializer->printStats(stderr);
             }
 
-#if defined(LINUX)
+#if defined(LINUX) && !defined(OMR_OS_ALPINE)
             static char *isPrintJITServerMallocStats = feGetEnv("TR_PrintJITServerMallocStats");
             if (isPrintJITServerMallocStats)
                 malloc_stats();
-#endif /* defined(LINUX) */
+#endif /* defined(LINUX) && !defined(OMR_OS_ALPINE) */
         }
     }
 #endif /* defined(J9VM_OPT_JITSERVER) */
