@@ -6502,7 +6502,7 @@ static int32_t J9THREAD_PROC samplerThreadProc(void *entryarg)
                 // Every second
                 if (crtTime - lastSecondCheck >= 1000) {
                     lastSecondCheck = crtTime;
-#ifdef LINUX
+#if defined(LINUX) && !defined(OMR_OS_ALPINE)
                     if (TR::Options::_mallocTrimPeriod > 0) // if enabled
                     {
                         if (crtTime - lastMallocTrimIssueTime >= TR::Options::_mallocTrimPeriod * 1000) {
@@ -6510,7 +6510,7 @@ static int32_t J9THREAD_PROC samplerThreadProc(void *entryarg)
                             malloc_trim(0);
                         }
                     }
-#endif /* LINUX */
+#endif /* defined(LINUX) && !defined(OMR_OS_ALPINE) */
 #if defined(TR_TARGET_32BIT) && (defined(WINDOWS) || defined(LINUX) || defined(J9ZOS390))
                     // On 32 bit Windows, Linux, and 31 bit z/OS, monitor the virtual memory available to the user
                     if (crtTime - lastVirtualMemoryCheck >= (TR::Options::_virtualMemoryCheckFrequencySec * 1000)) {
@@ -6662,7 +6662,7 @@ static int32_t J9THREAD_PROC samplerThreadProc(void *entryarg)
                 }
 
 #if defined(J9VM_OPT_JITSERVER)
-#if defined(LINUX)
+#if defined(LINUX) && !defined(OMR_OS_ALPINE)
                 static uint64_t lastMallocTrimTime = 0;
                 if ((TR::Options::_jitserverMallocTrimInterval > 0)
                     && (persistentInfo->getRemoteCompilationMode() == JITServer::CLIENT)
@@ -6670,7 +6670,7 @@ static int32_t J9THREAD_PROC samplerThreadProc(void *entryarg)
                     malloc_trim(0);
                     lastMallocTrimTime = crtTime;
                 }
-#endif /* defined(LINUX) */
+#endif /* defined(LINUX) && !defined(OMR_OS_ALPINE) */
                 if (persistentInfo->getRemoteCompilationMode() == JITServer::CLIENT
                     && TR::Options::_lowCompDensityModeEnterThreshold > 0 && // A value of 0 disables this feature
                     !TR::Options::getCmdLineOptions()->getOption(TR_FullSpeedDebug)

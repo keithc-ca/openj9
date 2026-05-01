@@ -1968,8 +1968,9 @@ criuCheckpointJVMImpl(JNIEnv *env,
 		}
 
 		TRIGGER_J9HOOK_VM_CRIU_CHECKPOINT(vm->hookInterface, currentThread);
-
+#if !defined(OMR_OS_ALPINE)
 		malloc_trim(0);
+#endif /* !defined(OMR_OS_ALPINE) */
 		Trc_VM_criu_before_checkpoint(currentThread, j9time_nano_time(), j9time_current_time_nanos(&success));
 
 		VM_VMHelpers::setVMState(currentThread, J9VMSTATE_CRIU_SUPPORT_CHECKPOINT_PHASE_END);
