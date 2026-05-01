@@ -789,21 +789,23 @@ unwindAfterDump(struct J9JavaVM *vm, struct J9RASdumpContext *context, UDATA sta
  * Convert a dump label template into an actual dump label by expanding all the tokens.
  *
  * Parameters:
- *  vm [in] 	 - VM structure pointer
- *  agent		 - dump agent pointer
- *  context		 - dump context pointer
- *  buf [in/out] - memory buffer for expanded label
- *  len [in]	 - length of supplied buffer
- *  reqLen [out] - length of buffer required, if expansion would have overflowed buf
- *  now [in]	 - current time
+ *  vm [in]         - VM structure pointer
+ *  agent [in]      - dump agent pointer
+ *  context [in]    - dump context pointer
+ *  buf [in/out]    - memory buffer for expanded label
+ *  len [in]        - length of supplied buffer
+ *  reqLen [out]    - length of buffer required, if expansion would have overflowed buf
+ *  now [in]        - current time
+ *  incrSeqNum [in] - should the global sequence number be incremented?
  *
  * Returns: OMR_ERROR_NONE, OMR_ERROR_INTERNAL, OMR_ERROR_OUT_OF_NATIVE_MEMORY
  */
 omr_error_t
-dumpLabel(struct J9JavaVM *vm, J9RASdumpAgent *agent, J9RASdumpContext *context, char *buf, size_t len, UDATA *reqLen, I_64 now)
+dumpLabel(struct J9JavaVM *vm, J9RASdumpAgent *agent, J9RASdumpContext *context, char *buf, size_t len, UDATA *reqLen, I_64 now, BOOLEAN incrSeqNum)
 {
 	/* monotonic counter */
 	static UDATA seqNum = 0;
+	omr_error_t result = OMR_ERROR_INTERNAL;
 	struct J9StringTokens *stringTokens = NULL;
 	RasDumpGlobalStorage *dump_storage = (RasDumpGlobalStorage *)vm->j9rasdumpGlobalStorage;
 
@@ -821,32 +823,29 @@ dumpLabel(struct J9JavaVM *vm, J9RASdumpAgent *agent, J9RASdumpContext *context,
 
 	j9str_set_time_tokens(stringTokens, now);
 
-	seqNum += 1; /* Atomicity guaranteed as we are inside the dumpLabelTokensMutex. */
+	if (incrSeqNum) {
+		seqNum += 1; /* Atomicity guaranteed as we are inside the dumpLabelTokensMutex. */
+	}
 
 	if (0 != j9str_set_token(stringTokens, "seq", "%04u", seqNum)) {
-		omrthread_monitor_exit(dump_storage->dumpLabelTokensMutex);
-		return OMR_ERROR_INTERNAL;
+		goto done;
 	}
 
 	if (0 != j9str_set_token(stringTokens, "home", "%s", (vm->javaHome == NULL) ? "" : (const char *)vm->javaHome)) {
-		omrthread_monitor_exit(dump_storage->dumpLabelTokensMutex);
-		return OMR_ERROR_INTERNAL;
+		goto done;
 	}
 
 	if (0 != j9str_set_token(stringTokens, "event", "%s", mapDumpEvent(context->eventFlags))) {
-		omrthread_monitor_exit(dump_storage->dumpLabelTokensMutex);
-		return OMR_ERROR_INTERNAL;
+		goto done;
 	}
 
 	if (0 != j9str_set_token(stringTokens, "list", "%s", (context->dumpList == NULL) ? "" : context->dumpList)) {
-		omrthread_monitor_exit(dump_storage->dumpLabelTokensMutex);
-		return OMR_ERROR_INTERNAL;
+		goto done;
 	}
 
 	/* %vmbin is not listed in printLabelSpec as it is only useful for loading internal tools that live in the vm directory. */
 	if (0 != j9str_set_token(stringTokens, "vmbin", "%s", (vm->j2seRootDirectory == NULL) ? "" : (const char *)vm->j2seRootDirectory)) {
-		omrthread_monitor_exit(dump_storage->dumpLabelTokensMutex);
-		return OMR_ERROR_INTERNAL;
+		goto done;
 	}
 
 	/* Default label is "-", ie. stderr */
@@ -857,22 +856,24 @@ dumpLabel(struct J9JavaVM *vm, J9RASdumpAgent *agent, J9RASdumpContext *context,
 	/* Check the return value here to see if token expansion fitted in the buffer */
 	*reqLen = j9str_subst_tokens(buf, len, agent->labelTemplate, stringTokens);
 	if (*reqLen > len) {
-		omrthread_monitor_exit(dump_storage->dumpLabelTokensMutex);
-		return OMR_ERROR_OUT_OF_NATIVE_MEMORY;
+		result = OMR_ERROR_OUT_OF_NATIVE_MEMORY;
+		goto done;
 	}
 
 	if (agent->dumpFn != doToolDump) {
 		/* Cache last dump label (but not for tool dumps!) */
 		if (0 != j9str_set_token(stringTokens, "last", "%s", buf)) {
-			omrthread_monitor_exit(dump_storage->dumpLabelTokensMutex);
-			return OMR_ERROR_INTERNAL;
+			goto done;
 		}
 	}
 
+	result = OMR_ERROR_NONE;
+
+done:
 	/* release access to the tokens */
 	omrthread_monitor_exit(dump_storage->dumpLabelTokensMutex);
 
-	return OMR_ERROR_NONE;
+	return result;
 }
 
 omr_error_t

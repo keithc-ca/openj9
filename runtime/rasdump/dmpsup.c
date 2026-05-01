@@ -1166,6 +1166,10 @@ pushDumpFacade(J9JavaVM *vm)
 		queue->facade.setDumpOption		= setDumpOption;
 		queue->facade.resetDumpOptions	= resetDumpOptions;
 		queue->facade.queryVmDump		= queryVmDump;
+		queue->facade.printDumpAgent = printDumpAgent;
+#if defined(OMR_TDUMP_VALIDATION)
+		queue->facade.validateDumpAgent = validateDumpAgent;
+#endif /* defined(OMR_TDUMP_VALIDATION) */
 #if defined(J9VM_OPT_CRIU_SUPPORT)
 		queue->facade.criuReloadXDumpAgents = criuReloadXDumpAgents;
 #endif /* defined(J9VM_OPT_CRIU_SUPPORT) */

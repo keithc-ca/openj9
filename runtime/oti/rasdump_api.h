@@ -415,6 +415,27 @@ triggerOneOffDump(struct J9JavaVM *vm, char *optionString, char *caller, char *f
 omr_error_t
 queryVmDump(struct J9JavaVM *vm, int buffer_size, void* options_buffer, int* data_size);
 
+/**
+ * Print the specified dump agent.
+ *
+ * @param *vm VM pointer
+ * @param *agent the agent to be printed
+ * @return omr_error_t
+ */
+omr_error_t
+printDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+
+#if defined(OMR_TDUMP_VALIDATION)
+/**
+ * Validate a dump agent.
+ *
+ * @param *vm VM pointer
+ * @param *agent the agent to be validated
+ * @return omr_error_t
+ */
+omr_error_t
+validateDumpAgent(struct J9JavaVM *vm, struct J9RASdumpAgent *agent);
+#endif /* defined(OMR_TDUMP_VALIDATION) */
 
 /**
 * @brief
@@ -425,11 +446,11 @@ queryVmDump(struct J9JavaVM *vm, int buffer_size, void* options_buffer, int* dat
 * @param len
 * @param *reqLen
 * @param now
+* @param incrSeqNum
 * @return omr_error_t
 */
 omr_error_t
-dumpLabel(struct J9JavaVM *vm, J9RASdumpAgent *agent, J9RASdumpContext *context, char *buf, size_t len, UDATA *reqLen, I_64 now);
-
+dumpLabel(struct J9JavaVM *vm, J9RASdumpAgent *agent, J9RASdumpContext *context, char *buf, size_t len, UDATA *reqLen, I_64 now, BOOLEAN incrSeqNum);
 
 /**
 * @brief
@@ -468,7 +489,7 @@ void
 j9rasSetServiceLevel(J9JavaVM *vm, const char *runtimeVersion);
 
 #ifdef __cplusplus
-}
+} /* extern "C" */
 #endif
 
 #endif /* rasdump_api_h */
