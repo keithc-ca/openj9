@@ -90,9 +90,9 @@ char *getPlatformFileEncoding(JNIEnv * env, char *codepageProp, int propSize, in
 #if defined(LINUX) || defined(OSX)
 	IDATA result = 0;
 	char langProp[24] = {0};
-#if defined(LINUX)
+#if defined(LINUX) && !defined(OMR_OS_ALPINE)
 	char *ctype = NULL;
-#endif /* defined(LINUX) */
+#endif /* defined(LINUX) && !defined(OMR_OS_ALPINE) */
 	PORT_ACCESS_FROM_ENV(env);
 #endif /* defined(LINUX) || defined(OSX) */
 
