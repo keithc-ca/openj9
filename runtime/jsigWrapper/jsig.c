@@ -178,7 +178,7 @@ sysv_signal(int signum, sighandler_t handler)
 
 #endif /* !defined(J9ZOS390) */
 
-#if defined(LINUX)
+#if defined(LINUX) && defined(__GLIBC__)
 
 __sighandler_t
 __sysv_signal(int sig, __sighandler_t handler)
@@ -204,7 +204,7 @@ ssignal(int sig, sighandler_t handler)
 	return rc;
 }
 
-#endif /* defined(LINUX) */
+#endif /* defined(LINUX) && defined(__GLIBC__) */
 
 int
 jsig_primary_sigaction(int signum, const struct sigaction *act, struct sigaction *oldact)

@@ -61,12 +61,12 @@ typedef sighandler_t (*Sysv_Signal)(int signum, sighandler_t handler);
 sighandler_t sysv_signal(int signum, sighandler_t handler);
 #endif /* !defined(J9ZOS390) */
 
-#if defined(LINUX)
+#if defined(LINUX) && defined(__GLIBC__)
 typedef __sighandler_t (*__Sysv_Signal)(int sig, __sighandler_t handler);
 __sighandler_t __sysv_signal(int sig, __sighandler_t handler);
 typedef sighandler_t (*Ssignal)(int sig, sighandler_t handler);
 sighandler_t ssignal(int sig, sighandler_t handler);
-#endif /* defined(LINUX) */
+#endif /* defined(LINUX) && defined(__GLIBC__) */
 
 #if defined(J9ZOS390)
 typedef int (*__SigActionSet)(size_t newct, const __sigactionset_t newsets[], size_t *oldct, __sigactionset_t oldsets[], int options);
@@ -89,10 +89,10 @@ typedef struct SigHandlerTable {
 #if !defined(J9ZOS390)
 	void *sysv_signal;
 #endif /* !defined(J9ZOS390) */
-#if defined(LINUX)
+#if defined(LINUX) && defined(__GLIBC__)
 	void *__sysv_signal;
 	void *ssignal;
-#endif /* defined(LINUX) */
+#endif /* defined(LINUX) && defined(__GLIBC__) */
 #endif /* !defined(WIN32) */
 } SigHandlerTable;
 
