@@ -111,8 +111,24 @@ Java_jdk_jfr_internal_JVM_getClassId(JNIEnv *env, jclass clazz, jclass targetCla
 jstring JNICALL
 Java_jdk_jfr_internal_JVM_getPid(JNIEnv *env, jobject obj)
 {
-	// TODO: implementation
-	return NULL;
+	J9VMThread *currentThread = (J9VMThread*) env;
+	J9JavaVM *vm = currentThread->javaVM;
+	J9InternalVMFunctions *vmFuncs = vm->internalVMFunctions;
+	jstring result = NULL;
+	U_8 pidBuffer[32];
+	UDATA pidLen = 0;
+
+	PORT_ACCESS_FROM_JAVAVM(vm);
+
+	pidLen = j9str_printf((char*) pidBuffer, sizeof(pidBuffer), "%zu", vm->j9ras->pid);
+
+	vmFuncs->internalEnterVMFromJNI(currentThread);
+	j9object_t stringObj = vm->memoryManagerFunctions->j9gc_createJavaLangString(
+		currentThread, pidBuffer, pidLen, 0);
+	result = (jstring) vmFuncs->j9jni_createLocalRef(env, stringObj);
+	vmFuncs->internalExitVMToJNI(currentThread);
+
+	return result;
 }
 
 jlong JNICALL
