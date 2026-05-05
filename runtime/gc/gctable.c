@@ -140,9 +140,6 @@ J9MemoryManagerFunctions MemoryManagerFunctions = {
 	j9gc_objaccess_indexableStoreU32,
 	j9gc_objaccess_indexableStoreI64,
 	j9gc_objaccess_indexableStoreU64,
-#if !defined(J9VM_ENV_DATA64)
-	j9gc_objaccess_indexableStoreU64Split,
-#endif /* !J9VM_ENV_DATA64 */
 	j9gc_objaccess_indexableStoreObject,
 	j9gc_objaccess_indexableStoreAddress,
 	j9gc_objaccess_indexableDataDisplacement,
@@ -170,9 +167,6 @@ J9MemoryManagerFunctions MemoryManagerFunctions = {
 	j9gc_objaccess_mixedObjectStoreU64,
 	j9gc_objaccess_mixedObjectStoreObject,
 	j9gc_objaccess_mixedObjectStoreAddress,
-#if !defined(J9VM_ENV_DATA64)
-	j9gc_objaccess_mixedObjectStoreU64Split,
-#endif /* !J9VM_ENV_DATA64 */
 	j9gc_objaccess_mixedObjectCompareAndSwapInt,
 	j9gc_objaccess_mixedObjectCompareAndSwapLong,
 #if defined(J9VM_OPT_VALHALLA_COMPACT_LAYOUTS)
@@ -193,9 +187,6 @@ J9MemoryManagerFunctions MemoryManagerFunctions = {
 	j9gc_objaccess_staticStoreU64,
 	j9gc_objaccess_staticStoreObject,
 	j9gc_objaccess_staticStoreAddress,
-#if !defined(J9VM_ENV_DATA64)
-	j9gc_objaccess_staticStoreU64Split,
-#endif /* !J9VM_ENV_DATA64 */
 	j9gc_objaccess_storeObjectToInternalVMSlot,
 	j9gc_objaccess_readObjectFromInternalVMSlot,
 	j9gc_objaccess_getArrayObjectDataAddress,
@@ -273,15 +264,9 @@ J9MemoryManagerFunctions MemoryManagerFunctions = {
 #if defined(J9VM_GC_OBJECT_ACCESS_BARRIER)
 	j9gc_objaccess_staticCompareAndSwapInt,
 	j9gc_objaccess_staticCompareAndExchangeInt,
-#if !defined(J9VM_ENV_DATA64)
-	j9gc_objaccess_mixedObjectCompareAndSwapLongSplit,
-#endif /* !J9VM_ENV_DATA64 */
 	j9gc_objaccess_staticCompareAndSwapLong,
 	j9gc_objaccess_staticCompareAndExchangeLong,
-#if !defined(J9VM_ENV_DATA64)
-	j9gc_objaccess_staticCompareAndSwapLongSplit,
-#endif /* !J9VM_ENV_DATA64 */
-#endif /* J9VM_GC_OBJECT_ACCESS_BARRIER */
+#endif /* defined(J9VM_GC_OBJECT_ACCESS_BARRIER) */
 	j9gc_get_bytes_allocated_by_thread,
 	j9gc_get_cumulative_bytes_allocated_by_thread,
 	j9gc_get_cumulative_class_unloading_stats,
