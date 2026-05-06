@@ -455,7 +455,7 @@ def workflow(SDK_VERSION, SPEC, SHAS, OPENJDK_REPO, OPENJDK_BRANCH, OPENJ9_REPO,
                 NUM_MACHINES = "4"
             } else if (testJobName.contains("sanity.openjdk")) {
                 PARALLEL = "Dynamic"
-                TEST_TIME = "30"
+                NUM_MACHINES = "4"
             } else if (testJobName.contains("special.system")) {
                 PARALLEL = "Dynamic"
                 TEST_TIME = "90"
