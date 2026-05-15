@@ -62,7 +62,7 @@ Java_com_ibm_jvmti_tests_getThreadListStackTracesExtended_gtlste002_anyJittedFra
 			return JNI_FALSE;
 		}
 
-		for (int i = 0; i < extensionCount; i++) {
+		for (i = 0; i < extensionCount; i++) {
 			if (strcmp(extensionFunctions[i].id, COM_IBM_GET_THREAD_LIST_STACK_TRACES_EXTENDED) == 0) {
 				getThreadListStackTracesExtended = extensionFunctions[i].func;
 			}

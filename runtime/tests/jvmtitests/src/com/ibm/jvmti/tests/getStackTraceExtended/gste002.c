@@ -62,7 +62,7 @@ Java_com_ibm_jvmti_tests_getStackTraceExtended_gste002_anyJittedFrame(JNIEnv *jn
 			return 0;
 		}
 
-		for (int i = 0; i < extensionCount; i++) {
+		for (i = 0; i < extensionCount; i++) {
 			if (strcmp(extensionFunctions[i].id, COM_IBM_GET_STACK_TRACE_EXTENDED) == 0) {
 				getStackTraceExtended = extensionFunctions[i].func;
 			}
@@ -108,7 +108,6 @@ Java_com_ibm_jvmti_tests_getStackTraceExtended_gste002_anyJittedFrame(JNIEnv *jn
 		error(env, err, "getStackTraceExtended failed");
 		return 0;
 	}
-
 
 	for (i = 0; i < numFrames; ++i) {
 		if (frameBuffer[i].type != COM_IBM_STACK_FRAME_EXTENDED_NOT_JITTED) {
