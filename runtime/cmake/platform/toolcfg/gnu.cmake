@@ -21,11 +21,6 @@
 ################################################################################
 
 list(APPEND OMR_PLATFORM_COMPILE_OPTIONS -O3 -g -fstack-protector)
-if(OMR_DDR AND NOT (CMAKE_C_COMPILER_VERSION VERSION_LESS 11))
-	# In gcc 11+ the default is to use DWARF version 5 which is not yet
-	# supported by ddrgen: tell the compiler to use DWARF version 4.
-	list(APPEND OMR_PLATFORM_COMPILE_OPTIONS -gdwarf-4)
-endif()
 list(APPEND OMR_PLATFORM_C_COMPILE_OPTIONS -Wimplicit -Wreturn-type)
 list(APPEND OMR_PLATFORM_CXX_COMPILE_OPTIONS -fno-threadsafe-statics)
 
