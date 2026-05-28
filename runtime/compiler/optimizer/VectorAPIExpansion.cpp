@@ -884,19 +884,13 @@ TR_VectorAPIExpansion::vapiObjType TR_VectorAPIExpansion::getObjectTypeFromClass
 
     char *cursor = classNameChars + length;
 
-    if (!strncmp(cursor - 6, "Vector", 6)) {
-        objectType = Vector;
-        cursor -= 6;
-    } else if (!strncmp(cursor - 4, "Mask", 4)) {
-        objectType = Mask;
-        cursor -= 4;
-    } else if (!strncmp(cursor - 7, "Shuffle", 7)) {
-        objectType = Shuffle;
-        cursor -= 7;
-    } else {
-        return Unknown;
-    }
-
+#if JAVA_SPEC_VERSION >= 27
+    /*
+     * In jdk27+, the vector length is at the end of the type name, for example:
+     *   DoubleVector512
+     *   DoubleVector512$DoubleMask512
+     *   DoubleVector512$DoubleShuffle512
+     */
     if (!strncmp(cursor - 2, "64", 2)) {
         vectorLength = TR::VectorLength64;
         cursor -= 2;
@@ -916,6 +910,44 @@ TR_VectorAPIExpansion::vapiObjType TR_VectorAPIExpansion::getObjectTypeFromClass
     } else {
         return Unknown;
     }
+#endif /* JAVA_SPEC_VERSION >= 27 */
+
+    if (!strncmp(cursor - 6, "Vector", 6)) {
+        objectType = Vector;
+        cursor -= 6;
+    } else if (!strncmp(cursor - 4, "Mask", 4)) {
+        objectType = Mask;
+        cursor -= 4;
+    } else if (!strncmp(cursor - 7, "Shuffle", 7)) {
+        objectType = Shuffle;
+        cursor -= 7;
+    } else {
+        return Unknown;
+    }
+
+#if JAVA_SPEC_VERSION < 27
+    /*
+     * Before jdk27, the vector length is at the end of the species name, for example:
+     *   Double512Vector
+     *   Double512Vector$Double512Mask
+     *   Double512Vector$Double512Shuffle
+     */
+    if (!strncmp(cursor - 2, "64", 2)) {
+        vectorLength = TR::VectorLength64;
+        cursor -= 2;
+    } else if (!strncmp(cursor - 3, "128", 3)) {
+        vectorLength = TR::VectorLength128;
+        cursor -= 3;
+    } else if (!strncmp(cursor - 3, "256", 3)) {
+        vectorLength = TR::VectorLength256;
+        cursor -= 3;
+    } else if (!strncmp(cursor - 3, "512", 3)) {
+        vectorLength = TR::VectorLength512;
+        cursor -= 3;
+    } else {
+        return Unknown;
+    }
+#endif /* JAVA_SPEC_VERSION < 27 */
 
     if (!strncmp(cursor - 4, "Byte", 4)) {
         elementType = TR::Int8;
