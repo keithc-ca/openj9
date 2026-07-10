@@ -395,6 +395,7 @@ public class RomClassWalker extends ClassWalker {
 		}
 	}
 
+	@SuppressWarnings("fallthrough")
 	private void allSlotsInBytecodesDo(J9ROMMethodPointer method) throws CorruptDataException {
 		/* bytecodeSizeLow already walked */
 		long length = ROMHelp.J9_BYTECODE_SIZE_FROM_ROM_METHOD(method).longValue();

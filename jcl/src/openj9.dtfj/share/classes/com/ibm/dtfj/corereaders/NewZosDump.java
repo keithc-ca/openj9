@@ -65,7 +65,7 @@ public class NewZosDump implements ICoreFileReader {
 
 	private final static int RECORD_LEN = RECORD_HEADER_LEN + RECORD_BODY_LEN;
 
-	private List _additionalFileNames = new ArrayList();
+	private List<String> _additionalFileNames = new ArrayList<>();
 
 	private IAbstractAddressSpace _space;
 
@@ -75,7 +75,7 @@ public class NewZosDump implements ICoreFileReader {
 	private Object _failingThread = null;
 
 	/** Maintains the list of Java address spaces */
-	private HashMap _javaAddressSpaces = new LinkedHashMap();
+	private Map<Integer, int[]> _javaAddressSpaces = new LinkedHashMap<>();
 
 	/** Logger */
 	private static Logger log = Logger.getLogger(NewZosDump.class.getName());
@@ -92,15 +92,14 @@ public class NewZosDump implements ICoreFileReader {
 		_is64Bit = false;
 
 		// Read the memory ranges and also look for the Java address spaces
-		List memoryRanges = readTDUMP();
+		List<MemoryRange> memoryRanges = readTDUMP();
 
 		// List of memory ranges which are in Java address spaces
-		List keepList = null;
+		List<MemoryRange> keepList = null;
 
 		// Collect together the address ranges associated with the IDs
-		for (Iterator iter = _javaAddressSpaces.values().iterator(); iter.hasNext();) {
-			int []asidinfo = (int[])iter.next();
-			List onASID = keepMemoryRangesWithAsid(asidinfo, memoryRanges);
+		for (int[] asidinfo : _javaAddressSpaces.values()) {
+			List<MemoryRange> onASID = keepMemoryRangesWithAsid(asidinfo, memoryRanges);
 			if (keepList != null) {
 				keepList.addAll(onASID);
 			} else {
@@ -111,7 +110,7 @@ public class NewZosDump implements ICoreFileReader {
 		}
 
 		if (keepList != null) {
-			MemoryRange[] rawRanges = (MemoryRange[]) keepList.toArray(new MemoryRange[keepList.size()]);
+			MemoryRange[] rawRanges = keepList.toArray(new MemoryRange[keepList.size()]);
 			_space = new DumpReaderAddressSpace(rawRanges, new DumpReader(stream, _is64Bit), false, _is64Bit);
 		}
 
@@ -188,20 +187,22 @@ public class NewZosDump implements ICoreFileReader {
 	 * @param as Zebedee address space
 	 * @return All the EDBs for the address space
 	 */
-	private Edb[] getEdbs(AddressSpace as) {
-		Map edbs = new HashMap();
+	private static Edb[] getEdbs(AddressSpace as) {
+		Map<Long, Edb> edbs = new HashMap<>();
 		Tcb tc[] = Tcb.getTcbs(as);
-		if (tc != null) for (int i = 0; i < tc.length; ++i) {
-			 try {
-				 Caa ca = new Caa(tc[i]);
-				 Edb edb = ca.getEdb();
-				 // Some EDBs don't have any modules, so ignore them
-				 if (edb.getFirstDll() != null) {
-					 edbs.put(Long.valueOf(edb.address()), edb);
-				 }
-			 } catch (CaaNotFound e) {
-			 } catch (IOException e) {
-			 }
+		if (tc != null) {
+			for (int i = 0; i < tc.length; ++i) {
+				try {
+					Caa ca = new Caa(tc[i]);
+					Edb edb = ca.getEdb();
+					// Some EDBs don't have any modules, so ignore them
+					if (edb.getFirstDll() != null) {
+						edbs.put(Long.valueOf(edb.address()), edb);
+					}
+				} catch (CaaNotFound e) {
+				} catch (IOException e) {
+				}
+			}
 		}
 		Edb edb[] = new Edb[edbs.size()];
 		edbs.values().toArray(edb);
@@ -217,8 +218,8 @@ public class NewZosDump implements ICoreFileReader {
 	 * @param stackSyms a map of (address,symbol) pairs of stack frame symbols found when processing frames
 	 * @return List of ImageThreads
 	 */
-	private List getThreads(final Builder builder, final Object imgAdr, AddressSpace addressSpace, Edb edb, Map stackSyms) {
-		List threads = new ArrayList();
+	private List<?> getThreads(final Builder builder, final Object imgAdr, AddressSpace addressSpace, Edb edb, Map<Long, String> stackSyms) {
+		List<Object> threads = new ArrayList<>();
 
 		//get the thread ID of the failing thread
 		long tid = -1;
@@ -254,7 +255,7 @@ public class NewZosDump implements ICoreFileReader {
 						rs = caa.getCurrentFrame().getRegisterSet();
 					}
 				}
-				ArrayList regs = new ArrayList();
+				List<Object> regs = new ArrayList<>();
 				long psw = rs.getPSW();
 				String pswn = null;
 				switch ((int)(psw >> 31) & 3) {
@@ -271,7 +272,7 @@ public class NewZosDump implements ICoreFileReader {
 				regs.add(builder.buildRegister("PSW", Long.valueOf(psw)));
 				// There isn't an easy way to get the total number of registers, so hard code it
 				for (int i = 0; i < 16; ++i) {
-					regs.add(builder.buildRegister("R"+i, Long.valueOf(rs.getRegister(i))));
+					regs.add(builder.buildRegister("R" + i, Long.valueOf(rs.getRegister(i))));
 				}
 				Properties props = new Properties();
 				props.setProperty("TCB", format(caa.getTcb().address()));
@@ -294,10 +295,10 @@ public class NewZosDump implements ICoreFileReader {
 				//props.setProperty("Failed",Boolean.toString(caa.hasFailed()));
 
 				// List of stack frames from thread
-				ArrayList stackFrames = new ArrayList();
+				List<Object> stackFrames = new ArrayList<>();
 
 				// Find sections for stack frames
-				ArrayList stackSections = new ArrayList();
+				List<Object> stackSections = new ArrayList<>();
 				// Avoid adding a range as section multiple times
 				boolean usedRange[] = new boolean[rr.length];
 
@@ -369,7 +370,7 @@ public class NewZosDump implements ICoreFileReader {
 	 * @return The DLL which contains a symbol closest to the address
 	 * @throws IOException
 	 */
-	private Dll closestDll(Edb edb, long address) throws IOException {
+	private static Dll closestDll(Edb edb, long address) throws IOException {
 		Dll closestDll = null;
 		long closestDist = Long.MAX_VALUE;
 		for (Dll dll = edb.getFirstDll(); dll != null; dll = dll.getNext()) {
@@ -402,14 +403,13 @@ public class NewZosDump implements ICoreFileReader {
 	 * @param stackSyms extra symbols from stack frames which might not be exported from DLLs
 	 * @return list of ImageModules
 	 */
-	private List getModules(final Builder builder, final Object imgAdr, AddressSpace addressSpace, Edb edb, Map stackSyms) {
-		List modules = new ArrayList();
+	private List<?> getModules(final Builder builder, final Object imgAdr, AddressSpace addressSpace, Edb edb, Map<Long, String> stackSyms) {
+		List<Object> modules = new ArrayList<>();
 		AddressRange rr[] = addressSpace.getAddressRanges();
 		try {
 			// Do the lookup once per symbol
-			Map closestDlls = new HashMap();
-			for (Iterator i = stackSyms.keySet().iterator(); i.hasNext();) {
-				Long addr = (Long)i.next();
+			Map<Long, Dll> closestDlls = new HashMap<>();
+			for (Long addr : stackSyms.keySet()) {
 				long address = addr.longValue();
 				Dll closest = closestDll(edb, address);
 				closestDlls.put(addr, closest);
@@ -419,7 +419,7 @@ public class NewZosDump implements ICoreFileReader {
 				final DllVariable g[] = dll.getVariables();
 				// Find all the functions and variables in the DLL
 				final String dllname = dll.getName();
-				ArrayList symbols = new ArrayList();
+				List<Object>symbols = new ArrayList<>();
 				boolean usedRange[] = new boolean[rr.length];
 				boolean usedDataRange[] = new boolean[rr.length];
 				// Add functions
@@ -433,17 +433,17 @@ public class NewZosDump implements ICoreFileReader {
 					findRange(g[i].address, usedDataRange, rr);
 				}
 				// Add stack symbols in this DLL if they are closest to symbols in this DLL
-				for (Iterator i = stackSyms.keySet().iterator(); i.hasNext();) {
-					Long addr = (Long)i.next();
+				for (Iterator<Long> i = stackSyms.keySet().iterator(); i.hasNext();) {
+					Long addr = i.next();
 					long address = addr.longValue();
-					Dll closest = (Dll)closestDlls.get(addr);
+					Dll closest = closestDlls.get(addr);
 					// Fix when Zebedee does equals() for Dll
 					//if (dll.equals(closest)) {
 					if (closest != null && dll.getName().equals(closest.getName())) {
 						// Check the stack symbol is in this DLL's ranges
 						int r = findRange(address, rr);
 						if (r >= 0 && usedRange[r]) {
-							String name = (String)stackSyms.get(addr);
+							String name = stackSyms.get(addr);
 							symbols.add(builder.buildSymbol(imgAdr, name, address));
 							i.remove();
 						}
@@ -451,7 +451,7 @@ public class NewZosDump implements ICoreFileReader {
 				}
 
 				Properties props = new Properties();
-				ArrayList sections = new ArrayList();
+				List<Object> sections = new ArrayList<>();
 
 				for (int i = 0; i < usedRange.length; ++i) {
 					if (usedRange[i]) {
@@ -482,16 +482,16 @@ public class NewZosDump implements ICoreFileReader {
 				// Unrecognised symbols, so put them into a dummy DLL where they can be found for printing stack frames
 				final String dllname = "ExtraSymbolsModule";
 				long loadAddress = Long.MAX_VALUE;
-				ArrayList symbols = new ArrayList();
+				List<Object> symbols = new ArrayList<>();
 				boolean usedRange[] = new boolean[rr.length];
 				// Add stack symbols in this DLL
-				for (Iterator i = stackSyms.keySet().iterator(); i.hasNext();) {
-					Long addr = (Long)i.next();
+				for (Iterator<Long> i = stackSyms.keySet().iterator(); i.hasNext();) {
+					Long addr = i.next();
 					long address = addr.longValue();
 					loadAddress = Math.min(address, loadAddress);
 					// Find which ranges apply
 					findRange(address, usedRange, rr);
-					String name = (String)stackSyms.get(addr);
+					String name = stackSyms.get(addr);
 					symbols.add(builder.buildSymbol(imgAdr, name, address));
 					i.remove();
 				}
@@ -499,7 +499,7 @@ public class NewZosDump implements ICoreFileReader {
 
 				Properties props = new Properties();
 				props.setProperty("Load address", format(loadAddress));
-				ArrayList sections = new ArrayList();
+				List<Object> sections = new ArrayList<>();
 
 				for (int i = 0; i < usedRange.length; ++i) {
 					if (usedRange[i]) {
@@ -585,7 +585,7 @@ public class NewZosDump implements ICoreFileReader {
 	 * @param edb the enclave
 	 * @return
 	 */
-	private Properties getEnvironment(Builder build, AddressSpace addressSpace, Edb edb) {
+	private static Properties getEnvironment(Builder build, AddressSpace addressSpace, Edb edb) {
 		try {
 			log.fine("Get environment for EDB = "+edb);
 			Properties p = edb.getEnvVars();
@@ -613,10 +613,9 @@ public class NewZosDump implements ICoreFileReader {
 	 * @param rangeArray list of core reader address ranges
 	 * @return The list of ranges
 	 */
-	private List keepMemoryRangesWithAsid(int[] asidinfo, List rangeArray) {
-		List keep = new ArrayList();
-		for (Iterator iter = rangeArray.iterator(); iter.hasNext();) {
-			MemoryRange range = (MemoryRange) iter.next();
+	private List<MemoryRange> keepMemoryRangesWithAsid(int[] asidinfo, List<MemoryRange> rangeArray) {
+		List<MemoryRange> keep = new ArrayList<>();
+		for (MemoryRange range : rangeArray) {
 			boolean range64 = range.getVirtualAddress() + range.getSize() >= 0x100000000L;
 			if (range64) {
 				log.finer("Found 64-bit address range "+format(range.getVirtualAddress())+":"+format(range.getSize())+" in address space "+format(range.getAsid()));
@@ -642,7 +641,7 @@ public class NewZosDump implements ICoreFileReader {
 		return keep;
 	}
 
-	private boolean bufferHasJ9RASEyeCatcher(byte[] buf) {
+	private static boolean bufferHasJ9RASEyeCatcher(byte[] buf) {
 		byte[] j9vmras = { (byte)'J', (byte)'9', (byte)'V', (byte)'M', (byte)'R', (byte)'A', (byte)'S', (byte)'\0' };
 		for (int i = 0; i < buf.length; i += 8) {
 			boolean found = true;
@@ -659,7 +658,8 @@ public class NewZosDump implements ICoreFileReader {
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.corereaders.ICoreFileReader#getAdditionalFileNames()
 	 */
-	public Iterator getAdditionalFileNames()
+	@Override
+	public Iterator<String> getAdditionalFileNames()
 	{
 		return _additionalFileNames.iterator();
 	}
@@ -667,15 +667,15 @@ public class NewZosDump implements ICoreFileReader {
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.corereaders.ICoreFileReader#extract(com.ibm.dtfj.corereaders.Builder)
 	 */
+	@Override
 	public void extract(Builder builder)
 	{
 		builder.setOSType("z/OS");
 		builder.setCPUType("s390");
 		builder.setCPUSubType("");
 
-		log.fine("Address spaces "+_javaAddressSpaces.size());
-		for (Iterator i = _javaAddressSpaces.values().iterator(); i.hasNext(); ) {
-			int asidinfo[] = (int[])i.next();
+		log.fine("Address spaces " + _javaAddressSpaces.size());
+		for (int[] asidinfo : _javaAddressSpaces.values()) {
 			buildAddressSpace(builder, asidinfo[0], asidinfo[1] != 0);
 		}
 
@@ -703,10 +703,14 @@ public class NewZosDump implements ICoreFileReader {
 		for (int i = 0; i < edbs.length; ++i) {
 			final Edb edb = edbs[i];
 			Properties environment = edb == null ? new Properties() : getEnvironment(builder, adrJava, edb);
-			Map stackSymbols = new HashMap();
-			List threads = edb == null ? Collections.singletonList(builder.buildCorruptData(addressSpace, "unable to extract thread information this time!", 0)) : getThreads(builder, addressSpace, adrJava, edb, stackSymbols);
-			List modules = edb == null ? Collections.EMPTY_LIST : getModules(builder, addressSpace, adrJava, edb, stackSymbols);
-			Iterator mods = modules.iterator();
+			Map<Long, String> stackSymbols = new HashMap<>();
+			List<?> threads = edb == null
+					? Collections.singletonList(builder.buildCorruptData(addressSpace, "unable to extract thread information this time!", 0))
+					: getThreads(builder, addressSpace, adrJava, edb, stackSymbols);
+			List<?> modules = edb == null
+					? Collections.emptyList()
+					: getModules(builder, addressSpace, adrJava, edb, stackSymbols);
+			Iterator<?> mods = modules.iterator();
 			Object executable = mods.hasNext() ? mods.next() : null;
 			if (executable == null) {
 				builder.setExecutableUnavailable("unable to extract executable information");
@@ -767,10 +771,10 @@ public class NewZosDump implements ICoreFileReader {
 		return new NewZosDump(stream);
 	}
 
-	protected List readTDUMP()
+	protected List<MemoryRange> readTDUMP()
 	{
 		log.fine("Reading address ranges");
-		List ranges = new ArrayList();
+		List<MemoryRange> ranges = new ArrayList<>();
 		byte[] buf = new byte[RECORD_BODY_LEN];
 		try {
 			long pos = 0;
@@ -829,15 +833,18 @@ public class NewZosDump implements ICoreFileReader {
 		//return new MemoryRange(address, pos+RECORD_HEADER_LEN, RECORD_BODY_LEN, asid, false,false,true);
 	}
 
+	@Override
 	public IAbstractAddressSpace getAddressSpace()
 	{
 		return _space;
 	}
 
+	@Override
 	public boolean isTruncated() {
 		return false;
 	}
 
+	@Override
 	public void releaseResources() throws IOException {
 		if(stream instanceof ClosingFileReader) {
 			((ClosingFileReader)stream).releaseResources();

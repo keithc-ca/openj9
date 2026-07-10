@@ -28,5 +28,5 @@ public interface ITagParser {
 	public ILineRule getLineRule(String tag);
 	public String getSectionName();
 	public boolean hasTag(String tag);
-	public Iterator getTags();
+	public Iterator<String> getTags();
 }

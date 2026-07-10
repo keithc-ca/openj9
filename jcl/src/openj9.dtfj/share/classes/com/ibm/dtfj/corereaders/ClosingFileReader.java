@@ -379,6 +379,8 @@ public class ClosingFileReader extends ImageInputStreamImpl implements ResourceR
 		return buffer[0];
 	}
 
+	@Override
+	@SuppressWarnings("removal")
 	public void finalize() throws Throwable
 	{
 		try {

@@ -30,7 +30,7 @@ import java.util.Properties;
 
 public interface Builder {
 
-	public Object buildProcess(Object addressSpace, String pid, String commandLine, Properties environment, Object currentThread, Iterator threads, Object executable, Iterator libraries, int addressSize);
+	public Object buildProcess(Object addressSpace, String pid, String commandLine, Properties environment, Object currentThread, Iterator<?> threads, Object executable, Iterator<?> libraries, int addressSize);
 
 	public Object buildAddressSpace(String name, int id);
 
@@ -38,11 +38,11 @@ public interface Builder {
 
 	public Object buildStackSection(Object addressSpace, long stackStart, long stackEnd);
 
-	public Object buildThread(String name, Iterator registers, Iterator stackSections, Iterator stackFrames, Properties properties, int signalNumber);
+	public Object buildThread(String name, Iterator<?> registers, Iterator<?> stackSections, Iterator<?> stackFrames, Properties properties, int signalNumber);
 
 	public Object buildModuleSection(Object addressSpace, String name, long imageStart, long imageEnd);
 
-	public Object buildModule(String name, Properties properties, Iterator sections, Iterator symbols, long startAddress);
+	public Object buildModule(String name, Properties properties, Iterator<?> sections, Iterator<?> symbols, long startAddress);
 
 	public Object buildStackFrame(Object addressSpace, long stackBasePointer, long pc);
 
@@ -54,7 +54,7 @@ public interface Builder {
 
 	public long getEnvironmentAddress();
 
-	public long getValueOfNamedRegister(List registers, String string);
+	public long getValueOfNamedRegister(List<?> registers, String string);
 
 	/**
 	 * Called to inform the builder that the executable data cannot be trusted.

@@ -26,6 +26,7 @@ import static com.ibm.j9ddr.vm29.structure.J9ROMFieldOffsetWalkState.*;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.ibm.j9ddr.CorruptDataException;
 import com.ibm.j9ddr.tools.ddrinteractive.Command;
@@ -58,7 +59,8 @@ public class J9ClassShapeCommand extends Command
 	{
 		addCommand("j9classshape", "<ramclass>", "view instance shape");
 	}
-		
+
+	@Override
 	public void run(String command, String[] args, Context context, PrintStream out) throws DDRInteractiveCommandException 
 	{
 		if (args.length != 1) {
@@ -116,7 +118,7 @@ public class J9ClassShapeCommand extends Command
 				Iterator<J9ObjectFieldOffset> iterator = J9ObjectFieldOffsetIterator.J9ObjectFieldOffsetIteratorFor(superclass.romClass(), instanceClass, previousSuperclass, flags);
 
 				while (iterator.hasNext()) {
-					J9ObjectFieldOffset result = (J9ObjectFieldOffset) iterator.next();
+					J9ObjectFieldOffset result = iterator.next();
 
 					boolean printField = true;
 					boolean isHiddenField = result.isHidden();
@@ -158,13 +160,13 @@ public class J9ClassShapeCommand extends Command
 	
 	public static J9ClassPointer[] findClassByName(J9JavaVMPointer vm, String searchClassName) throws DDRInteractiveCommandException 
 	{
-		ArrayList<J9ClassPointer> result = new ArrayList<J9ClassPointer>();
+		List<J9ClassPointer> result = new ArrayList<>();
 		try {
 			PatternString pattern = new PatternString (searchClassName);
 
 			ClassSegmentIterator classSegmentIterator = new ClassSegmentIterator(vm.classMemorySegments());
 			while (classSegmentIterator.hasNext()) {
-				J9ClassPointer classPointer = (J9ClassPointer) classSegmentIterator.next();
+				J9ClassPointer classPointer = classSegmentIterator.next();
 				String javaName = J9ClassHelper.getJavaName(classPointer);
 				if (pattern.isMatch(javaName)) {
 					result.add(classPointer);
@@ -173,7 +175,7 @@ public class J9ClassShapeCommand extends Command
 		} catch (CorruptDataException e) {
 			throw new DDRInteractiveCommandException(e);
 		}
-		return result.toArray(new J9ClassPointer[result.size()] );
+		return result.toArray(new J9ClassPointer[result.size()]);
 	}
 
 }

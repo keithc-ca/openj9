@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -400,7 +401,7 @@ public class DDRInteractiveClassLoader extends ClassLoader {
 
 		public URL toURL() {
 			try {
-				return new URL("jar:file:" + jarFile.getAbsolutePath() + "!/" + classFilePathName);
+				return URI.create("jar:file:" + jarFile.getAbsolutePath() + "!/" + classFilePathName).toURL();
 			} catch (MalformedURLException e) {
 				logger.log(logLevelForPluginLoadFailures,"Exception thrown when constructing URL from jar file name " + jarFile.getAbsolutePath() + " and class file name " + classFilePathName);
 				return null;

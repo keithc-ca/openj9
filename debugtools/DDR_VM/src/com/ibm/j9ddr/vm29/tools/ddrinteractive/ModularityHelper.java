@@ -233,7 +233,7 @@ public class ModularityHelper {
 	public static int iterateModules(PrintStream out, ModuleIteratorFilter filter, ModuleOutput outputter, String filterArg) throws CorruptDataException {
 		int count = 0;
 		J9JavaVMPointer vm = J9RASHelper.getVM(DataType.getJ9RASPointer());
-		if (JavaVersionHelper.ensureJava9AndUp(vm, out)) {
+		if (JavaVersionHelper.ensureMinimumJavaVersion(9, vm, out)) {
 			GCClassLoaderIterator iterator = GCClassLoaderIterator.from();
 			while (iterator.hasNext()) {
 				J9ClassLoaderPointer classLoaderPointer = iterator.next();
@@ -269,7 +269,7 @@ public class ModularityHelper {
 	public static int iteratePackages(PrintStream out, PackageIteratorFilter filter, PackageOutput outputter, String filterArg) throws CorruptDataException {
 		int count = 0;
 		J9JavaVMPointer vm = J9RASHelper.getVM(DataType.getJ9RASPointer());
-		if (JavaVersionHelper.ensureJava9AndUp(vm, out)) {
+		if (JavaVersionHelper.ensureMinimumJavaVersion(9, vm, out)) {
 			GCClassLoaderIterator iterator = GCClassLoaderIterator.from();
 			while (iterator.hasNext()) {
 				count += iterateClassLoaderPackages(out, filter, outputter, filterArg, iterator.next());
@@ -296,7 +296,7 @@ public class ModularityHelper {
 	public static int iterateClassLoaderPackages(PrintStream out, PackageIteratorFilter filter, PackageOutput outputter, String filterArg, J9ClassLoaderPointer classLoaderPtr) throws CorruptDataException {
 		int count = 0;
 		J9JavaVMPointer vm = J9RASHelper.getVM(DataType.getJ9RASPointer());
-		if (JavaVersionHelper.ensureJava9AndUp(vm, out)) {
+		if (JavaVersionHelper.ensureMinimumJavaVersion(9, vm, out)) {
 			HashTable<J9PackagePointer> packageHashTable = PackageHashTable
 					.fromJ9HashTable(classLoaderPtr.packageHashTable());
 			SlotIterator<J9PackagePointer> slotIterator = packageHashTable.iterator();
@@ -330,7 +330,7 @@ public class ModularityHelper {
 	public static int iterateClassLoaderClasses(PrintStream out, ClassIteratorFilter filter, ClassOutput outputter, String filterArg, J9ClassLoaderPointer classLoaderPtr) throws CorruptDataException {
 		int count = 0;
 		J9JavaVMPointer vm = J9RASHelper.getVM(DataType.getJ9RASPointer());
-		if (JavaVersionHelper.ensureJava9AndUp(vm, out)) {
+		if (JavaVersionHelper.ensureMinimumJavaVersion(9, vm, out)) {
 			Iterator<J9ClassPointer> classIterator = ClassIterator.fromJ9Classloader(classLoaderPtr);
 			while (classIterator.hasNext()) {
 				J9ClassPointer classPtr = classIterator.next();

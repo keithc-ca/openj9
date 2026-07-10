@@ -23,6 +23,7 @@
 package com.ibm.dtfj.javacore.parser.framework.tag;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 import com.ibm.dtfj.javacore.parser.framework.scanner.IParserToken;
@@ -81,7 +82,7 @@ public abstract class LineRule implements ILineRule {
 	// Support for offset calculation of a token, but
 	// not currently used.
 	protected int fOffset;
-	private HashMap fTokenList;
+	private Map<String, IParserToken> fTokenList;
 
 	public LineRule() {
 		fSource = new StringBuffer();
@@ -100,11 +101,12 @@ public abstract class LineRule implements ILineRule {
 	 * @param startingOffset offset of the first character in the source line. offsets are determined externally from the start of the file.
 	 * @return attribute value map containing parsed tokens.
 	 */
+	@Override
 	public IAttributeValueMap parseLine(String source, int lineNumber, int startingOffset) {
 		fSource.delete(0, fSource.length());
 		fSource.append(source);
 		fLineNumber = lineNumber;
-		fTokenList = new HashMap();
+		fTokenList = new HashMap<>();
 		// User-implemented
 		processLine(source, startingOffset);
 		return AttributeValueMapFactory.createAttributeValueMap(fTokenList);
@@ -360,8 +362,8 @@ public abstract class LineRule implements ILineRule {
 	 */
 	protected boolean consumeUntilFirstMatch(Matcher matcher) {
 		matcher.reset(fSource);
-		boolean matched = false;
-		if (matched = matcher.find()) {
+		boolean matched = matcher.find();
+		if (matched) {
 			fSource.delete(0, matcher.end());
 		}
 		return matched;

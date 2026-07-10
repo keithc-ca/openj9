@@ -100,9 +100,9 @@ public abstract class DataType {
 		}
 
 		try {
-			java.lang.reflect.Method method = clazz.getDeclaredMethod("cast", new Class[] { long.class });
+			java.lang.reflect.Method method = clazz.getDeclaredMethod("cast", long.class);
 			@SuppressWarnings("unchecked")
-			T result = (T) method.invoke(null, new Object[] { address });
+			T result = (T) method.invoke(null, address);
 			return result;
 		} catch (Exception e) {
 			throw new IllegalStateException("Cannot create the structure " + clazz.getSimpleName(), e);

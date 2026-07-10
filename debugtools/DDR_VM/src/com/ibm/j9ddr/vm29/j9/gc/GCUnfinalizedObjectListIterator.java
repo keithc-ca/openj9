@@ -31,7 +31,7 @@ import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.MM_UnfinalizedObjectListPointer;
 
-public class GCUnfinalizedObjectListIterator extends GCIterator
+public class GCUnfinalizedObjectListIterator extends GCIterator<J9ObjectPointer>
 {
 	protected MM_UnfinalizedObjectListPointer head;
 	protected MM_UnfinalizedObjectListPointer currentList;
@@ -56,6 +56,7 @@ public class GCUnfinalizedObjectListIterator extends GCIterator
 		return new GCUnfinalizedObjectListIterator(getExtensions().unfinalizedObjectLists());
 	}
 
+	@Override
 	public boolean hasNext()
 	{
 		if (null != next) {
@@ -101,6 +102,7 @@ public class GCUnfinalizedObjectListIterator extends GCIterator
 		return false;
 	}
 
+	@Override
 	public J9ObjectPointer next()
 	{
 		if (hasNext()) {
@@ -111,7 +113,8 @@ public class GCUnfinalizedObjectListIterator extends GCIterator
 			throw new NoSuchElementException("There are no more items available through this iterator");
 		}
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress() 
 	{
 		// Does not make sense in this case

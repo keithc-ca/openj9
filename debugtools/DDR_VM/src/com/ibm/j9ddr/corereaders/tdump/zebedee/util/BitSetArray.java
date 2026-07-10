@@ -168,8 +168,13 @@ public class BitSetArray {
     }
     
     IntEnumeration nullEnum = new IntEnumeration() {
+        @Override
         public boolean hasMoreElements() { return false; }
-        public Object nextElement() { return null; }
+
+        @Override
+        public Long nextElement() { return null; }
+
+        @Override
         public long nextInt() { return 0; }
     };
 
@@ -188,14 +193,17 @@ public class BitSetArray {
             index = 0;
         }
 
+        @Override
         public boolean hasMoreElements() {
             return index < size;
         }
 
-        public Object nextElement() {
+        @Override
+        public Long nextElement() {
             return null;
         }
 
+        @Override
         public long nextInt() {
             return bits[index++];
         }
@@ -369,7 +377,7 @@ public class BitSetArray {
         public BitSet cloneSet() {
             try {
                 SmallSet clone = (SmallSet)super.clone();
-                clone.bits = (int[])bits.clone();
+                clone.bits = bits.clone();
                 return clone;
             } catch (CloneNotSupportedException e) {
                 throw new Error("impossible");
@@ -611,8 +619,8 @@ public class BitSetArray {
         public BitSet cloneSet() {
             try {
                 IntervalSet clone = (IntervalSet)super.clone();
-                clone.intervals = (int[])intervals.clone();
-                clone.lengths = (int[])lengths.clone();
+                clone.intervals = intervals.clone();
+                clone.lengths = lengths.clone();
                 return clone;
             } catch (CloneNotSupportedException e) {
                 throw new Error("impossible");

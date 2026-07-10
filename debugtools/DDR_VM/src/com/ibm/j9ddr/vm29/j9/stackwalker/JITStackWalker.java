@@ -141,11 +141,6 @@ public class JITStackWalker
 	}
 
 	/**
-	 * JIT Stack Walker for Java 5 SR11
-	 * @author andhall
-	 */
-
-	/**
 	 * JIT Stack Walker for 2.6 circa early 2010
 	 * @author andhall
 	 */
@@ -614,6 +609,7 @@ public class JITStackWalker
 			walkState.argCount = pendingSendSlots;
 		}
 
+		@SuppressWarnings("fallthrough")
 		private char jitNextSigChar(String signatureString) throws CorruptDataException
 		{
 			char utfChar = signatureString.charAt(charIndex++);

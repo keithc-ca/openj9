@@ -153,6 +153,7 @@ public class ObjectHash {
 	 * Recursively computes the hash for value objects, mirroring the algorithm
 	 * in recursiveValueObjectHash() in ObjectHash.hpp.
 	 */
+	@SuppressWarnings("fallthrough")
 	private static I32 convertValueObjectAtOffsetToHash(J9JavaVMPointer vm, J9ObjectPointer objectPointer, J9ClassPointer clazz, UDATA startOffset) throws CorruptDataException
 	{
 		ValueTypeHelper valueTypeHelper = ValueTypeHelper.getValueTypeHelper();

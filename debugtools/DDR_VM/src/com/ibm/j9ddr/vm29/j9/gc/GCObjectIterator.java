@@ -32,7 +32,7 @@ import com.ibm.j9ddr.vm29.pointer.helper.J9ClassHelper;
 import com.ibm.j9ddr.vm29.structure.J9Object;
 import com.ibm.j9ddr.vm29.types.UDATA;
 
-public abstract class GCObjectIterator extends GCIterator
+public abstract class GCObjectIterator extends GCIterator<J9ObjectPointer>
 {
 	protected J9ObjectPointer object;
 	protected boolean includeClassSlot;
@@ -42,12 +42,17 @@ public abstract class GCObjectIterator extends GCIterator
 	{
 		this.object = object;
 		this.includeClassSlot = includeClassSlot;
-	}	
-	
+	}
+
+	@Override
 	public abstract boolean hasNext();
+
+	@Override
 	public abstract J9ObjectPointer next();
+
+	@Override
 	public abstract VoidPointer nextAddress();
-	
+
 	/**
 	 * Factory method to construct an appropriate object iterator.
 	 * @param object Object to iterate

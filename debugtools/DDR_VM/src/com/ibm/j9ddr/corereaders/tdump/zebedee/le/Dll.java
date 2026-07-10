@@ -298,7 +298,7 @@ public class Dll {
                         // log.fine("IEWB2 " + funcName + " at " + hex(funcAddr) + " env " + hex(funcAda));
                         functions[i] = new DllFunction(funcName, funcAddr, null, funcAda);
                     } catch (IOException e) {
-                        functions[i] = new DllFunction(e.toString(), 0, null, space.WILD_POINTER);
+                        functions[i] = new DllFunction(e.toString(), 0, null, AddressSpace.WILD_POINTER);
                     }
                 }
             } else if (ciet2_version == 1) {
@@ -324,9 +324,9 @@ public class Dll {
                         // log.finer("funcAddr = " + hex(funcAddr));
                         // log.finer("ciet_is_addr = " + hex(ciet_is_addr));
                         // log.fine("IEWB1 " + funcName + " at " + hex(funcAddr));
-                        functions[i] = new DllFunction(funcName, funcAddr, null, space.WILD_POINTER);
+                        functions[i] = new DllFunction(funcName, funcAddr, null, AddressSpace.WILD_POINTER);
                     } catch (IOException e) {
-                        functions[i] = new DllFunction(e.toString(), 0, null, space.WILD_POINTER);
+                        functions[i] = new DllFunction(e.toString(), 0, null, AddressSpace.WILD_POINTER);
                     }
                 }
             } else

@@ -30,7 +30,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9JVMTIDataPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9JVMTIEnvPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9PoolPointer;
 
-public class GCJVMTIObjectTagTableListIterator extends GCIterator
+public class GCJVMTIObjectTagTableListIterator extends GCIterator<J9JVMTIEnvPointer>
 {
 	protected Iterator<J9JVMTIEnvPointer> poolIterator;
 	
@@ -44,16 +44,19 @@ public class GCJVMTIObjectTagTableListIterator extends GCIterator
 		return new GCJVMTIObjectTagTableListIterator(jvmtiData.environments());
 	}
 
+	@Override
 	public boolean hasNext()
 	{
 		return poolIterator.hasNext();
 	}
 
+	@Override
 	public J9JVMTIEnvPointer next()
 	{
 		return poolIterator.next();
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress() 
 	{
 		// Does not make sense in this case

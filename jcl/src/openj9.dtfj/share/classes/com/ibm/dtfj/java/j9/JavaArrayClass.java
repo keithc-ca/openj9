@@ -27,7 +27,6 @@ import java.util.Iterator;
 import java.util.Vector;
 
 import com.ibm.dtfj.image.CorruptDataException;
-import com.ibm.dtfj.image.DataUnavailable;
 import com.ibm.dtfj.image.ImagePointer;
 import com.ibm.dtfj.image.j9.CorruptData;
 import com.ibm.dtfj.java.JavaClass;
@@ -58,6 +57,7 @@ public class JavaArrayClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getName()
 	 */
+	@Override
 	public String getName() throws CorruptDataException
 	{
 		String name = "";
@@ -103,6 +103,7 @@ public class JavaArrayClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getSuperclass()
 	 */
+	@Override
 	public JavaClass getSuperclass() throws CorruptDataException
 	{
 		//the superclass for every array class is j/l/O
@@ -112,6 +113,7 @@ public class JavaArrayClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#isArray()
 	 */
+	@Override
 	public boolean isArray() throws CorruptDataException
 	{
 		return true;
@@ -133,7 +135,7 @@ public class JavaArrayClass extends JavaAbstractClass
 	{
 		JavaClass componentType = null;
 		if (1 == _dimension) {
-			 componentType = getLeafClass();
+			componentType = getLeafClass();
 		} else {
 			componentType = _javaVM.getComponentTypeForClass(this);
 
@@ -147,6 +149,7 @@ public class JavaArrayClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getClassLoader()
 	 */
+	@Override
 	public JavaClassLoader getClassLoader() throws CorruptDataException
 	{
 		JavaClassLoader cl = super.getClassLoader();
@@ -160,33 +163,37 @@ public class JavaArrayClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getDeclaredFields()
 	 */
-	public Iterator getDeclaredFields()
+	@Override
+	public Iterator<?> getDeclaredFields()
 	{
 		//there aren't declared fields on array types
-		return Collections.EMPTY_LIST.iterator();
+		return Collections.emptyIterator();
 	}
 
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getDeclaredMethods()
 	 */
-	public Iterator getDeclaredMethods()
+	@Override
+	public Iterator<?> getDeclaredMethods()
 	{
 		//there aren't declared methods on array types
-		return Collections.EMPTY_LIST.iterator();
+		return Collections.emptyIterator();
 	}
 
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getConstantPoolReferences()
 	 */
-	public Iterator getConstantPoolReferences()
+	@Override
+	public Iterator<?> getConstantPoolReferences()
 	{
 		//array classes don't have constant pools
-		return Collections.EMPTY_LIST.iterator();
+		return Collections.emptyIterator();
 	}
 
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.j9.JavaAbstractClass#getInstanceSize(com.ibm.dtfj.java.JavaObject)
 	 */
+	@Override
 	public int getInstanceSize(com.ibm.dtfj.java.JavaObject instance)
 	{
 		try {
@@ -259,10 +266,11 @@ public class JavaArrayClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaArrayClass#getReferences()
 	 */
-	public Iterator getReferences()
+	@Override
+	public Iterator<?> getReferences()
 	{
 		// need to build a list of references from this class.
-		Vector references = new Vector();
+		Vector<Object> references = new Vector<>();
 
 		addSuperclassReference(references);
 		addClassLoaderReference(references);
@@ -271,6 +279,7 @@ public class JavaArrayClass extends JavaAbstractClass
 		return references.iterator();
 	}
 
+	@Override
 	public long getInstanceSize() throws CorruptDataException {
 		throw new java.lang.UnsupportedOperationException("JavaArrayClass does not support getInstanceSize");
 	}

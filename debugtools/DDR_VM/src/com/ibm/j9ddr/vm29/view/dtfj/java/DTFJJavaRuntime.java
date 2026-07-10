@@ -120,23 +120,24 @@ public class DTFJJavaRuntime implements JavaRuntime {
 	}
 	
 	private List<Object> compiledMethods = null;
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Iterator getCompiledMethods() {
+
+	@Override
+	public Iterator<?> getCompiledMethods() {
 		if (compiledMethods == null) {
-			compiledMethods = new ArrayList<Object>();
-			Iterator<Object> classLoaderIterators = getJavaClassLoaders();
+			compiledMethods = new ArrayList<>();
+			Iterator<?> classLoaderIterators = getJavaClassLoaders();
 			while (classLoaderIterators.hasNext()) {
 				Object classLoaderObj = classLoaderIterators.next();
 				if (classLoaderObj instanceof CorruptData) {
 					compiledMethods.add(classLoaderObj);
 				} else {
-					Iterator classesIterator = ((JavaClassLoader) classLoaderObj).getDefinedClasses();
+					Iterator<?> classesIterator = ((JavaClassLoader) classLoaderObj).getDefinedClasses();
 					while (classesIterator.hasNext()) {
 						Object classObject = classesIterator.next();
 						if (classObject instanceof CorruptData) {
 							compiledMethods.add(classObject);
 						} else {
-							Iterator methodsIterator = ((JavaClass) classObject).getDeclaredMethods();
+							Iterator<?> methodsIterator = ((JavaClass) classObject).getDeclaredMethods();
 							while (methodsIterator.hasNext()) {
 								Object methodObj = methodsIterator.next();
 								if (methodObj instanceof CorruptData) {
@@ -155,15 +156,16 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		return compiledMethods.iterator();
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getHeapRoots() {
+	@Override
+	public Iterator<?> getHeapRoots() {
 		if (null == references) {
 			scanReferences();
 		}
 		
 		return references.iterator();
 	}
-	
+
+	@Override
 	public boolean isJITEnabled() throws CorruptDataException {
 		try {
 			J9JITConfigPointer jitConfig = DTFJContext.getVm().jitConfig();
@@ -173,7 +175,8 @@ public class DTFJJavaRuntime implements JavaRuntime {
 			throw J9DDRDTFJUtils.handleAsCorruptDataException(DTFJContext.getProcess(), t);
 		}
 	}
-	
+
+	@Override
 	public Properties getJITProperties() throws DataUnavailable, CorruptDataException {
 		Properties properties = new Properties();
 		try {
@@ -215,7 +218,7 @@ public class DTFJJavaRuntime implements JavaRuntime {
 	
 	private void scanReferences()
 	{
-		references = new LinkedList<Object>();
+		references = new LinkedList<>();
 		AddCorruptionToListListener corruptionListener = new AddCorruptionToListListener(references);
 		register(corruptionListener);
 		
@@ -645,10 +648,10 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getHeaps() throws UnsupportedOperationException {
+	@Override
+	public Iterator<?> getHeaps() throws UnsupportedOperationException {
 		try {
-			LinkedList<Object> heaps = new LinkedList<Object>();
+			List<Object> heaps = new LinkedList<>();
 
 			VoidPointer memorySpace = DTFJContext.getVm().defaultMemorySpace();
 			MM_MemorySpacePointer defaultMemorySpace = MM_MemorySpacePointer.cast(memorySpace);
@@ -670,12 +673,12 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getJavaClassLoaders() {
+	@Override
+	public Iterator<?> getJavaClassLoaders() {
 		if (classLoaders != null) {
 			return classLoaders.iterator(); // return cached set of class loaders
-		} 
-		classLoaders = new LinkedList<Object>();
+		}
+		classLoaders = new LinkedList<>();
 		GCClassLoaderIterator classLoaderIterator;
 		try {
 			classLoaderIterator = GCClassLoaderIterator.from();
@@ -702,6 +705,7 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		return classLoaders.iterator();
 	}
 
+	@Override
 	public ImagePointer getJavaVM() throws CorruptDataException {
 		try {
 			return DTFJContext.getImagePointer(DTFJContext.getVm().getAddress());
@@ -710,12 +714,13 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		}
 	}
 
+	@Override
 	public JavaVMInitArgs getJavaVMInitArgs() throws DataUnavailable, CorruptDataException {
 		return vminitargs;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getMonitors() {
+	@Override
+	public Iterator<?> getMonitors() {
 		try {
 			return new DTFJMonitorIterator();
 		} catch (Throwable t) {
@@ -724,6 +729,7 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		}
 	}
 
+	@Override
 	public JavaObject getObjectAtAddress(ImagePointer address) throws CorruptDataException, IllegalArgumentException, MemoryAccessException, DataUnavailable {
 		try {
 			J9ObjectPointer object = J9ObjectPointer.cast(address.getAddress());
@@ -756,9 +762,9 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		if( mergedHeapSections != null ) {
 			return;
 		}
-		
-		Iterator heaps = getHeaps();
-		List<ImageSection> heapSections = new LinkedList<ImageSection>();
+
+		Iterator<?> heaps = getHeaps();
+		List<ImageSection> heapSections = new LinkedList<>();
 
 		// If there are no heap sections this can't be valid.
 		if (!heaps.hasNext()) {
@@ -766,13 +772,14 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		}
 		while (heaps.hasNext()) {
 			DTFJJavaHeap heap = (DTFJJavaHeap) heaps.next();
-			Iterator sections = heap.getSections();
+			Iterator<?> sections = heap.getSections();
 			while (sections.hasNext()) {
 				heapSections.add((ImageSection) sections.next());
 			}
 		}
 		// Sort them.
 		Collections.sort(heapSections, new Comparator<ImageSection>() {
+			@Override
 			public int compare(ImageSection arg0, ImageSection arg1) {
 				U64 ptr0 = new U64(arg0.getBaseAddress().getAddress());
 				U64 ptr1 = new U64(arg1.getBaseAddress().getAddress());
@@ -788,7 +795,7 @@ public class DTFJJavaRuntime implements JavaRuntime {
 			}
 		});
 
-		mergedHeapSections = new LinkedList<ImageSection>();
+		mergedHeapSections = new LinkedList<>();
 		Iterator<ImageSection> itr = heapSections.iterator();
 		// We know we have at least one section.
 		ImageSection currentSection = itr.next();
@@ -846,16 +853,15 @@ public class DTFJJavaRuntime implements JavaRuntime {
 	 * Returns the JavaHeap which contains the passed-in address
 	 * Returns null if no containing JavaHeap is found
 	 */
-	@SuppressWarnings("rawtypes")
 	public DTFJJavaHeap getHeapFromAddress(ImagePointer address)
 	{
 		try {
 			VoidPointer pointer = VoidPointer.cast(address.getAddress());
 			
-			Iterator heapsIterator = getHeaps();
+			Iterator<?> heapsIterator = getHeaps();
 			while(heapsIterator.hasNext()) {
 				DTFJJavaHeap heap = (DTFJJavaHeap) heapsIterator.next();
-				Iterator sectionsIterator = heap.getSections();
+				Iterator<?> sectionsIterator = heap.getSections();
 				while(sectionsIterator.hasNext()) {
 					ImageSection section = (ImageSection) sectionsIterator.next();
 					VoidPointer base = VoidPointer.cast(section.getBaseAddress().getAddress());
@@ -874,8 +880,8 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		return null;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getThreads() {
+	@Override
+	public Iterator<?> getThreads() {
 		GCVMThreadListIterator threadIterator;
 		try {
 			threadIterator = GCVMThreadListIterator.from();
@@ -884,7 +890,7 @@ public class DTFJJavaRuntime implements JavaRuntime {
 			return corruptIterator(cd);
 		}
 		
-		List<Object> toIterate = new LinkedList<Object>();
+		List<Object> toIterate = new LinkedList<>();
 		AddCorruptionToListListener listener = new AddCorruptionToListListener(toIterate);
 		register(listener);
 		try {
@@ -903,14 +909,12 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		return toIterate.iterator();
 	}
 
+	@Override
 	public Object getTraceBuffer(String arg0, boolean arg1) throws CorruptDataException {
 		return new J9DDRCorruptData(DTFJContext.getProcess(),"Trace buffers are not available");
 	}
 
-	public String getFullVersion() throws CorruptDataException {
-		return getVersion();
-	}
-
+	@Override
 	public String getVersion() throws CorruptDataException {
 		try {
 			//starting with 26 stream, RAS structure contains the JRE version which avoids the potential pitfall
@@ -966,6 +970,7 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		protected boolean corruption = false;
 		protected com.ibm.j9ddr.CorruptDataException exception;
 		
+		@Override
 		public void corruptData(String message,
 				com.ibm.j9ddr.CorruptDataException e, boolean fatal) {
 			corruption = true;
@@ -1010,12 +1015,14 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		return "Java Runtime 0x" + Long.toHexString(DTFJContext.getVm().getAddress());
 	}
 
+	@Override
 	public Iterator<?> getMemoryCategories() throws DataUnavailable
 	{
-		final List<Object> returnList = new LinkedList<Object>();
+		final List<Object> returnList = new LinkedList<>();
 		
-		IEventListener eventListener = new IEventListener(){
+		IEventListener eventListener = new IEventListener() {
 
+			@Override
 			public void corruptData(String message,
 					com.ibm.j9ddr.CorruptDataException e, boolean fatal)
 			{
@@ -1040,7 +1047,6 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		return Collections.unmodifiableList(returnList).iterator();
 	}
 
-	@SuppressWarnings("unchecked")
 	public Iterator<?> getMemorySections(boolean includeFreed)
 			throws DataUnavailable
 	{
@@ -1064,7 +1070,7 @@ public class DTFJJavaRuntime implements JavaRuntime {
 	 */
 	private static Iterator<Object> getNonMallocMemorySections()
 	{
-		List<Object> list = new LinkedList<Object>();
+		List<Object> list = new LinkedList<>();
 		
 		//TODO Fill in heap sections
 		
@@ -1079,10 +1085,11 @@ public class DTFJJavaRuntime implements JavaRuntime {
 	{
 		private final J9MemTagIterator memTagIt;
 		
-		private final List<Object> buffer = new ArrayList<Object>(2);
+		private final List<Object> buffer = new ArrayList<>(2);
 		
-		private final IEventListener eventListener = new IEventListener(){
+		private final IEventListener eventListener = new IEventListener() {
 
+			@Override
 			public void corruptData(String message,
 					com.ibm.j9ddr.CorruptDataException e, boolean fatal)
 			{
@@ -1093,7 +1100,8 @@ public class DTFJJavaRuntime implements JavaRuntime {
 		{
 			memTagIt = it;
 		}
-		
+
+		@Override
 		public boolean hasNext()
 		{
 			if (buffer.size() > 0) {
@@ -1117,6 +1125,7 @@ public class DTFJJavaRuntime implements JavaRuntime {
 			}
 		}
 
+		@Override
 		public Object next()
 		{
 			if (hasNext()) {
@@ -1126,21 +1135,12 @@ public class DTFJJavaRuntime implements JavaRuntime {
 			}
 		}
 
+		@Override
 		public void remove()
 		{
 			throw new UnsupportedOperationException();
 		}
 		
-	}
-	
-	public JavaObject getNestedPackedObject(JavaClass jc, ImagePointer packedDataAddress) 
-			throws DataUnavailable {
-		throw new DataUnavailable("Not implemented");
-	}
-
-	public JavaObject getNestedPackedArrayObject(JavaClass jc, ImagePointer i, int arrayLength) 
-			throws DataUnavailable {
-		throw new DataUnavailable("Not implemented");
 	}
 
 	/**
@@ -1148,6 +1148,7 @@ public class DTFJJavaRuntime implements JavaRuntime {
 	 * 
 	 * @return long - JVM start time (milliseconds since 1970)
 	 */
+	@Override
 	public long getStartTime() throws DataUnavailable, CorruptDataException {
 		try {
 			return DTFJContext.getVm().j9ras().startTimeMillis().longValue();
@@ -1161,6 +1162,7 @@ public class DTFJJavaRuntime implements JavaRuntime {
 	 * 
 	 * @return long - system nanotime at JVM start
 	 */
+	@Override
 	public long getStartTimeNanos() throws DataUnavailable, CorruptDataException {
 		try {
 			return DTFJContext.getVm().j9ras().startTimeNanos().longValue();

@@ -71,7 +71,7 @@ public class Context
 		return loader;
 	}
 
-	public void refreshCommandList() {
+	public final void refreshCommandList() {
 		try {
 			if (vmData.getClassLoader() == null) {
 				loader = new DDRInteractiveClassLoader(vmData, this.getClass().getClassLoader());

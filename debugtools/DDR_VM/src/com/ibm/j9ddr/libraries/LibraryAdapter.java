@@ -19,11 +19,10 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.j9ddr.libraries;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
 
 //defines the operations to be supported by a library adapter which handles requests for both DTFJ and DDR.
 
@@ -33,18 +32,18 @@ public interface LibraryAdapter {
 	 * @param coreFile core file to collect the libraries for
 	 * @return a list of paths, each of which point to a library entry
 	 */
-	public ArrayList<String> getLibraryList(final File coreFile);
+	public List<String> getLibraryList(File coreFile);
 	
 	/**
 	 * Retrieve a list of error messages which have been produced during the library collection
 	 * @return a list of error messages as strings
 	 */
-	public ArrayList<String> getErrorMessages();
+	public List<String> getErrorMessages();
 	
 	/**
 	 * Determines if library collection is required for the specified core file
 	 * @param coreFile core file to analyse
 	 * @return true if the libraries need to be collected (Linux/AIX), false if not (Windows/z/OS)
 	 */
-	public boolean isLibraryCollectionRequired(final File coreFile);
+	public boolean isLibraryCollectionRequired(File coreFile);
 }

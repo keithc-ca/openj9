@@ -55,7 +55,7 @@ public class XMLIndexReader extends DefaultHandler implements IParserNode
 {
 	private ICoreFileReader _coreFile;
 	private Image _coreImage;
-	private Stack _elements;
+	private Stack<IParserNode> _elements;
 
 	//used for pulling out raw data between XML tags
 	private StringBuffer _scrapingBuffer = new StringBuffer();
@@ -80,7 +80,7 @@ public class XMLIndexReader extends DefaultHandler implements IParserNode
 	public Image parseIndexWithDump(InputStream input, ICoreFileReader core, ClosingFileReader reader, IFileLocationResolver fileResolver)
 	{
 		_fileResolvingAgent = fileResolver;
-		_elements = new Stack();
+		_elements = new Stack<>();
 		_coreFile = core;	//some entities need this for instantiation
 		_reader = reader;	//required for when the builder starts up
 		SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -115,7 +115,7 @@ public class XMLIndexReader extends DefaultHandler implements IParserNode
 	public Image parseIndexWithDump(InputStream input, ICoreFileReader core, ImageInputStream stream, IFileLocationResolver fileResolver)
 	{
 		_fileResolvingAgent = fileResolver;
-		_elements = new Stack();
+		_elements = new Stack<>();
 		_coreFile = core;	//some entities need this for instantiation
 		_stream = stream;	//required for when the builder starts up
 		SAXParserFactory factory = SAXParserFactory.newInstance();
@@ -138,6 +138,7 @@ public class XMLIndexReader extends DefaultHandler implements IParserNode
 		return _coreImage;
 	}
 
+	@Override
 	public void startElement(String uri,
 			String localName,
 			String qName,
@@ -145,11 +146,12 @@ public class XMLIndexReader extends DefaultHandler implements IParserNode
 		throws SAXException
 	{
 		_checkScrapeBuffer();
-		IParserNode node = ((IParserNode)(_elements.peek())).nodeToPushAfterStarting(uri, localName, qName, attributes);
+		IParserNode node = _elements.peek().nodeToPushAfterStarting(uri, localName, qName, attributes);
 		assert (null != node) : "Node should not be null when starting new tag: " + qName;
 		_elements.push(node);
 	}
 
+	@Override
 	public void endElement(String uri,
 			String localName,
 			String qName)
@@ -157,7 +159,7 @@ public class XMLIndexReader extends DefaultHandler implements IParserNode
 	{
 		_checkScrapeBuffer();
 		// pop whatever we were parsing and notify them that we are discarding them
-		IParserNode formerTop = (IParserNode) _elements.pop();
+		IParserNode formerTop = _elements.pop();
 		formerTop.didFinishParsing();
 	}
 
@@ -165,14 +167,16 @@ public class XMLIndexReader extends DefaultHandler implements IParserNode
 	{
 		String collapse = _scrapingBuffer.toString();
 		_scrapingBuffer = new StringBuffer();
-		((IParserNode)(_elements.peek())).stringWasParsed(collapse);
+		_elements.peek().stringWasParsed(collapse);
 	}
 
+	@Override
 	public void characters(char[] arg0, int arg1, int arg2) throws SAXException
 	{
 		_scrapingBuffer.append(arg0, arg1, arg2);
 	}
 
+	@Override
 	public IParserNode nodeToPushAfterStarting(String uri, String localName, String qName, Attributes attributes)
 	{
 		IParserNode next = null;
@@ -186,11 +190,13 @@ public class XMLIndexReader extends DefaultHandler implements IParserNode
 		return next;
 	}
 
+	@Override
 	public void stringWasParsed(String string)
 	{
 		//ignore
 	}
 
+	@Override
 	public void didFinishParsing()
 	{
 		//ignore
@@ -218,12 +224,12 @@ public class XMLIndexReader extends DefaultHandler implements IParserNode
 		// Add all the address spaces to the core image
 		// Try to find the corresponding process and address space for the XML
 		// If not sure, use the first address space/process pair found
-		for (Iterator it = builder.getAddressSpaces(); it.hasNext();) {
+		for (Iterator<?> it = builder.getAddressSpaces(); it.hasNext();) {
 			ImageAddressSpace addressSpace1 = (ImageAddressSpace) it.next();
 			final boolean vb = false;
 			if (vb) System.out.println("address space "+addressSpace1);
 			_coreImage.addAddressSpace(addressSpace1);
-			for (Iterator it2 = addressSpace1.getProcesses(); it2.hasNext(); ) {
+			for (Iterator<?> it2 = addressSpace1.getProcesses(); it2.hasNext(); ) {
 				ImageProcess process1 = (ImageProcess)it2.next();
 				if (vb) try {
 					System.out.println("process "+process1.getID());
@@ -324,12 +330,12 @@ public class XMLIndexReader extends DefaultHandler implements IParserNode
 		String cpuSubType = builder.getCPUSubType();
 		long creationTime = builder.getCreationTime();
 		_coreImage = new Image(osType, null, cpuType, cpuSubType, 0, 0, creationTime);
-		Iterator spaces = builder.getAddressSpaces();
+		Iterator<?> spaces = builder.getAddressSpaces();
 		while (spaces.hasNext())
 		{
 			ImageAddressSpace addressSpace = (ImageAddressSpace) spaces.next();
 			// Set all processes as having invalid runtimes
-			for (Iterator processes = addressSpace.getProcesses(); processes.hasNext();) {
+			for (Iterator<?> processes = addressSpace.getProcesses(); processes.hasNext();) {
 				ImageProcess process = (ImageProcess) processes.next();
 				process.runtimeExtractionFailed(e);
 			}

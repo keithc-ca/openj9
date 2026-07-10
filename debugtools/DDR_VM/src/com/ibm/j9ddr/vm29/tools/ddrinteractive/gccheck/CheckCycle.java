@@ -23,6 +23,9 @@ package com.ibm.j9ddr.vm29.tools.ddrinteractive.gccheck;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 import com.ibm.j9ddr.CorruptDataException;
@@ -31,11 +34,10 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9JavaVMPointer;
 
 import static com.ibm.j9ddr.vm29.tools.ddrinteractive.gccheck.CheckBase.*;
 
-@SuppressWarnings("unchecked")
 class CheckCycle
 {
 	private static final String[] checkNames;
-	private static final Class<Check>[] checkClasses;
+	private static final Class<? extends Check>[] checkClasses;
 
 //	private J9JavaVMPointer _javaVM;
 	private int _checkFlags;
@@ -49,73 +51,55 @@ class CheckCycle
 	private CheckEngine _engine;
 	private boolean _printHelp;
 
-	static
-	{
-		ArrayList<String> names = new ArrayList<>();
-		ArrayList<Class<?>> classes = new ArrayList<>();
+	static {
+		// Use LinkedHashMap to retain insertion order.
+		Map<String, Class<? extends Check>> map = new LinkedHashMap<>();
 
-		names.add("objectheap");
-		classes.add(CheckObjectHeap.class);
-
-		names.add("classheap");
-		classes.add(CheckClassHeap.class);
+		map.put("objectheap", CheckObjectHeap.class);
+		map.put("classheap", CheckClassHeap.class);
 
 		if (J9BuildFlags.J9VM_GC_GENERATIONAL) {
-			names.add("rememberedset");
-			classes.add(CheckRememberedSet.class);
+			map.put("rememberedset", CheckRememberedSet.class);
 		}
 
 		if (J9BuildFlags.J9VM_GC_FINALIZATION) {
-			names.add("unfinalized");
-			classes.add(CheckUnfinalizedList.class);
-
-			names.add("finalizable");
-			classes.add(CheckFinalizableList.class);
+			map.put("unfinalized", CheckUnfinalizedList.class);
+			map.put("finalizable", CheckFinalizableList.class);
 		}
 
-		names.add("stringtable");
-		classes.add(CheckStringTable.class);
-
-		names.add("classloaders");
-		classes.add(CheckClassLoaders.class);
-
-		names.add("jniglobalrefs");
-		classes.add(CheckJNIGlobalReferences.class);
-
-		names.add("jniweakglobalrefs");
-		classes.add(CheckJNIWeakGlobalReferences.class);
+		map.put("stringtable", CheckStringTable.class);
+		map.put("classloaders", CheckClassLoaders.class);
+		map.put("jniglobalrefs", CheckJNIGlobalReferences.class);
+		map.put("jniweakglobalrefs", CheckJNIWeakGlobalReferences.class);
 
 		if (J9BuildFlags.J9VM_OPT_JVMTI) {
-			names.add("jvmtiobjecttagtables");
-			classes.add(CheckJVMTIObjectTagTables.class);
+			map.put("jvmtiobjecttagtables", CheckJVMTIObjectTagTables.class);
 		}
 
-		names.add("vmclassslots");
-		classes.add(CheckVMClassSlots.class);
+		map.put("vmclassslots", CheckVMClassSlots.class);
+		map.put("monitortable", CheckMonitorTable.class);
+		map.put("vmthreads", CheckVMThreads.class);
+		map.put("threadstacks", CheckVMThreadStacks.class);
 
-		names.add("monitortable");
-		classes.add(CheckMonitorTable.class);
+		int size = map.size();
 
-		names.add("vmthreads");
-		classes.add(CheckVMThreads.class);
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		Class<Check>[] classArray = new Class[size];
 
-		names.add("threadstacks");
-		classes.add(CheckVMThreadStacks.class);
-
-		checkNames = names.toArray(new String[names.size()]);
-		checkClasses = classes.toArray(new Class[classes.size()]);
+		checkNames = map.keySet().toArray(new String[size]);
+		checkClasses = map.values().toArray(classArray);
 	}
 
 	public CheckCycle(J9JavaVMPointer javaVM, CheckEngine engine, String options)
 	{
 //		_javaVM = javaVM;
 //		_errorCount = 0;
-_checks = null;
-_engine = engine;
-initialize(options);
-}
+		_checks = null;
+		_engine = engine;
+		initialize(options);
+	}
 
-private void printHelp()
+	private void printHelp()
 	{
 		CheckReporter reporter = _engine.getReporter();
 		reporter.println("GC Check for J9, Version 2.7");
@@ -154,9 +138,9 @@ private void printHelp()
 
 	private void initialize(String options)
 	{
-		HashMap<String, Boolean> checksToRun = new HashMap<>();
-		ArrayList<ArrayList<String>> separatedOptions = new ArrayList<>();
-		ArrayList<Check> checks = new ArrayList<Check>();
+		Map<String, Boolean> checksToRun = new HashMap<>();
+		List<List<String>> separatedOptions = new ArrayList<>();
+		List<Check> checks = new ArrayList<>();
 		int checkFlags = 0;
 		int miscFlags = J9MODRON_GCCHK_VERBOSE | J9MODRON_GCCHK_MISC_CHECK;
 
@@ -170,7 +154,7 @@ private void printHelp()
 			StringTokenizer colonSeparated = new StringTokenizer(options, ":");
 			while (colonSeparated.hasMoreTokens()) {
 				StringTokenizer commaSeparated = new StringTokenizer(colonSeparated.nextToken(), ",");
-				ArrayList<String> separated = new ArrayList<String>();
+				List<String> separated = new ArrayList<>();
 				while (commaSeparated.hasMoreTokens()) {
 					separated.add(commaSeparated.nextToken());
 				}
@@ -179,7 +163,7 @@ private void printHelp()
 
 			if (separatedOptions.size() > 0) {
 				// scan options
-				ArrayList<String> scanOptions = separatedOptions.get(0);
+				List<String> scanOptions = separatedOptions.get(0);
 				if (scanOptions.size() == 0) {
 					/* Set defaults if user did not specify */
 					for(int i = 0; i < checkNames.length; i++) {
@@ -241,7 +225,7 @@ private void printHelp()
 			}
 
 			if (separatedOptions.size() > 1) {
-				ArrayList<String> checkOptions = separatedOptions.get(1);
+				List<String> checkOptions = separatedOptions.get(1);
 				if (checkOptions.size() == 0) {
 					checkFlags = J9MODRON_GCCHK_VERIFY_ALL;
 				} else {
@@ -425,12 +409,10 @@ private void printHelp()
 		for (int i = 0; i < checkNames.length; i++) {
 			if (checksToRun.get(checkNames[i])) {
 				try {
-					Check check = checkClasses[i].newInstance();
+					Check check = checkClasses[i].getConstructor().newInstance();
 					check.initialize(_engine);
 					checks.add(check);
-				} catch (IllegalAccessException e) {
-					e.printStackTrace();
-				} catch (InstantiationException e) {
+				} catch (ReflectiveOperationException e) {
 					e.printStackTrace();
 				}
 			}

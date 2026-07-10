@@ -74,6 +74,7 @@ public class DTFJJavaStackFrame implements JavaStackFrame, JavaLocation
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaStackFrame#getBasePointer()
 	 */
+	@Override
 	public ImagePointer getBasePointer() throws CorruptDataException
 	{
 		return basePointer;
@@ -82,8 +83,8 @@ public class DTFJJavaStackFrame implements JavaStackFrame, JavaLocation
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaStackFrame#getHeapRoots()
 	 */
-	@SuppressWarnings("rawtypes")
-	public Iterator getHeapRoots()
+	@Override
+	public Iterator<?> getHeapRoots()
 	{
 		return roots.iterator();
 	}
@@ -91,6 +92,7 @@ public class DTFJJavaStackFrame implements JavaStackFrame, JavaLocation
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaStackFrame#getLocation()
 	 */
+	@Override
 	public JavaLocation getLocation() throws CorruptDataException
 	{
 		return this;
@@ -106,22 +108,26 @@ public class DTFJJavaStackFrame implements JavaStackFrame, JavaLocation
 		return jitMethod;
 	}
 
+	@Override
 	public ImagePointer getAddress() throws CorruptDataException
 	{
 		return pc;
 	}
 
+	@Override
 	public int getCompilationLevel() throws CorruptDataException
 	{
 		//Mimics behaviour for J9 DTFJ. 1 = JIT compiled, 0 = interpreted.
 		return jitMethod ? 1 : 0;
 	}
 
+	@Override
 	public String getFilename() throws DataUnavailable, CorruptDataException
 	{
 		return dtfjMethod.getFilename();
 	}
 
+	@Override
 	public int getLineNumber() throws DataUnavailable, CorruptDataException
 	{
 		if (J9BuildFlags.J9VM_OPT_DEBUG_INFO_SERVER) {
@@ -141,6 +147,7 @@ public class DTFJJavaStackFrame implements JavaStackFrame, JavaLocation
 		}
 	}
 
+	@Override
 	public JavaMethod getMethod() throws CorruptDataException
 	{
 		return dtfjMethod;

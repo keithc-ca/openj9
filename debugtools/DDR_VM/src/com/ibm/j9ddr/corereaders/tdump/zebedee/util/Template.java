@@ -52,13 +52,13 @@ public class Template {
     /** The name of this template */
     private String templateName;
     /** Maps template field names to TemplateField objects */
-    private HashMap fieldNameTable = new HashMap();
+    private Map<String, TemplateField> fieldNameTable = new HashMap<>();
     /** List of fields in their original order */
-    private ArrayList fields = new ArrayList();
+    private List<TemplateField> fields = new ArrayList<>();
     /** Total length of the template in bytes */
     private int length;
     /** Maps template names to instances */
-    private static HashMap templateMap = new HashMap();
+    private static Map<String, Template> templateMap = new HashMap<>();
     /** Logger */
     private static Logger log = Logger.getLogger(com.ibm.j9ddr.corereaders.ICoreFileReader.J9DDR_CORE_READERS_LOGGER_NAME);
 
@@ -71,7 +71,7 @@ public class Template {
      * @throws InvalidTemplateFile if the xml is invalid in any way
      */
     public static Template getTemplate(String templateFileName) throws FileNotFoundException, InvalidTemplateFile {
-        Template template = (Template)templateMap.get(templateFileName);
+        Template template = templateMap.get(templateFileName);
         if (template == null) {
             template = new Template(templateFileName);
             templateMap.put(templateFileName, template);
@@ -181,7 +181,7 @@ public class Template {
      * @throws NoSuchFieldException if there is no field with the given name
      */
     public TemplateField getField(String name) throws NoSuchFieldException {
-        TemplateField field = (TemplateField)fieldNameTable.get(name);
+        TemplateField field = fieldNameTable.get(name);
         if (field == null)
             throw new NoSuchFieldException("no field with name " + name + " in template " + templateName);
         return field;
@@ -191,7 +191,7 @@ public class Template {
      * Returns a <code>List</code> of the fields in the Template in their original order.
      * @return list the <code>List</code> of fields
      */
-    public List getFields() {
+    public List<TemplateField> getFields() {
         return fields;
     }
 
@@ -280,8 +280,7 @@ public class Template {
                 out.println("Offset  Length  Field");
                 out.println("======  ======  =====");
                 out.println("");
-                for (Iterator it = template.fields.iterator(); it.hasNext(); ) {
-                    TemplateField field = (TemplateField)it.next();
+                for (TemplateField field : template.fields) {
                     String offset = pad(hex(field.getOffset()), 6);
                     String length = null;
                     if (field.isBitField()) {

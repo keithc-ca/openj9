@@ -122,11 +122,11 @@ public class LiveSetWalker {
 		boolean onlyStronglyReachable = (rootSetType == RootSetType.STRONG_REACHABLE)
 				|| (rootSetType == RootSetType.STRONG_REACHABLE_EXCLUDING_STACK_SLOTS);
 
-		GCIterator rootIterator = rootSet.gcIterator(rootSetType);
-		GCIterator rootAddressIterator = rootSet.gcIterator(rootSetType);
+		GCIterator<J9ObjectPointer> rootIterator = rootSet.gcIterator(rootSetType);
+		GCIterator<J9ObjectPointer> rootAddressIterator = rootSet.gcIterator(rootSetType);
 
 		while (rootIterator.hasNext()) {
-			J9ObjectPointer nextObject = (J9ObjectPointer) rootIterator.next();
+			J9ObjectPointer nextObject = rootIterator.next();
 			VoidPointer nextAddress = rootAddressIterator.nextAddress();
 
 			if (nextObject.notNull()) {

@@ -94,7 +94,7 @@ public class FindInstances extends Command
 			classPointer = null;
 
 			while (iterator.hasNext()) {
-				J9ClassPointer clsPointer = (J9ClassPointer)iterator.next();
+				J9ClassPointer clsPointer = iterator.next();
 				String javaName = J9ClassHelper.getJavaName(clsPointer);
 				if (className.equals(javaName)) {
 					String hexString = clsPointer.getHexAddress();

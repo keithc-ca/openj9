@@ -39,18 +39,20 @@ public class NativeMemorySectionParser extends SectionParser implements INativeM
 		super(NATIVEMEM_SECTION);
 	}
 
+	@Override
 	protected void sovOnlyRules(String startingTag) throws ParserException
 	{
 		//Do nothing
 	}
 
+	@Override
 	protected void topLevelRule() throws ParserException
 	{
 		IImageProcessBuilder fImageProcessBuilder = fImageBuilder.getCurrentAddressSpaceBuilder().getCurrentImageProcessBuilder();
 		IJavaRuntimeBuilder fRuntimeBuilder = fImageProcessBuilder.getCurrentJavaRuntimeBuilder();
 
 		IAttributeValueMap results = null;
-		Stack categoryStack = new Stack();
+		Stack<JavaRuntimeMemoryCategory> categoryStack = new Stack<>();
 
 		processTagLineOptional(T_0MEMUSER);
 
@@ -74,7 +76,7 @@ public class NativeMemorySectionParser extends SectionParser implements INativeM
 			JavaRuntimeMemoryCategory parent = null;
 
 			if (categoryStack.size() > 0) {
-				parent = (JavaRuntimeMemoryCategory) categoryStack.peek();
+				parent = categoryStack.peek();
 			}
 
 			if (name.equals(OTHER_CATEGORY)) {
@@ -93,7 +95,7 @@ public class NativeMemorySectionParser extends SectionParser implements INativeM
 		}
 	}
 
-	private long parseCommaDelimitedLong(String tokenValue)
+	private static long parseCommaDelimitedLong(String tokenValue)
 	{
 		return Long.parseLong(tokenValue.replaceAll(",", ""));
 	}

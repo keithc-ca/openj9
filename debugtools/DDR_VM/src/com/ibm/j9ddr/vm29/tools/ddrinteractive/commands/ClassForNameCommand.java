@@ -61,7 +61,7 @@ public class ClassForNameCommand extends Command
 					"Searching for classes named '%1$s' in VM=%2$s%n",
 					searchClassName, Long.toHexString(vm.getAddress()));
 			while (iterator.hasNext()) {
-				J9ClassPointer classPointer = (J9ClassPointer) iterator.next();
+				J9ClassPointer classPointer = iterator.next();
 				String javaName = J9ClassHelper.getJavaName(classPointer);
 				if (pattern.isMatch(javaName)) {
 					hitCount++;
@@ -74,15 +74,14 @@ public class ClassForNameCommand extends Command
 		} catch (CorruptDataException e) {
 			throw new DDRInteractiveCommandException(e);
 		}
-
 	}
-	
-	 /**
-     * Prints the usage for the classforname command.
-     *
-     * @param out  the PrintStream the usage statement prints to
-     */
-	private void printUsage (PrintStream out) {
+
+	/**
+	 * Prints the usage for the classforname command.
+	 *
+	 * @param out  the PrintStream the usage statement prints to
+	 */
+	private static void printUsage(PrintStream out) {
 		out.println("classforname <name> - find the class corresponding to name (with wildcards)");
 	}
 }

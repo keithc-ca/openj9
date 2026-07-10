@@ -158,10 +158,7 @@ public class Edb {
 		return Long.toHexString(i);
 	}
 
-	private static String hex(int i) {
-		return Integer.toHexString(i);
-	}
-
+	@Override
 	public String toString() {
 		return hex(address);
 	}

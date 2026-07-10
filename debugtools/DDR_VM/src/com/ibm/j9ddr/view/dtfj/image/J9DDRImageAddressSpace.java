@@ -24,6 +24,7 @@ package com.ibm.j9ddr.view.dtfj.image;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -46,7 +47,7 @@ public class J9DDRImageAddressSpace implements ImageAddressSpace {
 	{
 		this.as = as;
 	}
-	
+
 	public IAddressSpace getIAddressSpace() {
 		return as;
 	}
@@ -55,7 +56,8 @@ public class J9DDRImageAddressSpace implements ImageAddressSpace {
 	public ByteOrder getByteOrder() {
 		return as.getByteOrder();
 	}
-	
+
+	@Override
 	public J9DDRImageProcess getCurrentProcess() {
 		//TODO current thread/process support
 		Iterator<J9DDRImageProcess> processesIt = getProcesses();
@@ -78,6 +80,7 @@ public class J9DDRImageAddressSpace implements ImageAddressSpace {
 		return first;
 	}
 
+	@Override
 	public Iterator<?> getImageSections() {
 		Collection<? extends IMemoryRange> ranges = as.getMemoryRanges();
 		
@@ -87,7 +90,7 @@ public class J9DDRImageAddressSpace implements ImageAddressSpace {
 		
 		//it may be the case that we can't determine the pointer size if there are no processes found in the address space
 		if(null == proc) {
-			return J9DDRDTFJUtils.emptyIterator();
+			return Collections.emptyIterator();
 		}
 		
 		for (IMemoryRange thisRange : ranges) {
@@ -98,6 +101,7 @@ public class J9DDRImageAddressSpace implements ImageAddressSpace {
 		return sections.iterator();
 	}
 
+	@Override
 	public ImagePointer getPointer(long address) {
 		return new J9DDRImagePointer(getPointerProcess(), address);
 	}
@@ -122,10 +126,11 @@ public class J9DDRImageAddressSpace implements ImageAddressSpace {
 		return process;
 	}
 
+	@Override
 	public Iterator<J9DDRImageProcess> getProcesses() {
 		Collection<? extends IProcess> processes = as.getProcesses();
 		
-		List<J9DDRImageProcess> dtfjList = new LinkedList<J9DDRImageProcess>();
+		List<J9DDRImageProcess> dtfjList = new LinkedList<>();
 		
 		for (IProcess thisProcess : processes) {
 			dtfjList.add(new J9DDRImageProcess(thisProcess));
@@ -133,7 +138,8 @@ public class J9DDRImageAddressSpace implements ImageAddressSpace {
 		
 		return dtfjList.iterator();
 	}
-	
+
+	@Override
 	public String getID() {
 		return "0x" + Long.toHexString(as.getAddressSpaceId());
 	}
@@ -159,6 +165,7 @@ public class J9DDRImageAddressSpace implements ImageAddressSpace {
 	}
 	
 	//currently returns no OS specific properties
+	@Override
 	public Properties getProperties() {
 		return new Properties();
 	}

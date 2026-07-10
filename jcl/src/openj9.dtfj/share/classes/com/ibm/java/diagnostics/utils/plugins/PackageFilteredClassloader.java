@@ -34,26 +34,27 @@ import java.net.URLClassLoader;
  * @author adam
  *
  */
-public class PackageFilteredClassloader extends URLClassLoader {
+public final class PackageFilteredClassloader extends URLClassLoader {
 	private static final String PACKAGE_MASK = "com.ibm.java.diagnostics.utils.plugins.impl";
-	private ClassLoader parent;
+
+	private final ClassLoader parent;
 
 	public PackageFilteredClassloader(URL[] urls, ClassLoader parent) {
 		super(urls, parent);
-		if(getParent() == null) {
-			this.parent = getSystemClassLoader();
-		} else {
-			this.parent = getParent();
+		ClassLoader realParent = getParent();
+		if (realParent == null) {
+			realParent = getSystemClassLoader();
 		}
+		this.parent = realParent;
 	}
 
 	public PackageFilteredClassloader(URL[] urls) {
 		super(urls);
-		if(getParent() == null) {
-			this.parent = getSystemClassLoader();
-		} else {
-			this.parent = getParent();
+		ClassLoader realParent = getParent();
+		if (realParent == null) {
+			realParent = getSystemClassLoader();
 		}
+		this.parent = realParent;
 	}
 
 	/* (non-Javadoc)

@@ -32,7 +32,6 @@ import com.ibm.dtfj.image.CorruptDataException;
 import com.ibm.dtfj.image.DataUnavailable;
 import com.ibm.dtfj.image.ImageAddressSpace;
 import com.ibm.dtfj.image.ImagePointer;
-import com.ibm.dtfj.image.ImageSection;
 import com.ibm.dtfj.image.ImageThread;
 import com.ibm.dtfj.image.MemoryAccessException;
 import com.ibm.dtfj.java.JavaObject;
@@ -52,7 +51,7 @@ public class PHDJavaThread implements JavaThread {
 	private CorruptData priority_cd;
 	private int state;
 	private CorruptData state_cd;
-	private List<JavaStackFrame>frames = new ArrayList<JavaStackFrame>();
+	private List<JavaStackFrame> frames = new ArrayList<>();
 	private JavaObject object;
 	private CorruptData object_cd;
 	private ImageThread imageThread;
@@ -87,7 +86,7 @@ public class PHDJavaThread implements JavaThread {
 		} catch (CorruptDataException e) {
 			state_cd = new PHDCorruptData(space, e);
 		}
-		for (Iterator it = meta.getStackFrames(); it.hasNext(); ) {
+		for (Iterator<?> it = meta.getStackFrames(); it.hasNext();) {
 			Object next = it.next();
 			if (next instanceof CorruptData) {
 				frames.add(new PHDCorruptJavaStackFrame(space, (CorruptData)next));
@@ -119,6 +118,7 @@ public class PHDJavaThread implements JavaThread {
 		}
 	}
 
+	@Override
 	public ImageThread getImageThread() throws CorruptDataException,
 			DataUnavailable {
 		if (imageThread_cd != null) throw new CorruptDataException(imageThread_cd);
@@ -126,46 +126,54 @@ public class PHDJavaThread implements JavaThread {
 		return imageThread;
 	}
 
+	@Override
 	public ImagePointer getJNIEnv() throws CorruptDataException {
 		checkCD(env_cd);
 		return env;
 	}
 
+	@Override
 	public String getName() throws CorruptDataException {
 		checkCD(name_cd);
 		return name;
 	}
 
+	@Override
 	public JavaObject getObject() throws CorruptDataException {
 		checkCD(object_cd);
 		return object;
 	}
 
+	@Override
 	public int getPriority() throws CorruptDataException {
 		checkCD(priority_cd);
 		return priority;
 	}
 
-	public Iterator<JavaStackFrame> getStackFrames() {
+	@Override
+	public Iterator<?> getStackFrames() {
 		return frames.iterator();
 	}
 
-	public Iterator<ImageSection> getStackSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+	@Override
+	public Iterator<?> getStackSections() {
+		return Collections.emptyIterator();
 	}
 
+	@Override
 	public int getState() throws CorruptDataException {
 		checkCD(state_cd);
 		return state;
 	}
 
-	private void checkCD(CorruptData cd) throws CorruptDataException {
+	private static void checkCD(CorruptData cd) throws CorruptDataException {
 		if (cd != null) throw new CorruptDataException(cd);
 	}
 
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaThread#getBlockingObject()
 	 */
+	@Override
 	public JavaObject getBlockingObject() throws CorruptDataException, DataUnavailable {
 		throw new DataUnavailable("Not Available.");
 	}

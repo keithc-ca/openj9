@@ -51,6 +51,7 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 		super(clazz, ptr);
 	}
 
+	@Override
 	public Object get(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		try {	
 			switch(getSigFlag()) {
@@ -86,6 +87,7 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public boolean getBoolean(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		try {
 			int data = getIntField();
@@ -95,6 +97,7 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public byte getByte(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		try {
 			byte data = (byte)(getIntField() & 0xFF);	
@@ -104,6 +107,7 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public char getChar(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		try {
 			char data = (char)(getIntField() & 0xFFFF);
@@ -113,6 +117,7 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public double getDouble(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		try {
 			long data = getLongField();
@@ -122,6 +127,7 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public float getFloat(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		try {
 			int data = getIntField();
@@ -131,6 +137,7 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public int getInt(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		try {
 			int data = getIntField();
@@ -139,7 +146,8 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 			throw J9DDRDTFJUtils.handleAllButMemAccExAsCorruptDataException(DTFJContext.getProcess(), t, allowlist);
 		}
 	}
-	
+
+	@Override
 	public long getLong(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		try {
 			long data = getLongField();
@@ -149,6 +157,7 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public short getShort(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		try {
 			int data = getIntField();
@@ -158,6 +167,7 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public String getString(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if ( ! DTFJJavaFieldHelper.fieldIsString(this)) {
 			throw new IllegalArgumentException("JavaField.getString() called on non-String field.");
@@ -169,7 +179,7 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 			throw J9DDRDTFJUtils.handleAllButMemAccExAsCorruptDataException(DTFJContext.getProcess(), t, allowlist);
 		}
 	}
-	
+
 	private J9ObjectPointer getObject() throws com.ibm.j9ddr.CorruptDataException {
 
 		UDATAPointer pointer = clazz.getJ9Class().ramStatics().addOffset(fieldOffset.getOffsetOrAddress());
@@ -184,16 +194,6 @@ public class DTFJJavaFieldStatic extends DTFJJavaField {
 	private long getLongField() throws com.ibm.j9ddr.CorruptDataException {
 		I64Pointer pointer = I64Pointer.cast(clazz.getJ9Class().ramStatics().addOffset(fieldOffset.getOffsetOrAddress()));
 		return pointer.at(0).longValue();
-	}
-	
-	public boolean isNestedPacked() {
-		// vm29 does not support packed
-		return false;
-	}
-
-	public boolean isNestedPackedArray() {
-		// vm29 does not support packed
-		return false;
 	}
 
 	public int getPackedLengthAnnotationValue() {

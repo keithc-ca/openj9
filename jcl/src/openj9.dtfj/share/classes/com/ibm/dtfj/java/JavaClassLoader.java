@@ -51,7 +51,7 @@ public interface JavaClassLoader {
 	 * @see JavaClass
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getDefinedClasses();
+	public Iterator<?> getDefinedClasses();
 
 	/**
 	 * When a ClassLoader successfully delegates a findClass() request to
@@ -66,7 +66,7 @@ public interface JavaClassLoader {
 	 * @see JavaClass
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getCachedClasses();
+	public Iterator<?> getCachedClasses();
 
 	/**
 	 * Find a named class within this class loader. The class may have been
@@ -96,6 +96,9 @@ public interface JavaClassLoader {
 	 * @param obj
 	 * @return True if the given object refers to the same Java Class Loader in the image
 	 */
+	@Override
 	public boolean equals(Object obj);
+
+	@Override
 	public int hashCode();
 }

@@ -24,6 +24,7 @@ package com.ibm.dtfj.phd;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.ibm.dtfj.image.CorruptData;
 import com.ibm.dtfj.image.CorruptDataException;
@@ -47,8 +48,8 @@ public class PHDJavaMonitor implements JavaMonitor {
 	private JavaObject object;
 	private JavaThread owner;
 	private CorruptData owner_cd;
-	private ArrayList<JavaThread> enterWaiters = new ArrayList<JavaThread>();
-	private ArrayList<JavaThread> notifyWaiters = new ArrayList<JavaThread>();
+	private List<JavaThread> enterWaiters = new ArrayList<>();
+	private List<JavaThread> notifyWaiters = new ArrayList<>();
 
 	/**
 	 * Build Java monitor information from a JavaMonitor from another dump type.
@@ -81,7 +82,7 @@ public class PHDJavaMonitor implements JavaMonitor {
 		} catch (CorruptDataException e) {
 			owner_cd = new PHDCorruptData(space, e);
 		}
-		for (Iterator it = source.getEnterWaiters(); it.hasNext(); ) {
+		for (Iterator<?> it = source.getEnterWaiters(); it.hasNext(); ) {
 			Object next = it.next();
 			if (next instanceof CorruptData) {
 				JavaThread thr = new PHDCorruptJavaThread(space, (CorruptData)next);
@@ -90,7 +91,7 @@ public class PHDJavaMonitor implements JavaMonitor {
 				enterWaiters.add(runtime.getThread((JavaThread)next));
 			}
 		}
-		for (Iterator it = source.getNotifyWaiters(); it.hasNext(); ) {
+		for (Iterator<?> it = source.getNotifyWaiters(); it.hasNext(); ) {
 			Object next = it.next();
 			if (next instanceof CorruptData) {
 				JavaThread thr = new PHDCorruptJavaThread(space, (CorruptData)next);
@@ -101,37 +102,45 @@ public class PHDJavaMonitor implements JavaMonitor {
 		}
 	}
 
-	public Iterator<JavaThread> getEnterWaiters() {
+	@Override
+	public Iterator<?> getEnterWaiters() {
 		return enterWaiters.iterator();
 	}
 
+	@Override
 	public ImagePointer getID() {
 		return id;
 	}
 
+	@Override
 	public String getName() throws CorruptDataException {
 		if (name_cd != null) throw new CorruptDataException(name_cd);
 		return name;
 	}
 
-	public Iterator<JavaThread> getNotifyWaiters() {
+	@Override
+	public Iterator<?> getNotifyWaiters() {
 		return notifyWaiters.iterator();
 	}
 
+	@Override
 	public JavaObject getObject() {
 		return object;
 	}
 
+	@Override
 	public JavaThread getOwner() throws CorruptDataException {
 		if (owner_cd != null) throw new CorruptDataException(owner_cd);
 		return owner;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (o == null || !getClass().equals(o.getClass())) return false;
 		return id == ((PHDJavaMonitor)o).id;
 	}
 
+	@Override
 	public int hashCode() {
 		return id.hashCode();
 	}

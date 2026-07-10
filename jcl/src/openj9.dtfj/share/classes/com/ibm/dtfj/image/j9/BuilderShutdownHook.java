@@ -23,6 +23,7 @@
 package com.ibm.dtfj.image.j9;
 
 import java.io.IOException;
+import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.Iterator;
 import java.util.List;
@@ -32,27 +33,27 @@ import com.ibm.dtfj.corereaders.ClosingFileReader;
 
 public class BuilderShutdownHook extends Thread
 {
-	List _openFiles = null;
+	List<Reference<ClosingFileReader>> _openFiles = null;
 
 	public BuilderShutdownHook()
 	{
 		super("BuilderShutdownHook"); //$NON-NLS-1$
-		_openFiles = new Vector();
+		_openFiles = new Vector<>();
 	}
 
 	public void addFile(ClosingFileReader file)
 	{
-		_openFiles.add(new WeakReference(file));
+		_openFiles.add(new WeakReference<>(file));
 	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Thread#run()
 	 */
+	@Override
 	public void run()
 	{
-		Iterator allFiles = _openFiles.iterator();
-		while (allFiles.hasNext()) {
-			ClosingFileReader reader = (ClosingFileReader) ((WeakReference)(allFiles.next())).get();
+		for (Reference<ClosingFileReader> ref : _openFiles) {
+			ClosingFileReader reader = ref.get();
 			if (null != reader) {
 				try {
 					reader.close();

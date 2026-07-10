@@ -46,8 +46,8 @@ public class GenericThread {
 	long stackstart = 0; // used by system threads
 	int stacksize = 0;	// used by system threads
 	int rva = 0;		// used by system threads
-	Vector registers = new Vector();
-	Vector nativeFrames = new Vector();
+	Vector<Register> registers = new Vector<>();
+	Vector<StackFrame> nativeFrames = new Vector<>();
 	protected NativeThreadContext context = null;
 
 	public GenericThread(GenericThread thread) {
@@ -125,8 +125,7 @@ public class GenericThread {
 	/**
 	 */
 	public void addRegister(Register r) {
-		 registers.add(r);
-
+		registers.add(r);
 	}
 
 	public void addNativeFrame(StackFrame f) {
@@ -135,24 +134,22 @@ public class GenericThread {
 
 	public Register getNamedRegister(String name) {
 		// allow uppercase or lower case in the name
-
-		String name1 = name.toUpperCase();
-		Iterator it = getRegisters();
+		Iterator<Register> it = getRegisters();
 		while (it.hasNext()) {
-			Register r = (Register)it.next();
-			if (r.name.toUpperCase().equals(name1)) {
-				return r;
+			Register reg = it.next();
+			if (reg.name.equalsIgnoreCase(name)) {
+				return reg;
 			}
 		}
 
 		return null;
 	}
 
-	public Iterator getRegisters() {
+	public Iterator<Register> getRegisters() {
 		return registers.iterator();
 	}
 
-	public Iterator getNativeFrames() {
+	public Iterator<StackFrame> getNativeFrames() {
 		return nativeFrames.iterator();
 	}
 
@@ -185,7 +182,6 @@ public class GenericThread {
 
 		sb.append("\n");
 		return sb.toString();
-
 	}
 
 	public void printHeader(StringBuffer sb) {
@@ -195,8 +191,7 @@ public class GenericThread {
 	public void printNativeFrames(StringBuffer sb) {
 		if (0 != nativeFrames.size()) {
 			sb.append("\n\tStack:\n");
-			for (int i=0; i<nativeFrames.size();i++ ) {
-				StackFrame frameInfo = (StackFrame) nativeFrames.get(i);
+			for (StackFrame frameInfo : nativeFrames) {
 				if (null != frameInfo) {
 					sb.append("\t\t" + frameInfo.toString() + "\n");
 				}
@@ -210,24 +205,28 @@ public class GenericThread {
 	public NativeThreadContext getContext() {
 		return context;
 	}
+
 	/**
 	 * @param context The context to set.
 	 */
 	public void setContext(NativeThreadContext context) {
 		this.context = context;
 	}
+
 	/**
 	 * @return Returns the javaLangThreadObjectAddress.
 	 */
 	public String getJavaLangThreadObjectAddress() {
 		return javaLangThreadObjectAddress;
 	}
+
 	/**
 	 * @param stacksize The stacksize to set.
 	 */
 	public void setStacksize(int stacksize) {
 		this.stacksize = stacksize;
 	}
+
 	/**
 	 * @param stackstart The stackstart to set.
 	 */

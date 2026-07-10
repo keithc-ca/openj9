@@ -31,7 +31,7 @@ import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ClassPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9MemorySegmentPointer;
 
-public class GCClassHeapIterator extends GCIterator 
+public class GCClassHeapIterator extends GCIterator<J9ClassPointer>
 {
 	private J9ClassPointer classPointer; 
 	
@@ -52,12 +52,14 @@ public class GCClassHeapIterator extends GCIterator
 	{
 		return new GCClassHeapIterator(memorySegment);
 	}
-	
+
+	@Override
 	public boolean hasNext() 
 	{
 		return classPointer.notNull();
 	}
 
+	@Override
 	public J9ClassPointer next() 
 	{
 		try {
@@ -74,6 +76,7 @@ public class GCClassHeapIterator extends GCIterator
 		}
 	}
 	
+	@Override
 	public VoidPointer nextAddress() 
 	{
 		// Does not make sense in this case

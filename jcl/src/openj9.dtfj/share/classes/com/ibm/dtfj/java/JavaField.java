@@ -183,11 +183,13 @@ public interface JavaField extends JavaMember {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public boolean equals(Object obj);
 
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public int hashCode();
 
 	@Deprecated

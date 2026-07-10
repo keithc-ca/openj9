@@ -136,7 +136,7 @@ public class WalkJ9PoolCommand extends Command
 	{
 		try {
 			J9PoolPointer j9pool = J9PoolPointer.cast(address);
-			Pool pool = Pool.fromJ9Pool(j9pool, VoidPointer.class, isInline);
+			Pool<VoidPointer> pool = Pool.fromJ9Pool(j9pool, VoidPointer.class, isInline);
 
 			SlotIterator<VoidPointer> poolIterator = pool.iterator();
 			for (int i = 0; poolIterator.hasNext(); i++) {

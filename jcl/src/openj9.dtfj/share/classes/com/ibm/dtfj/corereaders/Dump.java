@@ -99,10 +99,11 @@ public interface Dump extends ICoreFileReader
 	 * @return An iterator of the MemoryRange objects making up the address space
 	 * @see MemoryRange
 	 */
-	public Iterator getMemoryRanges();
+	public Iterator<MemoryRange> getMemoryRanges();
 
 	/**
 	 * @return An iterator of String object specifying names of additional files needed by the Dump
 	 */
-	Iterator getAdditionalFileNames();
+	@Override
+	Iterator<String> getAdditionalFileNames();
 }

@@ -57,7 +57,7 @@ public class DTFJJavaHeap implements JavaHeap {
 	private ImagePointer id;
 	List<GCHeapRegionDescriptor> regions;
 	List<Object> objects = null;
-	List<ImageSection> sections = null;
+	List<Object> sections = null;
 	
 	/*
 	 * A JavaHeap is essentially equivalent to a J9MemorySpace (in heapIterator code) 
@@ -69,8 +69,7 @@ public class DTFJJavaHeap implements JavaHeap {
 		this.id = id;
 		initRegions(); 
 	}
-	
-	@SuppressWarnings("unchecked")
+
 	private void initRegions() throws com.ibm.j9ddr.CorruptDataException
 	{
 		MM_GCExtensionsPointer gcext = GCExtensions.getGCExtensionsPointer();
@@ -78,18 +77,19 @@ public class DTFJJavaHeap implements JavaHeap {
 		regions = IteratorHelpers.toList(GCHeapRegionIterator.fromMMHeapRegionManager(hrm, space, true, true));
 
 	}
-	
+
+	@Override
 	public String getName() {
 		return name + "@" + id;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getObjects() 
+	@Override
+	public Iterator<?> getObjects()
 	{			
-		return new Iterator()
+		return new Iterator<Object>()
 		{
 			class CurrentRegionListener implements IEventListener {
-				
+				@Override
 				public void corruptData(String message, CorruptDataException e,
 						boolean fatal) {
 					if( fatal ) {
@@ -99,9 +99,10 @@ public class DTFJJavaHeap implements JavaHeap {
 				}
 			};
 
-			Iterator currentRegionIterator = null;
+			Iterator<?> currentRegionIterator = null;
 			Iterator<GCHeapRegionDescriptor> regionsIterator = regions.iterator();
 
+			@Override
 			public boolean hasNext()
 			{
 				IEventListener currentRegionlistener = new CurrentRegionListener();
@@ -129,7 +130,8 @@ public class DTFJJavaHeap implements JavaHeap {
 					unregister(currentRegionlistener);
 				}
 			}
-			
+
+			@Override
 			public Object next()
 			{
 				if(hasNext()) {
@@ -138,7 +140,8 @@ public class DTFJJavaHeap implements JavaHeap {
 				
 				throw new NoSuchElementException();
 			}
-			
+
+			@Override
 			public void remove()
 			{
 				throw new UnsupportedOperationException("Remove not supported");
@@ -147,11 +150,11 @@ public class DTFJJavaHeap implements JavaHeap {
 		};
 	}
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Iterator getSections() {
+	@Override
+	public Iterator<?> getSections() {
 		try {
 			if(null == sections) {
-				List sectionList = new ArrayList<ImageSection>();
+				List<Object> sectionList = new ArrayList<>();
 				
 				Iterator<GCHeapRegionDescriptor> it = regions.iterator();
 				while (it.hasNext()) {
@@ -219,7 +222,5 @@ public class DTFJJavaHeap implements JavaHeap {
 		}
 		return description;
 	}
-	
-	
-	
+
 }

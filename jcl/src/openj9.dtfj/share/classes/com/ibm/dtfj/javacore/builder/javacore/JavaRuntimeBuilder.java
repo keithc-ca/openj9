@@ -23,6 +23,7 @@
 package com.ibm.dtfj.javacore.builder.javacore;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import com.ibm.dtfj.image.CorruptDataException;
 import com.ibm.dtfj.image.ImagePointer;
@@ -61,7 +62,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	private JCJavaRuntime fJavaRuntime = null;
 	private JCImageAddressSpace fAddressSpace = null;
 	private JCJavaVMInitArgs fJavaVMInitArgs = null;
-	private HashMap j9ThreadToJNIEnv = new HashMap();
+	private Map<Long, ImagePointer> j9ThreadToJNIEnv = new HashMap<>();
 	private String fId;
 
 	public JavaRuntimeBuilder(JCImageProcess imageProcess, String id) throws JCInvalidArgumentsException {
@@ -86,6 +87,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	 * @return successfully created JavaClassLoader
 	 * @throws BuilderFailureException if class loader ID is invalid.
 	 */
+	@Override
 	public JavaClassLoader addClassLoader(String classLoaderName, long clID, long objectID) throws BuilderFailureException {
 		try {
 			JCJavaClassLoader classLoader = getJavaRuntime().findJavaClassLoader(clID);
@@ -114,6 +116,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	 * Note that even if a class was already registered with a class loader previously, it may contain incomplete data,
 	 * so this case has to be considered.
 	 */
+	@Override
 	public JavaClass addClass(JavaClassLoader jClassLoader, String name, long classID, long superClassID, String fileName) throws BuilderFailureException {
 		try {
 			JCJavaClassLoader classLoader = (JCJavaClassLoader) jClassLoader;
@@ -203,6 +206,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	 * @throws BuilderFailureException if arguments lead to an invalid DTFJ object, particularly an invalid threadID
 	 * @return a non null JavaThread that was successfully added or updated.
 	 */
+	@Override
 	public JavaThread addJavaThread(ImageThread imageThread, String name, long tid, long j9thread_t, long javaObjID, long jniEnv, String state, int priority, long blockingObject, String blockingObjectClass) throws BuilderFailureException {
 		try {
 			if (j9thread_t != IBuilderData.NOT_AVAILABLE && jniEnv != IBuilderData.NOT_AVAILABLE) {
@@ -224,7 +228,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 			javaThread.setImageThread((JCImageThread)imageThread);
 			if (jniEnv == IBuilderData.NOT_AVAILABLE) {
 				// Retrieve the JNIEnv
-				ImagePointer pointer = (ImagePointer)j9ThreadToJNIEnv.get(Long.valueOf(j9thread_t));
+				ImagePointer pointer = j9ThreadToJNIEnv.get(Long.valueOf(j9thread_t));
 				if (pointer != null) {
 					// Set it for 1.4.2
 					javaThread.setJNIEnv(pointer);
@@ -258,6 +262,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	/**
 	 *
 	 */
+	@Override
 	public JavaStackFrame addJavaStackFrame(JavaThread javaThread, String className, String classFileName, String methodName, String methodType, String compilationLevel, int lineNumber) throws BuilderFailureException {
 		try {
 			JCJavaThread jThread = (JCJavaThread) javaThread;
@@ -304,6 +309,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	 * @return successfully created JavaMonitor
 	 * @throws BuilderFailureException if an invalid monitor ID is passed.
 	 */
+	@Override
 	public JavaMonitor addJavaMonitor(String monitorName, long monitorID, long objectID, String className, long owningThread) throws BuilderFailureException {
 		try {
 			JCJavaMonitor monitor = getJavaRuntime().findMonitor(monitorID);
@@ -337,6 +343,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	/**
 	 *
 	 */
+	@Override
 	public void addBlockedThread(JavaMonitor monitor, long threadID) throws BuilderFailureException {
 		JCJavaMonitor jmonitor = (JCJavaMonitor) monitor;
 		ImagePointer pointer = fAddressSpace.getPointer(threadID);
@@ -346,6 +353,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	/**
 	 *
 	 */
+	@Override
 	public void addWaitOnNotifyThread(JavaMonitor monitor, long threadID) throws BuilderFailureException {
 		JCJavaMonitor jmonitor = (JCJavaMonitor) monitor;
 		ImagePointer pointer = fAddressSpace.getPointer(threadID);
@@ -355,6 +363,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	/**
 	 * Adds an (empty) JavaVMInitArgs
 	 */
+	@Override
 	public void addVMInitArgs() throws BuilderFailureException {
 		if (fJavaVMInitArgs != null) {
 			throw new BuilderFailureException("JCJavaVMInitArgs already created for this JavaRuntime");
@@ -372,6 +381,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	/**
 	 * Adds an individual VM option to JavaVMInitArgs
 	 */
+	@Override
 	public void addVMOption(String option) throws BuilderFailureException {
 		if (fJavaVMInitArgs == null) {
 			throw new BuilderFailureException("JCJavaVMInitArgs must be created before options added");
@@ -386,6 +396,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	/**
 	 * Adds an individual VM option to JavaVMInitArgs, with 'extra information' field
 	 */
+	@Override
 	public void addVMOption(String option, long extraInfo) throws BuilderFailureException {
 		if (fJavaVMInitArgs == null) {
 			throw new BuilderFailureException("JCJavaVMInitArgs must be created before options added");
@@ -401,6 +412,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 	/**
 	 * Sets the Java version string.
 	 */
+	@Override
 	public void setJavaVersion(String version) {
 		getJavaRuntime().setVersion(version);
 	}
@@ -421,6 +433,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 		return fJavaRuntime;
 	}
 
+	@Override
 	public JavaRuntimeMemoryCategory addMemoryCategory(String name,
 			long deepBytes, long deepAllocations,
 			JavaRuntimeMemoryCategory parent)
@@ -436,6 +449,7 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 		return category;
 	}
 
+	@Override
 	public void setShallowCountersForCategory(
 			JavaRuntimeMemoryCategory category, long shallowBytes,
 			long shallowAllocations)
@@ -443,18 +457,22 @@ public class JavaRuntimeBuilder extends AbstractBuilderComponent implements IJav
 		((JCJavaRuntimeMemoryCategory) category).setShallowCounters(shallowBytes, shallowAllocations);
 	}
 
+	@Override
 	public void setJITEnabled(boolean enabled) {
 		getJavaRuntime().setJITEnabled(enabled);
 	}
 
+	@Override
 	public void addJITProperty(String name, String value) {
 		getJavaRuntime().addJITProperty(name, value);
 	}
 
+	@Override
 	public void setStartTime(long startTime) {
 		getJavaRuntime().setStartTime(startTime);
 	}
 
+	@Override
 	public void setStartTimeNanos(long startTimeNanos) {
 		getJavaRuntime().setStartTimeNanos(startTimeNanos);
 	}

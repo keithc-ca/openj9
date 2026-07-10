@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.j9ddr.libraries;
 
 import static java.util.logging.Level.SEVERE;
@@ -56,7 +55,7 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 				File coreFile = new File(args[x]);
 				System.out.println("Reading \"" + coreFile.getAbsolutePath() + "\"...");
 				DTFJLibraryAdapter adapter = new DTFJLibraryAdapter();
-				ArrayList<String> modules = adapter.getLibraryList(coreFile);
+				List<String> modules = adapter.getLibraryList(coreFile);
 				for(String module : modules) {
 					System.out.println("\t" + module);
 				}
@@ -66,7 +65,8 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 			System.exit(1);
 		}
 	}
-	
+
+	@Override
 	public boolean isLibraryCollectionRequired(File coreFile) {
 		ICoreFileReader reader = null;
 		try {
@@ -86,12 +86,11 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 		return false;
 	}
 
-
-
-	public ArrayList<String> getLibraryList(final File coreFile)
+	@Override
+	public List<String> getLibraryList(final File coreFile)
 	{
 		if(moduleNames == null) {
-			moduleNames = new ArrayList<String>();
+			moduleNames = new ArrayList<>();
 			try {
 				_parentDir = coreFile.getParentFile();
 				logger.fine("Creating DTFJ core file reader");
@@ -110,11 +109,13 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 		}
 		return moduleNames;
 	}
-	
-	public ArrayList<String> getErrorMessages() {
+
+	@Override
+	public List<String> getErrorMessages() {
 		return errorMessages;
 	}
-	
+
+	@Override
 	public ClosingFileReader openFile(String filename) throws IOException
 	{
 		//given that we may be looking for a file which came from another system, look it up in our support file dir first (we need that to over-ride the absolute path since it may be looking for a file in the same location as one on the local machine - this happens often if moving a core file from one Unix system to another)
@@ -129,9 +130,9 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 		}
 		return candidate;
 	}
-	
-	@SuppressWarnings("unchecked")
-	public Object buildModule(String name, Properties properties, Iterator sections, Iterator symbols, long loadAddress)
+
+	@Override
+	public Object buildModule(String name, Properties properties, Iterator<?> sections, Iterator<?> symbols, long loadAddress)
 	{
 		logger.fine("Module : " + name);
 		if(isAIX) {
@@ -146,9 +147,9 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 		}
 		return null;
 	}
-	
-	@SuppressWarnings("unchecked")
-	public Object buildProcess(Object addressSpace, String pid, String commandLine, Properties environment, Object currentThread, Iterator threads, Object executable, Iterator libraries, int addressSize)
+
+	@Override
+	public Object buildProcess(Object addressSpace, String pid, String commandLine, Properties environment, Object currentThread, Iterator<?> threads, Object executable, Iterator<?> libraries, int addressSize)
 	{
 		if(logger.isLoggable(Level.FINEST)) {
 			String msg = String.format("Building process %s : %s", pid, commandLine);
@@ -157,6 +158,7 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 		return null;			//no-op
 	}
 
+	@Override
 	public Object buildAddressSpace(String name, int id)
 	{
 		if(logger.isLoggable(Level.FINEST)) {
@@ -166,19 +168,20 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 		return null;			//no-op
 	}
 
+	@Override
 	public Object buildRegister(String name, Number value)
 	{
 		return null;			//no-op
 	}
 
+	@Override
 	public Object buildStackSection(Object addressSpace, long stackStart, long stackEnd)
 	{
 		return null;			//no-op
 	}
 
-	@SuppressWarnings("unchecked")
-	public Object buildThread(String name, Iterator registers, Iterator stackSections, Iterator stackFrames, Properties properties, int signalNumber)
-	{
+	@Override
+	public Object buildThread(String name, Iterator<?> registers, Iterator<?> stackSections, Iterator<?> stackFrames, Properties properties, int signalNumber) {
 		if(logger.isLoggable(Level.FINEST)) {
 			String msg = String.format("Building thread %s [signal %d]", name, signalNumber);
 			logger.finest(msg);
@@ -186,6 +189,7 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 		return null;			//no-op
 	}
 
+	@Override
 	public Object buildModuleSection(Object addressSpace, String name, long imageStart, long imageEnd)
 	{
 		if(logger.isLoggable(Level.FINEST)) {
@@ -195,32 +199,37 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 		return null;			//no-op
 	}
 
+	@Override
 	public Object buildStackFrame(Object addressSpace, long stackBasePointer, long pc)
 	{
 		return null;			//no-op
 	}
 
+	@Override
 	public Object buildSymbol(Object addressSpace, String functionName, long relocatedFunctionAddress)
 	{
 		return null;			//no-op
 	}
 
+	@Override
 	public Object buildCorruptData(Object addressSpace, String message, long address)
 	{
 		return null;			//no-op
 	}
 
+	@Override
 	public long getEnvironmentAddress()
 	{
 		return 0;			//no-op
 	}
 
-	@SuppressWarnings("unchecked")
-	public long getValueOfNamedRegister(List registers, String string)
+	@Override
+	public long getValueOfNamedRegister(List<?> registers, String string)
 	{
 		return 0;			//no-op
 	}
 
+	@Override
 	public void setExecutableUnavailable(String description)
 	{
 		errorMessages.add("Library collection not possible as the executable cannot be found [" + description + "]");
@@ -230,6 +239,7 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 		}
 	}
 
+	@Override
 	public void setOSType(String osType)
 	{
 		if(logger.isLoggable(Level.FINEST)) {
@@ -238,29 +248,22 @@ public class DTFJLibraryAdapter implements Builder, LibraryAdapter {
 		}
 	}
 
+	@Override
 	public void setCPUType(String cpuType)
 	{
 		//no-op
 	}
 
+	@Override
 	public void setCPUSubType(String subType)
 	{
 		//no-op
 	}
 
+	@Override
 	public void setCreationTime(long millis)
 	{
 		//no-op
-	}
-
-	@SuppressWarnings("unchecked")
-	public Object buildModule(String name, Properties properties, Iterator sections, Iterator symbols)
-	{
-		if(logger.isLoggable(Level.FINEST)) {
-			String msg = String.format("Building module %s", name);
-			logger.finest(msg);
-		}
-		return null;
 	}
 
 }

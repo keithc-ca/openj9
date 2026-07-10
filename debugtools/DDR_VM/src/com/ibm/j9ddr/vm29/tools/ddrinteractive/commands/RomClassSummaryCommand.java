@@ -111,7 +111,7 @@ public class RomClassSummaryCommand extends Command
 			Statistics statistics = new Statistics();
 			ROMClassesIterator classSegmentIterator = new ROMClassesIterator(out, vm.classMemorySegments());
 			while (classSegmentIterator.hasNext()) {
-				J9ROMClassPointer classPointer = (J9ROMClassPointer) classSegmentIterator.next();
+				J9ROMClassPointer classPointer = classSegmentIterator.next();
 
 				if (requiredShared || requiredLocal) {
 					boolean isShared;
@@ -167,7 +167,7 @@ public class RomClassSummaryCommand extends Command
 					long srpValue = I32Pointer.cast(nodeValue.getSlotPtr()).at(0).longValue();
 
 					// Checks if the value is 16bits 
-					if ((short)srpValue == (long)srpValue) {
+					if ((short)srpValue == srpValue) {
 						nameAndSignatureSRPCount++;
 						nameAndSignatureSRP16bitSize += nodeValue.getLength();
 					}

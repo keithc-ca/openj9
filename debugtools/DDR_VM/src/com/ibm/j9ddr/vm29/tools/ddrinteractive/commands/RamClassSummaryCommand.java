@@ -59,7 +59,8 @@ public class RamClassSummaryCommand extends Command
 	{
 		addCommand("ramclasssummary", "", "Display ram class summary");
 	}
-		
+
+	@Override
 	public void run(String command, String[] args, Context context,	PrintStream out) throws DDRInteractiveCommandException 
 	{
 		try {
@@ -69,7 +70,7 @@ public class RamClassSummaryCommand extends Command
 			ClassSegmentIterator classSegmentIterator = new ClassSegmentIterator(vm.classMemorySegments());
 
 			while (classSegmentIterator.hasNext()) {
-				J9ClassPointer classPointer = (J9ClassPointer) classSegmentIterator.next();
+				J9ClassPointer classPointer = classSegmentIterator.next();
 				numberOfClasses++;
 				
 				ClassWalker classWalker = new RamClassWalker(classPointer, context);
@@ -85,11 +86,9 @@ public class RamClassSummaryCommand extends Command
 			throw new DDRInteractiveCommandException(e);
 		}	
 	}
+
 	public long getNumberOfClasses() {
 		return numberOfClasses;
 	}
 
-
-
 }
-

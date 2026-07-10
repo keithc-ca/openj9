@@ -72,6 +72,7 @@ public class J9DDRImageModule implements ImageModule
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageModule#getName()
 	 */
+	@Override
 	public String getName() throws CorruptDataException
 	{
 		if (moduleNameOverride != null) {
@@ -88,6 +89,7 @@ public class J9DDRImageModule implements ImageModule
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageModule#getProperties()
 	 */
+	@Override
 	public Properties getProperties() throws CorruptDataException
 	{
 		try {
@@ -100,12 +102,12 @@ public class J9DDRImageModule implements ImageModule
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageModule#getSections()
 	 */
-	@SuppressWarnings("unchecked")
-	public Iterator getSections()
+	@Override
+	public Iterator<?> getSections()
 	{
 		Collection<? extends IMemoryRange> ranges = delegate.getMemoryRanges();
 		
-		List<ImageSection> sections = new ArrayList<ImageSection>(ranges.size());
+		List<ImageSection> sections = new ArrayList<>(ranges.size());
 		
 		for (IMemoryRange range : ranges) {
 			sections.add(new J9DDRImageSection(process, range.getBaseAddress(), range.getSize(), range.getName()));
@@ -117,6 +119,7 @@ public class J9DDRImageModule implements ImageModule
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageModule#getSymbols()
 	 */
+	@Override
 	public Iterator<?> getSymbols()
 	{
 		Collection<? extends ISymbol> symbols;
@@ -139,7 +142,7 @@ public class J9DDRImageModule implements ImageModule
 			return Collections.singletonList(new J9DDRCorruptData(process,e.getMessage(),baseAddress)).iterator();
 		}
 		
-		List<ImageSymbol> dtfjSymbols = new ArrayList<ImageSymbol>(symbols.size());
+		List<ImageSymbol> dtfjSymbols = new ArrayList<>(symbols.size());
 		
 		for (ISymbol symbol : symbols) {
 			dtfjSymbols.add(new J9DDRImageSymbol(symbol.getName(), new J9DDRImagePointer(process, symbol.getAddress())));
@@ -180,6 +183,7 @@ public class J9DDRImageModule implements ImageModule
 		}
 	}
 	
+	@Override
 	public long getLoadAddress() throws DataUnavailable {
 		return delegate.getLoadAddress();
 	}

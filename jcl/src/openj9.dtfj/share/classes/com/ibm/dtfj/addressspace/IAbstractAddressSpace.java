@@ -39,7 +39,7 @@ public interface IAbstractAddressSpace
 	 * @return An iterator of the MemoryRange objects making up the address space
 	 * @see MemoryRange
 	 */
-	public Iterator getMemoryRanges();
+	public Iterator<MemoryRange> getMemoryRanges();
 
 	/**
 	 * @param asid an address space ID

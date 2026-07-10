@@ -90,7 +90,7 @@ public class ITableSizeCommand extends Command
 			J9JavaVMPointer vm = J9RASHelper.getVM(DataType.getJ9RASPointer());
 			ClassSegmentIterator classSegmentIterator = new ClassSegmentIterator(vm.classMemorySegments());
 			while (classSegmentIterator.hasNext()) {
-				J9ClassPointer clazz = (J9ClassPointer) classSegmentIterator.next();
+				J9ClassPointer clazz = classSegmentIterator.next();
 				int classDepth = clazz.classDepthAndFlags().bitAnd(J9AccClassDepthMask).intValue();
 				J9ITablePointer superITable = J9ITablePointer.NULL;
 				J9ITablePointer startITable = J9ITablePointer.cast(clazz.iTable());

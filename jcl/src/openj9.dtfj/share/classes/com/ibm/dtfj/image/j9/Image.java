@@ -51,10 +51,10 @@ public class Image implements ReleasingImage, ManagedImage
 	private int _cpuCount;
 	private long _bytesMem;
 	private long _creationTime;
-	private Vector _addressSpaces = new Vector();
+	private Vector<ImageAddressSpace> _addressSpaces = new Vector<>();
 	private String _hostname;
-	private List _ipAddresses = new Vector();
-	private List _closables = new Vector();
+	private List<Object> _ipAddresses = new Vector<>();
+	private List<ResourceReleaser> _closables = new Vector<>();
 	private URI source = null;
 	private ManagedImageSource imageSource = null;
 
@@ -69,11 +69,13 @@ public class Image implements ReleasingImage, ManagedImage
 		_creationTime = creationTime;
 	}
 
-	public Iterator getAddressSpaces()
+	@Override
+	public Iterator<?> getAddressSpaces()
 	{
 		return _addressSpaces.iterator();
 	}
 
+	@Override
 	public String getProcessorType() throws DataUnavailable, CorruptDataException
 	{
 		//Jazz 4961 : chamlain : NumberFormatException opening corrupt dump
@@ -85,6 +87,7 @@ public class Image implements ReleasingImage, ManagedImage
 		}
 	}
 
+	@Override
 	public String getProcessorSubType() throws DataUnavailable, CorruptDataException
 	{
 		if (null == _cpuSubType) {
@@ -95,6 +98,7 @@ public class Image implements ReleasingImage, ManagedImage
 		}
 	}
 
+	@Override
 	public int getProcessorCount() throws DataUnavailable
 	{
 		if (0 == _cpuCount)
@@ -107,6 +111,7 @@ public class Image implements ReleasingImage, ManagedImage
 		}
 	}
 
+	@Override
 	public String getSystemType() throws DataUnavailable, CorruptDataException
 	{
 		//Jazz 4961 : chamlain : NumberFormatException opening corrupt dump
@@ -118,6 +123,7 @@ public class Image implements ReleasingImage, ManagedImage
 		}
 	}
 
+	@Override
 	public String getSystemSubType() throws DataUnavailable, CorruptDataException
 	{
 		if (null == _osSubType)
@@ -130,6 +136,7 @@ public class Image implements ReleasingImage, ManagedImage
 		}
 	}
 
+	@Override
 	public long getInstalledMemory() throws DataUnavailable
 	{
 		if (0 == _bytesMem)
@@ -139,6 +146,7 @@ public class Image implements ReleasingImage, ManagedImage
 		return _bytesMem;
 	}
 
+	@Override
 	public long getCreationTime() throws DataUnavailable
 	{
 		if (0 == _creationTime)
@@ -156,6 +164,7 @@ public class Image implements ReleasingImage, ManagedImage
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.Image#getHostName()
 	 */
+	@Override
 	public String getHostName() throws DataUnavailable
 	{
 		if (null != _hostname) {
@@ -168,7 +177,8 @@ public class Image implements ReleasingImage, ManagedImage
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.Image#getIPAddresses()
 	 */
-	public Iterator getIPAddresses() throws DataUnavailable
+	@Override
+	public Iterator<?> getIPAddresses() throws DataUnavailable
 	{
 		if (_ipAddresses.size() > 0) {
 			return _ipAddresses.iterator();
@@ -198,17 +208,17 @@ public class Image implements ReleasingImage, ManagedImage
 		_ipAddresses.add(newAddress);
 	}
 
+	@Override
 	public void addReleasable(ResourceReleaser o) {
 		_closables.add(o);
 	}
 
+	@Override
 	public void close() {
-		Iterator it = _closables.iterator();
-		while(it.hasNext()) {
-			Object o = it.next();
-			if (o instanceof ResourceReleaser) {
+		for (ResourceReleaser o : _closables) {
+			if (o != null) {
 				try {
-					((ResourceReleaser)o).releaseResources();
+					o.releaseResources();
 				} catch (IOException e) {
 					Logger.getLogger(com.ibm.dtfj.image.ImageFactory.DTFJ_LOGGER_NAME).log(Level.INFO, e.getMessage());
 				}
@@ -228,12 +238,15 @@ public class Image implements ReleasingImage, ManagedImage
 	 * (non-Javadoc)
 	 * @see java.lang.Object#finalize()
 	 */
+	@Override
+	@SuppressWarnings("removal")
 	protected void finalize() throws Throwable {
 		super.finalize();
 		close();
 	}
 
 	//currently returns no OS specific properties
+	@Override
 	public Properties getProperties() {
 		return new Properties();
 	}
@@ -242,6 +255,7 @@ public class Image implements ReleasingImage, ManagedImage
 		this.source = source;		//allow the factory to set the source without changing the legacy public methods
 	}
 
+	@Override
 	public URI getSource() {
 		try {
 			if(source == null) {
@@ -254,14 +268,17 @@ public class Image implements ReleasingImage, ManagedImage
 		}
 	}
 
+	@Override
 	public ManagedImageSource getImageSource() {
 		return imageSource;
 	}
 
+	@Override
 	public void setImageSource(ManagedImageSource source) {
 		imageSource = source;
 	}
 
+	@Override
 	public long getCreationTimeNanos() throws DataUnavailable, CorruptDataException {
 		// Not supported in legacy DTFJ (pre-DDR)
 		throw new DataUnavailable();

@@ -84,7 +84,8 @@ public class DTFJJavaObject implements JavaObject {
 	J9ObjectPointer getJ9ObjectPointer() {
 		return object;
 	}
-	
+
+	@Override
 	public void arraycopy(int srcStart, Object dst, int dstStart, int length) throws CorruptDataException, MemoryAccessException {
 		fetchDeferredData();
 		if(!objectIsArray) {
@@ -157,7 +158,8 @@ public class DTFJJavaObject implements JavaObject {
 			throw new IllegalArgumentException("Destination object of type " + dst.getClass().getName() + " is not an array");
 		}
 	}
-	
+
+	@Override
 	public int getArraySize() throws CorruptDataException {
 		fetchDeferredData();
 		if(objectIsArray) {
@@ -167,6 +169,7 @@ public class DTFJJavaObject implements JavaObject {
 		}
 	}
 
+	@Override
 	public long getHashcode() throws DataUnavailable, CorruptDataException {
 		try {
 			return ObjectAccessBarrier.getObjectHashCode(object).longValue();
@@ -175,6 +178,7 @@ public class DTFJJavaObject implements JavaObject {
 		}
 	}
 
+	@Override
 	public JavaHeap getHeap() throws CorruptDataException, DataUnavailable {
 		try {
 			if (heap == null) {
@@ -190,10 +194,12 @@ public class DTFJJavaObject implements JavaObject {
 		}
 	}
 
+	@Override
 	public ImagePointer getID() {
 		return DTFJContext.getImagePointer(object.getAddress());
 	}
 
+	@Override
 	public JavaClass getJavaClass() throws CorruptDataException {
 		try {
 			//CMVC 168912 : go through helper class to allow for SWH changes
@@ -204,6 +210,7 @@ public class DTFJJavaObject implements JavaObject {
 		}
 	}
 
+	@Override
 	public long getPersistentHashcode() throws DataUnavailable,	CorruptDataException {
 		try {
 			/*
@@ -220,9 +227,9 @@ public class DTFJJavaObject implements JavaObject {
 			throw J9DDRDTFJUtils.handleAllButDataUnavailAsCorruptDataException(DTFJContext.getProcess(), t);
 		}
 	}
-	
-	@SuppressWarnings("rawtypes")
-	public Iterator getReferences() {
+
+	@Override
+	public Iterator<?> getReferences() {
 		boolean isClass = false;
 		boolean isClassLoader = false;
 		boolean isWeakReference = false;
@@ -230,7 +237,7 @@ public class DTFJJavaObject implements JavaObject {
 		boolean isPhantomReference = false;
 		
 		if (null == references) {
-			references = new LinkedList<Object>();
+			references = new LinkedList<>();
 			try {
 				// find this object's class
 				JavaClass jClass = getJavaClass();
@@ -248,7 +255,7 @@ public class DTFJJavaObject implements JavaObject {
 				} else {
 					isClass = (jClass != null) && jClass.getName().equals("java/lang/Class");
 					
-					List<JavaClass> superClasses = new LinkedList<JavaClass>();
+					List<JavaClass> superClasses = new LinkedList<>();
 					
 					//Do superclass walk
 					while (jClass != null) {
@@ -288,7 +295,7 @@ public class DTFJJavaObject implements JavaObject {
 					JavaClassLoader associatedClassLoader = getAssociatedClassLoader();
 					
 					if (associatedClassLoader != null) {
-						for (Iterator classes = associatedClassLoader.getDefinedClasses(); classes.hasNext();) {
+						for (Iterator<?> classes = associatedClassLoader.getDefinedClasses(); classes.hasNext();) {
 							Object potentialClass = classes.next();
 							if (potentialClass instanceof JavaClass) {
 								JavaClass currentClass = (JavaClass)potentialClass;
@@ -545,7 +552,8 @@ public class DTFJJavaObject implements JavaObject {
 		return ((DTFJJavaClass)getJavaClass()).isObjectArray();
 	}
 
-	public Iterator getSections() {
+	@Override
+	public Iterator<?> getSections() {
 		try {
 			fetchDeferredData();
 			LinkedList<ImageSection> sections = new LinkedList<ImageSection>();
@@ -572,7 +580,8 @@ public class DTFJJavaObject implements JavaObject {
 		name.append(" bytes)");
 		return name.toString();
 	}
-	
+
+	@Override
 	public long getSize() throws CorruptDataException {
 		try {
 			fetchDeferredData();
@@ -582,6 +591,7 @@ public class DTFJJavaObject implements JavaObject {
 		}
 	}
 
+	@Override
 	public boolean isArray() throws CorruptDataException {
 		try {
 			fetchDeferredData();
@@ -653,63 +663,5 @@ public class DTFJJavaObject implements JavaObject {
 	public int hashCode() {
 		return object.hashCode();
 	}
-	
-	public boolean isPacked() {
-		return false; // 29 vm does not support packed
-	}
 
-	/*
-	 * (non-Javadoc)
-	 * Returns false if this object is java packed, or not packed.
-	 * @see com.ibm.dtfj.java.JavaObject#isNativePacked()
-	 */
-	public boolean isNativePacked() {
-		return false;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * Return 0 if this is not a native packed object;
-	 * @see com.ibm.dtfj.java.JavaObject#getNativePackedDataPointer()
-	 */
-	public long getNativePackedDataPointer() {
-		return 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * Returns false if this object is not a derived object or is not a packed object at all. 
-	 * @see com.ibm.dtfj.java.JavaObject#isDerivedObject()
-	 */
-	public boolean isDerivedObject() {
-		return false;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * Return null if this object is not a derived object or not a packed object at all.
-	 * @see com.ibm.dtfj.java.JavaObject#getTargetJavaObject()
-	 */
-	public JavaObject getTargetJavaObject() {
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * Return 0 if this object is not a derived object or not a packed object at all. 
-	 * @see com.ibm.dtfj.java.JavaObject#getTargetOffset()
-	 */
-	public long getTargetOffset() {
-		return 0;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * Return false if this object is not a nested packed object or not a packed object at all.
-	 * @see com.ibm.dtfj.java.JavaObject#isNestedPacked()
-	 */
-	public boolean isNestedPacked() {
-		return false;
-	}
 }
-

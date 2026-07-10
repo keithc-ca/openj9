@@ -82,7 +82,7 @@ public class CoreInfoCommand extends Command {
 		try {
 			J9RASPointer ras = DataType.getJ9RASPointer();
 			J9JavaVMPointer vm = J9RASHelper.getVM(ras);
-			IProcess process = vm.getProcess();
+			IProcess process = DataType.getProcess();
 			J9DDRImageProcess ddrProcess = new J9DDRImageProcess(process);
 
 			try {

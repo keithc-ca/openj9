@@ -30,7 +30,7 @@ import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.MM_SublistPoolPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.MM_SublistPuddlePointer;
 
-abstract class MMSublistIterator extends GCIterator
+abstract class MMSublistIterator extends GCIterator<MM_SublistPuddlePointer>
 {
 	protected MM_SublistPuddlePointer currentPuddle;
 	
@@ -38,12 +38,14 @@ abstract class MMSublistIterator extends GCIterator
 	{
 		currentPuddle = sublistPool._list(); 
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		return currentPuddle.notNull();
 	}
 
+	@Override
 	public MM_SublistPuddlePointer next()
 	{
 		try {	
@@ -60,6 +62,7 @@ abstract class MMSublistIterator extends GCIterator
 		}
 	}
 
+	@Override
 	public VoidPointer nextAddress() 
 	{
 		// Does not make sense in this case

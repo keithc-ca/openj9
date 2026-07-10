@@ -23,7 +23,6 @@
 package com.ibm.dtfj.image.j9;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import java.util.Iterator;
@@ -46,7 +45,7 @@ import com.ibm.dtfj.image.DataUnavailable;
 public class Builder implements com.ibm.dtfj.corereaders.Builder
 {
 	private IAbstractAddressSpace _memory;
-	private Vector _addressSpaces = new Vector();
+	private Vector<ImageAddressSpace> _addressSpaces = new Vector<>();
 	private long _environmentAddress;
 	private DataUnavailable _executableException;
 	private DataUnavailable _libraryException;
@@ -92,9 +91,10 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.jvm.j9.dump.systemdump.Builder#buildProcess(java.lang.String, java.lang.String, java.util.Properties, java.lang.Object, java.util.Iterator, java.lang.Object, java.util.Iterator, int)
 	 */
+	@Override
 	public Object buildProcess(Object addressSpace, String pid,
 			String commandLine, Properties environment, Object currentThread,
-			Iterator threads, Object executable, Iterator libraries,
+			Iterator<?> threads, Object executable, Iterator<?> libraries,
 			int addressSize)
 	{
 		ImageProcess process = null;
@@ -113,6 +113,7 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.jvm.j9.dump.systemdump.Builder#buildAddressSpace(java.lang.Object, java.util.Iterator)
 	 */
+	@Override
 	public Object buildAddressSpace(String name, int id) {
 		ImageAddressSpace space = new ImageAddressSpace(_memory, id);
 		_addressSpaces.add(space);
@@ -122,6 +123,7 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.jvm.j9.dump.systemdump.Builder#buildRegister(java.lang.String, java.lang.Number)
 	 */
+	@Override
 	public Object buildRegister(String name, Number value) {
 		return new ImageRegister(name, value);
 	}
@@ -129,6 +131,7 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.jvm.j9.dump.systemdump.Builder#buildStackSection(long, long)
 	 */
+	@Override
 	public Object buildStackSection(Object addressSpace, long stackStart, long stackEnd) {
 		return new StackImageSection(pointer(addressSpace, stackStart), stackEnd - stackStart);
 	}
@@ -140,7 +143,8 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.jvm.j9.dump.systemdump.Builder#buildThread(java.lang.String, java.util.Iterator, java.lang.Object, java.util.Iterator, java.util.Properties)
 	 */
-	public Object buildThread(String name, Iterator registers, Iterator stackSections, Iterator stackFrames, Properties properties, int signalNumber)
+	@Override
+	public Object buildThread(String name, Iterator<?> registers, Iterator<?> stackSections, Iterator<?> stackFrames, Properties properties, int signalNumber)
 	{
 		return new ImageThread(name, registers, stackSections, stackFrames, properties, signalNumber);
 	}
@@ -148,6 +152,7 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.jvm.j9.dump.systemdump.Builder#buildModuleSection(java.lang.String, long, long)
 	 */
+	@Override
 	public Object buildModuleSection(Object addressSpace, String name, long imageStart, long imageEnd) {
 		return new ModuleImageSection(name, pointer(addressSpace, imageStart), imageEnd - imageStart);
 	}
@@ -155,21 +160,24 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.jvm.j9.dump.systemdump.Builder#buildModule(java.lang.String, java.util.Properties, java.util.Iterator, java.util.Iterator)
 	 */
-	public Object buildModule(String name, Properties properties, Iterator sections, Iterator symbols, long loadAddress) {
+	@Override
+	public Object buildModule(String name, Properties properties, Iterator<?> sections, Iterator<?> symbols, long loadAddress) {
 		return new ImageModule(name, properties, sections, symbols, loadAddress);
 	}
 
-	public Iterator getAddressSpaces() {
+	public Iterator<?> getAddressSpaces() {
 		return _addressSpaces.iterator();
 	}
 
+	@Override
 	public long getEnvironmentAddress() {
 		return _environmentAddress;
 	}
 
-	public long getValueOfNamedRegister(List registers, String string)
+	@Override
+	public long getValueOfNamedRegister(List<?> registers, String string)
 	{
-		Iterator regs = registers.iterator();
+		Iterator<?> regs = registers.iterator();
 
 		while (regs.hasNext()) {
 			ImageRegister register = (ImageRegister) regs.next();
@@ -183,12 +191,14 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 		return -1;	//maybe this should throw
 	}
 
+	@Override
 	public Object buildStackFrame(Object addressSpace, long stackBasePointer, long pc)
 	{
 		ImageAddressSpace space = (ImageAddressSpace) addressSpace;
 		return new ImageStackFrame(space, space.getPointer(pc), space.getPointer(stackBasePointer));
 	}
 
+	@Override
 	public ClosingFileReader openFile(String filename) throws IOException
 	{
 		//this is where the resolving agent comes in handy.  Not only will it look on the filesystem but it is also free to look into jars and other interesting containers where we can expect to find things
@@ -198,6 +208,7 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 		return reader;
 	}
 
+	@Override
 	public Object buildSymbol(Object addressSpace, String functionName, long relocatedFunctionAddress)
 	{
 		return new ImageSymbol(functionName, ((ImageAddressSpace)addressSpace).getPointer(relocatedFunctionAddress));
@@ -206,6 +217,7 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.corereaders.Builder#setExecutableUnavailable(java.lang.String)
 	 */
+	@Override
 	public void setExecutableUnavailable(String description)
 	{
 		_executableException = new DataUnavailable(description);
@@ -237,6 +249,7 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.corereaders.Builder#setOSType(java.lang.String)
 	 */
+	@Override
 	public void setOSType(String osType)
 	{
 		_osType = osType;
@@ -245,6 +258,7 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.corereaders.Builder#setCPUType(java.lang.String)
 	 */
+	@Override
 	public void setCPUType(String cpuType)
 	{
 		_cpuType = cpuType;
@@ -253,6 +267,7 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.corereaders.Builder#setCPUSubType(java.lang.String)
 	 */
+	@Override
 	public void setCPUSubType(String subType)
 	{
 		_cpuSubType = subType;
@@ -261,11 +276,13 @@ public class Builder implements com.ibm.dtfj.corereaders.Builder
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.corereaders.Builder#setCreationTime(long)
 	 */
+	@Override
 	public void setCreationTime(long millis)
 	{
 		_creationTimeMillis = millis;
 	}
 
+	@Override
 	public Object buildCorruptData(Object addressSpace, String message, long address)
 	{
 		return new CorruptData(message, pointer(addressSpace, address));

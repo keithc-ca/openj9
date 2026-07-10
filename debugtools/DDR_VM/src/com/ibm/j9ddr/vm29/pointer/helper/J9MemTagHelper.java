@@ -167,15 +167,15 @@ public class J9MemTagHelper
 		 * conditional on the extra 2 U_32s
 		 */
 		for (int i = 0; i < (J9MemTag.SIZEOF / U32.SIZEOF); i++) {
-			sum ^= slots.at(i).longValue();
+			sum ^= (int) slots.at(i).longValue();
 		}
 
 		if (J9BuildFlags.J9VM_ENV_DATA64) {
 			U32 a = new U32(UDATA.cast(tag).rightShift(32));
 			U32 b = new U32(UDATA.cast(tag).bitAnd(U32.MAX));
-			sum ^= a.longValue() ^ b.longValue();
+			sum ^= (int) a.longValue() ^ (int) b.longValue();
 		} else {
-			sum ^= tag.longValue();
+			sum ^= (int) tag.longValue();
 		}
 
 		if (sum != 0) {

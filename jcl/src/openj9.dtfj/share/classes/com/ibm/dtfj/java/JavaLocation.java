@@ -100,12 +100,16 @@ public interface JavaLocation {
 	/**
 	 * @return A string representing the location as it would be seen in a Java stack trace
 	 */
+	@Override
 	public String toString();
 
 	/**
 	 * @param obj
 	 * @return True if the given object refers to the same Java Location in the image
 	 */
+	@Override
 	public boolean equals(Object obj);
+
+	@Override
 	public int hashCode();
 }

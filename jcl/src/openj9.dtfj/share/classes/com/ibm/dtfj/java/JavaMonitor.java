@@ -62,7 +62,7 @@ public interface JavaMonitor {
 	 * @see JavaThread
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getEnterWaiters();
+	public Iterator<?> getEnterWaiters();
 
 	/**
 	 * Get the set of threads waiting to be notified on the monitor (in the Object.wait method)
@@ -72,7 +72,7 @@ public interface JavaMonitor {
 	 * @see JavaThread
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getNotifyWaiters();
+	public Iterator<?> getNotifyWaiters();
 
 	/**
 	 * Get the identifier for this monitor
@@ -84,6 +84,9 @@ public interface JavaMonitor {
 	 * @param obj
 	 * @return True if the given object refers to the same Java Monitor in the image
 	 */
+	@Override
 	public boolean equals(Object obj);
+
+	@Override
 	public int hashCode();
 }

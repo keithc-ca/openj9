@@ -43,11 +43,6 @@ public interface IImageAddressSpaceBuilder {
 	 * @return current (usually the only) ImageProcess factory. Value must not be null.
 	 */
 	public IImageProcessBuilder getCurrentImageProcessBuilder();
-	/**
-	 *
-	 * @param builderID
-	 *
-	 */
 
 	/**
 	 * In multiple image process scenarios, each image process is associated with

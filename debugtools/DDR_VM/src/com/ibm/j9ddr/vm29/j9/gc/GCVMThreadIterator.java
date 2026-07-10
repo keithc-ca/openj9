@@ -28,7 +28,7 @@ import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9VMThreadPointer;
 
-public class GCVMThreadIterator extends GCIterator
+public class GCVMThreadIterator extends GCIterator<J9ObjectPointer>
 {
 	public final static int state_start = 0;
 	public final static int state_slots = 1;
@@ -57,6 +57,8 @@ public class GCVMThreadIterator extends GCIterator
 		return new GCVMThreadIterator(vmThread);
 	}
 
+	@Override
+	@SuppressWarnings("fallthrough")
 	public boolean hasNext()
 	{
 		if(state == state_end) {
@@ -89,6 +91,7 @@ public class GCVMThreadIterator extends GCIterator
 		return false;
 	}
 
+	@Override
 	public J9ObjectPointer next()
 	{
 		if(hasNext()) {
@@ -107,6 +110,7 @@ public class GCVMThreadIterator extends GCIterator
 		throw new NoSuchElementException("There are no more items available through this iterator"); 
 	}
 
+	@Override
 	public VoidPointer nextAddress()
 	{
 		if(hasNext()) {

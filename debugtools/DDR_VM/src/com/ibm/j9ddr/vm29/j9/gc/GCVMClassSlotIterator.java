@@ -30,7 +30,7 @@ import com.ibm.j9ddr.vm29.pointer.PointerPointer;
 import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ClassPointer;
 
-public class GCVMClassSlotIterator extends GCIterator
+public class GCVMClassSlotIterator extends GCIterator<J9ClassPointer>
 {
 	protected PointerPointer scanPtr;
 	protected PointerPointer endPtr;
@@ -46,11 +46,13 @@ public class GCVMClassSlotIterator extends GCIterator
 		return new GCVMClassSlotIterator();
 	}
 
+	@Override
 	public boolean hasNext()
 	{
 		return scanPtr.lt(endPtr);
 	}
 
+	@Override
 	public J9ClassPointer next()
 	{
 		try {
@@ -67,6 +69,7 @@ public class GCVMClassSlotIterator extends GCIterator
 		}
 	}
 
+	@Override
 	public VoidPointer nextAddress()
 	{
 		if(hasNext()) {

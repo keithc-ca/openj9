@@ -81,7 +81,7 @@ public class PluginConfig {
 
 	public ICommand newInstance() throws DDRInteractiveCommandException {
 		try {
-			return command.newInstance();
+			return command.getConstructor().newInstance();
 		} catch (Exception e) {
 			throw new DDRInteractiveCommandException("Failed to create a new instance of command " + command.getClass().getName(), e);
 		}

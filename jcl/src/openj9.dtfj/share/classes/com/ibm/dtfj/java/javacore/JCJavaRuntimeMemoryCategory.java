@@ -38,7 +38,7 @@ public class JCJavaRuntimeMemoryCategory implements JavaRuntimeMemoryCategory
 	private long shallowAllocations;
 	private long shallowBytes;
 
-	private final List children = new LinkedList();
+	private final List<JCJavaRuntimeMemoryCategory> children = new LinkedList<>();
 
 	private static final String nl = System.getProperty("line.separator");
 
@@ -49,31 +49,36 @@ public class JCJavaRuntimeMemoryCategory implements JavaRuntimeMemoryCategory
 		this.deepBytes = deepBytes;
 	}
 
-	public Iterator getChildren()
+	@Override
+	public Iterator<?> getChildren()
 	{
 		return Collections.unmodifiableList(children).iterator();
 	}
 
-	public void addChild(JavaRuntimeMemoryCategory child)
+	public void addChild(JCJavaRuntimeMemoryCategory child)
 	{
 		children.add(child);
 	}
 
+	@Override
 	public long getDeepAllocations()
 	{
 		return deepAllocations;
 	}
 
+	@Override
 	public long getDeepBytes()
 	{
 		return deepBytes;
 	}
 
-	public Iterator getMemorySections(boolean includeFreed)
+	@Override
+	public Iterator<?> getMemorySections(boolean includeFreed)
 	{
-		return Collections.EMPTY_LIST.iterator();
+		return Collections.emptyIterator();
 	}
 
+	@Override
 	public String getName()
 	{
 		return name;
@@ -86,6 +91,7 @@ public class JCJavaRuntimeMemoryCategory implements JavaRuntimeMemoryCategory
 		this.shallowValuesSet = true;
 	}
 
+	@Override
 	public long getShallowAllocations()
 	{
 		if (shallowValuesSet) {
@@ -97,6 +103,7 @@ public class JCJavaRuntimeMemoryCategory implements JavaRuntimeMemoryCategory
 		}
 	}
 
+	@Override
 	public long getShallowBytes()
 	{
 		if (shallowValuesSet) {
@@ -108,6 +115,7 @@ public class JCJavaRuntimeMemoryCategory implements JavaRuntimeMemoryCategory
 		}
 	}
 
+	@Override
 	public String toString()
 	{
 		StringBuffer buffer = new StringBuffer();
@@ -149,10 +157,7 @@ public class JCJavaRuntimeMemoryCategory implements JavaRuntimeMemoryCategory
 
 		buffer.append(nl);
 
-		Iterator childIt = children.iterator();
-		while (childIt.hasNext()) {
-			JCJavaRuntimeMemoryCategory child = (JCJavaRuntimeMemoryCategory) childIt.next();
-
+		for (JCJavaRuntimeMemoryCategory child : children) {
 			child.buildPrintTree(buffer, depth + 1);
 		}
 
@@ -163,6 +168,7 @@ public class JCJavaRuntimeMemoryCategory implements JavaRuntimeMemoryCategory
 		}
 	}
 
+	@Override
 	public int hashCode()
 	{
 		final int prime = 31;
@@ -176,6 +182,7 @@ public class JCJavaRuntimeMemoryCategory implements JavaRuntimeMemoryCategory
 		return result;
 	}
 
+	@Override
 	public boolean equals(Object obj)
 	{
 		if (this == obj) {

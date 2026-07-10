@@ -31,7 +31,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9ROMFieldShapePointer;
 import com.ibm.j9ddr.vm29.pointer.helper.J9ROMFieldShapeHelper;
 import com.ibm.j9ddr.vm29.types.UDATA;
 
-public class J9ROMFieldShapeIterator implements Iterator, Iterable<J9ROMFieldShapePointer> {
+public class J9ROMFieldShapeIterator implements Iterator<Object>, Iterable<Object> {
 
 	J9ROMFieldShapePointer firstField;
 	J9ROMFieldShapePointer lastField;
@@ -43,10 +43,12 @@ public class J9ROMFieldShapeIterator implements Iterator, Iterable<J9ROMFieldSha
 		this.fieldsLeft = romFieldCount.longValue();
 	}
 
+	@Override
 	public boolean hasNext() {
 		return cursor < fieldsLeft;
 	}
 
+	@Override
 	public Object next() {
 		if (!hasNext()) {
 			throw new NoSuchElementException();
@@ -68,11 +70,13 @@ public class J9ROMFieldShapeIterator implements Iterator, Iterable<J9ROMFieldSha
 		return lastField;
 	}
 
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException();
 	}
 
-	public Iterator<J9ROMFieldShapePointer> iterator() {
+	@Override
+	public Iterator<Object> iterator() {
 		return this;
 	}
 

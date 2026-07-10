@@ -161,7 +161,7 @@ public interface JavaObject {
 	 * @see ImageSection
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getSections();
+	public Iterator<?> getSections();
 
 	/**
 	 * Get the set of references from this object.
@@ -173,7 +173,7 @@ public interface JavaObject {
 	 * @see com.ibm.dtfj.java.JavaReference
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getReferences();
+	public Iterator<?> getReferences();
 
 	/**
 	 * Gets the heap where this object is located.
@@ -188,11 +188,13 @@ public interface JavaObject {
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public boolean equals(Object obj);
 
 	/**
 	 * {@inheritDoc}
 	 */
+	@Override
 	public int hashCode();
 
 }

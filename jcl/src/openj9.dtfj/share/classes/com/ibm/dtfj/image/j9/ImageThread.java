@@ -33,15 +33,15 @@ public class ImageThread implements com.ibm.dtfj.image.ImageThread
 {
 	private String _systemThreadID;
 	private Properties _properties;
-	private Vector _registers = new Vector();
-	private Vector _stackSections = new Vector();
-	private Vector _stackFrames = new Vector();
+	private Vector<Object> _registers = new Vector<>();
+	private Vector<Object> _stackSections = new Vector<>();
+	private Vector<Object> _stackFrames = new Vector<>();
 	/**
 	 * If the thread is currently processing or has a pending signal, it will be non-zero
 	 */
 	private int _signalNumber;
 
-	public ImageThread(String threadID, Iterator registers, Iterator stackSections, Iterator stackFrames, Properties properties, int signalNumber)
+	public ImageThread(String threadID, Iterator<?> registers, Iterator<?> stackSections, Iterator<?> stackFrames, Properties properties, int signalNumber)
 	{
 		_systemThreadID = threadID;
 		while (registers.hasNext()) {
@@ -57,12 +57,14 @@ public class ImageThread implements com.ibm.dtfj.image.ImageThread
 		_properties = properties;
 	}
 
+	@Override
 	public String getID() throws CorruptDataException
 	{
 		return _systemThreadID;
 	}
 
-	public Iterator getStackFrames() throws DataUnavailable
+	@Override
+	public Iterator<?> getStackFrames() throws DataUnavailable
 	{
 		if (_stackFrames.isEmpty()) {
 			throw new DataUnavailable("no stack frames");
@@ -70,16 +72,19 @@ public class ImageThread implements com.ibm.dtfj.image.ImageThread
 		return _stackFrames.iterator();
 	}
 
-	public Iterator getStackSections()
+	@Override
+	public Iterator<?> getStackSections()
 	{
 		return _stackSections.iterator();
 	}
 
-	public Iterator getRegisters()
+	@Override
+	public Iterator<?> getRegisters()
 	{
 		return _registers.iterator();
 	}
 
+	@Override
 	public Properties getProperties()
 	{
 		return _properties;

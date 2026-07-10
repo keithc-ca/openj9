@@ -29,7 +29,7 @@ import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ClassLoaderPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9PoolPointer;
 
-public class GCClassLoaderIterator extends GCIterator
+public class GCClassLoaderIterator extends GCIterator<J9ClassLoaderPointer>
 {
 	protected Iterator<J9ClassLoaderPointer> iterator;
 	
@@ -42,17 +42,20 @@ public class GCClassLoaderIterator extends GCIterator
 	{
 		return new GCClassLoaderIterator(getJavaVM().classLoaderBlocks());
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		return iterator.hasNext();
 	}
 
+	@Override
 	public J9ClassLoaderPointer next()
 	{
 		return iterator.next();
 	}
 
+	@Override
 	public VoidPointer nextAddress() 
 	{
 		// Does not make sense in this case

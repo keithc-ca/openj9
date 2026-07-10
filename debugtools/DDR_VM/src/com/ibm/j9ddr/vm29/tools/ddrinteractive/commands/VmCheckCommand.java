@@ -529,7 +529,7 @@ public class VmCheckCommand extends Command
 	 * @note If morecharacters are required to fully decode the character,
 	 *       return failure
 	 */
-	U32 decodeUTF8CharN(U8Pointer input, /** not used */
+	U32 decodeUTF8CharN(U8Pointer input, /* not used */
 	U16 result, UDATA bytesRemaining) throws CorruptDataException {
 		U8 c;
 		U8Pointer cursor = input;

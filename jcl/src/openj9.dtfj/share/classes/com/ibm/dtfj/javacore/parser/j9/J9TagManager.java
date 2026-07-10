@@ -22,17 +22,18 @@
  */
 package com.ibm.dtfj.javacore.parser.j9;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import com.ibm.dtfj.javacore.parser.framework.tag.ITagManager;
 import com.ibm.dtfj.javacore.parser.framework.tag.ITagParser;
 import com.ibm.dtfj.javacore.parser.j9.section.common.ICommonTypes;
 
 public class J9TagManager implements ITagManager {
-	private HashMap fAllTags;
-	private HashMap fTagParsers;
+	private Map<String, String> fAllTags;
+	private Map<String, ITagParser> fTagParsers;
 	private static J9TagManager fTagManager;
 	public static final String CHECK_ALL = "check_all";
 
@@ -45,23 +46,22 @@ public class J9TagManager implements ITagManager {
 		return fTagManager;
 	}
 
-	public J9TagManager()	 {
-		fAllTags = new HashMap();
-		fTagParsers = new HashMap();
+	public J9TagManager() {
+		fAllTags = new HashMap<>();
+		fTagParsers = new HashMap<>();
 	}
 
 	/**
 	 * Hardcoded for now.
 	 *
 	 */
-	public void loadTagParsers(ArrayList tagParsers) {
+	public void loadTagParsers(List<ITagParser> tagParsers) {
 		if (tagParsers == null) {
 			return;
 		}
 		fAllTags.clear();
 		fTagParsers.clear();
-		for (Iterator it = tagParsers.iterator(); it.hasNext();){
-			ITagParser parser = (ITagParser) it.next();
+		for (ITagParser parser : tagParsers) {
 			if (parser != null) {
 				fTagParsers.put(parser.getSectionName(), parser);
 			}
@@ -74,10 +74,9 @@ public class J9TagManager implements ITagManager {
 	 *
 	 */
 	private void fillAllTags() {
-		for (Iterator it = fTagParsers.values().iterator(); it.hasNext();) {
-			ITagParser parser = (ITagParser) it.next();
-			for (Iterator itTags = parser.getTags(); itTags.hasNext();) {
-				String tag = (String)itTags.next();
+		for (ITagParser parser : fTagParsers.values()) {
+			for (Iterator<String> itTags = parser.getTags(); itTags.hasNext();) {
+				String tag = itTags.next();
 				if (tag != null) {
 					fAllTags.put(tag, tag);
 				}
@@ -90,12 +89,14 @@ public class J9TagManager implements ITagManager {
 	 * @param tag to check whether it exists in the Tag Manager.
 	 * @return true if the Tag Manager has this tag registered.
 	 */
+	@Override
 	public boolean hasTag(String identifier) {
 		return fAllTags.containsKey(identifier);
 	}
 
+	@Override
 	public ITagParser getTagParser(String section) {
-		return (ITagParser)fTagParsers.get(section);
+		return fTagParsers.get(section);
 	}
 
 	/**
@@ -104,13 +105,13 @@ public class J9TagManager implements ITagManager {
 	 * @param section
 	 *
 	 */
+	@Override
 	public boolean isTagInSection(String tag, String section) {
 		boolean result = false;
 		if (section.equals(CHECK_ALL)) {
 			result = fAllTags.containsKey(tag);
-		}
-		else {
-			ITagParser parser = (ITagParser) fTagParsers.get(section);
+		} else {
+			ITagParser parser = fTagParsers.get(section);
 			if (parser != null) {
 				result = parser.hasTag(tag);
 			}
@@ -123,6 +124,7 @@ public class J9TagManager implements ITagManager {
 	 * @param source
 	 *
 	 */
+	@Override
 	public boolean isComment(CharSequence source) {
 		boolean result = false;
 		int length = 0;

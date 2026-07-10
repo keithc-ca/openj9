@@ -23,10 +23,10 @@ package com.ibm.j9ddr.vm29.j9.gc;
 
 import com.ibm.j9ddr.vm29.j9.SlotIterator;
 
-@SuppressWarnings("unchecked")
-public abstract class GCIterator extends GCBase implements SlotIterator 
+public abstract class GCIterator<T> extends GCBase implements SlotIterator<T>
 {
-	public void remove() 
+	@Override
+	public final void remove()
 	{
 		throw new UnsupportedOperationException("The image is read only and cannot be modified.");
 	}

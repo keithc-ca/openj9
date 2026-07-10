@@ -27,7 +27,7 @@ import com.ibm.j9ddr.CorruptDataException;
 import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ClassPointer;
 
-public class GCClassIteratorClassSlots extends GCIterator
+public class GCClassIteratorClassSlots extends GCIterator<J9ClassPointer>
 {
 	public final static int state_start = 0;
 	public final static int state_constant_pool = 1;
@@ -55,7 +55,9 @@ public class GCClassIteratorClassSlots extends GCIterator
 	{
 		return new GCClassIteratorClassSlots(clazz); 
 	}
-	
+
+	@Override
+	@SuppressWarnings("fallthrough")
 	public boolean hasNext()
 	{
 		if(state == state_end) {
@@ -93,6 +95,7 @@ public class GCClassIteratorClassSlots extends GCIterator
 		return false;
 	}
 
+	@Override
 	public J9ClassPointer next()
 	{
 		if(hasNext()) {
@@ -114,6 +117,7 @@ public class GCClassIteratorClassSlots extends GCIterator
 		throw new NoSuchElementException("There are no more items available through this iterator"); 
 	}
 
+	@Override
 	public VoidPointer nextAddress()
 	{
 		if(hasNext()) {

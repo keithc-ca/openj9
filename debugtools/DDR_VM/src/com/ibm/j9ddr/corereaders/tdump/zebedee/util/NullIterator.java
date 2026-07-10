@@ -27,8 +27,7 @@ import java.util.Iterator;
 /**
  * This class provides an empty iterator with no elements.
  */
-
-public class NullIterator implements Iterator {
+public class NullIterator implements Iterator<Object> {
 
     private static NullIterator instance = new NullIterator();
 
@@ -45,14 +44,17 @@ public class NullIterator implements Iterator {
     public NullIterator() {
     }
 
+    @Override
     public boolean hasNext() {
         return false;
     }
 
+    @Override
     public Object next() {
         return null;
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }

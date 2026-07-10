@@ -52,7 +52,7 @@ public abstract class PluginConfig {
 		ClassInfo info = entry.getData();
 		try {
 			Class<?> clazz = Class.forName(info.getClassname(), true, loader);
-			Object instance = clazz.newInstance();
+			Object instance = clazz.getConstructor().newInstance();
 			if(instance instanceof BaseCommand) {
 				((BaseCommand)instance).setConfig(this);
 			}

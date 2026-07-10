@@ -41,7 +41,6 @@ import com.ibm.dtfj.image.ImageProcess;
 import com.ibm.dtfj.image.ImageSection;
 import com.ibm.dtfj.java.JavaHeap;
 import com.ibm.dtfj.java.JavaRuntime;
-import com.ibm.dtfj.runtime.ManagedRuntime;
 
 /**
  * @author ajohnson
@@ -77,19 +76,19 @@ class PHDImageAddressSpace implements ImageAddressSpace {
 	}
 
 	@Override
-	public Iterator<ImageSection> getImageSections() {
-		List<ImageSection> list = new ArrayList<ImageSection>();
-		for (Iterator<ImageProcess>ip = getProcesses(); ip.hasNext(); ) {
-			ImageProcess p = ip.next();
+	public Iterator<?> getImageSections() {
+		List<Object> list = new ArrayList<>();
+		for (Iterator<?> ip = getProcesses(); ip.hasNext();) {
+			Object p = ip.next();
 			if (p instanceof CorruptData) continue;
-			for (Iterator<ManagedRuntime> jr = p.getRuntimes(); jr.hasNext(); ) {
-				ManagedRuntime mr = jr.next();
+			for (Iterator<?> jr = ((ImageProcess) p).getRuntimes(); jr.hasNext();) {
+				Object mr = jr.next();
 				if (mr instanceof CorruptData) continue;
 				if (mr instanceof JavaRuntime) {
-					for (Iterator<JavaHeap> jh = ((JavaRuntime)mr).getHeaps(); jh.hasNext(); ) {
-						JavaHeap hp = jh.next();
+					for (Iterator<?> jh = ((JavaRuntime) mr).getHeaps(); jh.hasNext();) {
+						Object hp = jh.next();
 						if (hp instanceof CorruptData) continue;
-						for (Iterator<ImageSection> is = hp.getSections(); is.hasNext(); ) {
+						for (Iterator<?> is = ((JavaHeap) hp).getSections(); is.hasNext();) {
 							// Add the corrupt sections too
 							list.add(is.next());
 						}
@@ -98,7 +97,7 @@ class PHDImageAddressSpace implements ImageAddressSpace {
 			}
 		}
 		if (metaImageAddressSpace != null) {
-			for (Iterator it = metaImageAddressSpace.getImageSections(); it.hasNext(); ) {
+			for (Iterator<?> it = metaImageAddressSpace.getImageSections(); it.hasNext();) {
 				Object next = it.next();
 				if (next instanceof ImageSection) {
 					ImageSection section = (ImageSection)next;
@@ -110,18 +109,22 @@ class PHDImageAddressSpace implements ImageAddressSpace {
 		return list.iterator();
 	}
 
+	@Override
 	public ImagePointer getPointer(long arg0) {
 		return new PHDImagePointer(this,arg0);
 	}
 
-	public Iterator<ImageProcess> getProcesses() {
+	@Override
+	public Iterator<?> getProcesses() {
 		return processList.iterator();
 	}
 
+	@Override
 	public String getID() throws DataUnavailable, CorruptDataException {
 		return "0";
 	}
 
+	@Override
 	public Properties getProperties() {
 		return new Properties();		//not supported for this reader
 	}

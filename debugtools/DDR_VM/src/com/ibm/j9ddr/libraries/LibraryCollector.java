@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
@@ -189,7 +190,7 @@ public class LibraryCollector {
 	public CollectorResult collectLibrariesFor(final File coreFile, CollectionType type) {
 		LibraryAdapter adapter = getAdapterForCollectionType(type);
 		if (adapter.isLibraryCollectionRequired(coreFile)) {
-			ArrayList<String> modules = adapter.getLibraryList(coreFile);
+			List<String> modules = adapter.getLibraryList(coreFile);
 			createSearchPathForLibraries(modules);
 			footer = new Footer(modules.size());
 			for (String msg : adapter.getErrorMessages()) {
@@ -344,7 +345,7 @@ public class LibraryCollector {
 	 * Create a search path with which to resolve relative module paths
 	 * @param modules
 	 */
-	private void createSearchPathForLibraries(ArrayList<String> modules) {
+	private void createSearchPathForLibraries(List<String> modules) {
 		//add the jre bin directory to the search path
 		String jre_bin = System.getProperty("java.home") + File.separator + "bin";
 		File javaPath = new File(jre_bin);

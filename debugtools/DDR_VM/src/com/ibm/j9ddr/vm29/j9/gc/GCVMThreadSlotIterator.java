@@ -33,7 +33,7 @@ import com.ibm.j9ddr.vm29.pointer.StructurePointer.StructureField;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9VMThreadPointer;
 
-public class GCVMThreadSlotIterator extends GCIterator {
+public class GCVMThreadSlotIterator extends GCIterator<J9ObjectPointer> {
 
 	/**
 	 * In core files, typedef types may be expanded: This helper method

@@ -19,18 +19,17 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.j9ddr.corereaders.tdump.zebedee.util;
 
 /**
  * This class is used to provide feedback on progress for long running (eg greater than one
  * second) tasks. 
  */
-
 public class ProgressMeter {
     /** One of these per thread */
-    private static ThreadLocal local = new ThreadLocal() {
-        protected Object initialValue() {
+    private static ThreadLocal<ProgressMeter> local = new ThreadLocal<ProgressMeter>() {
+        @Override
+        protected ProgressMeter initialValue() {
             return new ProgressMeter();
         }
     };
@@ -40,28 +39,28 @@ public class ProgressMeter {
     public int percentage;
 
     public static void set(String message, int current, int max) {
-        ProgressMeter meter = (ProgressMeter)local.get();
+        ProgressMeter meter = local.get();
         meter.message = message;
         meter.percentage = (current * 100)/max;
     }
 
     public static void set(String message, int percentage) {
-        ProgressMeter meter = (ProgressMeter)local.get();
+        ProgressMeter meter = local.get();
         meter.message = message;
         meter.percentage = percentage;
     }
 
     public static void set(String message) {
-        ProgressMeter meter = (ProgressMeter)local.get();
+        ProgressMeter meter = local.get();
         meter.message = message;
     }
 
     public static void set(int percentage) {
-        ProgressMeter meter = (ProgressMeter)local.get();
+        ProgressMeter meter = local.get();
         meter.percentage = percentage;
     }
 
     public static ProgressMeter get() {
-        return (ProgressMeter)local.get();
+        return local.get();
     }
 }

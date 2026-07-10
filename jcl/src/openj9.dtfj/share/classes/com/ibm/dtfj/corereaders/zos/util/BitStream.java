@@ -46,7 +46,7 @@ import java.io.Serializable;
  * <p>
  * Todo: might be good to wrap this class round a generic Input/OutputStream.
  */
-
+@SuppressWarnings("serial")
 public final class BitStream implements Serializable {
 	private int[] bits;
 	/** Index into the bits array */

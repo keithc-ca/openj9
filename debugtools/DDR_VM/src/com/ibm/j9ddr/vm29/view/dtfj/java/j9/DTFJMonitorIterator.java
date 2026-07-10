@@ -24,6 +24,7 @@ package com.ibm.j9ddr.vm29.view.dtfj.java.j9;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import com.ibm.dtfj.java.JavaMonitor;
 import com.ibm.j9ddr.CorruptDataException;
 import com.ibm.j9ddr.vm29.j9.ObjectMonitor;
 import com.ibm.j9ddr.vm29.j9.walkers.MonitorIterator;
@@ -34,19 +35,20 @@ import com.ibm.j9ddr.vm29.view.dtfj.java.DTFJJavaSystemMonitor;
 
 //provides a DTFJ wrapper around the values returned from the J9 model
 
-@SuppressWarnings("unchecked")
-public class DTFJMonitorIterator implements Iterator {
+public class DTFJMonitorIterator implements Iterator<JavaMonitor> {
 	private final MonitorIterator monitors;
 	
 	public DTFJMonitorIterator() throws CorruptDataException {
 		monitors = new MonitorIterator(DTFJContext.getVm());
 	}
 
+	@Override
 	public boolean hasNext() {
 		return monitors.hasNext();
 	}
 
-	public Object next() {
+	@Override
+	public JavaMonitor next() {
 		if(hasNext()) {
 			Object current = monitors.next();
 			if (current instanceof J9ThreadMonitorPointer) {
@@ -59,6 +61,7 @@ public class DTFJMonitorIterator implements Iterator {
 		throw new NoSuchElementException();
 	}
 
+	@Override
 	public void remove() {
 		monitors.remove();
 	}

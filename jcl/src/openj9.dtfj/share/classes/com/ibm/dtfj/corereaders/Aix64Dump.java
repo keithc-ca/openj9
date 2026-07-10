@@ -34,7 +34,6 @@ import java.util.TreeMap;
  * 		which has been derived from a register. These structures are not versioned so there is no definitive way
  * 		to determine the shape of the structure.
  */
-
 public class Aix64Dump extends NewAixDump {
 	private static final long THRDENTRY64_V1_SIZE = 424;
 	private static final long THRDENTRY64_V2_SIZE = 512;
@@ -54,25 +53,29 @@ public class Aix64Dump extends NewAixDump {
 		readCore();
 	}
 
+	@Override
 	protected int readLoaderInfoFlags() throws IOException {
 		return coreReadInt();
 	}
 
+	@Override
 	protected long userInfoOffset() {
 		// offsetof(core_dumpxx, c_u)
 		return 1216;
 	}
 
+	@Override
 	protected int pointerSize() {
 		return 64;
 	}
 
-	protected Map readRegisters(long threadOffset) throws IOException {
-		if(!hasVersionBeenDetermined) {
+	@Override
+	protected Map<String, Number> readRegisters(long threadOffset) throws IOException {
+		if (!hasVersionBeenDetermined) {
 			calculateThreadStructureSizes(threadOffset);
 		}
 		coreSeek(threadOffset + sizeofThreadEntry64);
-		Map registers = new TreeMap();
+		Map<String, Number> registers = new TreeMap<>();
 		for (int i = 0; i < GPR_COUNT; i++)
 			registers.put("gpr" + i, Long.valueOf(coreReadLong()));
 		registers.put("msr", Long.valueOf(coreReadLong()));
@@ -108,6 +111,7 @@ public class Aix64Dump extends NewAixDump {
 		hasVersionBeenDetermined = true;
 	}
 
+	@Override
 	protected long threadSize(long threadOffset)
 	{
 		if(!hasVersionBeenDetermined) {
@@ -116,18 +120,22 @@ public class Aix64Dump extends NewAixDump {
 		return sizeofThreadCtx64;	// sizeof(thrdctx64)
 	}
 
-	protected long getStackPointerFrom(Map registers) {
-		return ((Long) registers.get("gpr1")).longValue();
+	@Override
+	protected long getStackPointerFrom(Map<String, Number> registers) {
+		return registers.get("gpr1").longValue();
 	}
 
-	protected long getInstructionPointerFrom(Map registers) {
-		return ((Long) registers.get("iar")).longValue();
+	@Override
+	protected long getInstructionPointerFrom(Map<String, Number> registers) {
+		return registers.get("iar").longValue();
 	}
 
-	protected long getLinkRegisterFrom(Map registers) {
-		return ((Long) registers.get("lr")).longValue();
+	@Override
+	protected long getLinkRegisterFrom(Map<String, Number> registers) {
+		return registers.get("lr").longValue();
 	}
 
+	@Override
 	protected int sizeofTopOfStack() {
 		// see struct top_of_stack in execargs.h
 		return 304;	//this is sizeof(top_of_stack)

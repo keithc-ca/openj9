@@ -101,24 +101,27 @@ public class LibraryResolverFactory
 	private static final List<Class<? extends ILibraryResolver>> resolverClasses;
 	
 	static {
+		@SuppressWarnings("removal")
 		String specifiedPath = AccessController.doPrivileged(new PrivilegedAction<String>() {
-
+			@Override
 			public String run()
 			{
 				return System.getProperty(LIBRARY_PATH_SYSTEM_PROPERTY);
 			}
 		});
 		
+		@SuppressWarnings("removal")
 		String mappingPath = AccessController.doPrivileged(new PrivilegedAction<String>() {
-
+			@Override
 			public String run()
 			{
 				return System.getProperty(PATH_MAPPING_SYSTEM_PROPERTY);
 			}
 		});
 
+		@SuppressWarnings("removal")
 		String resolvers = AccessController.doPrivileged(new PrivilegedAction<String>() {
-
+			@Override
 			public String run()
 			{
 				return System.getProperty(RESOLVER_LIST_PROPERTY, RESOLVER_DEFAULT_ORDER);
@@ -127,7 +130,7 @@ public class LibraryResolverFactory
 		
 		final String pathSeperator = File.pathSeparator;
 		
-		List<File> localPath = new LinkedList<File>();
+		List<File> localPath = new LinkedList<>();
 		
 		if (specifiedPath != null) {
 			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Library search path set as: {0} by property {1}",new Object[]{specifiedPath,LIBRARY_PATH_SYSTEM_PROPERTY});
@@ -140,7 +143,7 @@ public class LibraryResolverFactory
 			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "No library search path set. Falling back on defaults");
 		}
 		
-		Map<String, String> mPaths = new HashMap<String, String>();
+		Map<String, String> mPaths = new HashMap<>();
 		
 		if (mappingPath != null) {
 			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Library path mappings paths set as: {0} by property {1}",new Object[]{specifiedPath,PATH_MAPPING_SYSTEM_PROPERTY});
@@ -155,7 +158,7 @@ public class LibraryResolverFactory
 			logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "No library path mappings set. Falling back on defaults");
 		}
 		
-		List<Class<? extends ILibraryResolver>> classes = new LinkedList<Class<? extends ILibraryResolver>>();
+		List<Class<? extends ILibraryResolver>> classes = new LinkedList<>();
 		logger.logp(FINE, "LibraryResolverFactory", "<clinit>", "Library resolver search order: {0}",new Object[]{resolvers});
 		for( String resolver: resolvers.split(",") ) {
 			try {
@@ -177,7 +180,7 @@ public class LibraryResolverFactory
 	 */
 	public static ILibraryResolver getResolverForCoreFile(ImageInputStream stream)
 	{
-		List<ILibraryResolver> resolvers = new LinkedList<ILibraryResolver>();
+		List<ILibraryResolver> resolvers = new LinkedList<>();
 		
 		//This list determines library path search order
 		for( Class<? extends ILibraryResolver> resolverClass : resolverClasses ) {
@@ -205,7 +208,7 @@ public class LibraryResolverFactory
 	 */
 	public static ILibraryResolver getResolverForCoreFile(File file)
 	{
-		List<ILibraryResolver> resolvers = new LinkedList<ILibraryResolver>();
+		List<ILibraryResolver> resolvers = new LinkedList<>();
 		
 		//This list determines library path search order
 		for( Class<? extends ILibraryResolver> resolverClass : resolverClasses ) {
@@ -253,6 +256,7 @@ public class LibraryResolverFactory
 			this.resolvers = resolvers;
 		}
 		
+		@Override
 		public LibraryDataSource getLibrary(String fileName, boolean silent)
 				throws FileNotFoundException
 		{
@@ -292,7 +296,8 @@ public class LibraryResolverFactory
 
 		@SuppressWarnings("unused")
 		public LibraryPathResolver(File coreFile) {}
-		
+
+		@Override
 		public LibraryDataSource getLibrary(String fileName, boolean resolver)
 				throws FileNotFoundException
 		{
@@ -466,7 +471,8 @@ public class LibraryResolverFactory
 			}
 			return current;		//couldn't find it
 		}
-		
+
+		@Override
 		public LibraryDataSource getLibrary(String fileName, boolean silent)
 				throws FileNotFoundException
 		{
@@ -544,6 +550,7 @@ public class LibraryResolverFactory
 		@SuppressWarnings("unused")
 		public InPlaceResolver(File coreFile) {}
 		
+		@Override
 		public LibraryDataSource getLibrary(String fileName, boolean silent)
 				throws FileNotFoundException
 		{
@@ -598,12 +605,13 @@ public class LibraryResolverFactory
 			return output;
 		}
 		
-		
+		@Override
 		public LibraryDataSource getLibrary(String fileName) throws FileNotFoundException
 		{
 			return getLibrary(fileName, false);
 		}
 		
+		@Override
 		public void dispose() {
 			// default of a no-op
 		}

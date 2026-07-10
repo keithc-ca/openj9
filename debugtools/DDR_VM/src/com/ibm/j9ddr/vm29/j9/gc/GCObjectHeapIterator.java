@@ -27,7 +27,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.MM_HeapRegionDescriptorPointer;
 import com.ibm.j9ddr.vm29.types.UDATA;
 
-public abstract class GCObjectHeapIterator extends GCIterator
+public abstract class GCObjectHeapIterator extends GCIterator<J9ObjectPointer>
 {
 	protected boolean includeLiveObjects;
 	protected boolean includeDeadObjects;
@@ -51,10 +51,12 @@ public abstract class GCObjectHeapIterator extends GCIterator
 		return hrd.objectIterator(includeLiveObjects, includeDeadObjects);
 	}
 
+	@Override
 	public abstract J9ObjectPointer next();
-	
+
 	public abstract J9ObjectPointer peek();
-	
+
+	@Override
 	public VoidPointer nextAddress() 
 	{
 		// Does not make sense in this case

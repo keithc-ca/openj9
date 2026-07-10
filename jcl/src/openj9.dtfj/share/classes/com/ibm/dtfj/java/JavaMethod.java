@@ -44,7 +44,7 @@ public interface JavaMethod extends JavaMember {
 	 * @see com.ibm.dtfj.image.ImageSection
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getBytecodeSections();
+	public Iterator<?> getBytecodeSections();
 
 	/**
 	 * Get the set of ImageSections containing the compiled code of this method.
@@ -55,12 +55,15 @@ public interface JavaMethod extends JavaMember {
 	 * @see com.ibm.dtfj.image.ImageSection
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getCompiledSections();
+	public Iterator<?> getCompiledSections();
 
 	/**
 	 * @param obj
 	 * @return True if the given object refers to the same Java Method in the image
 	 */
+	@Override
 	public boolean equals(Object obj);
+
+	@Override
 	public int hashCode();
 }

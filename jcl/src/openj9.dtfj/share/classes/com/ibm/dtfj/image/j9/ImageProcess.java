@@ -38,9 +38,9 @@ import com.ibm.dtfj.java.j9.JavaRuntime;
  */
 public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 {
-	private Vector _runtimes = new Vector();
-	private Vector _libraries = new Vector();
-	private Vector _threads = new Vector();
+	private Vector<Object> _runtimes = new Vector<>();
+	private Vector<Object> _libraries = new Vector<>();
+	private Vector<Object> _threads = new Vector<>();
 	private int _pointerSize;
 	private ImageModule _executable;
 	private String _id;
@@ -53,7 +53,7 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	private static final String JAVA_COMMAND_LINE_ENVIRONMENT_VARIABLE = "OPENJ9_JAVA_COMMAND_LINE";
 	private static final String LEGACY_JAVA_COMMAND_LINE_ENVIRONMENT_VARIABLE = "IBM_JAVA_COMMAND_LINE";
 
-	public ImageProcess(String pid, String commandLine, Properties environment, ImageThread currentThread, Iterator threads, ImageModule executable, Iterator libraries, int pointerSize)
+	public ImageProcess(String pid, String commandLine, Properties environment, ImageThread currentThread, Iterator<?> threads, ImageModule executable, Iterator<?> libraries, int pointerSize)
 	{
 		_id = pid;
 		_commandLine = commandLine;
@@ -70,6 +70,7 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getCommandLine()
 	 */
+	@Override
 	public String getCommandLine() throws DataUnavailable, CorruptDataException
 	{
 		// We can't get the command line from the core dump on zOS, or on recent Windows versions. On Linux
@@ -97,6 +98,7 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getEnvironment()
 	 */
+	@Override
 	public Properties getEnvironment() throws DataUnavailable,
 			CorruptDataException
 	{
@@ -124,6 +126,7 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getID()
 	 */
+	@Override
 	public String getID() throws DataUnavailable, CorruptDataException
 	{
 		return _id;
@@ -132,7 +135,8 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getLibraries()
 	 */
-	public Iterator getLibraries() throws DataUnavailable, CorruptDataException
+	@Override
+	public Iterator<?> getLibraries() throws DataUnavailable, CorruptDataException
 	{
 		return _libraries.iterator();
 	}
@@ -140,6 +144,7 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getExecutable()
 	 */
+	@Override
 	public ImageModule getExecutable() throws DataUnavailable,
 			CorruptDataException
 	{
@@ -153,7 +158,8 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getThreads()
 	 */
-	public Iterator getThreads()
+	@Override
+	public Iterator<?> getThreads()
 	{
 		return _threads.iterator();
 	}
@@ -161,13 +167,14 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getCurrentThread()
 	 */
+	@Override
 	public com.ibm.dtfj.image.ImageThread getCurrentThread() throws CorruptDataException
 	{
 		ImageThread current = _currentThread;
 
 		if (0 != _faultingNativeID) {
 			//look up this thread
-			Iterator threads = getThreads();
+			Iterator<?> threads = getThreads();
 
 			while (threads.hasNext()) {
 				Object next = threads.next();
@@ -190,10 +197,11 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getRuntimes()
 	 */
-	public Iterator getRuntimes()
+	@Override
+	public Iterator<?> getRuntimes()
 	{
 		//left un-initialized so the compiler will warn us if we miss a code path
-		Iterator iter;
+		Iterator<?> iter;
 
 		if (null == _runtimeCheckFailure)
 		{
@@ -212,6 +220,7 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getSignalNumber()
 	 */
+	@Override
 	public int getSignalNumber() throws DataUnavailable, CorruptDataException
 	{
 		int agreedSignal = (null == _currentThread) ? 0 : _currentThread.getSignal();
@@ -263,13 +272,16 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 		"SIGFPE_INT_DIV_BY_ZERO",	// 36 - synthetic from generic signal
 		"SIGFPE_INT_OVERFLOW"		// 37 - synthetic from generic signal
 	};
-	private String resolvePlatformName(int num) {
+
+	private static String resolvePlatformName(int num) {
 		if (num >= 0 && num < names.length) return names[num];
 		else return "Signal."+Integer.toString(num);
 	}
+
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getSignalName()
 	 */
+	@Override
 	public String getSignalName() throws DataUnavailable, CorruptDataException
 	{
 		if (0 == getSignalNumber()) {
@@ -289,6 +301,7 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageProcess#getPointerSize()
 	 */
+	@Override
 	public int getPointerSize()
 	{
 		return _pointerSize;
@@ -326,7 +339,7 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	}
 
 	/* Used (at least) by derivative class PartialProcess */
-	protected void setThreads(Iterator threads) {
+	protected final void setThreads(Iterator<?> threads) {
 		_threads.clear();
 		while (threads.hasNext()) {
 			_threads.add(threads.next());
@@ -334,11 +347,12 @@ public class ImageProcess implements com.ibm.dtfj.image.ImageProcess
 	}
 
 	/* Also exposed for use by derivative class */
-	protected void setCurrentThread(ImageThread thread) {
+	protected final void setCurrentThread(ImageThread thread) {
 		_currentThread = thread;
 	}
 
 	//currently returns no OS specific properties
+	@Override
 	public Properties getProperties() {
 		return new Properties();
 	}

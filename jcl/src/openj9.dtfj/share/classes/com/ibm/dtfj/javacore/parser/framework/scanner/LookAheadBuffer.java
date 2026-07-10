@@ -24,17 +24,18 @@ package com.ibm.dtfj.javacore.parser.framework.scanner;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.ibm.dtfj.javacore.parser.framework.parser.ILookAheadBuffer;
 
 public class LookAheadBuffer implements ILookAheadBuffer {
-	private ArrayList fBuffer;
+	private List<IParserToken> fBuffer;
 	private int fCurrentDepth;
 	private IScanner fScanner;
 
 	public LookAheadBuffer(int size, IScanner scanner) {
 		fCurrentDepth = size;
-		fBuffer = new ArrayList(fCurrentDepth);
+		fBuffer = new ArrayList<>(fCurrentDepth);
 		fScanner = scanner;
 	}
 
@@ -43,14 +44,14 @@ public class LookAheadBuffer implements ILookAheadBuffer {
 	 * @param tokenType
 	 *
 	 */
+	@Override
 	public boolean match(String tokenType) {
 		boolean result = false;
 		if (fBuffer.size() > 0) {
-			IParserToken token = (IParserToken) fBuffer.get(0);
+			IParserToken token = fBuffer.get(0);
 			if (token != null) {
 				result = token.getType().equals(tokenType);
-			}
-			else {
+			} else {
 				result = (tokenType == null);
 			}
 		}
@@ -62,18 +63,19 @@ public class LookAheadBuffer implements ILookAheadBuffer {
 	 * @throws ScannerException
 	 *
 	 */
+	@Override
 	public void consume() throws IOException, ScannerException {
 		if (fBuffer.size() > 0) {
 			fBuffer.remove(0);
 		}
 		fill();
-
 	}
 
 	/**
 	 *
 	 *
 	 */
+	@Override
 	public boolean allConsumed() {
 		return fScanner.allTokensGenerated() && fBuffer.isEmpty() ;
 	}
@@ -93,15 +95,17 @@ public class LookAheadBuffer implements ILookAheadBuffer {
 	 * @throws ScannerException
 	 * @see com.ibm.dtfj.javacore.parser.framework.parser.ILookAheadBuffer#lookAhead(int)
 	 */
-	public IParserToken lookAhead(int depth) throws IOException, ScannerException, IndexOutOfBoundsException{
+	@Override
+	public IParserToken lookAhead(int depth) throws IOException, ScannerException, IndexOutOfBoundsException {
 		fill();
-		return (IParserToken)fBuffer.get(depth-1);
+		return fBuffer.get(depth - 1);
 	}
 
 	/**
 	 * @throws ScannerException
 	 *
 	 */
+	@Override
 	public void init() throws IOException, ScannerException {
 		fill();
 	}
@@ -110,8 +114,9 @@ public class LookAheadBuffer implements ILookAheadBuffer {
 	 * @throws ScannerException
 	 * @see com.ibm.dtfj.javacore.parser.framework.parser.ILookAheadBuffer#setLookAheadDepth(int)
 	 */
+	@Override
 	public void setLookAheadDepth(int depth) throws IOException, ScannerException {
-		if (depth > 0){
+		if (depth > 0) {
 			fCurrentDepth = depth;
 			/*
 			 * Fill any possible empty slots resulting from the buffer expansion.
@@ -124,10 +129,12 @@ public class LookAheadBuffer implements ILookAheadBuffer {
 	/**
 	 *
 	 */
-	public int length()	{
+	@Override
+	public int length() {
 		return fBuffer.size();
 	}
 
+	@Override
 	public int maxDepth() {
 		return fCurrentDepth;
 	}

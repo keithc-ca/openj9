@@ -38,13 +38,11 @@ public class SystemTrace {
     /** The AddressSpace that the system trace lives in */
     private AddressSpace space;
     /** The List of system trace entries */
-    private ArrayList entries = new ArrayList();
+    private List<Entry> entries = new ArrayList<>();
     /** Maps processor ids to Context objects */
-    private HashMap contextMap = new HashMap();
+    private Map<Integer, Context> contextMap = new HashMap<>();
     /** The cached trace entry address */
     private int cachedAddress;
-    /** The cached attributes map. This is the map associated with cachedAddress. */
-    private Map cachedMap;
     /** Properties file to map PC numbers to their descriptions */
     private Properties pcDescriptions;
     /** Properties file to map SVC numbers to their descriptions */
@@ -120,13 +118,12 @@ public class SystemTrace {
         /* Now sort them in date order */
         ProgressMeter.set("sorting trace entries", 0);
         final int nlogn = entries.size() * log2(entries.size());
-        Collections.sort(entries, new Comparator() {
+        Collections.sort(entries, new Comparator<Entry>() {
             int n;
-            public int compare(Object o1, Object o2) {
+            @Override
+            public int compare(Entry e1, Entry e2) {
                 if (n < nlogn)
                     ProgressMeter.set((n++ * 100)/nlogn);
-                Entry e1 = (Entry)o1;
-                Entry e2 = (Entry)o2;
                 if (e1.getRawTime() == e2.getRawTime()) {
                     /* Either one or both must be a TimelessEntry so use the address instead */
                     return e1.address - e2.address;
@@ -135,6 +132,7 @@ public class SystemTrace {
                 }
             }
 
+            @Override
             public boolean equals(Object obj) {
                 throw new Error("oops");
             }
@@ -144,7 +142,7 @@ public class SystemTrace {
     /**
      * Returns the list of system trace entries. 
      */
-    public List getEntries() {
+    public List<Entry> getEntries() {
         return entries;
     }
 
@@ -191,7 +189,7 @@ public class SystemTrace {
                 int ttchclen = space.readInt(ttchbptr + (buffer * 40) + 4);
                 Entry entry = null;
                 Entry lastTimedEntry = null;
-                ArrayList orphans = null;
+                List<Entry> orphans = null;
 
                 for (int entryPtr = ttchcptr; entryPtr < (ttchcptr + ttchclen); entryPtr += entry.length()) {
                     int id = space.readUnsignedByte(entryPtr);
@@ -204,7 +202,7 @@ public class SystemTrace {
                             if (inDebugRange(debugIndex)) System.out.println("index " + debugIndex + " :add to entry " + lastTimedEntry.index);
                         } else {
                             if (orphans == null)
-                                orphans = new ArrayList();
+                                orphans = new ArrayList<>();
                             orphans.add(entry);
                             if (inDebugRange(debugIndex)) System.out.println("index " + debugIndex + " :orphan");
                         }
@@ -213,7 +211,7 @@ public class SystemTrace {
                         entry = getEntry(context, entryPtr);
                         if (orphans != null) {
                             if (inDebugRange(debugIndex)) System.out.println("index " + debugIndex + " :adding orphans to " + entry.index);
-                            for (Iterator it = orphans.iterator(); it.hasNext();) {
+                            for (Iterator<Entry> it = orphans.iterator(); it.hasNext();) {
                                 TimelessEntry orphan = (TimelessEntry)it.next();
                                 orphan.lastTimedEntry = entry;
                                 entries.add(orphan);
@@ -528,7 +526,7 @@ public class SystemTrace {
 
     private Context getContext(long tod, int pid, int ppid) {
         Integer key = Integer.valueOf((pid << 16) | ppid);
-        Context context = (Context)contextMap.get(key);
+        Context context = contextMap.get(key);
         if (context == null) {
             context = new Context(tod, pid, ppid);
             contextMap.put(key, context);
