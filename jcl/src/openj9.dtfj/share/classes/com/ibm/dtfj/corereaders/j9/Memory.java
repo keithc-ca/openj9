@@ -45,10 +45,10 @@ public class Memory {
 	 */
 	public Memory(IAbstractAddressSpace space) {
 		this.space = space;
-		if (null != space) {				//determine the ASID from the first memory range
-			Iterator ranges = space.getMemoryRanges();
+		if (null != space) { // determine the ASID from the first memory range
+			Iterator<MemoryRange> ranges = space.getMemoryRanges();
 			if (ranges.hasNext()) {
-				MemoryRange firstRange = (MemoryRange)ranges.next();
+				MemoryRange firstRange = ranges.next();
 				asid = firstRange.getAsid();
 			}
 		}
@@ -126,7 +126,7 @@ public class Memory {
 	/**
 	 * Get the memory ranges for this address space
 	 */
-	public Iterator getMemoryRanges() {
+	public Iterator<MemoryRange> getMemoryRanges() {
 		return space.getMemoryRanges();
 	}
 

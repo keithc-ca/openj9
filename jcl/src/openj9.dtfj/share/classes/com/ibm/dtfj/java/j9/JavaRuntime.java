@@ -49,25 +49,25 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 {
 	private ImageProcess _containingProc;
 	private ImagePointer  _address;
-	private LinkedHashMap _classLoaders = new LinkedHashMap(); // use linked hashmap for predictable ordering
-	private Vector _vmThreads = new Vector();
-	private LinkedHashMap _classes = new LinkedHashMap(); // use linked hashmap for predictable ordering
-	private Set _arrayClasses = new HashSet();
-	private Map _arrayClassesMap = new HashMap();
-	private Vector _monitors = new Vector();
-	private Vector _heaps = new Vector();
-	private Vector _heapRoots = new Vector();
-	private HashMap _traceBuffers = new HashMap();
+	private Map<Long, com.ibm.dtfj.java.j9.JavaClassLoader> _classLoaders = new LinkedHashMap<>(); // use linked hashmap for predictable ordering
+	private Vector<JavaThread> _vmThreads = new Vector<>();
+	private Map<Long, JavaAbstractClass> _classes = new LinkedHashMap<>(); // use linked hashmap for predictable ordering
+	private Set<JavaArrayClass> _arrayClasses = new HashSet<>();
+	private Map<String, JavaArrayClass> _arrayClassesMap = new HashMap<>();
+	private Vector<JavaMonitor> _monitors = new Vector<>();
+	private Vector<JavaHeap> _heaps = new Vector<>();
+	private Vector<JavaReference> _heapRoots = new Vector<>();
+	private Map<String, TraceBuffer> _traceBuffers = new HashMap<>();
 	private Properties _systemProperties = new Properties();
 	private JavaVMInitArgs _javaVMInitArgs;
 	private boolean _objectsShouldInferHash = false;	//used as a work-around for our hash problem.  Set to true if this is a VM version which uses our 15-bits shifted hash algorithm
 
 	//these are caches provided to help optimize or clean-up other DTFJ routines
-	private HashMap _methodsByID = new HashMap();
-	private Vector deferMonitors = new Vector();
+	private Map<Long, JavaMethod> _methodsByID = new HashMap<>();
+	private Vector<DeferMonitor> deferMonitors = new Vector<>();
 
 	//to contain objects that represent classes, threads, monitors or classloaders
-	private HashMap _specialObjects = new HashMap();
+	private Map<ImagePointer, JavaObject> _specialObjects = new HashMap<>();
 
 	com.ibm.dtfj.java.j9.JavaClass _weakReferenceClass = null;
 	com.ibm.dtfj.java.j9.JavaClass _softReferenceClass = null;
@@ -93,6 +93,7 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaRuntime#getJavaVM()
 	 */
+	@Override
 	public ImagePointer getJavaVM() throws CorruptDataException
 	{
 		return _address;
@@ -101,7 +102,8 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaRuntime#getJavaClassLoaders()
 	 */
-	public Iterator getJavaClassLoaders()
+	@Override
+	public Iterator<?> getJavaClassLoaders()
 	{
 		return _classLoaders.values().iterator();
 	}
@@ -109,7 +111,8 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaRuntime#getThreads()
 	 */
-	public Iterator getThreads()
+	@Override
+	public Iterator<?> getThreads()
 	{
 		return _vmThreads.iterator();
 	}
@@ -117,20 +120,21 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaRuntime#getCompiledMethods()
 	 */
-	public Iterator getCompiledMethods()
+	@Override
+	public Iterator<?> getCompiledMethods()
 	{
-		Iterator classes = _classes.values().iterator();
-		Vector compiledMethods = new Vector();
+		Vector<Object> compiledMethods = new Vector<>();
 
-		while (classes.hasNext()) {
-			JavaAbstractClass oneClass = (JavaAbstractClass) classes.next();
-			Iterator methods = oneClass.getDeclaredMethods();
+		for (JavaAbstractClass oneClass : _classes.values()) {
+			Iterator<?> methods = oneClass.getDeclaredMethods();
 
 			while (methods.hasNext()) {
-				JavaMethod method = (JavaMethod)methods.next();
-
-				if (method.getCompiledSections().hasNext()) {
-					//this is jitted at least once
+				Object method = methods.next();
+				if (!(method instanceof JavaMethod)) {
+					continue;
+				}
+				if (((JavaMethod) method).getCompiledSections().hasNext()) {
+					// this is jitted at least once
 					compiledMethods.add(method);
 				}
 			}
@@ -141,7 +145,8 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaRuntime#getMonitors()
 	 */
-	public Iterator getMonitors()
+	@Override
+	public Iterator<?> getMonitors()
 	{
 		// we need to check that all the deferred items have been processed by now
 		checkDeferredMonitors();
@@ -151,7 +156,8 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaRuntime#getHeaps()
 	 */
-	public Iterator getHeaps()
+	@Override
+	public Iterator<?> getHeaps()
 	{
 		return _heaps.iterator();
 	}
@@ -159,6 +165,7 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaRuntime#getTraceBuffer(java.lang.String, boolean)
 	 */
+	@Override
 	public Object getTraceBuffer(String bufferName, boolean formatted)
 			throws CorruptDataException
 	{
@@ -166,17 +173,9 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	}
 
 	/* (non-Javadoc)
-	 * @see com.ibm.dtfj.runtime.ManagedRuntime#getFullVersion()
-	 */
-	public String getFullVersion() throws CorruptDataException
-	{
-		//TODO: remove after this code has passed into testing
-		return getVersion();
-	}
-
-	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.runtime.ManagedRuntime#getVersion()
 	 */
+	@Override
 	public String getVersion() throws CorruptDataException
 	{
 		String javaFullVersion = getRequiredSystemProperty("java.fullversion");
@@ -208,7 +207,7 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 				// (=during the XML parsing phase), the leaf class may not have been parsed yet, so getName() would
 				// fail with a NPE (see implementation). Therefore, we cannot build the map now, we will have to do it lazily
 				// at the first invocation of getComponentTypeForClass(). For now, we'll just record the array classes somewhere.
-				_arrayClasses.add(theClass);
+				_arrayClasses.add((JavaArrayClass) theClass);
 			}
 		} catch (CorruptDataException e1) {
 			// Nothing to do. Just swallow it...
@@ -246,10 +245,8 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 		//CMVC 161798 add check to see if array class set is valid before populating the map
 		if ((_arrayClasses != null) && _arrayClassesMap.isEmpty()) {
 			//1st invocation. Build the map
-			Iterator i = _arrayClasses.iterator();
-			while (i.hasNext()) {
+			for (JavaArrayClass currentClass : _arrayClasses) {
 				// CMVC 165884 add check for null classloader
-				JavaArrayClass currentClass = (JavaArrayClass)i.next();
 				String className = currentClass.getName();
 				String classLoaderID = "";
 				JavaClassLoader currentClassLoader = currentClass.getClassLoader();
@@ -288,8 +285,7 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	{
 		_monitors.add(monitor);
 		// and look at the deferred items to see if any match
-		for (int i=0;i<deferMonitors.size();i++) {
-			DeferMonitor mon = (DeferMonitor) deferMonitors.get(i);
+		for (DeferMonitor mon : deferMonitors) {
 			if (monitor.getID().getAddress() == mon.id) {
 				if (mon.blocked) monitor.addBlockedThread(mon.thread);
 				else monitor.addWaitingThread(mon.thread);
@@ -331,10 +327,10 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 			return "Defer monitor " + id;
 		}
 	}
+
 	private void checkDeferredMonitors() {
 		int errs = 0;
-		for (int i=0;i<deferMonitors.size();i++) {
-			DeferMonitor mon = (DeferMonitor) deferMonitors.get(i);
+		for (DeferMonitor mon : deferMonitors) {
 			if (mon.id != 0) {
 				// At this point we attempt a cover-up operation by building the monitor
 				ImagePointer ptr = pointerInAddressSpace(mon.id);
@@ -345,10 +341,11 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 			}
 		}
 		deferMonitors.clear();
-		//if (errs > 0) {
-		//	System.out.println("Some deferred monitors not processed " + errs);
-		//}
+		if (errs > 0) {
+			// System.out.println("Some deferred monitors not processed " + errs);
+		}
 	}
+
 	/**
 	 * Adds a JavaThread to the runtime along with optional IDs of monitors that it is blocked on or waiting on
 	 *
@@ -361,11 +358,9 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 		_vmThreads.add(thread);
 		if (0 != blockedOnMonitor) {
 			assert (0 == waitingOnMonitor) : "Thread cannot be blocked and waiting at the same time";
-			Iterator iter = _monitors.iterator();
 
 			boolean found = false;
-			while (iter.hasNext()) {
-				JavaMonitor monitor = (JavaMonitor)iter.next();
+			for (JavaMonitor monitor : _monitors) {
 				if(monitor.getID().getAddress() == blockedOnMonitor) {
 					monitor.addBlockedThread(thread);
 					found = true;
@@ -379,11 +374,9 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 
 		if (0 != waitingOnMonitor) {
 			assert (0 == blockedOnMonitor) : "Thread cannot be blocked and waiting at the same time";
-			Iterator iter = _monitors.iterator();
 
 			boolean found = false;
-			while (iter.hasNext()) {
-				JavaMonitor monitor = (JavaMonitor)iter.next();
+			for (JavaMonitor monitor : _monitors) {
 				if(monitor.getID().getAddress() == waitingOnMonitor) {
 					monitor.addWaitingThread(thread);
 					found = true;
@@ -428,6 +421,7 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 		_systemProperties.setProperty(key, value);
 	}
 
+	@Override
 	public boolean equals(Object obj)
 	{
 		boolean isEqual = false;
@@ -438,12 +432,14 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 		return isEqual;
 	}
 
+	@Override
 	public int hashCode()
 	{
 		//the version is mutable so might not have been set
 		return _address.hashCode();
 	}
 
+	@Override
 	public com.ibm.dtfj.java.JavaVMInitArgs getJavaVMInitArgs() throws DataUnavailable, CorruptDataException {
 		if (_javaVMInitArgs == null) {
 			throw new DataUnavailable("JavaVMInitArgs");
@@ -477,8 +473,12 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 		ImageThread thread = null;
 		try {
 			if (null != _containingProc) {
-				for (Iterator iter = _containingProc.getThreads(); iter.hasNext();) {
-					ImageThread t = (ImageThread) iter.next();
+				for (Iterator<?> iter = _containingProc.getThreads(); iter.hasNext();) {
+					Object next = iter.next();
+					if (!(next instanceof ImageThread)) {
+						continue;
+					}
+					ImageThread t = (ImageThread) next;
 					if (Long.decode(t.getID()).longValue() == nativeID)
 						thread = t;
 				}
@@ -491,7 +491,7 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 
 	public JavaMethod methodForID(long method)
 	{
-		return (JavaMethod) _methodsByID.get(Long.valueOf(method));
+		return _methodsByID.get(Long.valueOf(method));
 	}
 
 	public void addMethodForID(JavaMethod method, long id)
@@ -526,14 +526,15 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 		return s2;
 	}
 
-	protected Iterator getClasses() {
+	protected Iterator<?> getClasses() {
 		return _classes.values().iterator();
 	}
 
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaRuntime#getHeapRoots()
 	 */
-	public Iterator getHeapRoots()
+	@Override
+	public Iterator<?> getHeapRoots()
 	{
 		return _heapRoots.iterator();
 	}
@@ -541,6 +542,7 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	private static final int DEFAULT_OBJECT_ALIGNMENT = 8;		//default object alignment if it cannot be found in the XML
 
 	//CMVC 173262 - improve validation - throw NPE if address is null, throw IAE if address = 0, throw IAE if address in not correctly aligned
+	@Override
 	public JavaObject getObjectAtAddress(ImagePointer address) throws CorruptDataException, IllegalArgumentException
 	{
 		if(null == address) {
@@ -550,7 +552,7 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 		if(0 == ptr) {
 			throw new IllegalArgumentException("The object address " + ptr + " is not in any heap");
 		}
-		Iterator heaps = getHeaps();
+		Iterator<?> heaps = getHeaps();
 		JavaHeapRegion region = null;
 		JavaHeap heap = null;
 
@@ -574,33 +576,39 @@ public class JavaRuntime implements com.ibm.dtfj.java.JavaRuntime
 	}
 
 	public JavaObject getSpecialObject(ImagePointer address) {
-		return (JavaObject)_specialObjects.get(address);
+		return _specialObjects.get(address);
 	}
 
-	public Iterator getMemoryCategories() throws DataUnavailable
+	@Override
+	public Iterator<?> getMemoryCategories() throws DataUnavailable
 	{
 		throw new DataUnavailable("This implementation of DTFJ does not support getMemoryCategories");
 	}
 
-	public Iterator getMemorySections(boolean includeFreed)
+	@Override
+	public Iterator<?> getMemorySections(boolean includeFreed)
 			throws DataUnavailable
 	{
 		throw new DataUnavailable("This implementation of DTFJ does not support getMemorySections");
 	}
 
+	@Override
 	public boolean isJITEnabled() throws DataUnavailable, CorruptDataException {
 		throw new DataUnavailable("This implementation of DTFJ does not support isJITEnabled");
 	}
 
+	@Override
 	public Properties getJITProperties() throws DataUnavailable,	CorruptDataException {
 		throw new DataUnavailable("This implementation of DTFJ does not support getJITProperies");
 	}
 
+	@Override
 	public long getStartTime() throws DataUnavailable, CorruptDataException {
 		// Not supported in legacy DTFJ (pre-DDR)
 		throw new DataUnavailable("Dump start time is not available");
 	}
 
+	@Override
 	public long getStartTimeNanos() throws DataUnavailable, CorruptDataException {
 		// Not supported in legacy DTFJ (pre-DDR)
 		throw new DataUnavailable("Dump start time is not available");

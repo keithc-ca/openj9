@@ -428,8 +428,12 @@ public class ObjectFieldInfo {
 	{
 		/* iterate over fields to count instance fields by size */
 
-		Iterable <J9ROMFieldShapePointer>  fields = new J9ROMFieldShapeIterator(romClass.romFields(), romClass.romFieldCount());
-		for  (J9ROMFieldShapePointer f: fields) {
+		Iterable<?> fields = new J9ROMFieldShapeIterator(romClass.romFields(), romClass.romFieldCount());
+		for (Object o : fields) {
+			if (!(o instanceof J9ROMFieldShapePointer)) {
+				continue;
+			}
+			J9ROMFieldShapePointer f = (J9ROMFieldShapePointer) o;
 			UDATA modifiers = f.modifiers();
 			if (!modifiers.anyBitsIn(J9AccStatic) ) {
 				if (modifiers.anyBitsIn(J9FieldFlagObject)) {

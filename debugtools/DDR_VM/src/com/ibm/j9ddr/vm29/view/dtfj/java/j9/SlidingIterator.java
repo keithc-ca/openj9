@@ -21,26 +21,27 @@
  */
 package com.ibm.j9ddr.vm29.view.dtfj.java.j9;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-@SuppressWarnings("unchecked")
-public class SlidingIterator implements Iterator {
-	private final ArrayList data;
+public class SlidingIterator implements Iterator<Object> {
+	private final List<?> data;
 	private final int end;
 	private int current;
-	
-	public SlidingIterator(ArrayList src, int start, int end) {
+
+	public SlidingIterator(List<?> src, int start, int end) {
 		data = src;
 		this.end = end;
 		current = start;
 	}
 
+	@Override
 	public boolean hasNext() {
 		return current < end;
 	}
 
+	@Override
 	public Object next() {
 		if(hasNext()) {
 			Object obj = data.get(current);
@@ -51,6 +52,7 @@ public class SlidingIterator implements Iterator {
 		}
 	}
 
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("This iterator is read only");
 	}

@@ -115,10 +115,10 @@ public final class IntegerLruCache extends AbstractLruCache {
             }
         }
         if (doCheck) {
-            Long[] keys = (Long[])check.keySet().toArray(new Long[0]);
+            Long[] keys = check.keySet().toArray(new Long[0]);
             for (int i = 0; i < keys.length; i++) {
                 long key = keys[i].longValue();
-                int value = ((Integer)check.get(keys[i])).intValue();
+                int value = check.get(keys[i]).intValue();
                 if (get(key) != value) {
                     throw new Error("at " + i + " found " + get(key) + " expected " + value + " key " + key);
                 }
@@ -129,7 +129,7 @@ public final class IntegerLruCache extends AbstractLruCache {
     /**
      * @hidden
      */
-    private class LruCache extends LinkedHashMap {
+    private static class LruCache extends LinkedHashMap<Long, Integer> {
         int maxSize;
 
         LruCache(int maxSize) {
@@ -137,7 +137,8 @@ public final class IntegerLruCache extends AbstractLruCache {
             this.maxSize = maxSize;
         }
 
-        protected boolean removeEldestEntry(Map.Entry eldest) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<Long, Integer> eldest) {
             return size() > maxSize;
         }
     }

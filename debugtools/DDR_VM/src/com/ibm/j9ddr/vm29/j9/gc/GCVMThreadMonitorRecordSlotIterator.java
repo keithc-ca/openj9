@@ -31,7 +31,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9MonitorEnterRecordPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9VMThreadPointer;
 
-public class GCVMThreadMonitorRecordSlotIterator extends GCIterator
+public class GCVMThreadMonitorRecordSlotIterator extends GCIterator<J9ObjectPointer>
 {
 	protected J9MonitorEnterRecordPointer monitorRecord;
 	protected J9MonitorEnterRecordPointer jniMonitorRecord;
@@ -46,12 +46,14 @@ public class GCVMThreadMonitorRecordSlotIterator extends GCIterator
 	{
 		return new GCVMThreadMonitorRecordSlotIterator(vmThread);
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		return monitorRecord.notNull() || jniMonitorRecord.notNull();
 	}
 
+	@Override
 	public J9ObjectPointer next()
 	{
 		if(hasNext()) {
@@ -73,7 +75,8 @@ public class GCVMThreadMonitorRecordSlotIterator extends GCIterator
 			throw new NoSuchElementException("There are no more items available through this iterator");
 		}
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		if(hasNext()) {

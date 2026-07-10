@@ -37,12 +37,13 @@ import java.util.List;
  */
 public class MultipleCandidateException extends IOException {
 	private static final long serialVersionUID = 4233613937969520082L;
-	private List<ManagedImageSource> candidates = new ArrayList<ManagedImageSource>();
+	private List<ManagedImageSource> candidates = new ArrayList<>();
 	private File file = null;			//file which contained multiple candidates
 
 	public MultipleCandidateException(List<ManagedImageSource> candidates, File file) {
 		super("More than one core file was detected in " + file.getAbsolutePath());
 		this.candidates = candidates;
+		this.file = file;
 	}
 
 	public MultipleCandidateException(String arg0) {
@@ -50,13 +51,11 @@ public class MultipleCandidateException extends IOException {
 	}
 
 	public MultipleCandidateException(Throwable arg0) {
-		super();
-		initCause(arg0);
+		super(arg0);
 	}
 
 	public MultipleCandidateException(String arg0, Throwable arg1) {
-		super(arg0);
-		initCause(arg1);
+		super(arg0, arg1);
 	}
 
 	public List<ManagedImageSource> getCandidates() {

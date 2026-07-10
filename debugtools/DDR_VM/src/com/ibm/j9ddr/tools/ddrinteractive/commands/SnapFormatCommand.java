@@ -500,22 +500,22 @@ public class SnapFormatCommand extends SnapBaseCommand {
 		}
 
 		try {
-			Iterator<TracePoint> tpIterator = null;
+			Iterator<?> tpIterator = null;
 			if (userThreadId != null) {
-				Iterator<TraceThread> threadsIterator = (Iterator<TraceThread>) traceContext.getThreads();
+				Iterator<?> threadsIterator = traceContext.getThreads();
 				boolean foundThread = false;
 				while (threadsIterator.hasNext()) {
-					TraceThread thread = threadsIterator.next();
+					TraceThread thread = (TraceThread) threadsIterator.next();
 					if (thread.getThreadID() == threadId) {
 						foundThread = true;
-						tpIterator = (Iterator<TracePoint>) thread.getIterator();
+						tpIterator = thread.getIterator();
 					}
 				}
 				if (!foundThread) {
 					out.printf("Unable to find thread %s in trace data\n", userThreadId);
 				}
 			} else {
-				tpIterator = (Iterator<TracePoint>) traceContext.getTracepoints();
+				tpIterator = traceContext.getTracepoints();
 			}
 
 			if (tpIterator != null) {
@@ -532,11 +532,11 @@ public class SnapFormatCommand extends SnapBaseCommand {
 		}
 	}
 
-	private int printTracePoints(PrintStream traceOut, Iterator<TracePoint> tpIterator, TraceFilterExpression specFilter) {
+	private int printTracePoints(PrintStream traceOut, Iterator<?> tpIterator, TraceFilterExpression specFilter) {
 		int tpCount = 0;
 		TraceThread thread = null;
 		while (tpIterator.hasNext()) {
-			TracePoint tp = tpIterator.next();
+			TracePoint tp = (TracePoint) tpIterator.next();
 			TracePointImpl tracepoint = null;
 			if (tp instanceof TracePointImpl) {
 				tracepoint = (TracePointImpl) tp;

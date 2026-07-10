@@ -39,8 +39,7 @@ import com.ibm.j9ddr.vm29.view.dtfj.java.DTFJJavaObject;
 
 //provides a DTFJ wrapper around the values returned from the J9 model
 
-@SuppressWarnings("unchecked")
-public class DTFJConstantPoolIterator implements Iterator, IEventListener {
+public class DTFJConstantPoolIterator implements Iterator<Object>, IEventListener {
 	private GCConstantPoolObjectSlotIterator poolObjects;
 	private GCConstantPoolClassSlotIterator poolClasses;
 	private J9DDRCorruptData cdata = null;
@@ -61,10 +60,12 @@ public class DTFJConstantPoolIterator implements Iterator, IEventListener {
 		}
 	}
 
+	@Override
 	public boolean hasNext() {
 		return !(EOIObjects && EOIClasses) || (cdata != null);
 	}
 
+	@Override
 	public Object next() {
 		if(hasNext()) {
 			Object retval = null;
@@ -102,6 +103,7 @@ public class DTFJConstantPoolIterator implements Iterator, IEventListener {
 		throw new NoSuchElementException("There are no more elements in this iterator");
 	}
 
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("The image is read only and cannot be modified.");
 	}
@@ -116,6 +118,4 @@ public class DTFJConstantPoolIterator implements Iterator, IEventListener {
 		cdata = J9DDRDTFJUtils.newCorruptData(DTFJContext.getProcess(), e);
 	}
 
-	
-	
 }

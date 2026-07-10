@@ -23,6 +23,7 @@ package com.ibm.j9ddr.vm29.j9.gc;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.ibm.j9ddr.CorruptDataException;
 import com.ibm.j9ddr.vm29.pointer.VoidPointer;
@@ -32,15 +33,15 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9ClassPointer;
 
 import static com.ibm.j9ddr.vm29.structure.J9JavaAccessFlags.J9AccClassArray;
 
-public class GCClassArrayClassSlotIterator extends GCIterator
+public class GCClassArrayClassSlotIterator extends GCIterator<J9ClassPointer>
 {
 	protected Iterator<J9ClassPointer> slotIterator;
 	protected Iterator<VoidPointer> addressIterator;
 	
 	protected GCClassArrayClassSlotIterator(J9ClassPointer clazz) throws CorruptDataException
 	{
-		ArrayList<J9ClassPointer> slots = new ArrayList<J9ClassPointer>();
-		ArrayList<VoidPointer> addresses = new ArrayList<VoidPointer>();
+		List<J9ClassPointer> slots = new ArrayList<>();
+		List<VoidPointer> addresses = new ArrayList<>();
 		J9ClassPointer slot;
 		
 		slot = clazz.arrayClass(); 
@@ -81,17 +82,20 @@ public class GCClassArrayClassSlotIterator extends GCIterator
 		return new GCClassArrayClassSlotIterator(clazz);
 	}
 
+	@Override
 	public boolean hasNext()
 	{
 		return slotIterator.hasNext();
 	}
 
+	@Override
 	public J9ClassPointer next()
 	{
 		addressIterator.next();		// Keep iterators in sync
 		return slotIterator.next();
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		slotIterator.next();		// Keep iterators in sync

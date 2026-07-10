@@ -25,17 +25,21 @@ import java.util.NoSuchElementException;
 
 import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 
-public abstract class GCFreeListHeapIterator extends GCIterator {
+public abstract class GCFreeListHeapIterator extends GCIterator<GCHeapLinkedFreeHeader> {
+	@Override
 	public abstract boolean hasNext();
-	
+
+	@Override
 	public abstract GCHeapLinkedFreeHeader next() throws NoSuchElementException;
-	
+
 	public abstract int getFreeListNumber();
-	
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		throw new UnsupportedOperationException("Not implemented");
 	}
-	
-	abstract public String toString();
+
+	@Override
+	public abstract String toString();
 }

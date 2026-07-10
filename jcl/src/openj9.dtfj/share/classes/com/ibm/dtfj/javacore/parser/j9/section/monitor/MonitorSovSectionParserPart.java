@@ -23,6 +23,7 @@
 package com.ibm.dtfj.javacore.parser.j9.section.monitor;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import com.ibm.dtfj.javacore.builder.BuilderFailureException;
 import com.ibm.dtfj.javacore.builder.IBuilderData;
@@ -44,13 +45,14 @@ public class MonitorSovSectionParserPart extends SovereignSectionParserPart impl
 		super(MONITOR_SECTION);
 	}
 
+	@Override
 	public void computeSovRule(String sovRuleID, ILookAheadBuffer lookAheadBuffer) throws ParserException {
 		setLookAheadBuffer(lookAheadBuffer);
 		setTagManager(J9TagManager.getCurrent());
 		if (sovRuleID.equals(T_1LKREGMONDUMP)) {
 			IAttributeValueMap results;
 			if ((results = processTagLineOptional(LK_FLAT_MON_DUMP)) != null) {
-				HashMap threads = new HashMap();
+				Map<Integer, Long> threads = new HashMap<>();
 				while ((results = processTagLineOptional(LK_FLAT_MON)) != null) {
 					int flatid = results.getIntValue(MONITOR_FLAT_ID);
 					String name = results.getTokenValue(MONITOR_THREAD_NAME);
@@ -81,8 +83,8 @@ public class MonitorSovSectionParserPart extends SovereignSectionParserPart impl
 							long monitorID = results.getLongValue(MONITOR_OBJECT_ADDRESS);
 							results = processTagLineRequired(LK_FLAT_DETAILS);
 							int flatid = results.getIntValue(MONITOR_FLAT_ID);
-							Object p = threads.get(Integer.valueOf(flatid));
-							long threadID = p instanceof Long ? ((Long)p).longValue() : IBuilderData.NOT_AVAILABLE;
+							Long p = threads.get(Integer.valueOf(flatid));
+							long threadID = (p != null) ? p.longValue() : IBuilderData.NOT_AVAILABLE;
 							try {
 								if (monitorID != IBuilderData.NOT_AVAILABLE) {
 									// A valid monitor ID is required to build a monitor

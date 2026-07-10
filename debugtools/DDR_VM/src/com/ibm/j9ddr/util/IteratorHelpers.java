@@ -31,16 +31,36 @@ import java.util.NoSuchElementException;
  */
 public class IteratorHelpers
 {
-	
+
 	/**
-	 * Takes a list of iterators and returns one iterator that iterates over each iterator in turn.
+	 * Takes two iterators and returns one iterator that iterates over each iterator in turn.
 	 */
-	public static <T> Iterator<T> combineIterators(final Iterator<T> ... iterators)
+	public static <T> Iterator<T> combineIterators(Iterator<? extends T> it1, Iterator<? extends T> it2)
 	{
-		return new Iterator<T>(){
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		Iterator<? extends T>[] iterators = new Iterator[] { it1, it2 };
+
+		return combineHelper(iterators);
+	}
+
+	/**
+	 * Takes three iterators and returns one iterator that iterates over each iterator in turn.
+	 */
+	public static <T> Iterator<T> combineIterators(Iterator<? extends T> it1, Iterator<? extends T> it2, Iterator<? extends T> it3)
+	{
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		Iterator<? extends T>[] iterators = new Iterator[] { it1, it2, it3 };
+
+		return combineHelper(iterators);
+	}
+
+	private static <T> Iterator<T> combineHelper(final Iterator<? extends T>[] iterators)
+	{
+		return new Iterator<T>() {
 
 			private int index = 0;
-			
+
+			@Override
 			public boolean hasNext()
 			{
 				do {
@@ -57,6 +77,7 @@ public class IteratorHelpers
 				} while (true);
 			}
 
+			@Override
 			public T next()
 			{
 				if (hasNext()) {
@@ -66,22 +87,24 @@ public class IteratorHelpers
 				}
 			}
 
+			@Override
 			public void remove()
 			{
 				throw new UnsupportedOperationException();
-			}};
+			}
+		};
 	}
-	
+
 	public static <T> List<T> toList(Iterator<T> it)
 	{
-		ArrayList<T> list = new ArrayList<T>();
-		
-		while(it.hasNext()) {
+		List<T> list = new ArrayList<T>();
+
+		while (it.hasNext()) {
 			list.add(it.next());
 		}
 		return list;
 	}
-	
+
 	/**
 	 * Filters an iterator
 	 * @param <T> Generic type of iterator
@@ -89,30 +112,31 @@ public class IteratorHelpers
 	 * @param filter Filter object to select which objects to be passed through
 	 * @return Filtered iterator
 	 */
-	public static <T> Iterator<T> filterIterator(final Iterator<T> it, final IteratorFilter<T> filter)
+	public static <T> Iterator<T> filterIterator(final Iterator<T> it, final IteratorFilter<? super T> filter)
 	{
 		return new Iterator<T>() {
-			
+
 			private T current;
 
-			public boolean hasNext()
-			{
+			@Override
+			public boolean hasNext() {
 				if (current != null) {
 					return true;
 				}
-				
+
 				while (current == null && it.hasNext()) {
 					T possible = it.next();
-					
+
 					if (filter.accept(possible)) {
 						current = possible;
 						return true;
 					}
 				}
-				
+
 				return false;
 			}
 
+			@Override
 			public T next()
 			{
 				if (hasNext()) {
@@ -124,19 +148,20 @@ public class IteratorHelpers
 				}
 			}
 
+			@Override
 			public void remove()
 			{
 				throw new UnsupportedOperationException();
-			}};
+			}
+		};
 	}
-	
+
 	/**
 	 * Interface for filtering iterators
 	 */
 	public static interface IteratorFilter<T>
 	{
 		/**
-		 * 
 		 * @param obj Object under test
 		 * @return True if this object passed the filter (and should be included in the iterator), false otherwise
 		 */

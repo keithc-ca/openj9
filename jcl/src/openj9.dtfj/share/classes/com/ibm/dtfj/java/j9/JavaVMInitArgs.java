@@ -28,13 +28,12 @@ import java.util.Vector;
 import com.ibm.dtfj.image.CorruptDataException;
 import com.ibm.dtfj.image.DataUnavailable;
 import com.ibm.dtfj.image.ImageAddressSpace;
-import com.ibm.dtfj.java.j9.JavaVMOption;
 
 public class JavaVMInitArgs implements com.ibm.dtfj.java.JavaVMInitArgs
 {
 	private int _version;
 	private boolean _ignoreUnrecognized;
-	private Vector _options = new Vector();
+	private Vector<JavaVMOption> _options = new Vector<>();
 	private ImageAddressSpace _addressSpace;
 
 	public JavaVMInitArgs(ImageAddressSpace addressSpace, int version, boolean ignoreUnrecognized)
@@ -44,17 +43,20 @@ public class JavaVMInitArgs implements com.ibm.dtfj.java.JavaVMInitArgs
 		_addressSpace = addressSpace;
 	}
 
+	@Override
 	public int getVersion() throws DataUnavailable, CorruptDataException
 	{
 		return _version;
 	}
 
+	@Override
 	public boolean getIgnoreUnrecognized() throws DataUnavailable, CorruptDataException
 	{
 		return _ignoreUnrecognized;
 	}
 
-	public Iterator getOptions() throws DataUnavailable
+	@Override
+	public Iterator<?> getOptions() throws DataUnavailable
 	{
 		return _options.iterator();
 	}

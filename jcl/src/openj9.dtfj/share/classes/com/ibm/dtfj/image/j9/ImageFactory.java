@@ -463,7 +463,7 @@ public class ImageFactory implements com.ibm.dtfj.image.ImageFactory {
 
 		try {
 			Class<?> clazz = Class.forName(className, true, imageFactoryClassLoader);
-			Object obj = clazz.newInstance();
+			Object obj = clazz.getConstructor().newInstance();
 			if (obj instanceof com.ibm.dtfj.image.ImageFactory) {
 				return (com.ibm.dtfj.image.ImageFactory) obj;
 			}

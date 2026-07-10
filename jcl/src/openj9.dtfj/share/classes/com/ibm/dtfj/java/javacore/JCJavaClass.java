@@ -25,7 +25,7 @@ package com.ibm.dtfj.java.javacore;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.Vector;
+import java.util.Set;
 
 import com.ibm.dtfj.image.CorruptDataException;
 import com.ibm.dtfj.image.DataUnavailable;
@@ -49,10 +49,7 @@ public class JCJavaClass implements JavaClass{
 	private ImagePointer fClassPointer;
 	private int fModifiers;
 
-	private LinkedHashSet fMethods;
-	private Vector fConstantPoolReferences;
-	private Vector fDeclaredFields;
-	private Vector fInterfaces;
+	private Set<JavaMethod> fMethods;
 
 	/**
 	 *
@@ -79,10 +76,7 @@ public class JCJavaClass implements JavaClass{
 		fModifiers = IBuilderData.NOT_AVAILABLE;
 
 		// containers
-		fMethods = new LinkedHashSet();
-		fConstantPoolReferences = new Vector();
-		fDeclaredFields = new Vector();
-		fInterfaces = new Vector();
+		fMethods = new LinkedHashSet<>();
 
 		// must associate with a runtime.
 		fJavaRuntime.addJavaClass(this);
@@ -91,6 +85,7 @@ public class JCJavaClass implements JavaClass{
 	/**
 	 *
 	 */
+	@Override
 	public JavaClassLoader getClassLoader() throws CorruptDataException {
 		if (fJavaClassLoader == null) {
 			throw new CorruptDataException(new JCCorruptData(null));
@@ -101,6 +96,7 @@ public class JCJavaClass implements JavaClass{
 	/**
 	 * component type only for arrays
 	 */
+	@Override
 	public JavaClass getComponentType() throws CorruptDataException {
 		throw new CorruptDataException(new JCCorruptData(null));
 	}
@@ -108,27 +104,31 @@ public class JCJavaClass implements JavaClass{
 	/**
 	 *
 	 */
-	public Iterator getConstantPoolReferences() {
-		return fConstantPoolReferences.iterator();
+	@Override
+	public Iterator<?> getConstantPoolReferences() {
+		return Collections.emptyIterator();
 	}
 
 	/**
 	 *
 	 */
-	public Iterator getDeclaredFields() {
-		return fDeclaredFields.iterator();
+	@Override
+	public Iterator<?> getDeclaredFields() {
+		return Collections.emptyIterator();
 	}
 
 	/**
 	 *
 	 */
-	public Iterator getDeclaredMethods() {
+	@Override
+	public Iterator<?> getDeclaredMethods() {
 		return fMethods.iterator();
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public ImagePointer getID() {
 		if (fClassPointer == null && fClassID != IBuilderData.NOT_AVAILABLE) {
 			fClassPointer = fJavaRuntime.getImageProcess().getImageAddressSpace().getPointer(fClassID);
@@ -139,14 +139,16 @@ public class JCJavaClass implements JavaClass{
 	/**
 	 *
 	 */
-	public Iterator getInterfaces() {
-		return fInterfaces.iterator();
+	@Override
+	public Iterator<?> getInterfaces() {
+		return Collections.emptyIterator();
 	}
 
 	/**
 	 * @see com.ibm.dtfj.java.JavaClass#getModifiers()
 	 * @throws CorruptDataException if modifiers not set
 	 */
+	@Override
 	public int getModifiers() throws CorruptDataException {
 		if (fModifiers == IBuilderData.NOT_AVAILABLE) {
 			throw new CorruptDataException(new JCCorruptData(null));
@@ -158,6 +160,7 @@ public class JCJavaClass implements JavaClass{
 	 * @see com.ibm.dtfj.java.JavaClass#getName()
 	 * @throws CorruptDataException if class name is not set
 	 */
+	@Override
 	public String getName() throws CorruptDataException {
 		if (fClassName == null) {
 			throw new CorruptDataException(new JCCorruptData(null));
@@ -170,6 +173,7 @@ public class JCJavaClass implements JavaClass{
 	 * @see com.ibm.dtfj.java.JavaClass#getObject()
 	 * @throws CorruptDataException if no instance of this class is set
 	 */
+	@Override
 	public JavaObject getObject() throws CorruptDataException {
 		if (fJavaObject == null) {
 			throw new CorruptDataException(new JCCorruptData(null));
@@ -183,6 +187,7 @@ public class JCJavaClass implements JavaClass{
 	 * @see com.ibm.dtfj.java.JavaClass#getSuperclass()
 	 * @throws CorruptDataException if super class not found.
 	 */
+	@Override
 	public JavaClass getSuperclass() throws CorruptDataException {
 		JavaClass superClass = fJavaRuntime.findJavaClass(fSuperClassID);
 		if (superClass == null) {
@@ -194,6 +199,7 @@ public class JCJavaClass implements JavaClass{
 	/**
 	 *
 	 */
+	@Override
 	public long getInstanceSize() throws DataUnavailable, CorruptDataException {
 		throw new DataUnavailable("Instance size is not available in a javacore");
 	}
@@ -204,6 +210,7 @@ public class JCJavaClass implements JavaClass{
 	 * @see com.ibm.dtfj.java.j9.JavaClass
 	 * @return true if an array
 	 */
+	@Override
 	public boolean isArray() throws CorruptDataException {
 		String name = getName();
 		return name.startsWith("[");
@@ -281,8 +288,9 @@ public class JCJavaClass implements JavaClass{
 		fModifiers = modifiers;
 	}
 
-	public Iterator getReferences() {
-		return Collections.EMPTY_LIST.iterator();
+	@Override
+	public Iterator<?> getReferences() {
+		return Collections.emptyIterator();
 	}
 
 	/**
@@ -296,7 +304,8 @@ public class JCJavaClass implements JavaClass{
 		fMethods.add(method);
 	}
 
-	public JavaObject getProtectionDomain() throws DataUnavailable,	CorruptDataException {
+	@Override
+	public JavaObject getProtectionDomain() throws DataUnavailable, CorruptDataException {
 		throw new DataUnavailable("This implementation of DTFJ does not support getProtectionDomain");
 	}
 

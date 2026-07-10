@@ -27,8 +27,11 @@ import static com.ibm.j9ddr.vm29.events.EventManager.unregister;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,7 +53,7 @@ import com.ibm.j9ddr.vm29.view.dtfj.java.j9.SlidingIterator;
 public class DTFJJavaClassloader implements JavaClassLoader {
 
 	private J9ClassLoaderPointer j9ClassLoader;
-	private SoftReference<ClassCache> softReferenceToClassCache = new SoftReference<ClassCache>(null) ;  
+	private SoftReference<ClassCache> softReferenceToClassCache = new SoftReference<>(null);
 	private Logger log = DTFJContext.getLogger();
 	
 	public DTFJJavaClassloader(J9ClassLoaderPointer pointer) {
@@ -63,18 +66,19 @@ public class DTFJJavaClassloader implements JavaClassLoader {
 		return cache.findClass(name);
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getCachedClasses() {
+	@Override
+	public Iterator<?> getCachedClasses() {
 		ClassCache cache = getPopulatedClassCache(); // the scope of this strong reference to the cache is just this method, only the soft reference will persist
 		return cache.getCachedClasses();
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getDefinedClasses() {
+	@Override
+	public Iterator<?> getDefinedClasses() {
 		ClassCache cache = getPopulatedClassCache(); // the scope of this strong reference to the cache is just this method, only the soft reference will persist
 		return cache.getDefinedClasses();
 	}
 
+	@Override
 	public JavaObject getObject() throws CorruptDataException {
 		try {
 			return new DTFJJavaObject(j9ClassLoader.classLoaderObject());
@@ -83,6 +87,7 @@ public class DTFJJavaClassloader implements JavaClassLoader {
 		}
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (obj != null && obj instanceof DTFJJavaClassloader) {
 			DTFJJavaClassloader objImpl = (DTFJJavaClassloader) obj;
@@ -92,6 +97,7 @@ public class DTFJJavaClassloader implements JavaClassLoader {
 		return false;
 	}
 
+	@Override
 	public int hashCode() {
 		return (int) j9ClassLoader.getAddress();
 	}
@@ -115,16 +121,15 @@ public class DTFJJavaClassloader implements JavaClassLoader {
 			cache = new ClassCache();
 			cache.populateCache();
 			log.fine(String.format("Populated class cache for JavaClassLoader 0x%016x", j9ClassLoader.getAddress()));
-			softReferenceToClassCache = new SoftReference<ClassCache>(cache); // this soft reference is what persists
+			softReferenceToClassCache = new SoftReference<>(cache); // this soft reference is what persists
 		}		
 		return cache;		
 	}
 	
-	private class ClassCache implements IEventListener { 
-		private ArrayList<Object> cache = new ArrayList<Object>();					//cache of the objects
-		private HashMap<String, Integer> names = new HashMap<String, Integer>();	//name lookup index
-		@SuppressWarnings("rawtypes")
-		private Iterator corruptCache;
+	private class ClassCache implements IEventListener {
+		private List<Object> cache = new ArrayList<>(); // cache of the objects
+		private Map<String, Integer> names = new HashMap<>(); // name lookup index
+		private Iterator<?> corruptCache;
 		private int definedClassCount = 0;
 		
 		void populateCache() {
@@ -157,9 +162,8 @@ public class DTFJJavaClassloader implements JavaClassLoader {
 				}
 			}
 		}
-		
-		@SuppressWarnings("rawtypes")
-		private int storeClasses(Iterator classes, int start) {
+
+		private int storeClasses(Iterator<?> classes, int start) {
 			int initialSize = cache.size();
 			try {
 				register(this);		//register this class for notifications	
@@ -192,20 +196,18 @@ public class DTFJJavaClassloader implements JavaClassLoader {
 			cache.add(cd);
 		}
 
-		@SuppressWarnings("rawtypes")
-		Iterator getCachedClasses() {
+		Iterator<?> getCachedClasses() {
 			if(corruptCache == null) {
 				return new SlidingIterator(cache, 0, cache.size() - definedClassCount);
 			} else {
 				return corruptCache;
 			}
 		}
-		
-		@SuppressWarnings("rawtypes")
-		Iterator getDefinedClasses() {
+
+		Iterator<?> getDefinedClasses() {
 			if(corruptCache == null) {
 				if(definedClassCount == 0) {
-					return J9DDRDTFJUtils.emptyIterator();
+					return Collections.emptyIterator();
 				}
 				return new SlidingIterator(cache, cache.size() - definedClassCount, cache.size());
 			} else {

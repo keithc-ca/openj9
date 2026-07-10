@@ -149,6 +149,7 @@ public class ObjectHash {
 		return hashValue;
 	}
 
+	@SuppressWarnings("fallthrough")
 	/*
 	 * Recursively computes the hash for value objects, mirroring the algorithm
 	 * in recursiveValueObjectHash() in ObjectHash.hpp.

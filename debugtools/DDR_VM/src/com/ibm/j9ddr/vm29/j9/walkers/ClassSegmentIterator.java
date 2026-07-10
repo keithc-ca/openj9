@@ -36,11 +36,10 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9ClassPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9MemorySegmentListPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9MemorySegmentPointer;
 
-@SuppressWarnings("unchecked")
-public class ClassSegmentIterator implements Iterator {
+public class ClassSegmentIterator implements Iterator<J9ClassPointer> {
 	private static final AlgorithmVersion version;
 	private final Logger log = Logger.getLogger(LoggerNames.LOGGER_WALKERS);
-	private final Iterator segments;
+	private final Iterator<J9MemorySegmentPointer> segments;
 	private J9MemorySegmentPointer segment;
 	private boolean EOS = false;			//flag to indicate End Of Segments
 	private boolean hasNextClass = false;	//flag to indicate if there is a class to retrieve
@@ -69,7 +68,8 @@ public class ClassSegmentIterator implements Iterator {
 		segments = new MemorySegmentIterator(source, MemorySegmentIterator.MEMORY_TYPE_RAM_CLASS, true);
 		EOS = !segments.hasNext();		//no memory segments means no classloaders
 	}
-	
+
+	@Override
 	public boolean hasNext() {
 		if(hasNextClass) return true;	//next class already located
 		if(EOS) return false;			//end of segments
@@ -82,7 +82,7 @@ public class ClassSegmentIterator implements Iterator {
 				while(clazzPtr.isNull()) {					//class ptr not set
 					EOS = !segments.hasNext();
 					if(EOS) return false;										//reached EOS
-					segment = (J9MemorySegmentPointer) segments.next();
+					segment = segments.next();
 					clazzPtr = J9ClassPointer.cast(PointerPointer.cast(segment.heapBase()).at(0));
 				}
 				//find the next class to return
@@ -100,7 +100,8 @@ public class ClassSegmentIterator implements Iterator {
 		return hasNextClass;
 	}
 
-	public Object next() {
+	@Override
+	public J9ClassPointer next() {
 		if(hasNext()) {
 			hasNextClass = false;			//flag that we need to locate the next class
 			return clazzPtr;
@@ -109,6 +110,7 @@ public class ClassSegmentIterator implements Iterator {
 		}
 	}
 
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("This iterator is read only");
 	}

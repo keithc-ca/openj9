@@ -22,7 +22,6 @@
  */
 package com.ibm.dtfj.javacore.builder.javacore;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -51,7 +50,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	private JCImageAddressSpace fImageAddressSpace;
 	private JCImageProcess fImageProcess;
 	private BuilderContainer fBuilderContainer;
-	private Map registers;
+	private Map<String, Number> registers;
 
 	public ImageProcessBuilder(JCImageAddressSpace imageAddressSpace, String id) throws JCInvalidArgumentsException {
 		super(id);
@@ -66,6 +65,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	/**
 	 *
 	 */
+	@Override
 	public IJavaRuntimeBuilder getCurrentJavaRuntimeBuilder() {
 		return(IJavaRuntimeBuilder) fBuilderContainer.getLastAdded();
 	}
@@ -73,6 +73,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	/**
 	 *
 	 */
+	@Override
 	public IJavaRuntimeBuilder getJavaRuntimeBuilder(String builderID) {
 		return (IJavaRuntimeBuilder) fBuilderContainer.findComponent(builderID);
 	}
@@ -82,6 +83,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	 * @param id
 	 *
 	 */
+	@Override
 	public IJavaRuntimeBuilder generateJavaRuntimeBuilder(String id) throws BuilderFailureException {
 		IJavaRuntimeBuilder javaRuntimeBuilder = null;
 		if (getJavaRuntimeBuilder(id) == null) {
@@ -103,6 +105,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	/**
 	 *
 	 */
+	@Override
 	public ImageModule addLibrary(String name) {
 		ImageModule module = null;
 		if(name != null && (module = fImageProcess.getLibrary(name)) == null) {
@@ -117,6 +120,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	 *
 	 * @param size
 	 */
+	@Override
 	public void setPointerSize(int size) {
 		fImageProcess.setPointerSize(size);
 	}
@@ -125,6 +129,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	 *
 	 * @param Properties with String key and String value
 	 */
+	@Override
 	public ImageThread addImageThread(long nativeThreadID, long systemThreadID, Properties properties) throws BuilderFailureException {
 		try {
 			ImagePointer pointer = fImageAddressSpace.getPointer(nativeThreadID);
@@ -133,17 +138,15 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 				thread = new JCImageThread(pointer);
 				if (registers != null) {
 					// Add the registers to the first thread
-					for (Iterator it = registers.entrySet().iterator(); it.hasNext(); ) {
-						Map.Entry me = (Map.Entry)it.next();
-						ImageRegister ir = new JCImageRegister((String)me.getKey(), (Number)me.getValue());
+					for (Map.Entry<String, Number> me : registers.entrySet()) {
+						ImageRegister ir = new JCImageRegister(me.getKey(), me.getValue());
 						thread.addRegister(ir);
 					}
 					registers = null;
 				}
 				fImageProcess.addImageThread(thread);
 			}
-			for (Iterator it = properties.entrySet().iterator(); it.hasNext(); ) {
-				Map.Entry me = (Map.Entry)it.next();
+			for (Map.Entry<?, ?> me : properties.entrySet()) {
 				thread.addProperty(me.getKey(), me.getValue());
 			}
 			if (systemThreadID != IBuilderData.NOT_AVAILABLE) {
@@ -160,6 +163,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	 * Set signal
 	 * @param signal number
 	 */
+	@Override
 	public void setSignal(int signal) {
 		fImageProcess.setSignal(signal);
 	}
@@ -168,6 +172,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	 * Set command line
 	 * @param command line string
 	 */
+	@Override
 	public void setCommandLine(String cmdLine) {
 		fImageProcess.setCommandLine(cmdLine);
 	}
@@ -177,6 +182,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	 * @param thread The native thread
 	 * @param section The section we want to add
 	 */
+	@Override
 	public ImageSection addImageStackSection(ImageThread thread, ImageSection section) {
 		JCImageThread thread2 = (JCImageThread)thread;
 		thread2.addImageStackSection(section);
@@ -187,7 +193,8 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	 * Set registers if available in javacore.
 	 * @param regs Map of registers
 	 */
-	public void setRegisters(Map regs) {
+	@Override
+	public void setRegisters(Map<String, Number> regs) {
 		registers = regs;
 	}
 
@@ -196,10 +203,12 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 	 * @param name
 	 * @param value
 	 */
+	@Override
 	public void addEnvironmentVariable(String name, String value) {
 		fImageProcess.addEnvironment(name, value);
 	}
 
+	@Override
 	public ImageSymbol addRoutine(ImageModule library, String name, long address) {
 		ImagePointer addr = fImageAddressSpace.getPointer(address);
 		ImageSymbol symbol = new JCImageSymbol(name, addr);
@@ -208,6 +217,7 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 		return symbol;
 	}
 
+	@Override
 	public ImageStackFrame addImageStackFrame(long nativeThreadID, String name,
 			long baseAddress, long procAddress) {
 		ImagePointer pointer = fImageAddressSpace.getPointer(nativeThreadID);
@@ -215,24 +225,27 @@ public class ImageProcessBuilder extends AbstractBuilderComponent implements IIm
 		ImagePointer ip = procAddress != IBuilderData.NOT_AVAILABLE ? fImageAddressSpace.getPointer(procAddress) : null;
 		JCImageStackFrame stackFrame = new JCImageStackFrame(name, null, ip);
 		if (thread != null) {
-			JCImageThread thrd = (JCImageThread)thread;
-			thrd.addImageStackFrame(stackFrame);
+			thread.addImageStackFrame(stackFrame);
 		}
 		return stackFrame;
 	}
 
+	@Override
 	public void setExecutable(ImageModule execMod) {
 		fImageProcess.setExecutable(execMod);
 	}
 
+	@Override
 	public void setID(String pid) {
 		fImageProcess.setID(pid);
 	}
 
+	@Override
 	public void setCurrentThreadID(long imageThreadID) {
 		fImageProcess.setCurrentThreadID(imageThreadID);
 	}
 
+	@Override
 	public void addProperty(ImageModule library, String name, String value) {
 		JCImageModule mod = (JCImageModule)library;
 		mod.addProperty(name, value);

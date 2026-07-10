@@ -173,9 +173,9 @@ public class XCOFFReader
 		return props;
 	}
 
-	public List buildSymbols(Builder builder, Object addressSpace, long relocationBase)
+	public List<?> buildSymbols(Builder builder, Object addressSpace, long relocationBase)
 	{
-		LinkedList symbols = new LinkedList();
+		List<Object> symbols = new LinkedList<>();
 
 		try {
 			long symbolTableOffset = _symbolTableOffset();

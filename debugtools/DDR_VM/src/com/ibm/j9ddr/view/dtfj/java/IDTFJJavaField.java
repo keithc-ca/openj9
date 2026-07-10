@@ -24,21 +24,18 @@ package com.ibm.j9ddr.view.dtfj.java;
 import com.ibm.dtfj.image.CorruptDataException;
 
 /**
- * An interface that all implementations of the DDR DTFJJavaField implement
- * 
- */
-
-/**
- * Return the Java signature for this DTFJJavaField.
- * For example, if the field is a java/lang/Sting, 
- * return the signature string "Ljava/lang/String;"
- *
- * @return the signature string
- * @throws CorruptDataException
- *
+ * An interface that all implementations of the DDR DTFJJavaField implement.
  */
 public interface IDTFJJavaField {
 
+	/**
+	 * Return the Java signature for this DTFJJavaField.
+	 * For example, if the field is a java/lang/String,
+	 * return the signature string "Ljava/lang/String;"
+	 *
+	 * @return the signature string
+	 * @throws CorruptDataException
+	 */
 	public String getSignature() throws CorruptDataException;
 
 }

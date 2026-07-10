@@ -42,7 +42,7 @@ import com.ibm.dtfj.utils.file.ManagedImageSource;
 
 public class JCImage implements JCReleasingImage, ManagedImage {
 
-	private Vector fAddressSpaces = new Vector();
+	private Vector<ImageAddressSpace> fAddressSpaces = new Vector<>();
 	private String fosType = null;
 	private String fosSubType = null;
 	private String fcpuType = null;
@@ -56,8 +56,8 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 	private long fCreationTimeNanos;
 	private boolean fCreationTimeNanosSet = false;
 	private String fHostName = null;
-	private List fIPAddresses = new Vector();
-	private List _closables = new Vector();
+	private List<InetAddress> fIPAddresses = new Vector<>();
+	private List<JavaCoreResourceReleaser> _closables = new Vector<>();
 	private URI source = null;
 	private ManagedImageSource imageSource = null;
 
@@ -69,6 +69,7 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 		this.source = source;
 	}
 
+	@Override
 	public URI getSource() {
 		try {
 			if(source == null) {
@@ -94,13 +95,15 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 	/**
 	 *
 	 */
-	public Iterator getAddressSpaces() {
+	@Override
+	public Iterator<?> getAddressSpaces() {
 		return fAddressSpaces.iterator();
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public long getCreationTime() throws DataUnavailable {
 		if (!fCreationTimeSet) {
 			throw new DataUnavailable("Creation time not available");
@@ -111,6 +114,7 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 	/**
 	 *
 	 */
+	@Override
 	public String getHostName() throws DataUnavailable, CorruptDataException {
 		if (fHostName == null) {
 			throw new DataUnavailable("Host name not available");
@@ -121,13 +125,15 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 	/**
 	 *
 	 */
-	public Iterator getIPAddresses() throws DataUnavailable {
+	@Override
+	public Iterator<?> getIPAddresses() throws DataUnavailable {
 		return fIPAddresses.iterator();
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public long getInstalledMemory() throws DataUnavailable {
 		if (!fBytesMemSet) {
 			throw new DataUnavailable("Installed memory not available");
@@ -138,6 +144,7 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 	/**
 	 *
 	 */
+	@Override
 	public int getProcessorCount() throws DataUnavailable {
 		if (!fcpuCountSet) {
 			throw new DataUnavailable("Processor count not available");
@@ -148,6 +155,7 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 	/**
 	 *
 	 */
+	@Override
 	public String getProcessorSubType() throws DataUnavailable, CorruptDataException {
 		if (fcpuSubType == null) {
 			throw new DataUnavailable("Processor subtype not available");
@@ -158,6 +166,7 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 	/**
 	 *
 	 */
+	@Override
 	public String getProcessorType() throws DataUnavailable, CorruptDataException {
 		if (fcpuType == null) {
 			throw new DataUnavailable("Processor type not available");
@@ -168,6 +177,7 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 	/**
 	 *
 	 */
+	@Override
 	public String getSystemSubType() throws DataUnavailable, CorruptDataException {
 		if (fosSubType == null) {
 			throw new DataUnavailable("System subtype not available");
@@ -178,6 +188,7 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 	/**
 	 *
 	 */
+	@Override
 	public String getSystemType() throws DataUnavailable, CorruptDataException {
 		if (fosType == null) {
 			throw new DataUnavailable("System type not available");
@@ -192,7 +203,7 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 	/**
 	 *
 	 */
-	public void setAddressSpaces(Vector addressSpaces) {
+	public void setAddressSpaces(Vector<ImageAddressSpace> addressSpaces) {
 		fAddressSpaces = addressSpaces;
 	}
 
@@ -280,15 +291,14 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 		fosType = osType;
 	}
 
+	@Override
 	public void close() {
 		// This is just for show; JCImageFactory closes the input stream during construction.
 
-		Iterator it = _closables .iterator();
-		while(it.hasNext()) {
-			Object o = it.next();
-			if (o instanceof JavaCoreResourceReleaser) {
+		for (JavaCoreResourceReleaser o : _closables) {
+			if (o != null) {
 				try {
-					((JavaCoreResourceReleaser)o).releaseResources();
+					o.releaseResources();
 				} catch (IOException e) {
 					Logger.getLogger(com.ibm.dtfj.image.ImageFactory.DTFJ_LOGGER_NAME).log(Level.WARNING , e.getMessage(), e);
 				}
@@ -300,23 +310,28 @@ public class JCImage implements JCReleasingImage, ManagedImage {
 		}
 	}
 
+	@Override
 	public void addReleasable(JavaCoreResourceReleaser o) {
 		_closables.add(o);
 	}
 
+	@Override
 	public Properties getProperties() {
 		return new Properties();		//not supported for this reader
 	}
 
+	@Override
 	public ManagedImageSource getImageSource() {
 		return imageSource;
 	}
 
+	@Override
 	public void setImageSource(ManagedImageSource source) {
 		imageSource = source;
 
 	}
 
+	@Override
 	public long getCreationTimeNanos() throws DataUnavailable, CorruptDataException {
 		if (!fCreationTimeNanosSet) {
 			throw new DataUnavailable("Creation time not available");

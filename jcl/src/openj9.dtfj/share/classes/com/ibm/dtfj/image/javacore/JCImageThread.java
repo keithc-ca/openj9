@@ -45,9 +45,9 @@ public class JCImageThread implements ImageThread {
 	private final ImagePointer fNativeThreadID;
 
 	private Properties fProperties;
-	private Vector fRegisters;
-	private Vector fStackSections;
-	private Vector fStackFrames;
+	private Vector<ImageRegister> fRegisters;
+	private Vector<ImageSection> fStackSections;
+	private Vector<ImageStackFrame> fStackFrames;
 	private ImagePointer fSystemThreadID;
 	/**
 	 *
@@ -59,15 +59,16 @@ public class JCImageThread implements ImageThread {
 		}
 		fImageThreadID = "0x" + Long.toHexString(nativeThreadID.getAddress());
 		fNativeThreadID = nativeThreadID;
-		fRegisters = new Vector();
-		fStackSections = new Vector();
-		fStackFrames = new Vector();
+		fRegisters = new Vector<>();
+		fStackSections = new Vector<>();
+		fStackFrames = new Vector<>();
 		fProperties = new Properties();
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public String getID() throws CorruptDataException {
 		if (fImageThreadID == null) {
 			throw new CorruptDataException(new JCCorruptData(null));
@@ -78,6 +79,7 @@ public class JCImageThread implements ImageThread {
 	/**
 	 *
 	 */
+	@Override
 	public Properties getProperties() {
 		return fProperties;
 	}
@@ -94,21 +96,24 @@ public class JCImageThread implements ImageThread {
 	/**
 	 *
 	 */
-	public Iterator getRegisters() {
+	@Override
+	public Iterator<?> getRegisters() {
 		return fRegisters.iterator();
 	}
 
 	/**
 	 *
 	 */
-	public Iterator getStackSections() {
+	@Override
+	public Iterator<?> getStackSections() {
 		return fStackSections.iterator();
 	}
 
 	/**
 	 * Not available in javacore
 	 */
-	public Iterator getStackFrames() throws DataUnavailable {
+	@Override
+	public Iterator<?> getStackFrames() throws DataUnavailable {
 		if (fStackFrames.isEmpty()) {
 			throw new DataUnavailable("Native stack frame data not available");
 		}

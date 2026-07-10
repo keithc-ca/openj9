@@ -46,8 +46,8 @@ import com.ibm.dtfj.corereaders.ResourceReleaser;
 public class ZipExtractionResolver implements IFileLocationResolver, ResourceReleaser
 {
 	private ZipFile _container;
-	private Map _openFilesByName = new HashMap();
-	private List _deletables = new Vector();
+	private Map<String, File> _openFilesByName = new HashMap<>();
+	private List<File> _deletables = new Vector<>();
 
 	public ZipExtractionResolver(ZipFile zip)
 	{
@@ -57,6 +57,7 @@ public class ZipExtractionResolver implements IFileLocationResolver, ResourceRel
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.j9.IFileLocationResolver#findFileWithFullPath(java.lang.String)
 	 */
+	@Override
 	public File findFileWithFullPath(String fullPath)
 			throws FileNotFoundException
 	{
@@ -64,7 +65,7 @@ public class ZipExtractionResolver implements IFileLocationResolver, ResourceRel
 
 		//take the end of the path and see if we have such an entry
 		String name = (new File(fullPath)).getName();
-		File knownFile = (File) _openFilesByName.get(fullPath);
+		File knownFile = _openFilesByName.get(fullPath);
 
 		if (null == knownFile) {
 			//first try to get the entry by its long name.  If that doesn't work, try the short name (an easy way to get some backward compatibility)
@@ -173,11 +174,11 @@ public class ZipExtractionResolver implements IFileLocationResolver, ResourceRel
 	private String _baseCoreName()
 	{
 		String coreName = null;
-		Enumeration outer = _container.entries();
+		Enumeration<? extends ZipEntry> outer = _container.entries();
 		String zipName = _container.getName();
 
 		while ((null == coreName) && (outer.hasMoreElements())) {
-			ZipEntry outerEntry = (ZipEntry) outer.nextElement();
+			ZipEntry outerEntry = outer.nextElement();
 			String outerName = outerEntry.getName();
 
 			if (zipName.equals(outerName  + ".zip")) {
@@ -213,16 +214,16 @@ public class ZipExtractionResolver implements IFileLocationResolver, ResourceRel
 		}
 	}
 
-	public Iterator getCreatedFiles()
+	public Iterator<File> getCreatedFiles()
 	{
 		return _deletables.iterator();
 	}
 
+	@Override
 	public void releaseResources() throws IOException {
 		closeOpenFiles();
-		File f;
-		Iterator i;
-		for(i = getCreatedFiles(), f = null; i.hasNext() && ((f=(File) i.next())!=null) ; ) {
+		for (Iterator<File> i = getCreatedFiles(); i.hasNext();) {
+			File f = i.next();
 			String logMessage = "ZIP resource "+f.getAbsolutePath()+" ";
 			if (f.delete()) {
 				logMessage += "deleted successfully.";

@@ -98,7 +98,7 @@ public class Main {
 		}
 
 		@Override
-		public Object buildProcess(Object addressSpace, String pid, String commandLine, Properties environment, Object currentThread, Iterator threads, Object executable, Iterator libraries, int addressSize) {
+		public Object buildProcess(Object addressSpace, String pid, String commandLine, Properties environment, Object currentThread, Iterator<?> threads, Object executable, Iterator<?> libraries, int addressSize) {
 			return new Object();
 		}
 
@@ -113,7 +113,7 @@ public class Main {
 		}
 
 		@Override
-		public Object buildThread(String name, Iterator registers, Iterator stackSections, Iterator stackFrames,
+		public Object buildThread(String name, Iterator<?> registers, Iterator<?> stackSections, Iterator<?> stackFrames,
 				Properties properties, int signalNumber) {
 			return new Object();
 		}
@@ -124,7 +124,7 @@ public class Main {
 		}
 
 		@Override
-		public Object buildModule(String name, Properties properties, Iterator sections, Iterator symbols,
+		public Object buildModule(String name, Properties properties, Iterator<?> sections, Iterator<?> symbols,
 				long loadAddress) {
 			return new Object();
 		}
@@ -135,7 +135,7 @@ public class Main {
 		}
 
 		@Override
-		public long getValueOfNamedRegister(List registers, String name) {
+		public long getValueOfNamedRegister(List<?> registers, String name) {
 			for (Iterator<?> iter = registers.iterator(); iter.hasNext();) {
 				Register register = (Register) iter.next();
 				if (name.equals(register.name))
@@ -330,6 +330,7 @@ public class Main {
 		}
 	}
 
+	@SuppressWarnings("restricted")
 	private Main(String[] args) {
 		super();
 		_diagnostics = new ArrayList<>();

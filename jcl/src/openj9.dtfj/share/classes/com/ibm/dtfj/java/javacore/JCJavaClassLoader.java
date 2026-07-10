@@ -24,6 +24,7 @@ package com.ibm.dtfj.java.javacore;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Vector;
 
 import com.ibm.dtfj.image.CorruptDataException;
@@ -36,7 +37,7 @@ public class JCJavaClassLoader implements JavaClassLoader {
 
 	private final ImagePointer fID;
 
-	private LinkedHashMap fClassNames;
+	private Map<String, ImagePointer> fClassNames;
 	private JCJavaRuntime fRuntime;
 	private JCJavaObject fObject;
 
@@ -49,7 +50,7 @@ public class JCJavaClassLoader implements JavaClassLoader {
 		}
 		fRuntime = javaRuntime;
 		fID = fRuntime.getImageProcess().getImageAddressSpace().getPointer(id);
-		fClassNames = new LinkedHashMap();
+		fClassNames = new LinkedHashMap<>();
 		fObject = null;
 		fRuntime.addJavaClassLoader(this);
 	}
@@ -57,10 +58,11 @@ public class JCJavaClassLoader implements JavaClassLoader {
 	/**
 	 *
 	 */
+	@Override
 	public JavaClass findClass(String className) {
 		JavaClass foundClass = null;
 		if (fClassNames.containsKey(className)) {
-			ImagePointer ip = (ImagePointer)fClassNames.get(className);
+			ImagePointer ip = fClassNames.get(className);
 			if (ip != null) {
 				// By class ID
 				long id = ip.getAddress();
@@ -77,14 +79,16 @@ public class JCJavaClassLoader implements JavaClassLoader {
 	 * TODO: javacore appears to only list defined classes per class loader. If this changes
 	 * in the future, this implementation must be changed.
 	 */
-	public Iterator getCachedClasses() {
+	@Override
+	public Iterator<?> getCachedClasses() {
 		return getClasses();
 	}
 
 	/**
 	 *
 	 */
-	public Iterator getDefinedClasses() {
+	@Override
+	public Iterator<?> getDefinedClasses() {
 		return getClasses();
 	}
 
@@ -92,12 +96,10 @@ public class JCJavaClassLoader implements JavaClassLoader {
 	 *
 	 *
 	 */
-	private Iterator getClasses() {
-		Vector classes = new Vector();
-		Iterator classNameIt = fClassNames.keySet().iterator();
-		for(;classNameIt.hasNext();) {
-			final Object next = classNameIt.next();
-			classes.add(findClass((String)next));
+	private Iterator<?> getClasses() {
+		Vector<JavaClass> classes = new Vector<>();
+		for (String className : fClassNames.keySet()) {
+			classes.add(findClass(className));
 		}
 		return classes.iterator();
 	}
@@ -105,6 +107,7 @@ public class JCJavaClassLoader implements JavaClassLoader {
 	/**
 	 *
 	 */
+	@Override
 	public JavaObject getObject() throws CorruptDataException {
 		return fObject;
 	}

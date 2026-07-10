@@ -90,6 +90,7 @@ public class HashTable_V1<StructType extends AbstractPointer> extends HashTable<
 			}
 		}
 
+		@Override
 		public boolean hasNext()
 		{
 			boolean hasNext = false;
@@ -106,11 +107,10 @@ public class HashTable_V1<StructType extends AbstractPointer> extends HashTable<
 		/**
 		 * We always return pointer to a node
 		 */
-		@SuppressWarnings("unchecked")
+		@Override
 		public StructType next()
 		{
 			PointerPointer data = null;
-			StructType result = null;
 			
 			if (!hasNext()) {
 				throw new NoSuchElementException("There are no more available elements");
@@ -133,18 +133,26 @@ public class HashTable_V1<StructType extends AbstractPointer> extends HashTable<
 			}
 
 			try {
+				long address;
+
 				if (_isInline) {
-					result = (StructType)DataType.getStructure(_structType.getSimpleName(), data.getAddress());
+					address = data.getAddress();
 				} else {
-					result = (StructType)DataType.getStructure(_structType.getSimpleName(), PointerPointer.cast(data).at(0).getAddress());
+					address = data.at(0).getAddress();
 				}
+
+				@SuppressWarnings("unchecked")
+				StructType result = (StructType) DataType.getStructure(_structType.getSimpleName(), address);
+
+				return result;
 			} catch (CorruptDataException cde) {
 				raiseCorruptDataEvent("Pool element corrupted", cde, true);
 			}
 
-			return result;
+			return null;
 		}
 
+		@Override
 		public VoidPointer nextAddress()
 		{
 			if(_isInline) {
@@ -203,7 +211,7 @@ public class HashTable_V1<StructType extends AbstractPointer> extends HashTable<
 		public boolean equal(StructType entry1, StructType entry2) throws CorruptDataException 
 		{	
 			if (!_isInline) {
-				entry1 = (StructType) DataType.getStructure(_structType, PointerPointer.cast(entry1).at(0).longValue());
+				entry1 = DataType.getStructure(_structType, PointerPointer.cast(entry1).at(0).longValue());
 			}
 			return _equalFn.equal(entry1, entry2);
 		}		
@@ -218,7 +226,7 @@ public class HashTable_V1<StructType extends AbstractPointer> extends HashTable<
 		public boolean equal(StructType entry1, StructType entry2) throws CorruptDataException 
 		{
 			if (!_isInline) {
-				entry1 = (StructType) DataType.getStructure(_structType, PointerPointer.cast(entry1).at(0).longValue());				
+				entry1 = DataType.getStructure(_structType, PointerPointer.cast(entry1).at(0).longValue());
 			}
 			return (0 == _comparatorFn.compare(entry1, entry2));
 		}
@@ -232,17 +240,17 @@ public class HashTable_V1<StructType extends AbstractPointer> extends HashTable<
 		public int searchComparator(J9AVLTreePointer tree, UDATA searchValue, J9AVLTreeNodePointer node) throws CorruptDataException 
 		{
 			VoidPointer data = avlNodeToData(node);
-			StructType node1 = (StructType) DataType.getStructure(_structType, searchValue.longValue());
+			StructType node1 = DataType.getStructure(_structType, searchValue.longValue());
 			StructType node2 = null;
-			
-			if (_isInline) {				
-				node2 = (StructType) DataType.getStructure(_structType, data.longValue());				
-			} else {				
-				node2 = (StructType) DataType.getStructure(_structType, PointerPointer.cast(data).at(0).longValue());			
+
+			if (_isInline) {
+				node2 = DataType.getStructure(_structType, data.longValue());
+			} else {
+				node2 = DataType.getStructure(_structType, PointerPointer.cast(data).at(0).longValue());
 			}
-			
+
 			return _comparatorFn.compare(node1, node2);
-		}		
+		}
 	}
 	
 	protected HashTable_V1(J9HashTablePointer hashTablePointer, boolean isInline, Class<StructType> structType, HashEqualFunction<StructType> equalFn, HashFunction<StructType> hashFn) throws CorruptDataException 
@@ -336,20 +344,20 @@ public class HashTable_V1<StructType extends AbstractPointer> extends HashTable<
 		if (!_isInline && findNode.notNull()) {
 			findNode = PointerPointer.cast(findNode).at(0);
 		}
-		StructType node = (StructType) DataType.getStructure(_structType, findNode.getAddress());
+		StructType node = DataType.getStructure(_structType, findNode.getAddress());
 		return node;
 	}
 
 	private PointerPointer hashTableFindNodeSpaceOpt(J9HashTablePointer table, StructType entry, PointerPointer head) throws CorruptDataException 
 	{
 		PointerPointer node = head;
-		StructType nodeStruct = (StructType) DataType.getStructure(_structType, node.getAddress());
+		StructType nodeStruct = DataType.getStructure(_structType, node.getAddress());
 		while ((node.at(0).notNull()) && (!_equalFunctionWrapper.equal(nodeStruct, entry))) {
 			node = node.add(1);				
 			if (node == table.nodes().add(table.tableSize())) {
 				node = table.nodes();
 			}
-			nodeStruct = (StructType) DataType.getStructure(_structType, node.getAddress());
+			nodeStruct = DataType.getStructure(_structType, node.getAddress());
 		}
 		return node;
 	}
@@ -372,11 +380,11 @@ public class HashTable_V1<StructType extends AbstractPointer> extends HashTable<
 	{
 		/* Look through the list looking for the correct key */
 		VoidPointer node = head.at(0);
-		StructType currentStruct = (StructType) DataType.getStructure(_structType, node.getAddress());
+		StructType currentStruct = DataType.getStructure(_structType, node.getAddress());
 		
 		while ((!node.isNull()) && (!_equalFunctionWrapper.equal(currentStruct, entry))) {
 			node = nextEA(node).at(0);
-			currentStruct = (StructType) DataType.getStructure(_structType, node.getAddress());
+			currentStruct = DataType.getStructure(_structType, node.getAddress());
 		}
 		return VoidPointer.cast(currentStruct);
 	}

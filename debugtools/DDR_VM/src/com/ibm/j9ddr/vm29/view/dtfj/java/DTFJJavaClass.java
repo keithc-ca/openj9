@@ -28,6 +28,7 @@ import static com.ibm.j9ddr.vm29.j9.OptInfo.getSourceFileNameForROMClass;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -89,7 +90,8 @@ public class DTFJJavaClass implements JavaClass {
 	J9ClassPointer getJ9Class() {
 		return j9class;
 	}
-	
+
+	@Override
 	public JavaClassLoader getClassLoader() throws CorruptDataException {
 		if (javaClassLoader == null) {
 			try {
@@ -102,6 +104,8 @@ public class DTFJJavaClass implements JavaClass {
 	}
 
 	private DTFJJavaClass componentType;
+
+	@Override
 	public JavaClass getComponentType() throws CorruptDataException {	
 		if (!isArray()) {
 			// This exception is required in this circumstance by DTFJ API
@@ -127,11 +131,11 @@ public class DTFJJavaClass implements JavaClass {
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getConstantPoolReferences() {
+	@Override
+	public Iterator<?> getConstantPoolReferences() {
 		try {
 			if(isArray()) {		//array classes don't have constant pools
-				return J9DDRDTFJUtils.emptyIterator();
+				return Collections.emptyIterator();
 			} else {
 				return new DTFJConstantPoolIterator(j9class);
 			}
@@ -141,18 +145,18 @@ public class DTFJJavaClass implements JavaClass {
 		}
 	}
 
-	static final Map<J9ClassPointer,List<Object>> declaredFieldsCache = new HashMap<J9ClassPointer,List<Object>>();
-	
-	@SuppressWarnings("rawtypes")
-	public Iterator getDeclaredFields() {
+	static final Map<J9ClassPointer, List<Object>> declaredFieldsCache = new HashMap<>();
+
+	@Override
+	public Iterator<?> getDeclaredFields() {
 		List<Object> list = declaredFieldsCache.get(j9class);
 		
 		if (list == null) {
-			list = new LinkedList<Object>();
+			list = new LinkedList<>();
 			final List<Object> fieldList = list; 
 			
 			IEventListener corruptDataListener =  new IEventListener() {
-				
+				@Override
 				public void corruptData(String message,
 						com.ibm.j9ddr.CorruptDataException e, boolean fatal) {
 					J9DDRCorruptData cd = J9DDRDTFJUtils.newCorruptData(DTFJContext.getProcess(), e);
@@ -211,9 +215,9 @@ public class DTFJJavaClass implements JavaClass {
 		return list.iterator();
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getDeclaredMethods() {
-		ArrayList<Object> methods;
+	@Override
+	public Iterator<?> getDeclaredMethods() {
+		List<Object> methods;
 		J9MethodPointer ramMethod;
 		long methodCount;
 		try {
@@ -241,6 +245,8 @@ public class DTFJJavaClass implements JavaClass {
 	}
 
 	private J9DDRImagePointer id;
+
+	@Override
 	public ImagePointer getID() {
 		if (id == null) {
 			id = DTFJContext.getImagePointer(j9class.getAddress());
@@ -248,9 +254,9 @@ public class DTFJJavaClass implements JavaClass {
 		return id;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getInterfaces() {
-		ArrayList<Object> interfaceNames;
+	@Override
+	public Iterator<?> getInterfaces() {
+		List<Object> interfaceNames;
 		int interfaceCount;
 		SelfRelativePointer interfaceName;
 		try {
@@ -261,7 +267,7 @@ public class DTFJJavaClass implements JavaClass {
 				String msg = String.format("Invalid number of interfaces for class@0x%s", Long.toHexString(j9class.getAddress()));
 				throw new com.ibm.j9ddr.CorruptDataException(msg);
 			}
-			interfaceNames = new ArrayList<Object>(interfaceCount);
+			interfaceNames = new ArrayList<>(interfaceCount);
 			interfaceName = j9class.romClass().interfaces();
 		} catch (Throwable t) {
 			CorruptData cd = J9DDRDTFJUtils.handleAsCorruptData(DTFJContext.getProcess(), t);
@@ -287,9 +293,9 @@ public class DTFJJavaClass implements JavaClass {
 		return interfaceNames.iterator();
 	}
 
-	static final Map<J9ClassPointer,Integer> modifiersCache = new HashMap<J9ClassPointer,Integer>();
-	
-	
+	static final Map<J9ClassPointer, Integer> modifiersCache = new HashMap<>();
+
+	@Override
 	public int getModifiers() throws CorruptDataException {
 		Integer cachedModifiers = modifiersCache.get(j9class);
 		
@@ -306,7 +312,7 @@ public class DTFJJavaClass implements JavaClass {
 		return cachedModifiers;
 	}
 
-
+	@Override
 	public String getName() throws CorruptDataException {
 		try {
 			if (isArray()) {
@@ -341,7 +347,8 @@ public class DTFJJavaClass implements JavaClass {
 			throw J9DDRDTFJUtils.handleAsCorruptDataException(DTFJContext.getProcess(), t);
 		}
 	}
-	
+
+	@Override
 	public JavaObject getObject() throws CorruptDataException {
 		DTFJJavaObject obj = null; 
 		if( classObject != null ) {
@@ -359,12 +366,13 @@ public class DTFJJavaClass implements JavaClass {
 	}
 
 	private List<Object> references = null;
-	@SuppressWarnings("rawtypes")
-	public Iterator getReferences() {
+
+	@Override
+	public Iterator<?> getReferences() {
 		if (references == null) {
 			try {
-			// 	need to build a list of references from this class.
-				references = new ArrayList<Object>();
+				// need to build a list of references from this class.
+				references = new ArrayList<>();
 				//there are error handlers in each method which should handle corrupt data so only add one try..catch block in this method as a back stop
 				addConstantPoolReferences(references);
 				addStaticFieldReferences(references);
@@ -380,10 +388,9 @@ public class DTFJJavaClass implements JavaClass {
 			
 	}
 
-	@SuppressWarnings("rawtypes")
 	private void addStaticFieldReferences(List<Object> references) {
 		JavaReference jRef;
-		Iterator declaredFieldIt = getDeclaredFields();
+		Iterator<?> declaredFieldIt = getDeclaredFields();
 		Object obj = null;		//can get corrupt data returned through the field iterator as it's coming from DTFJ
 		while ((declaredFieldIt.hasNext() && (obj = declaredFieldIt.next()) instanceof DTFJJavaField)) {
 			DTFJJavaField jField = (DTFJJavaField) obj;
@@ -446,25 +453,24 @@ public class DTFJJavaClass implements JavaClass {
 	}
 	
 	private void addClassObjectReference (List<Object> coll) {
-	    JavaReference jRef = null;
-	    try {
-	        com.ibm.dtfj.java.JavaObject classObject = this.getObject();
-	    
-	        if(null != classObject) {
-	            jRef = new DTFJJavaReference(this,classObject,"Class object",JavaReference.REFERENCE_CLASS_OBJECT,JavaReference.HEAP_ROOT_UNKNOWN, JavaReference.REACHABILITY_STRONG);
-	            coll.add(jRef);
-	        }
-	    } catch (Throwable t) {
+		JavaReference jRef = null;
+		try {
+			com.ibm.dtfj.java.JavaObject classObject = this.getObject();
+
+			if (null != classObject) {
+				jRef = new DTFJJavaReference(this, classObject, "Class object", JavaReference.REFERENCE_CLASS_OBJECT, JavaReference.HEAP_ROOT_UNKNOWN, JavaReference.REACHABILITY_STRONG);
+				coll.add(jRef);
+			}
+		} catch (Throwable t) {
 			CorruptData cd = J9DDRDTFJUtils.handleAsCorruptData(DTFJContext.getProcess(), t);
 			coll.add(cd);
 		}
 	}
-	
-	@SuppressWarnings("rawtypes")
+
 	private JavaReference addConstantPoolReferences(List<Object> references) {
 		// get the Constant Pool references from this class.
 		JavaReference jRef = null;
-		Iterator constantPoolIt = getConstantPoolReferences();
+		Iterator<?> constantPoolIt = getConstantPoolReferences();
 		try {
 			while (constantPoolIt.hasNext()) {
 				// get each reference in turn, note that the iterator can return JavaClass
@@ -506,9 +512,10 @@ public class DTFJJavaClass implements JavaClass {
 		
 		public final JavaClass superClass;
 	}
-	
-	private static final Map<J9ClassPointer, SuperClassCacheEntry> superClassCache = new HashMap<J9ClassPointer,SuperClassCacheEntry>(); 
-	
+
+	private static final Map<J9ClassPointer, SuperClassCacheEntry> superClassCache = new HashMap<>();
+
+	@Override
 	public JavaClass getSuperclass() throws CorruptDataException {
 		SuperClassCacheEntry cachedEntry = superClassCache.get(j9class);
 		
@@ -551,7 +558,8 @@ public class DTFJJavaClass implements JavaClass {
 		}
 		return isInterface;
 	}
-	
+
+	@Override
 	public boolean isArray() throws CorruptDataException {
 		if (isArray == null) {
 			try {
@@ -564,6 +572,7 @@ public class DTFJJavaClass implements JavaClass {
 		return isArray;
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		if (obj != null && obj instanceof DTFJJavaClass) {
 			DTFJJavaClass objImpl = (DTFJJavaClass) obj;
@@ -573,10 +582,11 @@ public class DTFJJavaClass implements JavaClass {
 		return false;
 	}
 
+	@Override
 	public int hashCode() {
 		return (int) j9class.getAddress();
 	}
-	
+
 	public String getFilename() throws CorruptDataException
 	{
 		try {
@@ -586,6 +596,7 @@ public class DTFJJavaClass implements JavaClass {
 		}
 	}
 
+	@Override
 	public String toString()
 	{
 		try {
@@ -594,7 +605,8 @@ public class DTFJJavaClass implements JavaClass {
 			return "JavaClass 0x" + Long.toHexString(j9class.getAddress()) + " (exception reading class name)";
 		}
 	}
-	
+
+	@Override
 	public long getInstanceSize() throws CorruptDataException
 	{
 		try {
@@ -603,7 +615,8 @@ public class DTFJJavaClass implements JavaClass {
 			throw J9DDRDTFJUtils.handleAsCorruptDataException(DTFJContext.getProcess(), t);
 		}
 	}
-	
+
+	@Override
 	public JavaObject getProtectionDomain() throws DataUnavailable,	CorruptDataException {
 		try {
 			return DTFJJavaClassHelper.getProtectionDomain(this);
@@ -611,13 +624,5 @@ public class DTFJJavaClass implements JavaClass {
 			throw J9DDRDTFJUtils.handleAsCorruptDataException(DTFJContext.getProcess(), t);
 		}
 	}
-	
-	public boolean isPacked() {
-		return false; // 29 vm does not support packed
-	}
-	
-	public long getPackedDataSize() throws DataUnavailable, CorruptDataException {
-		return 0; // 29 vm does not support packed
-	}
-	
+
 }

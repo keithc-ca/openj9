@@ -64,18 +64,14 @@ public class SnapFormatWrapperCommand extends Command {
 		}
 		try {
 			Class<?> snapFormatCommandCls = Class.forName("com.ibm.j9ddr.tools.ddrinteractive.commands.SnapFormatCommand");
-			Object snapFormatCommandInstance = snapFormatCommandCls.newInstance();
+			Object snapFormatCommandInstance = snapFormatCommandCls.getConstructor().newInstance();
 			if (snapFormatCommandInstance instanceof Command) {
 				Command c = (Command) snapFormatCommandInstance;
 				c.run(command, args, context, out);
 			} else {
 				throw new DDRInteractiveCommandException("Unable to format trace. Could not create formatter.");
 			}
-		} catch (ClassNotFoundException
-				| IllegalAccessException
-				| IllegalArgumentException
-				| InstantiationException
-				| SecurityException e) {
+		} catch (ReflectiveOperationException | IllegalArgumentException | SecurityException e) {
 			throw new DDRInteractiveCommandException("Unable to format trace. " + e.getMessage(), e);
 		}
 	}

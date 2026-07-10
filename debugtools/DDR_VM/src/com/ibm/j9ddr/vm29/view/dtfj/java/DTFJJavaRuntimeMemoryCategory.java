@@ -179,7 +179,7 @@ public class DTFJJavaRuntimeMemoryCategory implements JavaRuntimeMemoryCategory
 	public Iterator<?> getMemorySections(boolean includeFreed) throws CorruptDataException, DataUnavailable
 	{
 		return IteratorHelpers.filterIterator(runtime.getMemorySections(includeFreed), new IteratorFilter<Object>() {
-
+			@Override
 			public boolean accept(Object obj)
 			{
 				if (obj instanceof JavaRuntimeMemorySection) {
@@ -197,7 +197,6 @@ public class DTFJJavaRuntimeMemoryCategory implements JavaRuntimeMemoryCategory
 					return true;
 				}
 			}
-			
 		});
 	}
 

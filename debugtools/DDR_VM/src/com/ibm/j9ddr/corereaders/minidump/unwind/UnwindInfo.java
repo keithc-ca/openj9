@@ -82,6 +82,7 @@ public class UnwindInfo {
 		return codeCount;
 	}
 
+	@Override
 	public String toString() {
 		String str = "";
 		try {
@@ -91,7 +92,7 @@ public class UnwindInfo {
 			byte countOfCodes = getCountOfCodes();
 			str += String.format("Version: 0x%x, flags 0x%x, SizeOfProlog 0x%02x, CountOfCodes %d", version, flags, prologSize, countOfCodes);
 			long unwindCodeAddr = OFFSET_UNWINDCODE + address;
-			for (byte codeIndex = 0; codeIndex < countOfCodes;) {
+			for (int codeIndex = 0; codeIndex < countOfCodes;) {
 				UnwindCode c = new UnwindCode(process, module, this, unwindCodeAddr);
 				str += "\n\t";
 				str += c.toString();
@@ -129,7 +130,7 @@ public class UnwindInfo {
 			// Hopefully we are just interested in the effect on the stack pointer.
 			long unwindCodeAddr = OFFSET_UNWINDCODE + address;
 
-			for (byte codeIndex = 0; codeIndex < countOfCodes;) {
+			for (int codeIndex = 0; codeIndex < countOfCodes;) {
 				// System.err.format("Stack pointer is: 0x%08x%n", stackPointer);
 				UnwindCode c = new UnwindCode(process, module, this, unwindCodeAddr);
 

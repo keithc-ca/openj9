@@ -126,10 +126,12 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				super(dataSize, location);
 			}
 
+			@Override
 			public void readFrom(MiniDump dump) throws IOException {
 				// Do nothing
 			}
 
+			@Override
 			public void readFrom(MiniDump dump, Builder builder, Object addressSpace, IAbstractAddressSpace memory, boolean is64Bit) throws IOException {
 				dump.coreSeek(getLocation());
 				if (getDataSize() < 4)
@@ -155,12 +157,13 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				super(dataSize, location);
 			}
 
+			@Override
 			public void readFrom(MiniDump dump) throws IOException {
 				long location = getLocation();
 				dump.coreSeek(location);
 				long numberOfMemoryRanges = dump.coreReadLong();
 				long baseAddress = dump.coreReadLong();
-				List memoryRanges = new ArrayList();
+				List<MemoryRange> memoryRanges = new ArrayList<>();
 				MemoryRange memoryRange = null;
 				for (int i = 0; i < numberOfMemoryRanges; i++) {
 					long start = dump.is64Bit() ? dump.coreReadLong(): dump.coreReadLong() & 0x00000000FFFFFFFFL;
@@ -188,6 +191,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				dump.setMemoryRanges(memoryRanges);
 			}
 
+			@Override
 			public void readFrom(MiniDump dump, Builder builder, Object addressSpace, IAbstractAddressSpace memory, boolean is64Bit) throws IOException {
 				// Do nothing
 			}
@@ -199,10 +203,12 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				super(dataSize, location);
 			}
 
+			@Override
 			public void readFrom(MiniDump dump) throws IOException {
 				// Do nothing
 			}
 
+			@Override
 			public void readFrom(MiniDump dump, Builder builder, Object addressSpace, IAbstractAddressSpace memory, boolean is64Bit) throws IOException {
 				class Module {
 					int nameAddress = -1;
@@ -278,7 +284,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 					}
 					long e_lfanewAddress = modules[i].imageBaseAddress + 0x3c;
 					//load the e_lfanew since that is the load-address-relative location of the PE Header
-					List sections = new Vector();
+					List<Object> sections = new Vector<>();
 					try {
 						long e_lfanew = 0xFFFFFFFFL & memory.getIntAt(0, e_lfanewAddress);
 						//push us to the start of the PE header
@@ -342,7 +348,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 			 * @param moduleLoadAddress
 			 * @return
 			 */
-			private Iterator _buildSymbolIterator(MiniDump dump, IAbstractAddressSpace memory, Builder builder, Object addressSpace, long imageBase, long moduleLoadAddress)
+			private Iterator<?> _buildSymbolIterator(MiniDump dump, IAbstractAddressSpace memory, Builder builder, Object addressSpace, long imageBase, long moduleLoadAddress)
 			{
 				try {
 					byte magic[] = new byte[2];
@@ -525,7 +531,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 						names[x] = new String (buffer, 0, index-1);
 					}
 
-					Vector symbols = new Vector();
+					Vector<Object> symbols = new Vector<>();
 					for (int x = 0; x < numberOfNames; x++) {
 						short index = ordinals[x];
 						long relocatedFunctionAddress = addresses[index] + moduleLoadAddress;
@@ -544,7 +550,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 			 * Get the module name as a String from the UTF-16LE data held in the dump
 			 * @throws IOException
 			 */
-			private String getModuleName(MiniDump dump, int position) throws IOException {
+			private static String getModuleName(MiniDump dump, int position) throws IOException {
 				dump.coreSeek(position);
 				int length = dump.coreReadInt();
 				if (length <= 0 || 512 <= length)
@@ -559,6 +565,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				super(dataSize, location);
 			}
 
+			@Override
 			public void readFrom(MiniDump dump) throws IOException {
 				dump.coreSeek(getLocation());
 				short processorArchitecture = dump.coreReadShort();
@@ -579,6 +586,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				dump.setWindowsMajorVersion(majorVersion);
 			}
 
+			@Override
 			public int readPtrSize(ImageInputStream f)
 			{
 				short processorArchitecture = 0;
@@ -597,6 +605,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 						PROCESSOR_ARCHITECTURE_IA32_ON_WIN64 == processorArchitecture) ? 64 : 32;
 			}
 
+			@Override
 			public void readFrom(MiniDump dump, Builder builder, Object addressSpace, IAbstractAddressSpace memory, boolean is64Bit) throws IOException {
 				// Do nothing
 			}
@@ -607,10 +616,12 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				super(dataSize, location);
 			}
 
+			@Override
 			public void readFrom(MiniDump dump) throws IOException {
 				// Do nothing
 			}
 
+			@Override
 			public void readFrom(MiniDump dump, Builder builder, Object addressSpace, IAbstractAddressSpace memory, boolean is64Bit) throws IOException {
 
 				//get the thread ID of the failing thread
@@ -629,7 +640,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 
 				dump.coreSeek(getLocation());
 				int numberOfThreads = dump.coreReadInt();
-				List threads = new ArrayList();
+				List<Object> threads = new ArrayList<>();
 				for (int i = 0; i < numberOfThreads; i++) {
 					dump.coreSeek(getLocation() + 4 + i * 48);
 					int threadId = dump.coreReadInt();
@@ -647,10 +658,10 @@ public abstract class NewWinDump extends CoreReaderSupport {
 					properties.setProperty("priorityClass", String.valueOf(priorityClass));
 					properties.setProperty("priority", String.valueOf(priority));
 
-					List registers = readRegisters(dump, builder, contextRva, contextDataSize);
+					List<?> registers = readRegisters(dump, builder, contextRva, contextDataSize);
 					long stackEnd = stackStart + stackSize;
 					Object section = builder.buildStackSection(addressSpace, stackStart, stackEnd);
-					List frames = readStackFrames(dump, builder, addressSpace, stackStart, stackEnd, stackRva, registers, memory, is64Bit);
+					List<?> frames = readStackFrames(dump, builder, addressSpace, stackStart, stackEnd, stackRva, registers, memory, is64Bit);
 					//TODO: find the signal number!
 					int signalNumber = 0;
 					Object thread = builder.buildThread(String.valueOf(threadId), registers.iterator(),
@@ -675,14 +686,14 @@ public abstract class NewWinDump extends CoreReaderSupport {
 //				}
 			}
 
-			private List readStackFrames(MiniDump dump, Builder builder, Object addressSpace, long stackStart, long stackEnd, long stackRva, List registers, IAbstractAddressSpace memory, boolean is64Bit)
+			private List<?> readStackFrames(MiniDump dump, Builder builder, Object addressSpace, long stackStart, long stackEnd, long stackRva, List<?> registers, IAbstractAddressSpace memory, boolean is64Bit)
 			{
 				// Windows stack frames can be read by following the ebp to the base of the stack: old ebp is at ebp(0) and return address to parent context is ebp(sizeof(void*))
 				// 1) find the ebp in the register file
 				long ebp = builder.getValueOfNamedRegister(registers, "ebp");
 				long eip = builder.getValueOfNamedRegister(registers, "eip");
 				long esp = builder.getValueOfNamedRegister(registers, "esp");
-				List frames = new ArrayList();
+				List<Object> frames = new ArrayList<>();
 
 				// eip may be -1 if we're in a system call
 				if (-1 == eip && stackStart <= esp && esp < stackEnd) {
@@ -717,7 +728,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				return frames;
 			}
 
-			private List readRegisters(MiniDump dump, Builder builder, long contextRva, long contextDataSize) throws IOException {
+			private List<?> readRegisters(MiniDump dump, Builder builder, long contextRva, long contextDataSize) throws IOException {
 				switch (dump.getProcessorArchitecture()) {
 				case PROCESSOR_ARCHITECTURE_AMD64:
 					return readAmd64Registers(dump, builder, contextRva, contextDataSize);
@@ -728,10 +739,10 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				}
 			}
 
-			private List readIntelRegisters(MiniDump dump, Builder builder, long contextRva, long contextDataSize) throws IOException {
+			private List<?> readIntelRegisters(MiniDump dump, Builder builder, long contextRva, long contextDataSize) throws IOException {
 				// We capture segment registers, flags, integer registers and instruction pointer
 				dump.coreSeek(contextRva + 140);
-				List registers = new ArrayList();
+				List<Object> registers = new ArrayList<>();
 				registers.add(builder.buildRegister("gs", Integer.valueOf(dump.coreReadInt())));
 				registers.add(builder.buildRegister("fs", Integer.valueOf(dump.coreReadInt())));
 				registers.add(builder.buildRegister("es", Integer.valueOf(dump.coreReadInt())));
@@ -751,10 +762,10 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				return registers;
 			}
 
-			private List readAmd64Registers(MiniDump dump, Builder builder, long contextRva, long contextDataSize) throws IOException {
+			private List<?> readAmd64Registers(MiniDump dump, Builder builder, long contextRva, long contextDataSize) throws IOException {
 				// We capture segment registers, flags, integer registers and instruction pointer
 				dump.coreSeek(contextRva + 56);
-				List registers = new ArrayList();
+				List<Object> registers = new ArrayList<>();
 				registers.add(builder.buildRegister("cs", Short.valueOf(dump.coreReadShort())));
 				registers.add(builder.buildRegister("ds", Short.valueOf(dump.coreReadShort())));
 				registers.add(builder.buildRegister("es", Short.valueOf(dump.coreReadShort())));
@@ -784,18 +795,18 @@ public abstract class NewWinDump extends CoreReaderSupport {
 			}
 		}
 
-		private List _directory = null;
+		private List<Stream> _directory = null;
 		private int _numberOfStreams = 0;
 		private long _streamDirectoryRva = 0;
 		private int _timeAndDate = 0;
-		private List _memoryRanges = null;
+		private List<MemoryRange> _memoryRanges = null;
 		private short _processorArchitecture = 0;
 		private int _windowsMajorVersion = 0;
 		private Object _executable = null;
-		private List _threads = new ArrayList();
+		private List<Object> _threads = new ArrayList<>();
 		private Object _failingThread = null;
-		private List _libraries = new ArrayList();
-		private Set _additionalFileNames = new TreeSet();
+		private List<Object> _libraries = new ArrayList<>();
+		private Set<String> _additionalFileNames = new TreeSet<>();
 		private String _pid = null;
 
 		public MiniDump(ImageInputStream stream) throws IOException {
@@ -816,7 +827,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 			littleEndianReadInt(stream); //ignore time and date
 
 			stream.seek(streamDirectoryRva);
-			Vector entries = new Vector();
+			Vector<Stream> entries = new Vector<>();
 			for (int i = 0; i < numberOfStreams; i++) {
 				int streamType = littleEndianReadInt(stream);
 				int dataSize = littleEndianReadInt(stream);
@@ -830,9 +841,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 				}
 			}
 
-			Iterator accessEntries = entries.iterator();
-			while (accessEntries.hasNext()) {
-				Stream entry = (Stream) accessEntries.next();
+			for (Stream entry : entries) {
 				int ptr = entry.readPtrSize(stream);
 				if (0 != ptr) {
 					return ptr;
@@ -845,7 +854,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 			_additionalFileNames.add(moduleName);
 		}
 
-		public Iterator getAdditionalFileNames() {
+		public Iterator<String> getAdditionalFileNames() {
 			return _additionalFileNames.iterator();
 		}
 
@@ -861,7 +870,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 			_pid = pid;
 		}
 
-		public void addThreads(List threads) {
+		public void addThreads(List<?> threads) {
 			_threads.addAll(threads);
 		}
 
@@ -885,7 +894,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 			return _processorArchitecture;
 		}
 
-		protected void setMemoryRanges(List memoryRanges) {
+		protected void setMemoryRanges(List<MemoryRange> memoryRanges) {
 			_memoryRanges = memoryRanges;
 		}
 
@@ -901,7 +910,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 
 		private void parseStreams() throws IOException {
 			coreSeek(_streamDirectoryRva);
-			_directory = new ArrayList();
+			_directory = new ArrayList<>();
 			for (int i = 0; i < _numberOfStreams; i++) {
 				int streamType = coreReadInt();
 				int dataSize = coreReadInt();
@@ -913,8 +922,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 					_directory.add(entry);
 			}
 
-			for (Iterator iter = _directory.iterator(); iter.hasNext();) {
-				Stream entry = (Stream) iter.next();
+			for (Stream entry : _directory) {
 				entry.readFrom(this);
 			}
 		}
@@ -922,8 +930,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 		public void extract(Builder builder) {
 			try {
 				Object addressSpace = builder.buildAddressSpace("Windows MiniDump Address Space", 0);
-				for (Iterator iter = _directory.iterator(); iter.hasNext();) {
-					Stream entry = (Stream) iter.next();
+				for (Stream entry : _directory) {
 					entry.readFrom(this, builder, addressSpace, getAddressSpace(), is64Bit());
 				}
 				String commandLine = _extractCommandLine();
@@ -1006,13 +1013,13 @@ public abstract class NewWinDump extends CoreReaderSupport {
 			if (null == _memoryRanges) {
 				return null;
 			}
-			return (MemoryRange[])_memoryRanges.toArray(new MemoryRange[_memoryRanges.size()]);
+			return _memoryRanges.toArray(new MemoryRange[_memoryRanges.size()]);
 		}
 	}
 
 	private static class UserDump extends NewWinDump {
 		private int _dataOffset;
-		private List _memoryRanges;
+		private List<MemoryRange> _memoryRanges;
 		private int _regionCount;
 		private int _regionOffset;
 
@@ -1030,7 +1037,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 		/* (non-Javadoc)
 		 * @see com.ibm.dtfj.corereaders.Dump#getMemoryRanges()
 		 */
-		public Iterator getMemoryRanges()
+		public Iterator<MemoryRange> getMemoryRanges()
 		{
 			return _memoryRanges.iterator();
 		}
@@ -1056,7 +1063,7 @@ public abstract class NewWinDump extends CoreReaderSupport {
 
 		private void parseMemory() throws IOException {
 			coreSeek(_regionOffset);
-			_memoryRanges = new ArrayList();
+			_memoryRanges = new ArrayList<>();
 			MemoryRange memoryRange = null;
 			for (int i = 0; i < _regionCount; i++) {
 				long start = coreReadInt();
@@ -1109,13 +1116,12 @@ public abstract class NewWinDump extends CoreReaderSupport {
 			}
 		}
 
-		public Iterator getAdditionalFileNames() {
-			// TODO Auto-generated method stub
-			return Collections.EMPTY_LIST.iterator();
+		public Iterator<String> getAdditionalFileNames() {
+			return Collections.emptyIterator();
 		}
 
 		protected MemoryRange[] getMemoryRangesAsArray() {
-			return (MemoryRange[])_memoryRanges.toArray(new MemoryRange[_memoryRanges.size()]);
+			return _memoryRanges.toArray(new MemoryRange[_memoryRanges.size()]);
 		}
 
 		protected boolean is64Bit()

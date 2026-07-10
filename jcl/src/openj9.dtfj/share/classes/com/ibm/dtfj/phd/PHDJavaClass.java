@@ -57,7 +57,7 @@ class PHDJavaClass implements JavaClass {
 	private final int hashCode;
 	private int size;
 	private JavaClass componentType;
-	private List<JavaMethod>methods = new ArrayList<JavaMethod>();
+	private List<JavaMethod> methods = new ArrayList<>();
 	private JavaObject classObject;
 	private static final int UNKNOWN_SIZE = Integer.MIN_VALUE;
 	static final int UNKNOWN_SUPERCLASS = -1;
@@ -202,6 +202,7 @@ class PHDJavaClass implements JavaClass {
 		componentType = builder.componentType;
 	}
 
+	@Override
 	public JavaClassLoader getClassLoader() throws CorruptDataException {
 		return loader;
 	}
@@ -212,6 +213,7 @@ class PHDJavaClass implements JavaClass {
 		return ret;
 	}
 
+	@Override
 	public JavaClass getComponentType() throws CorruptDataException {
 		if (!isArray()) throw new IllegalArgumentException(getName()+" is not an array");
 		if (componentType == null) {
@@ -254,31 +256,37 @@ class PHDJavaClass implements JavaClass {
 		return ret;
 	}
 
-	public Iterator<JavaObject> getConstantPoolReferences() {
-		return Collections.<JavaObject>emptyList().iterator();
-
+	@Override
+	public Iterator<?> getConstantPoolReferences() {
+		return Collections.emptyIterator();
 	}
 
-	public Iterator<JavaField> getDeclaredFields() {
-		return Collections.<JavaField>emptyList().iterator();
+	@Override
+	public Iterator<?> getDeclaredFields() {
+		return Collections.emptyIterator();
 	}
 
-	public Iterator<JavaMethod> getDeclaredMethods() {
+	@Override
+	public Iterator<?> getDeclaredMethods() {
 		return methods.iterator();
 	}
 
+	@Override
 	public ImagePointer getID() {
 		return addr != 0 ? space.getPointer(addr) : null;
 	}
 
-	public Iterator<String> getInterfaces() {
-		return Collections.<String>emptyList().iterator();
+	@Override
+	public Iterator<?> getInterfaces() {
+		return Collections.emptyIterator();
 	}
 
+	@Override
 	public int getModifiers() throws CorruptDataException {
 		return MODIFIERS_UNAVAILABLE;
 	}
 
+	@Override
 	public String getName() throws CorruptDataException {
 		if (name == null) {
 			throw new CorruptDataException(new PHDCorruptData("No class name available (null)", getID()));
@@ -291,6 +299,7 @@ class PHDJavaClass implements JavaClass {
 		}
 	}
 
+	@Override
 	public JavaObject getObject() throws CorruptDataException {
 		if (addr == 0) return null;
 		if (classObject != null) return classObject;
@@ -304,6 +313,7 @@ class PHDJavaClass implements JavaClass {
 		return classObject;
 	}
 
+	@Override
 	public JavaClass getSuperclass() throws CorruptDataException {
 		if (superAddress == 0) {
 			return null;
@@ -322,13 +332,15 @@ class PHDJavaClass implements JavaClass {
 		}
 	}
 
+	@Override
 	public boolean isArray() throws CorruptDataException {
 		return componentType != null
 			|| name != null && name.startsWith("[")
 			|| !UNKNOWN_NONARRAY.equals(name) && getName().startsWith("[");
 	}
 
-	public Iterator<JavaReference> getReferences() {
+	@Override
+	public Iterator<?> getReferences() {
 		final JavaClass source = this;
 		return new Iterator<JavaReference>() {
 			int count;
@@ -346,6 +358,8 @@ class PHDJavaClass implements JavaClass {
 				} catch (CorruptDataException e) {
 				}
 			}
+
+			@Override
 			public boolean hasNext() {
 				if (count < 0) {
 					return true;
@@ -363,6 +377,7 @@ class PHDJavaClass implements JavaClass {
 				}
 			}
 
+			@Override
 			public JavaReference next() {
 				if (!hasNext()) throw new NoSuchElementException(""+count++);
 				long ref;
@@ -411,6 +426,7 @@ class PHDJavaClass implements JavaClass {
 				}
 			}
 
+			@Override
 			public void remove() {
 				throw new UnsupportedOperationException();
 			}
@@ -418,10 +434,12 @@ class PHDJavaClass implements JavaClass {
 		};
 	}
 
+	@Override
 	public String toString() {
 		return "PHDJavaClass "+name+"@"+Long.toHexString(addr);
 	}
 
+	@Override
 	public int hashCode() {
 		return (int)addr ^ (int)(addr >>> 32);
 	}
@@ -433,6 +451,7 @@ class PHDJavaClass implements JavaClass {
 	 * @return
 	 * @throws CorruptDataException
 	 */
+	@Override
 	public long getInstanceSize() throws CorruptDataException {
 		int header;
 		if (size == UNKNOWN_SIZE) throw new CorruptDataException(new PHDCorruptData("No class size available", getID()));
@@ -470,7 +489,7 @@ class PHDJavaClass implements JavaClass {
 	 * @return
 	 */
 	static boolean referencesClass(JavaClass from, JavaClass to) {
-		for (Iterator i1 = from.getReferences(); i1.hasNext(); ) {
+		for (Iterator<?> i1 = from.getReferences(); i1.hasNext(); ) {
 			Object o = i1.next();
 			if (o instanceof CorruptData) continue;
 			JavaReference jr = (JavaReference)o;
@@ -521,7 +540,8 @@ class PHDJavaClass implements JavaClass {
 		}
 	}
 
-	public JavaObject getProtectionDomain() throws DataUnavailable,	CorruptDataException {
+	@Override
+	public JavaObject getProtectionDomain() throws DataUnavailable, CorruptDataException {
 		throw new DataUnavailable("This implementation of DTFJ does not support getProtectionDomain");
 	}
 

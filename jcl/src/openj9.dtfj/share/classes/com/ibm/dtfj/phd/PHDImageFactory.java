@@ -47,34 +47,33 @@ public class PHDImageFactory implements ImageFactory {
 	public PHDImageFactory() {
 	}
 
+	@Override
 	public Image getImage(ImageInputStream in, URI sourceID) throws IOException {
 		return new PHDImage(sourceID, in);
 	}
 
+	@Override
 	public Image getImage(ImageInputStream in, ImageInputStream meta, URI sourceID) throws IOException {
 		ImageFactory metaFactory = getMetaFactory();
 		Image metaImage = metaFactory.getImage(meta, sourceID);
 		return new PHDImage(sourceID, in, metaImage);
 	}
 
+	@Override
 	public Image[] getImagesFromArchive(File archive, boolean extract) throws IOException {
 		throw new IOException("Not supported for PHD files");
 	}
 
-	private ImageFactory getMetaFactory() throws IOException {
+	private static ImageFactory getMetaFactory() throws IOException {
 		ImageFactory factory = null;
 		try {
 			Class<?> c2 = Class.forName("com.ibm.dtfj.image.javacore.JCImageFactory");
-			factory = (ImageFactory) c2.newInstance();
+			factory = (ImageFactory) c2.getConstructor().newInstance();
 		} catch (ClassNotFoundException e) {
 			IOException e2 = new IOException("Unable to create javacore image factory");
 			e2.initCause(e);
 			throw e2;
-		} catch (InstantiationException e) {
-			IOException e2 = new IOException("Unable to create javacore image factory");
-			e2.initCause(e);
-			throw e2;
-		} catch (IllegalAccessException e) {
+		} catch (ReflectiveOperationException e) {
 			IOException e2 = new IOException("Unable to create javacore image factory");
 			e2.initCause(e);
 			throw e2;
@@ -82,14 +81,17 @@ public class PHDImageFactory implements ImageFactory {
 		return factory;
 	}
 
+	@Override
 	public int getDTFJMajorVersion() {
 		return DTFJ_MAJOR_VERSION;
 	}
 
+	@Override
 	public int getDTFJMinorVersion() {
 		return DTFJ_MINOR_VERSION;
 	}
 
+	@Override
 	public Image getImage(File file) throws IOException {
 		File meta = findMetaFile(file);
 		if (meta == null) {
@@ -119,7 +121,7 @@ public class PHDImageFactory implements ImageFactory {
 	 * @param file
 	 * @return Associated meta file (javacore) or null if not found
 	 */
-	private File findMetaFile(File file) {
+	private static File findMetaFile(File file) {
 		String name = file.getName();
 		String prefix = "heapdump";
 		// Allow extra stuff in front of "heapdump"
@@ -198,7 +200,7 @@ public class PHDImageFactory implements ImageFactory {
 		return null;
 	}
 
-	private String genJavacoreName(String[] s, int inc, int componentToInc) {
+	private static String genJavacoreName(String[] s, int inc, int componentToInc) {
 		StringBuffer sb = new StringBuffer(s[0]);
 		for (int i = 1; i < s.length - 1; ++i) {
 			String ss = s[i];
@@ -221,12 +223,13 @@ public class PHDImageFactory implements ImageFactory {
 		return sb.toString();
 	}
 
+	@Override
 	public Image getImage(File file, File metaFile) throws IOException {
 		Image i2 = getMetaImage(file, metaFile);
 		return new PHDImage(file, i2);
 	}
 
-	private Image getMetaImage(File file, File metaFile) throws IOException,
+	private static Image getMetaImage(File file, File metaFile) throws IOException,
 			FileNotFoundException {
 		ImageFactory metaFactory = getMetaFactory();
 		Image i2;
@@ -241,6 +244,7 @@ public class PHDImageFactory implements ImageFactory {
 		return i2;
 	}
 
+	@Override
 	public int getDTFJModificationLevel() {
 		// modification level is VM stream plus build version - historically the tag from RAS_Auto-Build/projects.psf - now just a number
 		return 28002;

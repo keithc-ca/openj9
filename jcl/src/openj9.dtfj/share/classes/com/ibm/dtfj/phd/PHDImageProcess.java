@@ -32,6 +32,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.imageio.stream.ImageInputStream;
@@ -55,8 +56,8 @@ class PHDImageProcess implements ImageProcess {
 	private final List<JavaRuntime> runtimes;
 	private final String pid;
 	private final ImageProcess metaImageProcess;
-	private final ArrayList<ImageModule>modules = new ArrayList<ImageModule>();
-	private final LinkedHashMap<Object, ImageThread>threads = new LinkedHashMap<Object, ImageThread>();
+	private final List<ImageModule> modules = new ArrayList<>();
+	private final Map<Object, ImageThread> threads = new LinkedHashMap<>();
 	private CorruptData modules_cd;
 	private ImageThread currentThread;
 
@@ -68,7 +69,7 @@ class PHDImageProcess implements ImageProcess {
 		processData(space);
 		//can't get the PID as there is no file name
 		pid = "<unknown pid>";
-		runtimes = new ArrayList<JavaRuntime>();
+		runtimes = new ArrayList<>();
 		runtimes.add(new PHDJavaRuntime(stream, parentImage, space,this,metaRuntime));
 	}
 
@@ -79,15 +80,15 @@ class PHDImageProcess implements ImageProcess {
 		this.is64bit = reader.is64Bit();
 		processData(space);
 		pid = getPID(file);
-		runtimes = new ArrayList<JavaRuntime>();
+		runtimes = new ArrayList<>();
 		runtimes.add(new PHDJavaRuntime(file, parentImage, space,this,metaRuntime));
 
 	}
 
-	private JavaRuntime getJavaRuntime(ImageProcess process) {
+	private static JavaRuntime getJavaRuntime(ImageProcess process) {
 		JavaRuntime metaRuntime = null;
 		if (process != null) {
-			Iterator i2 = process.getRuntimes();
+			Iterator<?> i2 = process.getRuntimes();
 			if (i2.hasNext()) {
 				Object o2 = i2.next();
 				if (!(o2 instanceof CorruptData) && o2 instanceof JavaRuntime) {
@@ -111,7 +112,7 @@ class PHDImageProcess implements ImageProcess {
 //		}
 		if (metaImageProcess != null) {
 			try {
-				for (Iterator it = metaImageProcess.getLibraries(); it.hasNext(); ) {
+				for (Iterator<?> it = metaImageProcess.getLibraries(); it.hasNext(); ) {
 					Object next = it.next();
 					if (next instanceof CorruptData) {
 						modules.add(new PHDCorruptImageModule(space, (CorruptData)next));
@@ -139,7 +140,7 @@ class PHDImageProcess implements ImageProcess {
 				currentThread = new PHDCorruptImageThread(space, e.getCorruptData());
 				current = null;
 			}
-			for (Iterator it = metaImageProcess.getThreads(); it.hasNext(); ) {
+			for (Iterator<?> it = metaImageProcess.getThreads(); it.hasNext(); ) {
 				Object next = it.next();
 				if (next instanceof CorruptData) {
 					threads.put(next, new PHDCorruptImageThread(space, (CorruptData)next));
@@ -158,7 +159,7 @@ class PHDImageProcess implements ImageProcess {
 //		runtimes.add(new PHDJavaRuntime(file, parentImage, space,this,metaRuntime));
 	}
 
-	private String getPID(File file) {
+	private static String getPID(File file) {
 		String pid = null;
 		String fn = file.getName();
 
@@ -171,7 +172,7 @@ class PHDImageProcess implements ImageProcess {
 		return pid;
 	}
 
-	private String getPID(String fn, Date d1, Date d2) {
+	private static String getPID(String fn, Date d1, Date d2) {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd.HHmmss");
 		ParsePosition pp = new ParsePosition(0);
 		for (int i = 0; i < fn.length(); ++i) {
@@ -194,7 +195,7 @@ class PHDImageProcess implements ImageProcess {
 		return null;
 	}
 
-	private String getPIDAIX(String name, Date d1, Date d2) {
+	private static String getPIDAIX(String name, Date d1, Date d2) {
 		// or for AIX 1.4.2 heapdumpPID.EPOCHTIME.phd
 		// heapdump454808.1244656860.phd
 		String prefix = "heapdump";
@@ -220,27 +221,32 @@ class PHDImageProcess implements ImageProcess {
 		return null;
 	}
 
+	@Override
 	public String getCommandLine() throws DataUnavailable, CorruptDataException {
 		if (metaImageProcess != null) return metaImageProcess.getCommandLine();
 		throw new DataUnavailable();
 	}
 
+	@Override
 	public ImageThread getCurrentThread() throws CorruptDataException {
 		// Javacore doesn't have an accurate version of this
 		return currentThread;
 	}
 
+	@Override
 	public Properties getEnvironment() throws DataUnavailable,
 			CorruptDataException {
 		if (metaImageProcess != null) return metaImageProcess.getEnvironment();
 		throw new DataUnavailable();
 	}
 
+	@Override
 	public ImageModule getExecutable() throws DataUnavailable,
 			CorruptDataException {
 		throw new DataUnavailable();
 	}
 
+	@Override
 	public String getID() throws DataUnavailable, CorruptDataException {
 		if (pid != null) {
 			return pid;
@@ -249,30 +255,36 @@ class PHDImageProcess implements ImageProcess {
 		}
 	}
 
+	@Override
 	public Iterator<ImageModule> getLibraries() throws DataUnavailable, CorruptDataException {
 		if (modules_cd != null) throw new CorruptDataException(modules_cd);
 		if (modules.size() == 0) throw new DataUnavailable();
 		return modules.iterator();
 	}
 
+	@Override
 	public int getPointerSize() {
 		return is64bit ? 64 : 32;
 	}
 
+	@Override
 	public Iterator<JavaRuntime> getRuntimes() {
 		return runtimes.iterator();
 	}
 
+	@Override
 	public String getSignalName() throws DataUnavailable, CorruptDataException {
 		if (metaImageProcess != null) return metaImageProcess.getSignalName();
 		throw new DataUnavailable();
 	}
 
+	@Override
 	public int getSignalNumber() throws DataUnavailable, CorruptDataException {
 		if (metaImageProcess != null) return metaImageProcess.getSignalNumber();
 		throw new DataUnavailable();
 	}
 
+	@Override
 	public Iterator<ImageThread> getThreads() {
 		return threads.values().iterator();
 	}
@@ -291,6 +303,7 @@ class PHDImageProcess implements ImageProcess {
 		return threads.get(metaThread);
 	}
 
+	@Override
 	public Properties getProperties() {
 		return new Properties();		//not supported for this reader
 	}

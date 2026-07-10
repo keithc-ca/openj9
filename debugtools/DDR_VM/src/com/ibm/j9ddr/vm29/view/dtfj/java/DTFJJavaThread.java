@@ -87,6 +87,7 @@ public class DTFJJavaThread implements JavaThread
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaThread#getImageThread()
 	 */
+	@Override
 	public ImageThread getImageThread() throws CorruptDataException, DataUnavailable
 	{
 		if (imageThread == null) {
@@ -112,6 +113,7 @@ public class DTFJJavaThread implements JavaThread
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaThread#getJNIEnv()
 	 */
+	@Override
 	public ImagePointer getJNIEnv() throws CorruptDataException
 	{
 		return DTFJContext.getImagePointer(thread.getAddress());
@@ -120,6 +122,7 @@ public class DTFJJavaThread implements JavaThread
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaThread#getName()
 	 */
+	@Override
 	public String getName() throws CorruptDataException
 	{
 		try {
@@ -140,6 +143,7 @@ public class DTFJJavaThread implements JavaThread
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaThread#getObject()
 	 */
+	@Override
 	public JavaObject getObject() throws CorruptDataException
 	{
 		try {
@@ -159,6 +163,7 @@ public class DTFJJavaThread implements JavaThread
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaThread#getPriority()
 	 */
+	@Override
 	public int getPriority() throws CorruptDataException
 	{
 		try {
@@ -176,8 +181,6 @@ public class DTFJJavaThread implements JavaThread
 		return priority;
 	}
 
-
-	@SuppressWarnings("rawtypes")
 	private JavaField getField(String fieldName) throws CorruptDataException, MemoryAccessException {
 		JavaObject threadObj = getObject();
 		if (threadObj == null) {
@@ -192,8 +195,7 @@ public class DTFJJavaThread implements JavaThread
 			if (threadClass == null) {
 				return null;
 			} else {
-				Iterator fieldIterator = threadClass
-						.getDeclaredFields();
+				Iterator<?> fieldIterator = threadClass.getDeclaredFields();
 				while (fieldIterator.hasNext()) {
 					Object nextField = fieldIterator.next();
 					if (nextField instanceof JavaField) {
@@ -213,8 +215,7 @@ public class DTFJJavaThread implements JavaThread
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaThread#getStackFrames()
 	 */
-	@SuppressWarnings("rawtypes")
-	public Iterator getStackFrames()
+	public Iterator<?> getStackFrames()
 	{
 		if (frames == null) {
 			walkStack();
@@ -385,8 +386,8 @@ public class DTFJJavaThread implements JavaThread
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaThread#getStackSections()
 	 */
-	@SuppressWarnings("rawtypes")
-	public Iterator getStackSections()
+	@Override
+	public Iterator<?> getStackSections()
 	{
 		if (sections == null) {
 			walkSections();
@@ -432,6 +433,7 @@ public class DTFJJavaThread implements JavaThread
 		}
 	}
 
+	@Override
 	public boolean equals(Object object) {
 		//note that we can't get image threads on all platforms and in all situations but we still need to return equals correctly
 		
@@ -460,7 +462,8 @@ public class DTFJJavaThread implements JavaThread
 		}
 		return isEqual;
 	}
-	
+
+	@Override
 	public int hashCode() {
 		try {
 			return getImageThread().getID().hashCode();
@@ -470,6 +473,7 @@ public class DTFJJavaThread implements JavaThread
 		}
 	}
 
+	@Override
 	public int getState() throws CorruptDataException {
 		try {
 			return J9VMThreadHelper.getDTFJState(thread);
@@ -489,6 +493,7 @@ public class DTFJJavaThread implements JavaThread
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaThread#getBlockingObject()
 	 */
+	@Override
 	public JavaObject getBlockingObject() throws CorruptDataException, DataUnavailable {
 		try {
 			if (thread.blockingEnterObject().isNull()) {

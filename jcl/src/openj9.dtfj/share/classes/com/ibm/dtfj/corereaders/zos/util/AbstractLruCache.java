@@ -31,7 +31,7 @@ package com.ibm.dtfj.corereaders.zos.util;
  * is used. Note that the LRU info is lost when the cache is rehashed, but I don't think that's
  * a problem because once the cache reaches its maximum size (and steady state) it will no longer rehash.
  */
-
+@SuppressWarnings("serial")
 public abstract class AbstractLruCache extends AbstractHashMap {
 
 	/** The maximum size of the cache */

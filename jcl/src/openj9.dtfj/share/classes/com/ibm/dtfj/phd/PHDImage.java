@@ -55,7 +55,7 @@ public class PHDImage implements ManagedImage {
 	private final File file;
 	private final ArrayList<ImageAddressSpace> addressList;
 	private final Image meta;
-	private final List<HeapdumpReader> closeList = new LinkedList<HeapdumpReader>();
+	private final List<HeapdumpReader> closeList = new LinkedList<>();
 	private final URI source;
 	private ManagedImageSource imageSource = null;
 
@@ -273,6 +273,8 @@ public class PHDImage implements ManagedImage {
 		}
 	}
 
+	@Override
+	@SuppressWarnings("removal")
 	protected void finalize() throws Throwable {
 		close();
 		super.finalize();

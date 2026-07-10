@@ -31,7 +31,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 import javax.imageio.stream.ImageInputStream;
 
@@ -60,13 +62,13 @@ import com.ibm.dtfj.phd.util.LongEnumeration;
  */
 class PHDJavaRuntime implements JavaRuntime {
 
-	private final List<PHDJavaHeap> heaps = new ArrayList<PHDJavaHeap>();
-	private final LinkedHashMap<JavaObject,PHDJavaClassLoader> loaders = new LinkedHashMap<JavaObject,PHDJavaClassLoader>();
-	private final LinkedHashMap<JavaThread,JavaThread> threads = new LinkedHashMap<JavaThread,JavaThread>();
-	private final ArrayList<JavaMonitor> monitors = new ArrayList<JavaMonitor>();
-	private final HashMap<Long,JavaClass>classIdCache = new HashMap<Long,JavaClass>();
-	private final HashMap<String,JavaClass>classNameCache = new HashMap<String,JavaClass>();
-	private final HashMap<Long, JavaObject> extraObjectsCache = new HashMap<Long, JavaObject>();
+	private final List<PHDJavaHeap> heaps = new ArrayList<>();
+	private final Map<JavaObject, PHDJavaClassLoader> loaders = new LinkedHashMap<>();
+	private final Map<JavaThread, JavaThread> threads = new LinkedHashMap<>();
+	private final List<JavaMonitor> monitors = new ArrayList<>();
+	private final Map<Long, JavaClass> classIdCache = new HashMap<>();
+	private final Map<String, JavaClass> classNameCache = new HashMap<>();
+	private final Map<Long, JavaObject> extraObjectsCache = new HashMap<>();
 	static final String arrayTypeName[]={"[Z","[C","[F","[D","[B","[S","[I","[J"};
 	private final JavaClass arrayClasses[] = new JavaClass[arrayTypeName.length];
 	private static final long[] NOREFS = {};
@@ -173,47 +175,58 @@ class PHDJavaRuntime implements JavaRuntime {
 //		initThreads();
 	}
 
+	@Override
 	public Iterator<JavaMethod> getCompiledMethods() {
 		return Collections.<JavaMethod>emptyList().iterator();
 	}
 
+	@Override
 	public Iterator<? extends JavaHeap> getHeaps() {
 		return heaps.iterator();
 	}
 
+	@Override
 	public Iterator<? extends JavaClassLoader> getJavaClassLoaders() {
 		return loaders.values().iterator();
 	}
 
+	@Override
 	public ImagePointer getJavaVM() throws CorruptDataException {
 		long addr = 0;
 		if (metaJavaRuntime != null) addr = metaJavaRuntime.getJavaVM().getAddress();
 		return space.getPointer(addr);
 	}
 
+	@Override
 	public JavaVMInitArgs getJavaVMInitArgs() throws DataUnavailable,
 			CorruptDataException {
 		if (metaJavaRuntime != null) return metaJavaRuntime.getJavaVMInitArgs();
 		throw new DataUnavailable();
 	}
 
+	@Override
 	public Iterator<JavaMonitor> getMonitors() {
 		return monitors.iterator();
 	}
 
+	@Override
 	public Iterator<? extends JavaThread> getThreads() {
 		return threads.values().iterator();
 	}
 
+	@Override
 	public Object getTraceBuffer(String arg0, boolean arg1)
 			throws CorruptDataException {
 		throw new CorruptDataException(new PHDCorruptData("No trace data", null));
 	}
 
+	@Override
+	@SuppressWarnings("deprecation")
 	public String getFullVersion() throws CorruptDataException {
 		return full_version;
 	}
 
+	@Override
 	public String getVersion() throws CorruptDataException {
 		if (metaJavaRuntime != null) {
 			//try {
@@ -224,10 +237,12 @@ class PHDJavaRuntime implements JavaRuntime {
 		return getFullVersion();
 	}
 
+	@Override
 	public Iterator<JavaReference> getHeapRoots() {
 		return Collections.<JavaReference>emptyList().iterator();
 	}
 
+	@Override
 	public JavaObject getObjectAtAddress(ImagePointer address)
 			throws CorruptDataException, IllegalArgumentException,
 			MemoryAccessException, DataUnavailable {
@@ -529,14 +544,14 @@ class PHDJavaRuntime implements JavaRuntime {
 		final long jlcAddress = jlc == null || jlc.getID() == null ? 0 : jlc.getID().getAddress();
 		// Find all the class loader classes
 		final JavaClass jcl = findClass("java/lang/ClassLoader");
-		final HashMap<Long,JavaClass>classLoaderClasses = new HashMap<Long,JavaClass>();
+		final Map<Long, JavaClass> classLoaderClasses = new HashMap<>();
 		for (Iterator<JavaClass> it = boot.getDefinedClasses(); it.hasNext();) {
 			JavaClass cls = it.next();
 			if (cls instanceof CorruptData) continue;
 			try {
 				// Avoid bug with superclass loops by remembering superclasses
 				// PHD Version 4 bug - bad superclass: J2RE 5.0 IBM J9 2.3 AIX ppc64-64 build 20080314_17962_BHdSMr
-				HashSet<JavaClass> supers = new HashSet<JavaClass>();
+				Set<JavaClass> supers = new HashSet<>();
 				for (JavaClass j1 = cls; j1 != null && supers.add(j1); j1 = j1.getSuperclass()) {
 					/*
 					 * See if either a superclass is java.lang.ClassLoader
@@ -559,16 +574,18 @@ class PHDJavaRuntime implements JavaRuntime {
 		final int onHeapClasses[] = new int[1];
 		// Find all the objects which are class loaders
 		final PHDJavaHeap heap = heaps.get(0);
-		final HashMap<Long, JavaObject> classObjects = new HashMap<Long, JavaObject>();
+		final Map<Long, JavaObject> classObjects = new HashMap<>();
 //		HeapdumpReader newreader = new HeapdumpReader(file, parentImage);
 		final int adjustLen = newreader.version() == 4 && newreader.isJ9() ? 1 : 0;
 		try {
 			newreader.parse(new PortableHeapDumpListener() {
 
+				@Override
 				public void classDump(long address, long superAddress, String name, int size,
 						int flags, int hashCode, LongEnumeration refs) throws Exception {
 				}
 
+				@Override
 				public void objectArrayDump(long address, long classAddress, int flags,
 						int hashCode, LongEnumeration refs, int length, long instanceSize) throws Exception {
 					if (extraObjectsCache.containsKey(address)) {
@@ -579,6 +596,7 @@ class PHDJavaRuntime implements JavaRuntime {
 					}
 				}
 
+				@Override
 				public void objectDump(long address, long classAddress, int flags,
 						int hashCode, LongEnumeration refs, long instanceSize) throws Exception {
 					JavaClass cls = classLoaderClasses.get(classAddress);
@@ -639,8 +657,12 @@ class PHDJavaRuntime implements JavaRuntime {
 		for (Iterator<JavaClass> it = boot.getDefinedClasses(); it.hasNext();) {
 			JavaClass j1 = it.next();
 			PHDJavaClassLoader bestLoader = null;
-			for (Iterator<JavaReference> it2 = j1.getReferences(); it2.hasNext(); ) {
-				JavaReference jr = it2.next();
+			for (Iterator<?> it2 = j1.getReferences(); it2.hasNext();) {
+				Object next = it2.next();
+				if (!(next instanceof JavaReference)) {
+					continue;
+				}
+				JavaReference jr = (JavaReference) next;
 				try {
 					// Is the first outbound object reference to a class loader?
 					if (jr.isObjectReference()) {
@@ -707,7 +729,7 @@ class PHDJavaRuntime implements JavaRuntime {
 
 		// Haven't found any loaders, but have a javacore file with loader information
 		if (metaJavaRuntime != null) {
-			for (Iterator i = metaJavaRuntime.getJavaClassLoaders(); i.hasNext(); ) {
+			for (Iterator<?> i = metaJavaRuntime.getJavaClassLoaders(); i.hasNext();) {
 				Object next = i.next();
 				if (next instanceof CorruptData) continue;
 				JavaClassLoader jcl2 = (JavaClassLoader)next;
@@ -755,7 +777,7 @@ class PHDJavaRuntime implements JavaRuntime {
 								loaderClass = jo.getJavaClass();
 							}
 							if (newLoader != null) {
-								for (Iterator i2 = jcl2.getDefinedClasses(); i2.hasNext(); ) {
+								for (Iterator<?> i2 = jcl2.getDefinedClasses(); i2.hasNext();) {
 									Object next2 = i2.next();
 									if (next2 instanceof CorruptData) continue;
 									JavaClass jc2 = (JavaClass)next2;
@@ -797,7 +819,7 @@ class PHDJavaRuntime implements JavaRuntime {
 											// We have found the new bootstrap class loader
 											boot2 = newLoader;
 										}
-										for (Iterator i3 = jc2.getDeclaredMethods(); i3.hasNext(); ) {
+										for (Iterator<?> i3 = jc2.getDeclaredMethods(); i3.hasNext();) {
 											Object next3 = i3.next();
 											if (next3 instanceof CorruptData) continue;
 											JavaMethod jm = (JavaMethod)next3;
@@ -899,7 +921,7 @@ class PHDJavaRuntime implements JavaRuntime {
 	private void prepThreads() {
 		if (metaJavaRuntime != null) {
 			final PHDJavaClassLoader boot = loaders.get(null);
-			for (Iterator it = metaJavaRuntime.getThreads(); it.hasNext(); ) {
+			for (Iterator<?> it = metaJavaRuntime.getThreads(); it.hasNext();) {
 				Object next = it.next();
 				if (next instanceof CorruptData) continue;
 				JavaThread thr = (JavaThread)next;
@@ -930,7 +952,7 @@ class PHDJavaRuntime implements JavaRuntime {
 
 	private void initThreads() {
 		if (metaJavaRuntime != null) {
-			for (Iterator it = metaJavaRuntime.getThreads(); it.hasNext(); ) {
+			for (Iterator<?> it = metaJavaRuntime.getThreads(); it.hasNext();) {
 				Object next = it.next();
 				if (next instanceof CorruptData) {
 					JavaThread thr = new PHDCorruptJavaThread(space, (CorruptData)next);
@@ -950,7 +972,7 @@ class PHDJavaRuntime implements JavaRuntime {
 	private void prepMonitors() {
 		if (metaJavaRuntime != null) {
 			final PHDJavaClassLoader boot = loaders.get(null);
-			for (Iterator it = metaJavaRuntime.getMonitors(); it.hasNext(); ) {
+			for (Iterator<?> it = metaJavaRuntime.getMonitors(); it.hasNext();) {
 				Object next = it.next();
 				if (next instanceof CorruptData) continue;
 				JavaMonitor mon = (JavaMonitor)next;
@@ -962,7 +984,7 @@ class PHDJavaRuntime implements JavaRuntime {
 
 	private void initMonitors() {
 		if (metaJavaRuntime != null) {
-			for (Iterator it = metaJavaRuntime.getMonitors(); it.hasNext(); ) {
+			for (Iterator<?> it = metaJavaRuntime.getMonitors(); it.hasNext();) {
 				Object next = it.next();
 				if (next instanceof CorruptData) {
 					monitors.add(new PHDCorruptJavaMonitor(space, (CorruptData)next));
@@ -981,7 +1003,7 @@ class PHDJavaRuntime implements JavaRuntime {
 	private void prepClassLoaders() {
 		if (metaJavaRuntime != null) {
 			final PHDJavaClassLoader boot = loaders.get(null);
-			for (Iterator it = metaJavaRuntime.getJavaClassLoaders(); it.hasNext(); ) {
+			for (Iterator<?> it = metaJavaRuntime.getJavaClassLoaders(); it.hasNext();) {
 				Object next = it.next();
 				if (next instanceof CorruptData) continue;
 				JavaClassLoader load = (JavaClassLoader)next;
@@ -1002,30 +1024,36 @@ class PHDJavaRuntime implements JavaRuntime {
 		return nextClsAddr;
 	}
 
-	public Iterator getMemoryCategories() throws DataUnavailable
+	@Override
+	public Iterator<?> getMemoryCategories() throws DataUnavailable
 	{
 		throw new DataUnavailable("This implementation of DTFJ does not support getMemoryCategories");
 	}
 
-	public Iterator getMemorySections(boolean includeFreed)
+	@Override
+	public Iterator<?> getMemorySections(boolean includeFreed)
 			throws DataUnavailable
 	{
 		throw new DataUnavailable("This implementation of DTFJ does not support getMemorySections");
 	}
 
+	@Override
 	public boolean isJITEnabled() throws DataUnavailable, CorruptDataException {
 		throw new DataUnavailable("This implementation of DTFJ does not support isJITEnabled");
 	}
 
+	@Override
 	public Properties getJITProperties() throws DataUnavailable,	CorruptDataException {
 		throw new DataUnavailable("This implementation of DTFJ does not support getJITProperies");
 	}
 
+	@Override
 	public long getStartTime() throws DataUnavailable, CorruptDataException {
 		// Not supported in DTFJ for PHD dumps
 		throw new DataUnavailable();
 	}
 
+	@Override
 	public long getStartTimeNanos() throws DataUnavailable, CorruptDataException {
 		// Not supported in DTFJ for PHD dumps
 		throw new DataUnavailable();

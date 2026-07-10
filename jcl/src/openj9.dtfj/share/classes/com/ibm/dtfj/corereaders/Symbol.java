@@ -25,6 +25,7 @@ package com.ibm.dtfj.corereaders;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -41,8 +42,8 @@ public class Symbol {
 	int symbolType;  // -1 = unknown
 	int symbolBinding; // -1 = unknown
 
-	protected static HashMap knownSymbolsByName;
-	protected static TreeMap symbolTree;
+	protected static Map<String, Symbol> knownSymbolsByName;
+	protected static SortedMap<Long, Symbol> symbolTree;
 
 	final static int STB_UNKNOWN = -1;
 	final static int STB_LOCAL = 0;
@@ -67,7 +68,7 @@ public class Symbol {
 		// check don't already have this name
 
 		if (null == knownSymbolsByName) {
-			knownSymbolsByName = new HashMap();
+			knownSymbolsByName = new HashMap<>();
 		}
 		Object o = knownSymbolsByName.get(name);
 		if (o == null ) {
@@ -88,9 +89,7 @@ public class Symbol {
 			knownSymbolsByName.put(name,this);
 			// ... and into the range tree
 			if (null == symbolTree) {
-
-				Comparator c = new Symbol.SymbolComparator();
-				symbolTree = new TreeMap(c);
+				symbolTree = new TreeMap<>(new SymbolComparator());
 			}
 			symbolTree.put(Long.valueOf(address),this);
 
@@ -99,24 +98,18 @@ public class Symbol {
 	}
 
 	public static Symbol getSymbol(String name) {
-		Symbol retSym = null;
-
-		retSym = (Symbol)knownSymbolsByName.get(name);
-
-		return retSym;
-
+		return knownSymbolsByName.get(name);
 	}
 
 	public static String getSymbolForAddress(long address) {
 		String retString = null;
 
-		SortedMap head = (SortedMap) symbolTree.headMap(Long.valueOf(address));
+		SortedMap<Long, Symbol> head = symbolTree.headMap(Long.valueOf(address));
 
 		// So now we look at bottom of tail and hopefully we might have a
 		// symbol covering this address....
 		if (head != null && !head.isEmpty()) {
-
-			Symbol s = (Symbol) symbolTree.get(head.lastKey());
+			Symbol s = symbolTree.get(head.lastKey());
 			if (s.symbolEnd == -1) {
 
 			} else {
@@ -130,47 +123,15 @@ public class Symbol {
 		return retString;
 	}
 
-	static final class SymbolComparator implements Comparator {
+	static final class SymbolComparator implements Comparator<Long> {
 
 		/* (non-Javadoc)
 		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
 		 */
-		public int compare(Object arg0, Object arg1) {
-
-			long addr0=0;
-			long addr1=0;
-			// arg0 and arg1 will be Symbol objects
-			if (arg0 instanceof Symbol) {
-				Symbol S0 = (Symbol) arg0;
-				Symbol S1 = (Symbol) arg1;
-				addr0 = S0.symbolStart;
-				addr1 = S1.symbolStart;
-			} else {
-				addr0 = ((Long)arg0).longValue();
-				addr1 = ((Long)arg1).longValue();
-			}
-
-			// both +ve
-			if (addr0 >= 0 && addr1 >=0) {
-				if (addr0 == addr1) return 0;
-				if (addr0 < addr1) return -1;
-				return 1;
-			}
-
-			// both -ve
-			if (addr0 < 0 && addr1 < 0) {
-				if (addr0 == addr1) return 0;
-				if (addr0 < addr1) return 1;
-				return -1;
-			}
-
-			if (addr0 < 0 && addr1 >=0) {
-				return 1;
-			}
-
-			return -1;
+		@Override
+		public int compare(Long addr0, Long addr1) {
+			return Long.compareUnsigned(addr0.longValue(), addr1.longValue());
 		}
-
 	}
 
 	/**
@@ -179,12 +140,14 @@ public class Symbol {
 	public long getSymbolEnd() {
 		return symbolEnd;
 	}
+
 	/**
 	 * @return Returns the symbolName.
 	 */
 	public String getSymbolName() {
 		return symbolName;
 	}
+
 	/**
 	 * @return Returns the symbolStart.
 	 */
@@ -192,15 +155,12 @@ public class Symbol {
 		return symbolStart;
 	}
 
-	public static Iterator getSymbolsIterator() {
+	public static Iterator<Long> getSymbolsIterator() {
 		return symbolTree.keySet().iterator();
-		//return knownSymbolsByName.keySet().iterator();
-
 	}
 
 	public static Symbol getSymbolUsingValue(Long l) {
-		Symbol s = (Symbol) symbolTree.get(l);
-		return s;
+		return symbolTree.get(l);
 	}
 
 }

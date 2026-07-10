@@ -31,7 +31,7 @@ import com.ibm.j9ddr.vm29.pointer.UDATAPointer;
 import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.MM_SublistPuddlePointer;
 
-abstract class MMSublistSlotIterator extends GCIterator
+abstract class MMSublistSlotIterator extends GCIterator<AbstractPointer>
 {
 	private MM_SublistPuddlePointer sublistPuddle;
 	private UDATAPointer scanPtr;
@@ -41,7 +41,8 @@ abstract class MMSublistSlotIterator extends GCIterator
 		this.sublistPuddle = sublistPuddle;
 		scanPtr = sublistPuddle._listBase();
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		try {
@@ -52,6 +53,7 @@ abstract class MMSublistSlotIterator extends GCIterator
 		}
 	}
 
+	@Override
 	public AbstractPointer next()
 	{
 		if(hasNext()) {

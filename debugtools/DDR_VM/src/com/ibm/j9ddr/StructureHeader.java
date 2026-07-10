@@ -32,7 +32,7 @@ import javax.imageio.stream.ImageInputStream;
  *
  * @author adam
  */
-public class StructureHeader {
+public final class StructureHeader {
 
 	/**
 	 * Identifies the type of blob by its name
@@ -72,7 +72,6 @@ public class StructureHeader {
 	private String packageID = DEFAULT_J9_PACKAGE_PREFIX;	// set the default Java package name
 	private final long headerSize;							// size of the header based on the number of bytes being read from the stream -1 = unknown
 
-	@SuppressWarnings("this-escape")
 	public StructureHeader(ImageInputStream ddrStream) throws IOException {
 		long start = ddrStream.getStreamPosition();
 		readCommonData(ddrStream);

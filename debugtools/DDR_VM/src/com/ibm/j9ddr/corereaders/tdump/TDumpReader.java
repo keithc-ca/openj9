@@ -645,14 +645,14 @@ public class TDumpReader implements ICoreFileReader
 					for (Iterator<Long> i = stackSyms.keySet().iterator(); i.hasNext();) {
 						Long addr = i.next();
 						long address = addr.longValue();
-						Dll closest = (Dll) closestDlls.get(addr);
+						Dll closest = closestDlls.get(addr);
 						// Fix when Zebedee does equals() for Dll
 						//if (dll.equals(closest)) {
 						if (closest != null && dll.getName().equals(closest.getName())) {
 							// Check if the stack symbol is within the address range of functions for this DLL
 							int r = findRange(address, rr);
 							if (r >= 0 && (address > usedTextRangeLimits[r][0]) && (address < usedTextRangeLimits[r][1])) {
-								String name = (String) stackSyms.get(addr);
+								String name = stackSyms.get(addr);
 								symbols.add(new Symbol(name, address));
 								i.remove();
 							}
@@ -723,7 +723,7 @@ public class TDumpReader implements ICoreFileReader
 						loadAddress = Math.min(address, loadAddress);
 						// Find which ranges apply
 						findRange(address, usedTextRangeLimits, rr);
-						String name = (String)stackSyms.get(addr);
+						String name = stackSyms.get(addr);
 						symbols.add(new Symbol(name, address));
 						i.remove();
 					}

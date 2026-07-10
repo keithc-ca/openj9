@@ -41,21 +41,25 @@ public class Aix32Dump extends NewAixDump {
 		readCore();
 	}
 
+	@Override
 	protected int readLoaderInfoFlags() throws IOException {
 		return 0; // Do nothing
 	}
 
+	@Override
 	protected long userInfoOffset() {
 		// offsetof(core_dumpx, c_u)
 		return 1008;
 	}
 
+	@Override
 	protected int pointerSize() {
 		return 32;
 	}
 
-	protected Map readRegisters(long threadOffset) throws IOException {
-		Map registers = new TreeMap();
+	@Override
+	protected Map<String, Number> readRegisters(long threadOffset) throws IOException {
+		Map<String, Number> registers = new TreeMap<>();
 		coreSeek(threadOffset + CONTEXT_OFFSET_IN_THREAD + IAR_OFFSET_IN_CONTEXT);
 		registers.put("iar", Integer.valueOf(coreReadInt()));
 		registers.put("msr", Integer.valueOf(coreReadInt()));
@@ -72,23 +76,28 @@ public class Aix32Dump extends NewAixDump {
 		return registers;
 	}
 
+	@Override
 	protected long threadSize(long threadOffset) {
 		// sizeof(thrdctx)
 		return 792;
 	}
 
-	protected long getStackPointerFrom(Map registers) {
-		return ((Integer) registers.get("gpr1")).intValue() & 0xffffffffL;
+	@Override
+	protected long getStackPointerFrom(Map<String, Number> registers) {
+		return registers.get("gpr1").intValue() & 0xffffffffL;
 	}
 
-	protected long getInstructionPointerFrom(Map registers) {
-		return ((Integer) registers.get("iar")).intValue() & 0xffffffffL;
+	@Override
+	protected long getInstructionPointerFrom(Map<String, Number> registers) {
+		return registers.get("iar").intValue() & 0xffffffffL;
 	}
 
-	protected long getLinkRegisterFrom(Map registers) {
+	@Override
+	protected long getLinkRegisterFrom(Map<String, Number> registers) {
 		return ((Integer) registers.get("lr")).intValue() & 0xffffffffL;
 	}
 
+	@Override
 	protected int sizeofTopOfStack() {
 		// see struct top_of_stack in execargs.h
 		return 140 + 4;	//this is sizeof(top_of_stack) aligned to 8 bytes since that seems to be an unspoken requirement of this structure

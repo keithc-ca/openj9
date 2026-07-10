@@ -53,7 +53,7 @@ public class SegmentsUtil {
 
 		long totalMemory = 0L, totalMemoryInUse = 0L;
 		while (segmentIterator.hasNext()) {
-			J9MemorySegmentPointer seg = (J9MemorySegmentPointer) segmentIterator.next();
+			J9MemorySegmentPointer seg = segmentIterator.next();
 
 			totalMemory += seg.size().longValue();
 			totalMemoryInUse += seg.heapAlloc().sub(seg.heapBase()).longValue();
@@ -91,7 +91,7 @@ public class SegmentsUtil {
 
 		long totalMemory = 0L, totalMemoryInUse = 0L;
 		while (segmentIterator.hasNext()) {
-			J9MemorySegmentPointer seg = (J9MemorySegmentPointer) segmentIterator.next();
+			J9MemorySegmentPointer seg = segmentIterator.next();
 
 			final UDATA heapBase = UDATAPointer.cast(seg.heapBase()).at(0);
 			long warmAlloc = UDATAPointer.cast(heapBase).at(0).longValue();
@@ -130,7 +130,7 @@ public class SegmentsUtil {
 		}
 
 		public CorruptDataException getCause() {
-			return (CorruptDataException)getCause();
+			return (CorruptDataException) super.getCause();
 		}
 	}
 
@@ -173,7 +173,7 @@ public class SegmentsUtil {
 		MemorySegmentIterator segmentIterator = new MemorySegmentIterator(segmentListPointer, segmentType, false);
 
 		while (segmentIterator.hasNext()) {
-			J9MemorySegmentPointer seg = (J9MemorySegmentPointer)segmentIterator.next();
+			J9MemorySegmentPointer seg = segmentIterator.next();
 			segmentArray.add(seg);
 		}
 	}
@@ -193,7 +193,7 @@ public class SegmentsUtil {
 				}
 			}
 		} catch (SegmentSortException e) {
-			throw (CorruptDataException)e.getCause();
+			throw e.getCause();
 		}
 
 		J9MemorySegmentPointer[] sortedSegmentArray = segmentArray.toArray(new J9MemorySegmentPointer[segmentArray.size()]);

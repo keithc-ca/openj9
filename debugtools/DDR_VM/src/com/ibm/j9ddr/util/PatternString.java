@@ -49,13 +49,13 @@ public class PatternString implements Serializable {
 	public static final char singleCharWildCard = '?';
 	private static int nullArray[] = new int[0];
 	public static final PatternString ALWAYS_MATCHES = new PatternString(String.valueOf(wildCard));
-	
-	 /**
-     * Constructor for creating a PatternString class which can contain wildcard expressions and 
-     * other characters to represent many strings at once.
-     *
-     * @param pattern	a String which can contain wildcards
-     */
+
+	/**
+	 * Constructor for creating a PatternString class which can contain wildcard expressions and 
+	 * other characters to represent many strings at once.
+	 *
+	 * @param pattern	a String which can contain wildcards
+	 */
 	public PatternString(String pattern) {
 		this.pattern = pattern;
 		if(pattern.equals(String.valueOf(wildCard))) {
@@ -66,7 +66,7 @@ public class PatternString implements Serializable {
 		
 		StringTokenizer tokenizer = new StringTokenizer(pattern, 
 					String.valueOf(wildCard) + singleCharWildCard, true);
-		List tokenList = new LinkedList();
+		List<String> tokenList = new LinkedList<>();
 		isRegularString = true;
 		while(tokenizer.hasMoreTokens()) {
 			String token = tokenizer.nextToken();
@@ -79,14 +79,14 @@ public class PatternString implements Serializable {
 			}
 			tokenList.add(token);
 		}
-		tokens = (String[]) tokenList.toArray(new String[tokenList.size()]);
+		tokens = tokenList.toArray(new String[tokenList.size()]);
 	}
-	
-	 /**
-     * Indicates the location in the PatternString of the first instance of a wildcard
-     *
-     * @return int	returns the index where the wildcard can be found, if no wildcards present returns -1, if pattern is '*' returns 0 
-     */
+
+	/**
+	 * Indicates the location in the PatternString of the first instance of a wildcard
+	 *
+	 * @return int	returns the index where the wildcard can be found, if no wildcards present returns -1, if pattern is '*' returns 0 
+	 */
 	int indexOfWildcard() {
 		if(isRegularString) {
 			return -1;
@@ -333,16 +333,12 @@ public class PatternString implements Serializable {
 			if(index < 0) {
 				return -1;
 			}
-			switch(index - stringStartIndex) {
-				default: //index > 1
-					if(!onWildCard) {
-						if(!onSingleCharWildCard || stringStartIndex + numChars != index) {
-							return -1;
-						}
+			if (index != stringStartIndex) { // index > 1
+				if (!onWildCard) {
+					if (!onSingleCharWildCard || stringStartIndex + numChars != index) {
+						return -1;
 					}
-					//fall through
-				case 0:
-					break;
+				}
 			}
 			return index;
 		}
@@ -411,6 +407,7 @@ public class PatternString implements Serializable {
 	 * 
 	 * @return String 	returns the pattern used to construct this PatternString
 	 */
+	@Override
 	public String toString() {
 		return pattern;
 	}

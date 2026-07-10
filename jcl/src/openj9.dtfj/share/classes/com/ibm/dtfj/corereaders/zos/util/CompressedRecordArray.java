@@ -72,7 +72,7 @@ import java.io.Serializable;
  *
  * @has - - - com.ibm.dtfj.corereaders.zos.util.BitStream
  */
-
+@SuppressWarnings("serial")
 public final class CompressedRecordArray implements Serializable {
 
 	/** Log2 of the size of each block */

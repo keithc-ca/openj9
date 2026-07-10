@@ -50,8 +50,7 @@ import com.ibm.j9ddr.vm29.types.UDATA;
  * 
  * @author Adam Pilkington
  */
-@SuppressWarnings("rawtypes")
-public class MonitorIterator implements Iterator {
+public class MonitorIterator implements Iterator<Object> {
 	private static final UDATA FREE_TAG = new UDATA(-1);
 	private final Logger log = Logger.getLogger(LoggerNames.LOGGER_WALKERS);
 	private J9ThreadMonitorPoolPointer pool;
@@ -74,7 +73,8 @@ public class MonitorIterator implements Iterator {
 		}
 		flatMonitorIterator = HeapWalker.getFlatLockedMonitors().iterator();
 	}
-	
+
+	@Override
 	public boolean hasNext() {
 		if(current != null) {
 			return true;		//have an object to serve out through the iterator
@@ -137,7 +137,8 @@ public class MonitorIterator implements Iterator {
 		}
 		return pool.notNull();
 	}
-	
+
+	@Override
 	public Object next() {
 		if(hasNext()) {
 			Object retval = current;
@@ -147,6 +148,7 @@ public class MonitorIterator implements Iterator {
 		throw new NoSuchElementException();
 	}
 
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("This iterator is read only");
 	}

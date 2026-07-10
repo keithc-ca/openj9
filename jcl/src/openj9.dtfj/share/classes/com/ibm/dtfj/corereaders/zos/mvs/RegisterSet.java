@@ -63,7 +63,9 @@ public class RegisterSet {
 			return registers[index] & 0x7fffffff;
 		case 2:
 			assert false;
+			break;
 		case 3:
+			break;
 		}
 		return registers[index];
 	}
@@ -107,10 +109,6 @@ public class RegisterSet {
 	 */
 	public String whereFound() {
 		return whereFound;
-	}
-
-	private static String hex(int i) {
-		return Integer.toHexString(i);
 	}
 
 	private static String hex(long i) {

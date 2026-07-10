@@ -47,9 +47,9 @@ public class DTFJJavaObjectMonitor implements JavaMonitor {
 		monitor = ptr;
 		log.fine(String.format("Created object monitor 0x%016x", monitor.getObject().getAddress()));
 	}
-	
-	@SuppressWarnings("rawtypes")
-	public Iterator getEnterWaiters() {
+
+	@Override
+	public Iterator<?> getEnterWaiters() {
 		try {
 			return convertToDTFJThreads(monitor.getBlockedThreads());
 		} catch (Throwable t) {
@@ -66,7 +66,8 @@ public class DTFJJavaObjectMonitor implements JavaMonitor {
 		}
 		return dtfjthreads.iterator();		
 	}
-	
+
+	@Override
 	public ImagePointer getID() {
 		try {
 			if(monitor.isInflated()) {
@@ -81,6 +82,7 @@ public class DTFJJavaObjectMonitor implements JavaMonitor {
 		return new J9DDRImagePointer(DTFJContext.getProcess(), 0xDEADBEEFBADF00DL);
 	}
 
+	@Override
 	public String getName() throws CorruptDataException {
 		if(name == null) {
 			try {
@@ -94,8 +96,8 @@ public class DTFJJavaObjectMonitor implements JavaMonitor {
 		return name;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getNotifyWaiters() {
+	@Override
+	public Iterator<?> getNotifyWaiters() {
 		try {
 			return convertToDTFJThreads(monitor.getWaitingThreads());
 		} catch (Throwable t) {
@@ -104,10 +106,12 @@ public class DTFJJavaObjectMonitor implements JavaMonitor {
 		}
 	}
 
+	@Override
 	public JavaObject getObject() {
 		return new DTFJJavaObject(monitor.getObject());
 	}
 
+	@Override
 	public JavaThread getOwner() throws CorruptDataException {
 		try {
 			J9VMThreadPointer ptr = monitor.getOwner();
@@ -121,7 +125,7 @@ public class DTFJJavaObjectMonitor implements JavaMonitor {
 			throw J9DDRDTFJUtils.handleAsCorruptDataException(DTFJContext.getProcess(), t);
 		}
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if((obj == null) || !(obj instanceof DTFJJavaObjectMonitor)) {

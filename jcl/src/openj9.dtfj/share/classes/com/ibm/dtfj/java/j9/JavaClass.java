@@ -41,10 +41,10 @@ public class JavaClass extends JavaAbstractClass
 {
 	private long _superClassID;
 	private String _className;
-	private Vector _methods = new Vector();
-	private Vector _fields = new Vector();
-	private Vector _constantPoolClassRefs = new Vector();
-	private Vector _constantPoolObjects = new Vector();
+	private Vector<JavaMethod> _methods = new Vector<>();
+	private Vector<JavaField> _fields = new Vector<>();
+	private Vector<Long> _constantPoolClassRefs = new Vector<>();
+	private Vector<Long> _constantPoolObjects = new Vector<>();
 	private int _instanceSize;
 	private String _fileName;
 
@@ -60,6 +60,7 @@ public class JavaClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getName()
 	 */
+	@Override
 	public String getName() throws CorruptDataException
 	{
 		return _className;
@@ -68,6 +69,7 @@ public class JavaClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getSuperclass()
 	 */
+	@Override
 	public com.ibm.dtfj.java.JavaClass getSuperclass()
 			throws CorruptDataException
 	{
@@ -85,6 +87,7 @@ public class JavaClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#isArray()
 	 */
+	@Override
 	public boolean isArray() throws CorruptDataException
 	{
 		return false;
@@ -93,6 +96,7 @@ public class JavaClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getComponentType()
 	 */
+	@Override
 	public com.ibm.dtfj.java.JavaClass getComponentType() throws CorruptDataException {
 			//we should probably document this special case and throw something appropriate
 			throw new IllegalArgumentException("Only array types have component types");
@@ -101,7 +105,8 @@ public class JavaClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getDeclaredFields()
 	 */
-	public Iterator getDeclaredFields()
+	@Override
+	public Iterator<?> getDeclaredFields()
 	{
 		return _fields.iterator();
 	}
@@ -109,7 +114,8 @@ public class JavaClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getDeclaredMethods()
 	 */
-	public Iterator getDeclaredMethods()
+	@Override
+	public Iterator<?> getDeclaredMethods()
 	{
 		return _methods.iterator();
 	}
@@ -117,14 +123,13 @@ public class JavaClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getConstantPoolReferences()
 	 */
-	public Iterator getConstantPoolReferences()
+	@Override
+	public Iterator<?> getConstantPoolReferences()
 	{
 		//first look up all the class IDs and translate them into classes then add the objects
-		Iterator ids = _constantPoolClassRefs.iterator();
-		Vector allRefs = new Vector();
+		Vector<Object> allRefs = new Vector<>();
 
-		while (ids.hasNext()) {
-			long oneID = ((Long)ids.next()).longValue();
+		for (long oneID : _constantPoolClassRefs) {
 			Object toBeAdded = null;
 			com.ibm.dtfj.java.JavaClass oneClass = _javaVM.getClassForID(oneID);
 			if (oneClass == null) {
@@ -142,9 +147,8 @@ public class JavaClass extends JavaAbstractClass
 		}
 
 		// Loop through the list of constant pool objects, instantiating them and adding them to the list
-		for (int i = 0; i < _constantPoolObjects.size(); i++) {
+		for (long objectId : _constantPoolObjects) {
 			try {
-				long objectId = ((Long)(_constantPoolObjects.get(i))).longValue();
 				if (objectId != 0) {
 					ImagePointer pointer = _javaVM.pointerInAddressSpace(objectId);
 					try {
@@ -176,6 +180,7 @@ public class JavaClass extends JavaAbstractClass
 		}
 	}
 
+	@Override
 	public int getInstanceSize(com.ibm.dtfj.java.JavaObject instance)
 	{
 		return _instanceSize;
@@ -218,6 +223,7 @@ public class JavaClass extends JavaAbstractClass
 		_fields.add(newStatic);
 	}
 
+	@Override
 	public String toString()
 	{
 		return _className+ "@" + Long.toHexString(_classPointer.getAddress());
@@ -226,14 +232,15 @@ public class JavaClass extends JavaAbstractClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getReferences()
 	 */
-	public Iterator getReferences()
+	@Override
+	public Iterator<?> getReferences()
 	{
 		// need to build a list of references from this class.
-		Vector references = new Vector();
+		Vector<Object> references = new Vector<>();
 		JavaReference jRef = null;
 
 		// get the Constant Pool references from this class.
-		Iterator constantPoolIt = getConstantPoolReferences();
+		Iterator<?> constantPoolIt = getConstantPoolReferences();
 		while (constantPoolIt.hasNext()) {
 			// get each reference in turn, note that the iterator can return JavaClass
 			// JavaObject and CorruptData. The CorruptData objects are ignored.
@@ -255,7 +262,7 @@ public class JavaClass extends JavaAbstractClass
 		}
 
 		// get the static field references from this class.
-		Iterator declaredFieldIt = getDeclaredFields();
+		Iterator<?> declaredFieldIt = getDeclaredFields();
 		while (declaredFieldIt.hasNext()) {
 			JavaField jField = (JavaField)declaredFieldIt.next();
 			// got a field, now test it to see if it is a static reference.
@@ -314,7 +321,8 @@ public class JavaClass extends JavaAbstractClass
 		}
 	}
 
+	@Override
 	public long getInstanceSize() throws CorruptDataException {
-		return (long)_instanceSize;
+		return _instanceSize;
 	}
 }

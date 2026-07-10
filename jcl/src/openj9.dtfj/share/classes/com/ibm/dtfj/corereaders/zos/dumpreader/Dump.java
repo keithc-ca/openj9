@@ -205,6 +205,7 @@ public final class Dump extends ImageInputStreamImpl {
 		}
 	}
 
+	@SuppressWarnings({ "deprecation", "restricted" })
 	private void openMvsDataset() throws FileNotFoundException {
 		try {
 			/*
@@ -369,10 +370,9 @@ public final class Dump extends ImageInputStreamImpl {
 				fposArray.close();
 				if (isMvsDataset) log.fine("fposArray used " + fposArray.memoryUsage());
 				spaces = (AddressSpace[])asidMap.toArray(new AddressSpace[0]);
-				Arrays.sort(spaces, new Comparator() {
-					public int compare(Object o1, Object o2) {
-						AddressSpace space1 = (AddressSpace)o1;
-						AddressSpace space2 = (AddressSpace)o2;
+				Arrays.sort(spaces, new Comparator<AddressSpace>() {
+					@Override
+					public int compare(AddressSpace space1, AddressSpace space2) {
 						return space1.getAsid() - space2.getAsid();
 					}
 				});

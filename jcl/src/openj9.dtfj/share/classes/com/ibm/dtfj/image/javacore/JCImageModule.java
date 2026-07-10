@@ -22,6 +22,7 @@
  */
 package com.ibm.dtfj.image.javacore;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Vector;
@@ -33,21 +34,20 @@ import com.ibm.dtfj.image.ImageSymbol;
 
 public class JCImageModule implements ImageModule {
 
-	private Vector fSections;
-	private Vector fSymbols;
+	private Vector<ImageSymbol> fSymbols;
 	private Properties fProperties;
 	private final String fName;
 
 	public JCImageModule(String name) {
 		fName = name;
-		fSections = new Vector();
-		fSymbols = new Vector();
+		fSymbols = new Vector<>();
 		fProperties = new Properties();
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public String getName() throws CorruptDataException {
 		if (fName == null) {
 			throw new CorruptDataException(new JCCorruptData("No name found for library", null));
@@ -67,6 +67,7 @@ public class JCImageModule implements ImageModule {
 	/**
 	 *
 	 */
+	@Override
 	public Properties getProperties() throws CorruptDataException {
 		if (fProperties.size() == 0) {
 			throw new CorruptDataException(new JCCorruptData("No properties available for " + fName,null));
@@ -86,14 +87,16 @@ public class JCImageModule implements ImageModule {
 	/**
 	 *
 	 */
-	public Iterator getSections() {
-		return fSections.iterator();
+	@Override
+	public Iterator<?> getSections() {
+		return Collections.emptyIterator();
 	}
 
 	/**
 	 *
 	 */
-	public Iterator getSymbols() {
+	@Override
+	public Iterator<?> getSymbols() {
 		return fSymbols.iterator();
 	}
 
@@ -106,6 +109,7 @@ public class JCImageModule implements ImageModule {
 		}
 	}
 
+	@Override
 	public long getLoadAddress() throws DataUnavailable {
 		throw new DataUnavailable("no load address in a javacore");
 	}

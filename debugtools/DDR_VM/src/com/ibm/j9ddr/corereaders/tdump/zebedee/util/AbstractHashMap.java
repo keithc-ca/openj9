@@ -232,14 +232,17 @@ public abstract class AbstractHashMap implements Serializable {
             if (index == tableSize) hasMore = false;
         }
 
+        @Override
         public boolean hasMoreElements() {
             return hasMore;
         }
 
-        public Object nextElement() {
+        @Override
+        public Long nextElement() {
             return Long.valueOf(nextInt());
         }
 
+        @Override
         public long nextInt() {
             long key = keys[index++];
             next();

@@ -25,7 +25,7 @@ import java.io.PrintStream;
 
 import com.ibm.j9ddr.CorruptDataException;
 
-public class J9XCommand extends Command 
+public final class J9XCommand extends Command
 {
 
 	private static final int DEFAULT_LINES = 2;
@@ -66,13 +66,12 @@ public class J9XCommand extends Command
 		'.', '.', '.', '.', '.', '.', '.', '.',
 		'.', '.', '.', '.', '.', '.', '.', '.'
 	};
-	
+
 	public J9XCommand()
 	{
 		addCommand("j9x", "<address>", "Hexdump <address>");
 		addCommand("j9xx", "<address>", "Hexdump <address>");
 	}
-	
 
 	/**
 	 * Debug assist method. Display words from the core file start at this
@@ -156,6 +155,8 @@ public class J9XCommand extends Command
 	 * @see com.ibm.j9ddr.tools.ddrinteractive.ICommand#run(java.lang.String,
 	 * java.io.StreamTokenizer, com.ibm.j9ddr.tools.ddrinteractive.Context)
 	 */
+	@Override
+	@SuppressWarnings("fallthrough")
 	public void run(String command, String arguments[], Context context, PrintStream out) throws DDRInteractiveCommandException 
 	{
 		if (arguments.length == 0) {

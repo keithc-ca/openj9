@@ -44,7 +44,7 @@ import com.ibm.dtfj.javacore.parser.j9.section.common.ICommonTypes;
 
 public class ParserController implements IParserController {
 
-	private List fFramework;
+	private List<ISectionParser> fFramework;
 	private IErrorListener fListener;
 	private IImageBuilderFactory fImageBuilderFactory;
 	private static final String DEFAULT_IMAGE_BUILDER = "default_image_builder";
@@ -56,7 +56,7 @@ public class ParserController implements IParserController {
 	 *
 	 * @param framework
 	 */
-	public ParserController(List framework, IImageBuilderFactory imageBuilderFactory) throws ParserException {
+	public ParserController(List<ISectionParser> framework, IImageBuilderFactory imageBuilderFactory) throws ParserException {
 		if (imageBuilderFactory == null) {
 			throw new ParserException("Must pass a valid image builder factory");
 		}
@@ -68,6 +68,7 @@ public class ParserController implements IParserController {
 	 * Support for one image builder parsing javacore data for only one runtime.
 	 * Multiple runtime support will require overriding this method in a subclass.
 	 */
+	@Override
 	public Image parse(IScannerManager scannerManager) throws ParserException {
 		ILookAheadBuffer lookAhead = scannerManager.getLookAheadBuffer();
 		// For error reporting
@@ -99,18 +100,17 @@ public class ParserController implements IParserController {
 
 		try {
 			lookAhead.init();
-			for (Iterator it = fFramework.iterator(); it.hasNext();) {
+			for (ISectionParser sectionParser : fFramework) {
 				processUnknownData(lookAhead);
-				ISectionParser sectionParser = (ISectionParser) it.next();
 				sectionParser.readIntoDTFJ(lookAhead, imageBuilder);
 
 				/*
 				 * Retrieve the error log.
 				 */
-				Iterator errors = sectionParser.getErrors();
+				Iterator<String> errors = sectionParser.getErrors();
 				if ((fListener != null) && errors.hasNext()) {
-					while(errors.hasNext()) {
-						fListener.handleEvent(errors.next().toString());
+					while (errors.hasNext()) {
+						fListener.handleEvent(errors.next());
 					}
 				}
 				anyMatched |= sectionParser.anyMatched();
@@ -144,7 +144,7 @@ public class ParserController implements IParserController {
 	 * @param lookAheadBuffer
 	 * @throws ScannerException
 	 */
-	private void processUnknownData(ILookAheadBuffer lookAheadBuffer) throws IOException, ScannerException {
+	private static void processUnknownData(ILookAheadBuffer lookAheadBuffer) throws IOException, ScannerException {
 		J9TagManager tagManager = J9TagManager.getCurrent();
 		boolean stop = false;
 		while (!lookAheadBuffer.allConsumed() && !stop) {
@@ -181,6 +181,7 @@ public class ParserController implements IParserController {
 	 *
 	 * @see com.ibm.dtfj.javacore.parser.framework.parser.IParserController#addErrorListener(com.ibm.dtfj.javacore.parser.framework.parser.IErrorListener)
 	 */
+	@Override
 	public void addErrorListener(IErrorListener listener) {
 		fListener = listener;
 	}

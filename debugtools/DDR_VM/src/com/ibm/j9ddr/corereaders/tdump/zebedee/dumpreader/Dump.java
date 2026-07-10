@@ -565,7 +565,7 @@ public final class Dump extends ImageInputStreamImpl {
      * Returns an object representing the system trace table.
      */
     public SystemTrace getSystemTrace() throws IOException {
-        SystemTrace systemTrace = (systemTraceRef == null ? null : (SystemTrace)systemTraceRef.get());
+        SystemTrace systemTrace = (systemTraceRef == null) ? null : systemTraceRef.get();
         if (systemTrace != null)
             return systemTrace;
         /* Search the address spaces for one with the TTCH eyecatcher in the first block */
@@ -576,7 +576,7 @@ public final class Dump extends ImageInputStreamImpl {
             int eyecatcher = space.readInt(lowestAddress);
             if (eyecatcher == 0xe3e3c3c8) {    // TTCH
                 systemTrace = new SystemTrace(space);
-                systemTraceRef = new SoftReference<SystemTrace>(systemTrace);
+                systemTraceRef = new SoftReference<>(systemTrace);
                 return systemTrace;
             }
         }

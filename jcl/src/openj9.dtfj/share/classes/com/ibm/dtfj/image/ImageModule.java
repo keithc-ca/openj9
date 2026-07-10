@@ -46,7 +46,7 @@ public interface ImageModule {
 	 * @see ImageSection
 	 * @see CorruptData
 	 */
-	public Iterator getSections();
+	public Iterator<?> getSections();
 
 	/**
 	 * Provides a collection of symbols defined by the library. This
@@ -59,7 +59,7 @@ public interface ImageModule {
 	 * @see ImageSymbol
 	 * @see CorruptData
 	 */
-	public Iterator getSymbols();
+	public Iterator<?> getSymbols();
 
 	/**
 	 * Get the table of properties associated with this module.

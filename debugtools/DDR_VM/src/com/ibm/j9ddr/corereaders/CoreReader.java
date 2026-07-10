@@ -67,11 +67,7 @@ public class CoreReader
 			Class<?> tdumpReaderClass = Class.forName("com.ibm.j9ddr.corereaders.tdump.TDumpReader");
 
 			if (ICoreFileReader.class.isAssignableFrom(tdumpReaderClass)) {
-				// the compiler doesn't recognize the significance of the test above
-				@SuppressWarnings("unchecked")
-				Class<? extends ICoreFileReader> cast = (Class<? extends ICoreFileReader>) tdumpReaderClass;
-
-				localReaders.add(cast);
+				localReaders.add(tdumpReaderClass.asSubclass(ICoreFileReader.class));
 			}
 		} catch (ClassNotFoundException e) {
 			// proceed without TDumpReader
@@ -100,7 +96,7 @@ public class CoreReader
 
 		for (Class<? extends ICoreFileReader> clazz : coreReaders) {
 			try {
-				ICoreFileReader reader = clazz.newInstance();
+				ICoreFileReader reader = clazz.getConstructor().newInstance();
 
 				DumpTestResult result = reader.testDump(path);
 
@@ -113,7 +109,7 @@ public class CoreReader
 				//ignore
 			} catch (IllegalAccessException e) {
 				logger.log(WARNING, "IllegalAccessException thrown creating " + clazz.getName(), e);
-			} catch (InstantiationException e) {
+			} catch (ReflectiveOperationException e) {
 				logger.log(WARNING, "Exception thrown creating " + clazz.getName(), e.getCause());
 			} catch (InvalidDumpFormatException e) {
 				logger.log(WARNING, "InvalidDumpFormatException thrown creating " + clazz.getName(), e);
@@ -149,7 +145,7 @@ public class CoreReader
 		
 		for (Class<? extends ICoreFileReader> clazz : coreReaders) {
 			try {
-				ICoreFileReader reader = clazz.newInstance();
+				ICoreFileReader reader = clazz.getConstructor().newInstance();
 		
 				DumpTestResult result = reader.testDump(in);
 		
@@ -160,10 +156,8 @@ public class CoreReader
 				}
 			} catch (UnsatisfiedLinkError e) {
 				//ignore
-			} catch (IllegalAccessException e) {
-				logger.log(WARNING, "IllegalAccessException thrown creating " + clazz.getName(), e);
-			} catch (InstantiationException e) {
-				logger.log(WARNING, "Exception thrown creating " + clazz.getName(), e.getCause());
+			} catch (ReflectiveOperationException e) {
+				logger.log(WARNING, "Exception thrown creating " + clazz.getName(), e);
 			} catch (InvalidDumpFormatException e) {
 				logger.log(WARNING, "InvalidDumpFormatException thrown creating " + clazz.getName(), e);
 			} catch (IOException e) {

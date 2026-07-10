@@ -24,7 +24,7 @@ package com.ibm.dtfj.corereaders.zos.le;
 
 /**
  * This exception is thrown if a stack cannot be found for a thread.
- *
  */
+@SuppressWarnings("serial")
 public class StackNotFound extends Exception {
 }

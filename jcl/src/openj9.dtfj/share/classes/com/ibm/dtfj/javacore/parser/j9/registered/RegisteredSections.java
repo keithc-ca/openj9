@@ -22,14 +22,12 @@
  */
 package com.ibm.dtfj.javacore.parser.j9.registered;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 
 public class RegisteredSections {
 
-	private ArrayList fSections;
-
-	public RegisteredSections()	{
+	public RegisteredSections() {
 		loadSections();
 	}
 
@@ -37,8 +35,8 @@ public class RegisteredSections {
 
 	}
 
-	public Iterator getSections() {
-		return fSections.iterator();
+	public Iterator<?> getSections() {
+		return Collections.emptyIterator();
 	}
 
 }

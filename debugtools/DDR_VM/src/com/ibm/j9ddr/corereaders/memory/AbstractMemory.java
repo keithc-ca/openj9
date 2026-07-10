@@ -107,8 +107,9 @@ public abstract class AbstractMemory extends SearchableMemory implements IMemory
 	protected final Map<IMemorySource, IMemorySource> decoratorMappingTable = new TreeMap<IMemorySource, IMemorySource>();
 	
 	static {
+		@SuppressWarnings("removal")
 		String maxCoreFileCacheSize = AccessController.doPrivileged(new PrivilegedAction<String>() {
-
+			@Override
 			public String run()
 			{
 				return System.getProperty(MAX_CORE_FILE_CACHE_SIZE_SYSTEM_PROPERTY);
@@ -136,8 +137,9 @@ public abstract class AbstractMemory extends SearchableMemory implements IMemory
 			GLOBAL_CACHE_ENABLED = true;
 		}
 
+		@SuppressWarnings("removal")
 		String enableCacheStats = AccessController.doPrivileged(new PrivilegedAction<String>() {
-
+			@Override
 			public String run()
 			{
 				return System.getProperty(ENABLE_CACHE_STATS_SYSTEM_PROPERTY);
@@ -460,9 +462,9 @@ public abstract class AbstractMemory extends SearchableMemory implements IMemory
 					
 					long offsetInBlock = address - blockBase;
 					long remainingInBlock = blockSize - offsetInBlock;
-					long amountToReadInBlock = remainingInBlock > toRead ? toRead : remainingInBlock;
+					int amountToReadInBlock = remainingInBlock > toRead ? toRead : (int) remainingInBlock;
 					
-					System.arraycopy(block.buffer,(int)offsetInBlock,buffer,destIndex,(int)amountToReadInBlock);
+					System.arraycopy(block.buffer, (int) offsetInBlock, buffer, destIndex, amountToReadInBlock);
 					
 					if (RECORDING_CACHE_STATS) {
 						if (cacheHit) {

@@ -41,9 +41,10 @@ public abstract class BaseAlgorithm implements IAlgorithm
 	/* (non-Javadoc)
 	 * @see com.ibm.j9ddr.vm.j9.IAlgorithm#matches(com.ibm.j9ddr.vm.j9.AlgorithmVersion)
 	 */
+	@Override
 	public boolean matches(AlgorithmVersion version)
 	{
-		return (version.getVMMinorVersion() == vmMinorVersion) && (version.getAlgorithmVersion() == algorithmVersion);
+		return (AlgorithmVersion.getVMMinorVersion() == vmMinorVersion) && (version.getAlgorithmVersion() == algorithmVersion);
 	}
 
 }

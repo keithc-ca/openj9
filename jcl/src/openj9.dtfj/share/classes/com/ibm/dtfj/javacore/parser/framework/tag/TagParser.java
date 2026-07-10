@@ -24,15 +24,16 @@ package com.ibm.dtfj.javacore.parser.framework.tag;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 public abstract class TagParser implements ITagParser {
 
-	private HashMap fTagRuleMap;
+	private Map<String, ILineRule> fTagRuleMap;
 	private String fSectionName;
 
 	public TagParser(String sectionName) {
 		fSectionName = sectionName;
-		fTagRuleMap = new HashMap();
+		fTagRuleMap = new HashMap<>();
 		initTagAttributeRules();
 	}
 
@@ -89,13 +90,15 @@ public abstract class TagParser implements ITagParser {
 	/**
 	 *
 	 */
+	@Override
 	public ILineRule getLineRule(String tag) {
-		return (ILineRule) fTagRuleMap.get(tag);
+		return fTagRuleMap.get(tag);
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public String getSectionName() {
 		return fSectionName;
 	}
@@ -103,6 +106,7 @@ public abstract class TagParser implements ITagParser {
 	/**
 	 *
 	 */
+	@Override
 	public boolean hasTag(String tag) {
 		return fTagRuleMap.containsKey(tag);
 	}
@@ -110,7 +114,8 @@ public abstract class TagParser implements ITagParser {
 	/**
 	 *
 	 */
-	public Iterator getTags() {
+	@Override
+	public Iterator<String> getTags() {
 		return fTagRuleMap.keySet().iterator();
 	}
 
