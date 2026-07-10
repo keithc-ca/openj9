@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.j9ddr.vm29.j9.walkers;
 
 import static com.ibm.j9ddr.vm29.events.EventManager.raiseCorruptDataEvent;
@@ -31,7 +30,7 @@ import com.ibm.j9ddr.CorruptDataException;
 import com.ibm.j9ddr.vm29.j9.DataType;
 import com.ibm.j9ddr.vm29.pointer.PointerPointer;
 
-public class ArrayIterator<StructType extends DataType>  implements Iterator<StructType> {
+public class ArrayIterator<StructType extends DataType> implements Iterator<StructType> {
 	private final int total;
 	private int current = 0;
 	private PointerPointer node = null;
@@ -52,16 +51,17 @@ public class ArrayIterator<StructType extends DataType>  implements Iterator<Str
 	public Iterator<StructType> iterator() {
 		return this;
 	}
-	
+
+	@Override
 	public boolean hasNext() {
 		return current < total;
 	}
 
-	@SuppressWarnings("unchecked")
+	@Override
 	public StructType next() {
 		if(hasNext()) {
 			try {
-				StructType ptr = (StructType)DataType.getStructure(structType, address);
+				StructType ptr = DataType.getStructure(structType, address);
 				address = 0;
 				setNextItem();
 				return ptr;
@@ -80,9 +80,10 @@ public class ArrayIterator<StructType extends DataType>  implements Iterator<Str
 			address = node.at(0).getAddress();
 		}
 	}
-	
+
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException();
 	}
-	
+
 }

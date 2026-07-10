@@ -312,9 +312,10 @@ public class DebugLocalMap
 				switch (action) {
 
 				case RTV_WIDE_POP_STORE_TEMP:
-					wideIndex = true;	/* Fall through case !!! */
-
 				case RTV_POP_STORE_TEMP:
+					if (action == RTV_WIDE_POP_STORE_TEMP) {
+						wideIndex = true;
+					}
 					index = type2 & 0x7;
 					if (type2 == 0) {
 						index = PARAM_8(bcIndex, 1).intValue();
@@ -477,6 +478,7 @@ public class DebugLocalMap
 			mapData.bytecodeMap[target] |= BRANCH_TARGET_TO_WALK;
 		}
 
+		@SuppressWarnings("fallthrough")
 		private int debugBuildBranchMap(DebugLocalMapData mapData) throws CorruptDataException
 		{
 			J9ROMMethodPointer romMethod = mapData.romMethod;

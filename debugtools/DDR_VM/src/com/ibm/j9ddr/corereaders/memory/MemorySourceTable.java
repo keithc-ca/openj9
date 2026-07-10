@@ -55,6 +55,7 @@ public class MemorySourceTable {
 	static long tlbCacheMisses = 0;
 
 	static {
+		@SuppressWarnings("removal")
 		String forceBinaryResolverString = AccessController.doPrivileged(new PrivilegedAction<String>() {
 			@Override
 			public String run() {
@@ -73,6 +74,7 @@ public class MemorySourceTable {
 			logger.logp(FINE, "MemoryRangeTable", "<clinit>", "BinaryChopResolver NOT forced on.");
 		}
 
+		@SuppressWarnings("removal")
 		String allowThreeTierResolverString = AccessController.doPrivileged(new PrivilegedAction<String>() {
 			@Override
 			public String run() {

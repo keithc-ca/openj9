@@ -58,8 +58,8 @@ import com.ibm.dtfj.javacore.parser.j9.section.title.TitleTagParser;
  */
 public class DTFJComponentLoader {
 
-	public List loadSections()	{
-		ArrayList sections = getSections();
+	public static List<ISectionParser> loadSections() {
+		List<Section> sections = getSections();
 		if (sections == null) {
 			throw new NullPointerException("No java core sections loaded.");
 		}
@@ -73,12 +73,11 @@ public class DTFJComponentLoader {
 	 * @param sections
 	 *
 	 */
-	private ArrayList getTagParsers(ArrayList sections) {
-		ArrayList tagParsers = null;
+	private static List<ITagParser> getTagParsers(List<Section> sections) {
+		List<ITagParser> tagParsers = null;
 		if (sections != null) {
-			tagParsers = new ArrayList();
-			for (Iterator it = sections.iterator(); it.hasNext();) {
-				Section section = (Section)it.next();
+			tagParsers = new ArrayList<>();
+			for (Section section : sections) {
 				if (section != null) {
 					ITagParser tagParser = section.getTagParser();
 					if (tagParser != null && !tagParsers.contains(tagParser)) {
@@ -95,12 +94,11 @@ public class DTFJComponentLoader {
 	 * @param sections
 	 *
 	 */
-	private ArrayList getSovParts(ArrayList sections) {
-		ArrayList sovParts = null;
+	private static List<SovereignSectionParserPart> getSovParts(List<Section> sections) {
+		List<SovereignSectionParserPart> sovParts = null;
 		if (sections != null) {
-			sovParts = new ArrayList();
-			for (Iterator it = sections.iterator(); it.hasNext();) {
-				Section section = (Section)it.next();
+			sovParts = new ArrayList<>();
+			for (Section section : sections) {
 				if (section != null) {
 					SovereignSectionParserPart part = section.getSovPart();
 					if (part != null && !sovParts.contains(part)) {
@@ -117,12 +115,11 @@ public class DTFJComponentLoader {
 	 * @param sections
 	 *
 	 */
-	private ArrayList getSectionParsers(ArrayList sections) {
-		ArrayList sectionParsers = null;
+	private static List<ISectionParser> getSectionParsers(List<Section> sections) {
+		List<ISectionParser> sectionParsers = null;
 		if (sections != null) {
-			sectionParsers = new ArrayList();
-			for (Iterator it = sections.iterator(); it.hasNext();) {
-				Section section = (Section)it.next();
+			sectionParsers = new ArrayList<>();
+			for (Section section : sections) {
 				if (section != null) {
 					ISectionParser part = section.getSectionParser();
 					if (part != null && !sectionParsers.contains(part)) {
@@ -138,8 +135,8 @@ public class DTFJComponentLoader {
 	 * Hardcoded for now
 	 *
 	 */
-	private ArrayList getSections() {
-		ArrayList loadedSections = new ArrayList();
+	private static List<Section> getSections() {
+		List<Section> loadedSections = new ArrayList<>();
 		Section section = new Section(null, new CommonTagParser(), null);
 		loadedSections.add(section);
 		section = new Section(new TitleSectionParser(), new TitleTagParser(),  null);

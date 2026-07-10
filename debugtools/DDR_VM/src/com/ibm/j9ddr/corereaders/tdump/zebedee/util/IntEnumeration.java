@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.j9ddr.corereaders.tdump.zebedee.util;
 
 import java.util.Enumeration;
@@ -28,11 +27,9 @@ import java.util.Enumeration;
  * This interface is just like that of java.util.Enumeration except that it adds the ability
  * to enumerate integer values rather than incur the overhead of allocating Integer objects.
  */
-
-public interface IntEnumeration extends Enumeration {
+public interface IntEnumeration extends Enumeration<Long> {
     /**
      * Return the next integer value.
      */
     public long nextInt();
 }
-

@@ -33,20 +33,6 @@ public class JavaVersionHelper
 {
 	private final static int J2SE_SERVICE_RELEASE_MASK = 0xFFFF;
 	private final static int J2SE_JAVA_SPEC_VERSION_SHIFT = 8;
-	
-	/**
-	 * Returns {@code true} if the Java version is Java9 or higher.
-	 * @param vm J9JavaVMPointer
-	 * @param out the output print stream
-	 * @return {@code true} if the Java version is Java9 or higher
-	 * @throws CorruptDataException
-	 * @deprecated use {@link #ensureMinimumJavaVersion(int, J9JavaVMPointer, PrintStream)} instead
-	 */
-	@Deprecated
-	public static boolean ensureJava9AndUp(J9JavaVMPointer vm, PrintStream out) throws CorruptDataException
-	{
-		return ensureMinimumJavaVersion(9, vm, out);
-	}
 
 	/**
 	 * Returns {@code true} if the Java version is {@code version} or higher.

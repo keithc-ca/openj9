@@ -32,6 +32,7 @@ import static com.ibm.j9ddr.vm29.structure.J9ConstantPool.J9_CP_DESCRIPTION_MASK
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.ibm.j9ddr.CorruptDataException;
 import com.ibm.j9ddr.vm29.pointer.AbstractPointer;
@@ -47,7 +48,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9RAMStringRefPointer;
 import com.ibm.j9ddr.vm29.pointer.helper.J9ROMClassHelper;
 import com.ibm.j9ddr.vm29.structure.J9RAMConstantPoolItem;
 
-public class GCConstantPoolSlotIterator extends GCIterator
+public class GCConstantPoolSlotIterator extends GCIterator<AbstractPointer>
 {
 	protected Iterator<AbstractPointer> slotIterator;
 	protected Iterator<VoidPointer> addressIterator;
@@ -72,8 +73,8 @@ public class GCConstantPoolSlotIterator extends GCIterator
 		long cpEntryCount = clazz.romClass().ramConstantPoolCount().longValue();
 		long cpDescriptionIndex = 0;
 		
-		ArrayList<AbstractPointer> slots = new ArrayList<AbstractPointer>();
-		ArrayList<VoidPointer> addresses = new ArrayList<VoidPointer>();
+		List<AbstractPointer> slots = new ArrayList<>();
+		List<VoidPointer> addresses = new ArrayList<>();
 		while(cpEntryCount > 0) {
 			if(0 == cpDescriptionIndex) {
 				// Load a new description word
@@ -128,17 +129,20 @@ public class GCConstantPoolSlotIterator extends GCIterator
 		addressIterator = addresses.iterator();
 	}
 
+	@Override
 	public boolean hasNext()
 	{
 		return slotIterator.hasNext();
 	}
 
+	@Override
 	public AbstractPointer next()
 	{
 		addressIterator.next();			// Keep the iterators in sync
 		return slotIterator.next();
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		slotIterator.next();			// Keep the iterators in sync

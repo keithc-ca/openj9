@@ -52,7 +52,7 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 	/**
 	 * All the JavaHeapRegions which make up the heap (note that this is always one in a legacy heap)
 	 */
-	private List _heapRegions;
+	private List<JavaHeapRegion> _heapRegions;
 	private int _arrayletIdOffset;
 	private int _arrayletIdWidth;
 	private long _arrayletIdMask;
@@ -98,7 +98,8 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaHeap#getSections()
 	 */
-	public Iterator getSections()
+	@Override
+	public Iterator<?> getSections()
 	{
 		return new MultiLevelSectionIterator(_heapRegions);
 	}
@@ -106,6 +107,7 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaHeap#getName()
 	 */
+	@Override
 	public String getName()
 	{
 		//TODO:  In the future, we will need a getID method on the JavaHeap interface and, at that time, this can be changed to just return _name
@@ -115,11 +117,13 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaHeap#getObjects()
 	 */
-	public Iterator getObjects()
+	@Override
+	public Iterator<?> getObjects()
 	{
 		return new MultiLevelExtentWalker(_heapRegions);
 	}
 
+	@Override
 	public boolean equals(Object obj)
 	{
 		boolean isEqual = false;
@@ -135,33 +139,37 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 		return isEqual;
 	}
 
+	@Override
 	public int hashCode()
 	{
-		return 	(_javaVM.hashCode() ^ _name.hashCode() ^ _id.hashCode() ^ ((int) _size));
+		return (_javaVM.hashCode() ^ _name.hashCode() ^ _id.hashCode() ^ ((int) _size));
 	}
 
-	private class MultiLevelSectionIterator implements Iterator
+	private static class MultiLevelSectionIterator implements Iterator<Object>
 	{
-		private Iterator _outer;
-		private Iterator _inner;
+		private Iterator<JavaHeapRegion> _outer;
+		private Iterator<?> _inner;
 
-		public MultiLevelSectionIterator(List list)
+		public MultiLevelSectionIterator(List<JavaHeapRegion> list)
 		{
 			_outer = list.iterator();
 		}
 
+		@Override
 		public boolean hasNext()
 		{
 			_refreshInner();
 			return _inner.hasNext();
 		}
 
+		@Override
 		public Object next()
 		{
 			_refreshInner();
 			return _inner.next();
 		}
 
+		@Override
 		public void remove()
 		{
 			throw new UnsupportedOperationException("The core-resident Java heap is immutable");
@@ -171,7 +179,7 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 		{
 			if ((null == _inner) || (!_inner.hasNext())) {
 				if (_outer.hasNext()) {
-					_inner = ((JavaHeapRegion)(_outer.next())).getSections();
+					_inner = _outer.next().getSections();
 				} else {
 					_inner = _outer;
 				}
@@ -179,28 +187,31 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 		}
 	}
 
-	private class MultiLevelExtentWalker implements Iterator
+	private static class MultiLevelExtentWalker implements Iterator<Object>
 	{
-		private Iterator _outer;
-		private Iterator _inner;
+		private Iterator<JavaHeapRegion> _outer;
+		private Iterator<?> _inner;
 
-		public MultiLevelExtentWalker(List list)
+		public MultiLevelExtentWalker(List<JavaHeapRegion> list)
 		{
 			_outer = list.iterator();
 		}
 
+		@Override
 		public boolean hasNext()
 		{
 			_refreshInner();
 			return _inner.hasNext();
 		}
 
+		@Override
 		public Object next()
 		{
 			_refreshInner();
 			return _inner.next();
 		}
 
+		@Override
 		public void remove()
 		{
 			throw new UnsupportedOperationException("The core-resident Java heap is immutable");
@@ -211,7 +222,7 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 			if ((null == _inner) || (!_inner.hasNext())) {
 				if (_outer.hasNext()) {
 					do {
-						_inner = ((JavaHeapRegion)(_outer.next())).getObjects();
+						_inner = _outer.next().getObjects();
 					} while ((!_inner.hasNext()) && (_outer.hasNext()));
 				} else {
 					_inner = _outer;
@@ -220,8 +231,13 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 		}
 	}
 
-	private static class RegionMatcher implements Comparator
+	private static class RegionMatcher implements Comparator<Object>
 	{
+		public RegionMatcher() {
+			super();
+		}
+
+		@Override
 		public int compare(Object arg0, Object arg1)
 		{
 			HeapSubRegionSection region = (HeapSubRegionSection) arg0;
@@ -276,46 +292,40 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 		return _arrayletIdResult;
 	}
 
-	public void setRegions(Vector regions)
+	public void setRegions(Vector<JavaHeapRegion> regions)
 	{
 		//store the regions
 		_heapRegions = regions;
 		//now make the sorted index of the subsections within all the regions for faster look-up, later on
-		Iterator outer = regions.iterator();
-		Vector heapSubRegionSections = new Vector();
+		Iterator<JavaHeapRegion> outer = regions.iterator();
+		Vector<HeapSubRegionSection> heapSubRegionSections = new Vector<>();
 		while (outer.hasNext()) {
-			JavaHeapRegion region = (JavaHeapRegion) outer.next();
-			Iterator sections = region.getSections();
+			JavaHeapRegion region = outer.next();
+			Iterator<?> sections = region.getSections();
 			while (sections.hasNext()) {
-				ImageSection section = (ImageSection)sections.next();
-				heapSubRegionSections.add(new HeapSubRegionSection(region, section));
+				Object section = sections.next();
+				if (section instanceof ImageSection) {
+					heapSubRegionSections.add(new HeapSubRegionSection(region, (ImageSection) section));
+				}
 			}
 		}
 		//now sort the sub-regions
-		_allSortedRegionSections = (HeapSubRegionSection[]) heapSubRegionSections.toArray(new HeapSubRegionSection[heapSubRegionSections.size()]);
-		Arrays.sort(_allSortedRegionSections, new Comparator(){
-			public int compare(Object arg0, Object arg1)
+		_allSortedRegionSections = heapSubRegionSections.toArray(new HeapSubRegionSection[heapSubRegionSections.size()]);
+		Arrays.sort(_allSortedRegionSections, new Comparator<HeapSubRegionSection>() {
+			@Override
+			public int compare(HeapSubRegionSection one, HeapSubRegionSection two)
 			{
-				HeapSubRegionSection one = (HeapSubRegionSection)arg0;
-				HeapSubRegionSection two = (HeapSubRegionSection)arg1;
-				long delta =  one.base() - two.base();
-				int result = 0;
-				if (delta < 0) {
-					result = -1;
-				} else if (delta > 0) {
-					result = 1;
-				}
-				return result;
+				return Long.compare(one.base(), two.base());
 			}
 		});
 	}
 
-	private class HeapSubRegionSection
+	private static class HeapSubRegionSection
 	{
 		private JavaHeapRegion _region;
 		private ImageSection _section;
 
-		private HeapSubRegionSection(JavaHeapRegion region, ImageSection section)
+		public HeapSubRegionSection(JavaHeapRegion region, ImageSection section)
 		{
 			_region = region;
 			_section = section;
@@ -331,7 +341,7 @@ public class JavaHeap implements com.ibm.dtfj.java.JavaHeap
 			return _region;
 		}
 
-		private long base()
+		public long base()
 		{
 			return _section.getBaseAddress().getAddress();
 		}

@@ -64,7 +64,7 @@ public class DumpModuleReadsCommand extends Command{
 		}
 		try {
 			J9JavaVMPointer vm = J9RASHelper.getVM(DataType.getJ9RASPointer());
-			if (JavaVersionHelper.ensureJava9AndUp(vm, out)) {
+			if (JavaVersionHelper.ensureMinimumJavaVersion(9, vm, out)) {
 				String targetModuleAddress = args[0];
 				J9ModulePointer modulePtr = J9ModulePointer.cast(Long.decode(targetModuleAddress));
 				J9HashTablePointer readTable = modulePtr.readAccessHashTable();

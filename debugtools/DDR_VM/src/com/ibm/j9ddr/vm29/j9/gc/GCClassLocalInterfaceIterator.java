@@ -31,7 +31,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9ClassPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ITablePointer;
 import com.ibm.j9ddr.vm29.pointer.helper.J9ClassHelper;
 
-public class GCClassLocalInterfaceIterator extends GCIterator
+public class GCClassLocalInterfaceIterator extends GCIterator<J9ClassPointer>
 {
 	protected J9ITablePointer iTable;
 	protected J9ITablePointer superclassITable;
@@ -51,7 +51,8 @@ public class GCClassLocalInterfaceIterator extends GCIterator
 	{
 		return new GCClassLocalInterfaceIterator(clazz); 
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		if(iTable.eq(superclassITable)) {
@@ -60,6 +61,7 @@ public class GCClassLocalInterfaceIterator extends GCIterator
 		return true;
 	}
 
+	@Override
 	public J9ClassPointer next()
 	{
 		if(hasNext()) {
@@ -76,7 +78,8 @@ public class GCClassLocalInterfaceIterator extends GCIterator
 			throw new NoSuchElementException("There are no more items available through this iterator"); 
 		}
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		if(hasNext()) {

@@ -214,7 +214,7 @@ public class Edb {
      * Returns an array of all the Edbs in the given address space.
      */
     public static Edb[] getEdbs(AddressSpace space) {
-        HashSet set = new HashSet();
+        Set<Edb> set = new HashSet<>();
         Caa[] caas = Caa.getCaas(space);
         for (int i = 0; i < caas.length; i++) {
             Edb edb = caas[i].getEdb();
@@ -229,7 +229,7 @@ public class Edb {
             }
         }
         log.fine("no sample edb found");
-        return (Edb[])set.toArray(new Edb[0]);
+        return set.toArray(new Edb[0]);
     }
 
     /**
@@ -237,15 +237,15 @@ public class Edb {
      * @throws IOException if an error occurred reading from the address space
      */
     public Dll getFirstDll() throws IOException {
-    	if (firstDll == null) {
-    		long ceeedb_dlcb_first = ceexedbTemplate.getCeeedb_dlcb_first(inputStream, address);
-    		log.fine("ceeedb_dlcb_first = " + hex(ceeedb_dlcb_first));
-    		if (ceeedb_dlcb_first != 0) {
-    			// cache the first Dll, which will eventually cache the whole chain
-    			firstDll = new Dll(ceeedb_dlcb_first, space);
-    		}
-    	}
-    	return firstDll;
+        if (firstDll == null) {
+           long ceeedb_dlcb_first = ceexedbTemplate.getCeeedb_dlcb_first(inputStream, address);
+           log.fine("ceeedb_dlcb_first = " + hex(ceeedb_dlcb_first));
+           if (ceeedb_dlcb_first != 0) {
+               // cache the first Dll, which will eventually cache the whole chain
+               firstDll = new Dll(ceeedb_dlcb_first, space);
+           }
+        }
+        return firstDll;
     }
 
     /**
@@ -280,11 +280,13 @@ public class Edb {
         return (space.readUnsignedByte(ceeedboptcb() + 0xec) & 0x80) != 0;
     }
 
+    @Override
     public boolean equals(Object obj) {
         Edb e = (Edb)obj;
         return e.space == space && e.address == address;
     }
 
+    @Override
     public int hashCode() {
         return (int)address;
     }
@@ -293,10 +295,7 @@ public class Edb {
         return Long.toHexString(i);
     }
 
-    private static String hex(int i) {
-        return Integer.toHexString(i);
-    }
-
+    @Override
     public String toString() {
         return hex(address);
     }

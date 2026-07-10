@@ -81,7 +81,7 @@ public abstract class BaseStructureCommand implements ICommand
 	 * Inserts supplied structure formatter at the head of the list.
 	 * @param formatter
 	 */
-	protected void registerStructureFormatter(IStructureFormatter formatter)
+	protected final void registerStructureFormatter(IStructureFormatter formatter)
 	{
 		if (formatter == null) {
 			throw new IllegalArgumentException("Structure formatter cannot be null");

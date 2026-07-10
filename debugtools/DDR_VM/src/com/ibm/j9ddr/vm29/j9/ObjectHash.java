@@ -163,6 +163,7 @@ public class ObjectHash {
 		return hashValue;
 	}
 
+	@SuppressWarnings("fallthrough")
 	private static I32 convertValueObjectAtOffsetToHash(J9JavaVMPointer vm, J9ObjectPointer objectPointer, J9ClassPointer clazz, UDATA startOffset) throws CorruptDataException
 	{
 		U32 hashValue = getSalt(vm, UDATA.cast(objectPointer), true);

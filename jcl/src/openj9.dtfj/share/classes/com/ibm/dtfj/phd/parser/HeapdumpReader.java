@@ -24,7 +24,6 @@ package com.ibm.dtfj.phd.parser;
 
 import java.io.*;
 import java.util.zip.GZIPInputStream;
-import java.util.Vector;
 
 import javax.imageio.stream.ImageInputStream;
 
@@ -60,7 +59,6 @@ public class HeapdumpReader extends Base {
 	int totalHash;
 	int totalActualRefs;
 	int totalNegGaps;
-	Vector classNames = new Vector();
 	int dumpFlags;
 	String full_version = "unknown";
 	boolean dbg = debug;
@@ -415,7 +413,7 @@ public class HeapdumpReader extends Base {
 		int count = refEnum.numberOfElements();
 		long[] refs = new long[count];
 		for (int i = 0; i < count; i++) {
-			refs[i] = (Long) refEnum.nextElement();
+			refs[i] = refEnum.nextLong();
 		}
 		refStream.clear();
 
@@ -498,7 +496,7 @@ public class HeapdumpReader extends Base {
 				int length = 0;
 				if (pre78432 && size == 3) {
 					address = lastAddress + (dis.readInt() << gapShift);
-					length = (int)dis.readInt();
+					length = dis.readInt();
 					if (dbg) System.out.println("warning! bad primitive array");
 				} else {
 					address = getRelativeAddress(size);
@@ -550,8 +548,10 @@ public class HeapdumpReader extends Base {
 				break;
 			}
 			case HeapdumpWriter.NEW_OBJECT_ARRAY_RECORD:
-				totalArray++;
 			case HeapdumpWriter.OBJECT_ARRAY_RECORD: {
+				if (tag == HeapdumpWriter.NEW_OBJECT_ARRAY_RECORD) {
+					totalArray += 1;
+				}
 				int flags = dis.readUnsignedByte();
 				address = getRelativeAddress((flags >> 6) & 3);
 				long classAddress = readUnsignedWord();
@@ -631,7 +631,7 @@ public class HeapdumpReader extends Base {
 		return new String(buf, "UTF-8");//AJ
 	}
 
-	class RefEnum implements LongEnumeration {
+	static class RefEnum implements LongEnumeration {
 
 		NumberStream stream;
 
@@ -639,22 +639,27 @@ public class HeapdumpReader extends Base {
 			this.stream = stream;
 		}
 
+		@Override
 		public boolean hasMoreElements() {
 			return stream.hasMore();
 		}
 
+		@Override
 		public boolean hasNumberOfElements() {
 			return true;
 		}
 
+		@Override
 		public int numberOfElements() {
 			return stream.elementCount();
 		}
 
-		public Object nextElement() {
+		@Override
+		public Long nextElement() {
 			return Long.valueOf(nextLong());
 		}
 
+		@Override
 		public long nextLong() {
 			return stream.readLong();
 		}

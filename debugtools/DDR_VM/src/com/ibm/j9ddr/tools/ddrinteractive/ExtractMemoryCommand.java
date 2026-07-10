@@ -28,14 +28,14 @@ import java.io.PrintStream;
 
 import com.ibm.j9ddr.corereaders.memory.MemoryFault;
 
-public class ExtractMemoryCommand extends Command 
+public final class ExtractMemoryCommand extends Command
 {
 	public ExtractMemoryCommand()
 	{
 		addCommand("extractmemory", "<hexAddress> <hexLength> <filename>", "Dump the specified memory range to a binary file");
 	}
-	
 
+	@Override
 	public void run(String command, String arguments[], Context context, PrintStream out) throws DDRInteractiveCommandException 
 	{
 		if (arguments.length != 3) {

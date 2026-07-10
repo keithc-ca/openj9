@@ -29,9 +29,9 @@ import com.ibm.dtfj.javacore.parser.framework.scanner.IParserToken;
 
 public class JavaCoreAttributeValueMap implements IAttributeValueMap {
 
-	private Map fResults;
+	private Map<String, IParserToken> fResults;
 
-	public JavaCoreAttributeValueMap(Map results) {
+	public JavaCoreAttributeValueMap(Map<String, IParserToken> results) {
 		if (results == null) {
 			throw new NullPointerException("Must pass non-null results");
 		}
@@ -48,6 +48,7 @@ public class JavaCoreAttributeValueMap implements IAttributeValueMap {
 	 * @param tokenType
 	 *
 	 */
+	@Override
 	public String getTokenValue(String tokenType) {
 		IParserToken token = getToken(tokenType);
 		String value = null;
@@ -62,6 +63,7 @@ public class JavaCoreAttributeValueMap implements IAttributeValueMap {
 	 * @param tokenType
 	 *
 	 */
+	@Override
 	public long getLongValue(String tokenType) {
 		IParserToken token = getToken(tokenType);
 		long value = IBuilderData.NOT_AVAILABLE;
@@ -91,6 +93,7 @@ public class JavaCoreAttributeValueMap implements IAttributeValueMap {
 		return value;
 	}
 
+	@Override
 	public int getIntValue(String tokenType) {
 		IParserToken token = getToken(tokenType);
 		int value = IBuilderData.NOT_AVAILABLE;
@@ -105,12 +108,9 @@ public class JavaCoreAttributeValueMap implements IAttributeValueMap {
 	 * @param tokenType
 	 *
 	 */
+	@Override
 	public IParserToken getToken(String tokenType) {
-		Object oToken = fResults.get(tokenType);
-		if (oToken instanceof IParserToken) {
-			return (IParserToken) oToken;
-		}
-		return null;
+		return fResults.get(tokenType);
 	}
 
 }

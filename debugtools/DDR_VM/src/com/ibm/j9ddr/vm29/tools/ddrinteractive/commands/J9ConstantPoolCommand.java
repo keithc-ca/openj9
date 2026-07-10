@@ -138,7 +138,7 @@ public class J9ConstantPoolCommand extends Command {
 	private static J9ClassPointer findClassByName(J9JavaVMPointer vm, String name) throws CorruptDataException {
 		ClassSegmentIterator iterator = new ClassSegmentIterator(vm.classMemorySegments());
 		while (iterator.hasNext()) {
-			J9ClassPointer classRef = (J9ClassPointer) iterator.next();
+			J9ClassPointer classRef = iterator.next();
 			String className;
 			if (J9ClassHelper.isArrayClass(classRef)) {
 				className = J9ClassHelper.getArrayName(classRef);

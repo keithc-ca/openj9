@@ -43,8 +43,8 @@ public class JavaMonitor implements com.ibm.dtfj.java.JavaMonitor
 	private ImagePointer _encompassingObjectAddress = null;
 	private JavaObject _encompassingObject = null;
 	private long _owningThreadID;
-	private Vector _blockList = new Vector();
-	private Vector _waitList = new Vector();
+	private final Vector<JavaThread> _blockList = new Vector<>();
+	private final Vector<JavaThread> _waitList = new Vector<>();
 
 	public JavaMonitor(JavaRuntime runtime, ImagePointer pointer, String name, ImagePointer encompassingObjectAddress, long owningThread)
 	{
@@ -72,6 +72,7 @@ public class JavaMonitor implements com.ibm.dtfj.java.JavaMonitor
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMonitor#getObject()
 	 */
+	@Override
 	public JavaObject getObject()
 	{
 		if (null == _encompassingObjectAddress) {
@@ -94,6 +95,7 @@ public class JavaMonitor implements com.ibm.dtfj.java.JavaMonitor
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMonitor#getName()
 	 */
+	@Override
 	public String getName() throws CorruptDataException
 	{
 		return _monitorName;
@@ -102,13 +104,18 @@ public class JavaMonitor implements com.ibm.dtfj.java.JavaMonitor
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMonitor#getOwner()
 	 */
+	@Override
 	public JavaThread getOwner() throws CorruptDataException
 	{
 		JavaThread owningThread = null;
-		Iterator allThreads = _javaVM.getThreads();
+		Iterator<?> allThreads = _javaVM.getThreads();
 
 		while (allThreads.hasNext()) {
-			JavaThread oneThread = (JavaThread) allThreads.next();
+			Object next = allThreads.next();
+			if (!(next instanceof JavaThread)) {
+				continue;
+			}
+			JavaThread oneThread = (JavaThread) next;
 
 			if (oneThread.getJNIEnv().getAddress() == _owningThreadID) {
 				owningThread = oneThread;
@@ -125,25 +132,22 @@ public class JavaMonitor implements com.ibm.dtfj.java.JavaMonitor
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMonitor#getEnterWaiters()
 	 */
-	public Iterator getEnterWaiters()
+	@Override
+	public Iterator<?> getEnterWaiters()
 	{
-		if (null == _blockList) {
-			_blockList = new Vector();
-		}
 		return _blockList.iterator();
 	}
 
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMonitor#getNotifyWaiters()
 	 */
-	public Iterator getNotifyWaiters()
+	@Override
+	public Iterator<?> getNotifyWaiters()
 	{
-		if (null == _waitList) {
-			_waitList = new Vector();
-		}
 		return _waitList.iterator();
 	}
 
+	@Override
 	public boolean equals(Object obj)
 	{
 		boolean isEqual = false;
@@ -155,6 +159,7 @@ public class JavaMonitor implements com.ibm.dtfj.java.JavaMonitor
 		return isEqual;
 	}
 
+	@Override
 	public int hashCode()
 	{
 		return _javaVM.hashCode() ^ _monitorID.hashCode();
@@ -163,6 +168,7 @@ public class JavaMonitor implements com.ibm.dtfj.java.JavaMonitor
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMonitor#getID()
 	 */
+	@Override
 	public ImagePointer getID()
 	{
 		return _monitorID;

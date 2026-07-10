@@ -78,8 +78,7 @@ public class DumpRomClassCommand extends Command {
 				ClassSegmentIterator iterator = new ClassSegmentIterator(
 						vm.classMemorySegments());
 				while (iterator.hasNext()) {
-					J9ClassPointer classPointer = (J9ClassPointer) iterator
-							.next();
+					J9ClassPointer classPointer = iterator.next();
 					String javaName = J9ClassHelper.getJavaName(classPointer);
 					if (pattern.isMatch(javaName)) {
 						hitCount++;

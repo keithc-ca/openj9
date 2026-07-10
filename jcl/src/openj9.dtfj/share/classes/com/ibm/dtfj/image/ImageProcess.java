@@ -72,7 +72,7 @@ public interface ImageProcess {
 	 * @see ImageModule
 	 * @see CorruptData
 	 */
-	public Iterator getLibraries() throws DataUnavailable, CorruptDataException;
+	public Iterator<?> getLibraries() throws DataUnavailable, CorruptDataException;
 
 	/**
 	 * Get the module representing the executable within the image.
@@ -97,7 +97,7 @@ public interface ImageProcess {
 	 * @see ImageThread
 	 * @see CorruptData
 	 */
-	public Iterator getThreads();
+	public Iterator<?> getThreads();
 
 	/**
 	 * Find the thread which triggered the creation of the image
@@ -123,7 +123,7 @@ public interface ImageProcess {
 	 * @see com.ibm.dtfj.java.JavaRuntime
 	 * @see CorruptData
 	 */
-	public Iterator getRuntimes();
+	public Iterator<?> getRuntimes();
 
 	/**
 	 * Get the OS signal number in this process which triggered the creation

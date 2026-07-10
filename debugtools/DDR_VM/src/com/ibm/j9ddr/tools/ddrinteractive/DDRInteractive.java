@@ -74,15 +74,17 @@ public class DDRInteractive implements Runnable
 	 * bootstrapping). Commands that need VM code should be listed in
 	 * com.ibm.j9ddr.vmXX.tools.ddrinteractive.GetCommandsTask
 	 */
-	private final List<ICommand> nonVMCommands;
-	{
+	@SuppressWarnings("this-escape")
+	private final List<ICommand> nonVMCommands = makeCommandList();
+
+	private List<ICommand> makeCommandList() {
 		List<ICommand> localCommandList = new LinkedList<>();
 
 		localCommandList.add(new J9XCommand());
-		localCommandList.add(new ContextCommand());
+		localCommandList.add(this.new ContextCommand());
 		localCommandList.add(new MemoryRangesCommand());
 		localCommandList.add(new FindInMemoryCommand());
-		localCommandList.add(new J9HelpCommand());
+		localCommandList.add(this.new J9HelpCommand());
 		localCommandList.add(new PluginCommand());
 		localCommandList.add(new NativeLibrariesCommand());
 		localCommandList.add(new LookupSymbolCommand());
@@ -91,7 +93,7 @@ public class DDRInteractive implements Runnable
 		localCommandList.add(new TimeCommand());
 		localCommandList.add(new ForeachCommand());
 
-		nonVMCommands = Collections.unmodifiableList(localCommandList);
+		return Collections.unmodifiableList(localCommandList);
 	}
 
 	/**
@@ -343,6 +345,7 @@ public class DDRInteractive implements Runnable
 	/**
 	 * Execute DDR inside a thread that was started by a debugger (!startddr).
 	 */
+	@Override
 	public void run()
 	{
 		try {
@@ -432,15 +435,14 @@ public class DDRInteractive implements Runnable
 		Context ctx = new Context(thisProcess, novm, nonVMCommands);
 		contexts.add(ctx);
 	}
-	
-	@SuppressWarnings("rawtypes")
-	public Collection getStructuresForCurrentContext()
+
+	public Collection<?> getStructuresForCurrentContext()
 	{
 		return currentContext.vmData.getStructures();
 	}
 
 	/* TODO: move to own file */
-	public class J9HelpCommand extends Command
+	public final class J9HelpCommand extends Command
 	{
 		public J9HelpCommand()
 		{
@@ -478,7 +480,7 @@ public class DDRInteractive implements Runnable
 	}
 
 	/* TODO: move to own file */
-	public class ContextCommand extends Command
+	public final class ContextCommand extends Command
 	{
 		public ContextCommand()
 		{

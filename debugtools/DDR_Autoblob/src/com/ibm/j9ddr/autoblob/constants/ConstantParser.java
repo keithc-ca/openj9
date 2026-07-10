@@ -195,6 +195,7 @@ public class ConstantParser
 		/* TODO: lpnguyen, make a listHelper instead of doing all this conversion to/from iterators */
 		Iterator<IFileEventCommand> eventsIterator = IteratorHelpers.filterIterator(events.iterator(), new IteratorFilter<IFileEventCommand>()
 			{
+				@Override
 				public boolean accept(IFileEventCommand obj)
 				{
 					if (obj instanceof ConstantFileEvent) {

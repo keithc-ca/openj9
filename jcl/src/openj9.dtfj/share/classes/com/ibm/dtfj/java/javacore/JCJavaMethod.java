@@ -22,8 +22,8 @@
  */
 package com.ibm.dtfj.java.javacore;
 
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.Vector;
 
 import com.ibm.dtfj.image.CorruptDataException;
 import com.ibm.dtfj.image.DataUnavailable;
@@ -37,8 +37,6 @@ public class JCJavaMethod implements JavaMethod {
 	private final JavaClass fJavaClass;
 
 	private String fSignature;
-	private Vector fBytecodeSections;
-	private Vector fCompiledSections;
 
 	public JCJavaMethod (String name, JCJavaClass javaClass) throws JCInvalidArgumentsException{
 		if (name == null) {
@@ -51,28 +49,29 @@ public class JCJavaMethod implements JavaMethod {
 		fJavaClass = javaClass;
 
 		fSignature = null;
-		fBytecodeSections = new Vector();
-		fCompiledSections = new Vector();
 		javaClass.addMethod(this);
 	}
 
 	/**
 	 *
 	 */
-	public Iterator getBytecodeSections() {
-		return fBytecodeSections.iterator();
+	@Override
+	public Iterator<?>getBytecodeSections() {
+		return Collections.emptyIterator();
 	}
 
 	/**
 	 *
 	 */
-	public Iterator getCompiledSections() {
-		return fCompiledSections.iterator();
+	@Override
+	public Iterator<?> getCompiledSections() {
+		return Collections.emptyIterator();
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public JavaClass getDeclaringClass() throws CorruptDataException, DataUnavailable {
 		if (fJavaClass == null) {
 			throw new DataUnavailable();
@@ -83,6 +82,7 @@ public class JCJavaMethod implements JavaMethod {
 	/**
 	 *
 	 */
+	@Override
 	public int getModifiers() throws CorruptDataException {
 		throw new CorruptDataException(new JCCorruptData(null));
 	}
@@ -90,6 +90,7 @@ public class JCJavaMethod implements JavaMethod {
 	/**
 	 *
 	 */
+	@Override
 	public String getName() throws CorruptDataException {
 		if (fName == null) {
 			throw new CorruptDataException(new JCCorruptData(null));
@@ -100,6 +101,7 @@ public class JCJavaMethod implements JavaMethod {
 	/**
 	 *
 	 */
+	@Override
 	public String getSignature() throws CorruptDataException {
 		if (fSignature == null) {
 			throw new CorruptDataException(new JCCorruptData(null));
@@ -107,6 +109,7 @@ public class JCJavaMethod implements JavaMethod {
 		return fSignature;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (o == null) return false;
 		if (getClass() != o.getClass()) return false;
@@ -114,10 +117,12 @@ public class JCJavaMethod implements JavaMethod {
 		return fName.equals(jm2.fName) && fJavaClass.equals(jm2.fJavaClass);
 	}
 
+	@Override
 	public int hashCode() {
 		return fName.hashCode() ^ fJavaClass.hashCode();
 	}
 
+	@Override
 	public String toString() {
 		try {
 			return getDeclaringClass().getName() + "." + getName();

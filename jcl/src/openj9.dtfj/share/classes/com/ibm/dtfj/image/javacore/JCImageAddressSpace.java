@@ -38,8 +38,8 @@ import com.ibm.dtfj.javacore.builder.IBuilderData;
 
 public class JCImageAddressSpace implements ImageAddressSpace {
 
-	private Vector fProcesses;
-	private Vector fImageSections;
+	private Vector<ImageProcess> fProcesses;
+	private Vector<ImageSection> fImageSections;
 	private JCImage fImage;
 
 	public JCImageAddressSpace(JCImage image) {
@@ -47,8 +47,8 @@ public class JCImageAddressSpace implements ImageAddressSpace {
 			throw new IllegalArgumentException("Must pass a valid image");
 		}
 		fImage = image;
-		fProcesses = new Vector();
-		fImageSections = new Vector();
+		fProcesses = new Vector<>();
+		fImageSections = new Vector<>();
 		image.addAddressSpace(this);
 	}
 
@@ -61,11 +61,12 @@ public class JCImageAddressSpace implements ImageAddressSpace {
 	/**
 	 * At the moment, just the last process to be added
 	 */
+	@Override
 	public ImageProcess getCurrentProcess() {
 		ImageProcess currentProcess = null;
 		int size = fProcesses.size();
 		if (size > 0) {
-			currentProcess = (ImageProcess) fProcesses.get(size-1);
+			currentProcess = fProcesses.get(size - 1);
 		}
 		return currentProcess;
 	}
@@ -73,13 +74,15 @@ public class JCImageAddressSpace implements ImageAddressSpace {
 	/**
 	 *
 	 */
-	public Iterator getImageSections() {
+	@Override
+	public Iterator<?> getImageSections() {
 		return fImageSections.iterator();
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public ImagePointer getPointer(long address) {
 		try {
 			return new JCImagePointer(this, address);
@@ -92,7 +95,8 @@ public class JCImageAddressSpace implements ImageAddressSpace {
 	/**
 	 *
 	 */
-	public Iterator getProcesses() {
+	@Override
+	public Iterator<?> getProcesses() {
 		return fProcesses.iterator();
 	}
 
@@ -121,7 +125,7 @@ public class JCImageAddressSpace implements ImageAddressSpace {
 	 *
 	 */
 	public boolean isValidAddressID(long id) {
-		return id != (long)IBuilderData.NOT_AVAILABLE;
+		return id != IBuilderData.NOT_AVAILABLE;
 	}
 
 	/**
@@ -132,10 +136,12 @@ public class JCImageAddressSpace implements ImageAddressSpace {
 		fImageSections.add(imageSection);
 	}
 
+	@Override
 	public String getID() throws DataUnavailable, CorruptDataException {
 		return "0";
 	}
 
+	@Override
 	public Properties getProperties() {
 		return new Properties();		//not supported for this reader
 	}

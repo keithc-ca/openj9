@@ -250,14 +250,14 @@ public class J9DDRClassLoader extends SecureClassLoader {
 		return Collections.unmodifiableCollection(reader.getStructures());
 	}
 
-	public IVMData getIVMData(IProcess process, long address) throws ClassNotFoundException, IllegalAccessException, InstantiationException {
+	public IVMData getIVMData(IProcess process, long address) throws ReflectiveOperationException {
 		if (vmData == null) {
 			// Associate this IVMData instance with this classloader by storing
 			// it in an instance field so that it lives as long as the classloader
 			// and any classes it generates. (In other words as long as we are
 			// still using this dump.)
 			Class<?> vmDataClazz = loadClassRelativeToStream("j9.VMData", false);
-			vmData = (IVMData) vmDataClazz.newInstance();
+			vmData = (IVMData) vmDataClazz.getConstructor().newInstance();
 		}
 		return vmData;
 	}

@@ -202,6 +202,7 @@ public abstract class VMDataFactory {
 		// Create and initialize a StructureClassLoader for this VM instance
 		final StructureReader structureReader = new StructureReader(in);
 
+		@SuppressWarnings("removal")
 		J9DDRClassLoader ddrClassLoader = AccessController.doPrivileged(new PrivilegedAction<J9DDRClassLoader>() {
 			@Override
 			public J9DDRClassLoader run() {
@@ -236,23 +237,7 @@ public abstract class VMDataFactory {
 			}
 
 			return vmData;
-		} catch (ClassNotFoundException e) {
-			Logger logger = Logger.getLogger(LoggerNames.LOGGER_STRUCTURE_READER);
-			logger.log(FINE, null, e);
-			throw new IOException(String.format("Invalid or unavailable structure offset data.  %s", e.getMessage()));
-		} catch (NoSuchMethodException e) {
-			Logger logger = Logger.getLogger(LoggerNames.LOGGER_STRUCTURE_READER);
-			logger.log(FINE, null, e);
-			throw new IOException(String.format("Invalid or unavailable structure offset data.  %s", e.getMessage()));
-		} catch (IllegalAccessException e) {
-			Logger logger = Logger.getLogger(LoggerNames.LOGGER_STRUCTURE_READER);
-			logger.log(FINE, null, e);
-			throw new IOException(String.format("Invalid or unavailable structure offset data.  %s", e.getMessage()));
-		} catch (InvocationTargetException e) {
-			Logger logger = Logger.getLogger(LoggerNames.LOGGER_STRUCTURE_READER);
-			logger.log(FINE, null, e);
-			throw new IOException(String.format("Invalid or unavailable structure offset data.  %s", e.getMessage()));
-		} catch (InstantiationException e) {
+		} catch (ReflectiveOperationException e) {
 			Logger logger = Logger.getLogger(LoggerNames.LOGGER_STRUCTURE_READER);
 			logger.log(FINE, null, e);
 			throw new IOException(String.format("Invalid or unavailable structure offset data.  %s", e.getMessage()));

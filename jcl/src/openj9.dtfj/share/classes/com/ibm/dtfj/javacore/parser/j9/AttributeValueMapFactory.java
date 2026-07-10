@@ -24,8 +24,10 @@ package com.ibm.dtfj.javacore.parser.j9;
 
 import java.util.Map;
 
+import com.ibm.dtfj.javacore.parser.framework.scanner.IParserToken;
+
 public class AttributeValueMapFactory {
-	public static IAttributeValueMap createAttributeValueMap(Map source) {
+	public static IAttributeValueMap createAttributeValueMap(Map<String, IParserToken> source) {
 		return new JavaCoreAttributeValueMap(source);
 	}
 }

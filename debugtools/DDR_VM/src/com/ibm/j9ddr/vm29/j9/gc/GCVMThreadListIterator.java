@@ -30,7 +30,7 @@ import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9VMThreadPointer;
 
 
-public class GCVMThreadListIterator extends GCIterator 
+public class GCVMThreadListIterator extends GCIterator<J9VMThreadPointer>
 {
 	protected J9VMThreadPointer initialVMThread;
 	protected J9VMThreadPointer currentVMThread;
@@ -54,12 +54,14 @@ public class GCVMThreadListIterator extends GCIterator
 	{
 		return new GCVMThreadListIterator();
 	}
-	
+
+	@Override
 	public boolean hasNext() 
 	{
 		return currentVMThread.notNull();
 	}
 
+	@Override
 	public J9VMThreadPointer next() 
 	{ 
 		try {
@@ -80,7 +82,8 @@ public class GCVMThreadListIterator extends GCIterator
 			return null;	
 		}
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress() 
 	{
 		// Does not make sense in this case

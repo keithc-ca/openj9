@@ -132,7 +132,7 @@ public interface JavaThread  {
 	 * @see ImageThread#getStackSections()
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getStackSections();
+	public Iterator<?> getStackSections();
 
 	/**
 	 * Get the set of stack frames.
@@ -141,9 +141,8 @@ public interface JavaThread  {
 	 *
 	 * @see JavaStackFrame
 	 * @see com.ibm.dtfj.image.CorruptData
-	 *
 	 */
-	public Iterator getStackFrames();
+	public Iterator<?> getStackFrames();
 
 	/**
 	 * Return the name of the thread.
@@ -175,6 +174,9 @@ public interface JavaThread  {
 	 * @param obj
 	 * @return True if the given object refers to the same Java Thread in the image
 	 */
+	@Override
 	public boolean equals(Object obj);
+
+	@Override
 	public int hashCode();
 }

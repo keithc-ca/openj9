@@ -28,19 +28,17 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
-import java.util.Vector;
 
 import com.ibm.dtfj.image.CorruptDataException;
 import com.ibm.dtfj.image.DataUnavailable;
 import com.ibm.dtfj.image.ImagePointer;
-import com.ibm.dtfj.image.MemoryAccessException;
 import com.ibm.dtfj.image.javacore.JCCorruptData;
 import com.ibm.dtfj.image.javacore.JCImageAddressSpace;
 import com.ibm.dtfj.image.javacore.JCImageProcess;
 import com.ibm.dtfj.image.javacore.JCImageThread;
 import com.ibm.dtfj.image.javacore.LookupKey;
-import com.ibm.dtfj.java.JavaClass;
 import com.ibm.dtfj.java.JavaObject;
 import com.ibm.dtfj.java.JavaRuntime;
 import com.ibm.dtfj.java.JavaVMInitArgs;
@@ -69,15 +67,13 @@ import com.ibm.dtfj.javacore.builder.IBuilderData;
  */
 public class JCJavaRuntime implements JavaRuntime {
 
-	private Vector fHeaps;
-	private Vector fCompiledMethods;
-	private HashMap fJavaClassLoaders;
-	private HashMap fJavaClasses;
-	private HashMap fMonitors;
-	private HashMap fJavaThreads;
-	private HashMap fJavaClassIDs;
+	private Map<LookupKey, JCJavaClassLoader> fJavaClassLoaders;
+	private Map<String, JCJavaClass> fJavaClasses;
+	private Map<LookupKey, JCJavaMonitor> fMonitors;
+	private Map<LookupKey, JCJavaThread> fJavaThreads;
+	private Map<LookupKey, JCJavaClass> fJavaClassIDs;
 	private JCJavaVMInitArgs fJavaVMInitArgs;
-	private List fMemoryCategories;
+	private List<JCJavaRuntimeMemoryCategory> fMemoryCategories;
 
 	private String fFullVersion;
 	private String fVersion;
@@ -106,14 +102,12 @@ public class JCJavaRuntime implements JavaRuntime {
 		fImageProcess = imageProcess;
 		fImageAddressSpace = imageProcess.getImageAddressSpace();
 
-		fHeaps = new Vector();
-		fCompiledMethods = new Vector();
-		fJavaClassLoaders = new LinkedHashMap();
-		fMonitors = new LinkedHashMap();
-		fJavaThreads = new LinkedHashMap();
-		fJavaClasses = new HashMap();
-		fJavaClassIDs = new HashMap();
-		fMemoryCategories = new LinkedList();
+		fJavaClassLoaders = new LinkedHashMap<>();
+		fMonitors = new LinkedHashMap<>();
+		fJavaThreads = new LinkedHashMap<>();
+		fJavaClasses = new HashMap<>();
+		fJavaClassIDs = new HashMap<>();
+		fMemoryCategories = new LinkedList<>();
 
 		fFullVersion = null;
 		fVersion = null;
@@ -124,41 +118,47 @@ public class JCJavaRuntime implements JavaRuntime {
 	/**
 	 * @see com.ibm.dtfj.java.JavaRuntime#getCompiledMethods()
 	 */
-	public Iterator getCompiledMethods() {
-		return fCompiledMethods.iterator();
+	@Override
+	public Iterator<?> getCompiledMethods() {
+		return Collections.emptyIterator();
 	}
 
 	/**
 	 * @see com.ibm.dtfj.java.JavaRuntime#getHeaps()
 	 */
-	public Iterator getHeaps() {
-		return fHeaps.iterator();
+	@Override
+	public Iterator<?> getHeaps() {
+		return Collections.emptyIterator();
 	}
 
 	/**
 	 * @see com.ibm.dtfj.java.JavaRuntime#getJavaClassLoaders()
 	 */
-	public Iterator getJavaClassLoaders() {
+	@Override
+	public Iterator<?> getJavaClassLoaders() {
 		return fJavaClassLoaders.values().iterator();
 	}
 
 	/**
 	 * @see com.ibm.dtfj.java.JavaRuntime#getMonitors()
 	 */
-	public Iterator getMonitors() {
+	@Override
+	public Iterator<?> getMonitors() {
 		return fMonitors.values().iterator();
 	}
 
 	/**
 	 * @see com.ibm.dtfj.java.JavaRuntime#getThreads()
 	 */
-	public Iterator getThreads() {
+	@Override
+	public Iterator<?> getThreads() {
 		return fJavaThreads.values().iterator();
 	}
 
 	/**
 	 *  @see com.ibm.dtfj.java.JavaRuntime#getJavaVMInitArgs()
 	 */
+	@Override
 	public JavaVMInitArgs getJavaVMInitArgs() throws DataUnavailable, CorruptDataException {
 		if (fJavaVMInitArgs == null) {
 			throw new DataUnavailable("JavaVMInitArgs not available");
@@ -170,6 +170,7 @@ public class JCJavaRuntime implements JavaRuntime {
 	/**
 	 *  @see com.ibm.dtfj.java.JavaRuntime#getJavaVM()
 	 */
+	@Override
 	public ImagePointer getJavaVM() throws CorruptDataException {
 		throw new CorruptDataException(new JCCorruptData(null));
 	}
@@ -177,6 +178,7 @@ public class JCJavaRuntime implements JavaRuntime {
 	/**
 	 *  @see com.ibm.dtfj.java.JavaRuntime#getTraceBuffer()
 	 */
+	@Override
 	public Object getTraceBuffer(String arg0, boolean arg1) throws CorruptDataException {
 		throw new CorruptDataException(new JCCorruptData(null));
 	}
@@ -184,6 +186,8 @@ public class JCJavaRuntime implements JavaRuntime {
 	/**
 	 * @see com.ibm.dtfj.runtime.ManagedRuntime#getFullVersion()
 	 */
+	@Override
+	@SuppressWarnings("deprecation")
 	public String getFullVersion() throws CorruptDataException {
 		if (fFullVersion == null) {
 			throw new CorruptDataException(new JCCorruptData(null));
@@ -194,6 +198,7 @@ public class JCJavaRuntime implements JavaRuntime {
 	/**
 	 * @see com.ibm.dtfj.runtime.ManagedRuntime#getVersion()
 	 */
+	@Override
 	public String getVersion() throws CorruptDataException {
 		if (fVersion == null) {
 			throw new CorruptDataException(new JCCorruptData(null));
@@ -232,7 +237,7 @@ public class JCJavaRuntime implements JavaRuntime {
 		if (javaClassLoader == null) {
 			throw new JCInvalidArgumentsException("Not a valid java class loader.");
 		}
-		fJavaClassLoaders.put(new LookupKey(((JCJavaClassLoader)javaClassLoader).getPointerID().getAddress()), javaClassLoader);
+		fJavaClassLoaders.put(new LookupKey(javaClassLoader.getPointerID().getAddress()), javaClassLoader);
 	}
 
 	/**
@@ -245,7 +250,7 @@ public class JCJavaRuntime implements JavaRuntime {
 	 */
 	public JCJavaClassLoader findJavaClassLoader(long clLoaderID) {
 		fIDLookupKey.setKey(clLoaderID);
-		return (JCJavaClassLoader) fJavaClassLoaders.get(fIDLookupKey);
+		return fJavaClassLoaders.get(fIDLookupKey);
 	}
 
 	/**
@@ -273,7 +278,7 @@ public class JCJavaRuntime implements JavaRuntime {
 	 */
 	public JCJavaMonitor findMonitor(long id) {
 		fIDLookupKey.setKey(id);
-		return (JCJavaMonitor) fMonitors.get(fIDLookupKey);
+		return fMonitors.get(fIDLookupKey);
 	}
 	/**
 	 * NON-DTFJ
@@ -303,12 +308,12 @@ public class JCJavaRuntime implements JavaRuntime {
 	 * @return found java thread or null.
 	 */
 	public JCJavaThread findJavaThread(long threadID) {
-		Object javaThread = null;
+		JCJavaThread javaThread;
 		fIDLookupKey.setKey(threadID);
 		if ((javaThread = fJavaThreads.get(fIDLookupKey)) == null) {
-			Iterator it = fJavaThreads.values().iterator();
+			Iterator<JCJavaThread> it = fJavaThreads.values().iterator();
 			while (javaThread == null && it.hasNext()) {
-				JCJavaThread jThread = (JCJavaThread) it.next();
+				JCJavaThread jThread = it.next();
 				JCImageThread imageThread = jThread.internalGetImageThread();
 				if (imageThread != null) {
 					// lookup via systemthreadID
@@ -327,7 +332,7 @@ public class JCJavaRuntime implements JavaRuntime {
 				}
 			}
 		}
-		return (JCJavaThread) javaThread;
+		return javaThread;
 	}
 
 	/**
@@ -375,7 +380,7 @@ public class JCJavaRuntime implements JavaRuntime {
 	 * @return found class or null if not found
 	 */
 	public JCJavaClass findJavaClass(String javaClassName) {
-		return (JCJavaClass) fJavaClasses.get(javaClassName);
+		return fJavaClasses.get(javaClassName);
 	}
 
 	/**
@@ -393,7 +398,7 @@ public class JCJavaRuntime implements JavaRuntime {
 		JCJavaClass javaClass = null;
 		if (fImageAddressSpace.isValidAddressID(id)) {
 			fIDLookupKey.setKey(id);
-			javaClass = (JCJavaClass) fJavaClassIDs.get(fIDLookupKey);
+			javaClass = fJavaClassIDs.get(fIDLookupKey);
 		}
 		return javaClass;
 	}
@@ -413,10 +418,12 @@ public class JCJavaRuntime implements JavaRuntime {
 		fJavaVMInitArgs = args;
 	}
 
-	public Iterator getHeapRoots() {
-		return Collections.EMPTY_LIST.iterator();
+	@Override
+	public Iterator<?> getHeapRoots() {
+		return Collections.emptyIterator();
 	}
 
+	@Override
 	public JavaObject getObjectAtAddress(ImagePointer address)	throws DataUnavailable {
 		throw new DataUnavailable("Object information not available.");
 	}
@@ -432,12 +439,14 @@ public class JCJavaRuntime implements JavaRuntime {
 		fVersion = version;
 	}
 
-	public Iterator getMemoryCategories() throws DataUnavailable
+	@Override
+	public Iterator<?> getMemoryCategories() throws DataUnavailable
 	{
 		return Collections.unmodifiableList(fMemoryCategories).iterator();
 	}
 
-	public Iterator getMemorySections(boolean includeFreed)
+	@Override
+	public Iterator<?> getMemorySections(boolean includeFreed)
 			throws DataUnavailable
 	{
 		throw new DataUnavailable("Memory section data not available in JavaCore");
@@ -448,6 +457,7 @@ public class JCJavaRuntime implements JavaRuntime {
 		fMemoryCategories.add(category);
 	}
 
+	@Override
 	public boolean isJITEnabled() throws DataUnavailable, CorruptDataException {
 		return isJITEnabled;
 	}
@@ -460,7 +470,8 @@ public class JCJavaRuntime implements JavaRuntime {
 		jitOptions.put(name, value);
 	}
 
-	public Properties getJITProperties() throws DataUnavailable,	CorruptDataException {
+	@Override
+	public Properties getJITProperties() throws DataUnavailable, CorruptDataException {
 		if(isJITEnabled) {
 			return jitOptions;
 		} else {
@@ -468,6 +479,7 @@ public class JCJavaRuntime implements JavaRuntime {
 		}
 	}
 
+	@Override
 	public long getStartTime() throws DataUnavailable, CorruptDataException {
 		if (fStartTimeSet) {
 			return fStartTime;
@@ -476,6 +488,7 @@ public class JCJavaRuntime implements JavaRuntime {
 		}
 	}
 
+	@Override
 	public long getStartTimeNanos() throws DataUnavailable, CorruptDataException {
 		if (fStartTimeNanosSet) {
 			return fStartTimeNanos;

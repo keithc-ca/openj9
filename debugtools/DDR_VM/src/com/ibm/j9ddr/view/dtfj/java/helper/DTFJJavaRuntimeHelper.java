@@ -34,7 +34,6 @@ public class DTFJJavaRuntimeHelper {
 
 	private static long totalSizeOfAllHeaps = -1;
 	
-	@SuppressWarnings("rawtypes")
 	public static long getTotalHeapSize(JavaRuntime runtime, IProcess process) throws CorruptDataException {
 
 		if (totalSizeOfAllHeaps > 0) {// already calculated, never changes
@@ -46,11 +45,11 @@ public class DTFJJavaRuntimeHelper {
 					J9DDRDTFJUtils.newCorruptData(process, "No Java Runtime present"));
 		}
 
-		Iterator heaps = runtime.getHeaps();
+		Iterator<?> heaps = runtime.getHeaps();
 
 		while (heaps.hasNext()) {
 			Object nextHeap = heaps.next();
-			Iterator sections;
+			Iterator<?> sections;
 
 			if (nextHeap instanceof JavaHeap) {
 				sections = ((JavaHeap)nextHeap).getSections();

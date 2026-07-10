@@ -28,6 +28,7 @@ import java.util.Vector;
 import com.ibm.dtfj.image.CorruptDataException;
 import com.ibm.dtfj.image.DataUnavailable;
 import com.ibm.dtfj.java.JavaVMInitArgs;
+import com.ibm.dtfj.java.JavaVMOption;
 
 /**
  * A javacore-based implementation of DTFJ JavaVMInitArgs. Note that javacores
@@ -39,7 +40,7 @@ import com.ibm.dtfj.java.JavaVMInitArgs;
  */
 public class JCJavaVMInitArgs implements JavaVMInitArgs {
 
-	private Vector fOptions = new Vector();
+	private Vector<JavaVMOption> fOptions = new Vector<>();
 	private JCJavaRuntime fRuntime;
 
 	public JCJavaVMInitArgs(JCJavaRuntime javaRuntime, int version, boolean ignoreUnrecognized)
@@ -48,17 +49,20 @@ public class JCJavaVMInitArgs implements JavaVMInitArgs {
 		fRuntime.addJavaVMInitArgs(this);
 	}
 
+	@Override
 	public int getVersion() throws DataUnavailable, CorruptDataException {
 		// JNI version not available in javacore
 		throw new DataUnavailable("JNI version not available");
 	}
 
+	@Override
 	public boolean getIgnoreUnrecognized() throws DataUnavailable, CorruptDataException {
 		// JNI version not available in javacore
 		throw new DataUnavailable("JNI ignoreUnrecognized field not available");
 	}
 
-	public Iterator getOptions() throws DataUnavailable {
+	@Override
+	public Iterator<JavaVMOption> getOptions() throws DataUnavailable {
 		return fOptions.iterator();
 	}
 

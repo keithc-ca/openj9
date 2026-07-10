@@ -60,8 +60,6 @@ public class FunctionEmulator {
     private long stackBase;
     /** Print instruction offsets when tracing */
     private boolean printOffsets;
-    /** Maps function entry points to return addresses */
-    //private IntegerMap returnAddresses = new IntegerMap();
     /** The root of the call tree if capturing was requested */
     private Function callTreeRoot;
     /** The current function while capturing the call tree */
@@ -69,8 +67,8 @@ public class FunctionEmulator {
     /** Record trace entries rather than printing them */
     private boolean recordTrace;
     /** List of recorded trace entries */
-    private ArrayList traceEntries;
-    private HashMap replacedFunctions = new HashMap();
+    private List<TraceEntry> traceEntries;
+    private Map<String, Replace> replacedFunctions = new HashMap<>();
     private ObjectMap enteredFunctions = new ObjectMap();
     /** Logger */
     private static Logger log = Logger.getLogger(com.ibm.j9ddr.corereaders.ICoreFileReader.J9DDR_CORE_READERS_LOGGER_NAME);
@@ -132,7 +130,7 @@ public class FunctionEmulator {
 
         /* Create the emulator */
         try {
-            em = (Emulator)Class.forName("com.ibm.zebedee.emulator.EmulatorImpl").newInstance();
+            em = (Emulator)Class.forName("com.ibm.zebedee.emulator.EmulatorImpl").getConstructor().newInstance();
         } catch (Exception e) {
             throw new Error("unable to instantiate com.ibm.zebedee.emulator.EmulatorImpl");
         }
@@ -205,14 +203,14 @@ public class FunctionEmulator {
         em.setTraceListener(instructionRecord ? new TraceListener() : null);
         if (instructionRecord) {
             recordTrace = true;
-            traceEntries = new ArrayList();
+            traceEntries = new ArrayList<>();
         } else {
             recordTrace = false;
         }
     }
 
     /** Return a list of the instruction trace entries */
-    public List getTraceEntries() {
+    public List<TraceEntry> getTraceEntries() {
         return traceEntries;
     }
 
@@ -267,8 +265,8 @@ public class FunctionEmulator {
     public class Function {
         private String name;
         private Function parent;
-        private ArrayList children = new ArrayList();
-        private HashMap childMap = new HashMap();
+        private List<Function> children = new ArrayList<>();
+        private Map<String, Function> childMap = new HashMap<>();
 
         Function(String name, Function parent) {
             this.name = name;
@@ -284,7 +282,7 @@ public class FunctionEmulator {
          * @return the functions called by this function in the order in which they were
          * first called (duplicates are discarded).
          */
-        public Iterator getChildren() {
+        public Iterator<Function> getChildren() {
             return children.iterator();
         }
 
@@ -298,7 +296,7 @@ public class FunctionEmulator {
          * @return the child function
          */
         public Function addChild(String childName) {
-            Function child = (Function)childMap.get(childName);
+            Function child = childMap.get(childName);
             if (child == null) {
                 child = new Function(childName, this);
                 children.add(child);
@@ -518,7 +516,7 @@ public class FunctionEmulator {
                     functionName = DsaStackFrame.getEntryPointName(space, stripTopBit(targetAddress));
                     enteredFunctions.put(targetAddress, functionName);
                 }
-                Replace ret = (Replace)replacedFunctions.get(functionName);
+                Replace ret = replacedFunctions.get(functionName);
                 if (ret != null) {
                     //System.out.println("found override " + functionName + " protect is " + ret.protect);
                     if (ret.protect) {

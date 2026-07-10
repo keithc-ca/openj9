@@ -27,17 +27,17 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 
 import com.ibm.j9ddr.corereaders.memory.MemoryFault;
-
 
 public abstract class Command implements ICommand
 {
 	protected static final String nl = System.getProperty("line.separator");
 
-	private HashMap<String,CommandDescription> _commandNames = new HashMap<String,CommandDescription>();
-		
+	private Map<String, CommandDescription> _commandNames = new HashMap<>();
+
 	/**
 	 * 
 	 * @param name				Command Name
@@ -60,7 +60,8 @@ public abstract class Command implements ICommand
 	{
 		command.addSubCommand(name, argDescription, helpDescription);
 	}
-	
+
+	@Override
 	public boolean recognises(String command, Context context)
 	{		
 		if (command.charAt(0) == '!') {
@@ -76,7 +77,8 @@ public abstract class Command implements ICommand
 
 		return false;
 	}
-	
+
+	@Override
 	public Collection<String> getCommandDescriptions()
 	{
 		String desc = new String();
@@ -88,7 +90,8 @@ public abstract class Command implements ICommand
 				
 		return Collections.singleton(desc);
 	}
-	
+
+	@Override
 	public Set<String> getCommandNames()
 	{
 		return _commandNames.keySet();
@@ -196,14 +199,14 @@ public abstract class Command implements ICommand
 		return true;
 	}
 	
-	protected class CommandDescription 
+	protected static class CommandDescription
 	{
 		private String commandName;
 		private String argumentDescription;
 		private String helpDescription;
-		
-		private HashMap<String,CommandDescription> _subCommandNames = new HashMap<String,CommandDescription>();
-		
+
+		private Map<String, CommandDescription> _subCommandNames = new HashMap<>();
+
 		public CommandDescription(String name, String argDescription, String help)
 		{
 			commandName = name;
@@ -229,5 +232,5 @@ public abstract class Command implements ICommand
 			return helpDescription;
 		}
 	}
-	
+
 }

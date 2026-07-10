@@ -93,4 +93,9 @@ public class PluginManagerLocator {
 		return urls.toArray(new URL[urls.size()]);
 	}
 
+	/* no instances */
+	private PluginManagerLocator() {
+		super();
+	}
+
 }

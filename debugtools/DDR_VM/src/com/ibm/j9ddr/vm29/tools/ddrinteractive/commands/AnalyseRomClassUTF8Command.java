@@ -81,7 +81,7 @@ public class AnalyseRomClassUTF8Command extends Command {
 			J9ObjectPointer bootstraploader = vm.systemClassLoader().classLoaderObject();
 
 			while (classSegmentIterator.hasNext()) {
-				J9ROMClassPointer classPointer = (J9ROMClassPointer) classSegmentIterator.next();
+				J9ROMClassPointer classPointer = classSegmentIterator.next();
 				
 				ClassWalker classWalker = new RomClassWalker(classPointer, context);
 				LinearDumper linearDumper = new LinearDumper();

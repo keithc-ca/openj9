@@ -206,7 +206,7 @@ public class AllClassesCommand extends Command
 				while (classSegmentIterator.hasNext()) {
 					J9ClassPointer classPointer = J9ClassPointer.NULL;
 					try {
-						classPointer = (J9ClassPointer) classSegmentIterator.next();
+						classPointer = classSegmentIterator.next();
 
 						if (useRange) {
 							if (classPointer.getAddress() < rangeStart.getAddress() ||

@@ -157,23 +157,6 @@ public class DsaStackFrame {
 	}
 
 	/**
-	 * Returns a guess as to the given argument number. Note that there is no guarantee that
-	 * the returned value is legitimate. The argument number might be greater than the number
-	 * of arguments that the function takes for instance. In which case whatever happens to be
-	 * on the stack will be returned regardless. The function might not obey the convention
-	 * of storing its arguments on the stack*/
-	/*
-	public int getArg(int argNumber) throws Exception {
-		if (downstack) {
-			return space.readInt(previous().address + 0x840 + (argNumber << 2));
-		} else {
-			int r1 = previous().registers[1];
-			return space.readInt(r1 + (argNumber << 2));
-		}
-	}
-	*/
-
-	/**
 	 * Returns the offset from the function entry point. This is the offset within the
 	 * function's executable code where the call was made to the successor stack frame.
 	 */
@@ -241,7 +224,7 @@ public class DsaStackFrame {
 		/* stack direction of DSA */
 		int dsa_format = isDownStack ? DS_FORMAT : US_FORMAT;
 		/* entry point */
-		long entry_address = space.WILD_POINTER;
+		long entry_address = AddressSpace.WILD_POINTER;
 
 		int dsaformat8 = dsa_format;    // Not sure why they use a byte version sometimes
 		if (dsa_format == UK_FORMAT) {
@@ -498,7 +481,7 @@ public class DsaStackFrame {
 	 * Determine the point at which a program lost control
 	 */
 	long getCallingAddr(long in_dsa, int in_dsafmt, long fo_dsa, int fo_dsafmt, boolean fo_dsatrans, long in_cib, long in_sfxm) throws IOException {
-		long callingaddr = space.WILD_POINTER;
+		long callingaddr = AddressSpace.WILD_POINTER;
 		long next_instruction_address = 0;
 		if (in_cib != 0) {
 			callingaddr = CeexcibTemplate.getCib_int(inputStream, in_cib);

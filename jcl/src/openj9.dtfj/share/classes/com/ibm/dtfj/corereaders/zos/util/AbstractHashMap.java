@@ -32,7 +32,7 @@ import java.util.logging.Logger;
  * and has a reasonably small footprint.
  * @depend - - - com.ibm.dtfj.corereaders.zos.util.IntEnumeration
  */
-
+@SuppressWarnings("serial")
 public abstract class AbstractHashMap implements Serializable {
 
 	static final int INITIAL_SIZE = 17;
@@ -228,22 +228,21 @@ public abstract class AbstractHashMap implements Serializable {
 			if (index == tableSize) hasMore = false;
 		}
 
+		@Override
 		public boolean hasMoreElements() {
 			return hasMore;
 		}
 
-		public Object nextElement() {
+		@Override
+		public Long nextElement() {
 			return Long.valueOf(nextInt());
 		}
 
+		@Override
 		public long nextInt() {
 			long key = keys[index++];
 			next();
 			return key;
-		}
-
-		public long peekInt() {
-			return keys[index];
 		}
 
 		public void reset() {

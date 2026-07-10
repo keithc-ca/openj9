@@ -28,7 +28,7 @@ import com.ibm.j9ddr.vm29.j9.MonitorTableListIterator;
 import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectMonitorPointer;
 
-public class GCMonitorReferenceIterator extends GCIterator
+public class GCMonitorReferenceIterator extends GCIterator<J9ObjectMonitorPointer>
 {
 	protected MonitorTableListIterator iterator;
 	
@@ -41,12 +41,14 @@ public class GCMonitorReferenceIterator extends GCIterator
 	{
 		return new GCMonitorReferenceIterator();
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		return iterator.hasNext();
 	}
 
+	@Override
 	public J9ObjectMonitorPointer next()
 	{
 		return iterator.next();
@@ -61,7 +63,8 @@ public class GCMonitorReferenceIterator extends GCIterator
 	{
 		return iterator.currentMonitorTable();
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		return iterator.nextAddress();

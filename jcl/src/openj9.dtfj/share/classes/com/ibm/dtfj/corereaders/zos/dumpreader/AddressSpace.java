@@ -51,6 +51,7 @@ import com.ibm.dtfj.corereaders.zos.util.ObjectLruCache;
  * @has - - - com.ibm.dtfj.corereaders.zos.util.MachineContext
  * @depend - - - com.ibm.dtfj.corereaders.zos.util.Template
  */
+@SuppressWarnings("serial")
 public class AddressSpace implements Serializable {
 	/** The dump we belong to */
 	protected Dump dump;
@@ -81,7 +82,7 @@ public class AddressSpace implements Serializable {
 	/** Whether we are a 64-bit address space */
 	private boolean is64bit;
 	/** A general purpose map that AddressSpace users can use for their own purposes */
-	private HashMap userMap = new HashMap();
+	private Map<Object, Object> userMap = new HashMap<>();
 	/** Constant used to indicate an uninitialized pointer (for performance reasons
 	 *  we use primitive longs for pointers rather than objects) */
 	public static final long WILD_POINTER = 0xbaadf00ddeadbeefL;
@@ -122,7 +123,7 @@ public class AddressSpace implements Serializable {
 	 */
 	private void initialize() {
 		blockCache = new ObjectLruCache(500);
-		userMap = new HashMap();
+		userMap = new HashMap<>();
 		lastBlockAddress = -1;
 		lastButOneBlockAddress = -1;
 		if (printStats && getClass() == AddressSpace.class) {
@@ -146,7 +147,7 @@ public class AddressSpace implements Serializable {
 	 * related info somewhere. Care should be taken that nobody else has used the same key -
 	 * one way to achieve this would be to use a class object as a key.
 	 */
-	public Map getUserMap() {
+	public Map<Object, Object> getUserMap() {
 		return userMap;
 	}
 
@@ -172,7 +173,7 @@ public class AddressSpace implements Serializable {
 		/* Now go through the list and create a new range every time we find a gap */
 		long startAddress = 0;
 		long lastAddress = 0;
-		Vector v = new Vector();
+		Vector<AddressRange> v = new Vector<>();
 		for (int i = 0; i < addresses.length; i++) {
 			if (i == 0) {
 				startAddress = addresses[0];
@@ -184,7 +185,7 @@ public class AddressSpace implements Serializable {
 			lastAddress = addresses[i];
 		}
 		v.add(new AddressRange(startAddress, lastAddress + 0x1000 - startAddress));
-		ranges = (AddressRange[])v.toArray(new AddressRange[0]);
+		ranges = v.toArray(new AddressRange[0]);
 		return ranges;
 	}
 

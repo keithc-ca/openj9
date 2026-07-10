@@ -81,6 +81,6 @@ public interface JavaVMInitArgs {
 	 *
 	 * @see JavaVMOption
 	 */
-	public Iterator getOptions() throws DataUnavailable;
+	public Iterator<?> getOptions() throws DataUnavailable;
 
 }

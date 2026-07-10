@@ -34,8 +34,7 @@ import com.ibm.j9ddr.vm29.view.dtfj.DTFJContext;
 import com.ibm.j9ddr.vm29.view.dtfj.java.DTFJJavaHeap;
 import com.ibm.j9ddr.vm29.view.dtfj.java.DTFJJavaObject;
 
-@SuppressWarnings("unchecked")
-public class HeapObjectIterator implements HeapWalkerEvents, Iterator {
+public class HeapObjectIterator implements HeapWalkerEvents, Iterator<Object> {
 	private final DTFJJavaHeap heap;
 	private final HeapWalker walker;
 	private Object object = null;
@@ -44,34 +43,41 @@ public class HeapObjectIterator implements HeapWalkerEvents, Iterator {
 		this.heap = heap;
 		walker = new HeapWalker(DTFJContext.getVm(), region, this);
 	}
-		
+
+	@Override
 	public boolean hasNext() {
 		while((object == null) && walker.hasNext()) {
 			walker.walk();						//walk the heap looking for the next live object
 		}
 		return (object != null);	//did we find an object ?
 	}
-	
+
+	@Override
 	public void doDeadObject(J9ObjectPointer object) {
 		//this is a no-op
 	}
 
+	@Override
 	public void doLiveObject(J9ObjectPointer ptr) {
 		object = new DTFJJavaObject(heap, ptr);
 	}
 
+	@Override
 	public void doSectionEnd(long address) {
 		// this is a no-op
 	}
 
+	@Override
 	public void doSectionStart(long address) {
 		// this is a no-op
 	}
 
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("This iterator is read only");
 	}
 
+	@Override
 	public Object next() {
 		if(hasNext()) {			//this call will check if there are any more objects + move to the next valid one
 			Object temp = object;
@@ -81,6 +87,7 @@ public class HeapObjectIterator implements HeapWalkerEvents, Iterator {
 		throw new NoSuchElementException();
 	}
 
+	@Override
 	public void doCorruptData(CorruptDataException e) {
 		object = J9DDRDTFJUtils.newCorruptData(DTFJContext.getProcess(), e);	//CDE so this is what is returned
 	}

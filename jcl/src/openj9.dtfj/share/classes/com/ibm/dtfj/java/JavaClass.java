@@ -98,7 +98,7 @@ public interface JavaClass {
 	 * @see JavaClassLoader#findClass(String)
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getInterfaces();
+	public Iterator<?> getInterfaces();
 
 	/**
 	 * Return the Java language modifiers for this class.
@@ -143,7 +143,7 @@ public interface JavaClass {
 	 * @see JavaField
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getDeclaredFields();
+	public Iterator<?> getDeclaredFields();
 
 	/**
 	 * Get the set of methods declared in this class.
@@ -153,7 +153,7 @@ public interface JavaClass {
 	 * @see JavaMethod
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getDeclaredMethods();
+	public Iterator<?> getDeclaredMethods();
 
 	/**
 	 * Java classes may refer to other classes and to String objects via
@@ -183,7 +183,7 @@ public interface JavaClass {
 	 * @see JavaObject
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getConstantPoolReferences();
+	public Iterator<?> getConstantPoolReferences();
 
 	/**
 	 * The ID of a class is a pointer to a section of memory which identifies
@@ -211,12 +211,13 @@ public interface JavaClass {
 	 * @see com.ibm.dtfj.java.JavaReference
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getReferences();
+	public Iterator<?> getReferences();
 
 	/**
 	 * @param obj
 	 * @return True if the given object refers to the same Java Class in the image
 	 */
+	@Override
 	public boolean equals(Object obj);
 
 	/**
@@ -236,6 +237,7 @@ public interface JavaClass {
 	 */
 	public long getInstanceSize() throws DataUnavailable, CorruptDataException;
 
+	@Override
 	public int hashCode();
 
 	/**

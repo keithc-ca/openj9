@@ -419,7 +419,7 @@ public class J9ObjectHelper
 		while (currentClass.notNull()) {
 			Iterator<J9ObjectFieldOffset> fields = J9ClassHelper.getFieldOffsets(currentClass);
 			while (fields.hasNext()) {
-				J9ObjectFieldOffset field = (J9ObjectFieldOffset) fields.next();
+				J9ObjectFieldOffset field = fields.next();
 				if (field.getName().equals(name) && field.getSignature().equals(signature)) {
 					return field;
 				}

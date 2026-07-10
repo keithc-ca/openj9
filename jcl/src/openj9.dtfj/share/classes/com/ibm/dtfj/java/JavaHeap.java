@@ -43,7 +43,7 @@ public interface JavaHeap {
 	 * @see com.ibm.dtfj.image.ImageSection
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getSections();
+	public Iterator<?> getSections();
 
 	/**
 	 * Get a brief textual description of this heap.
@@ -59,12 +59,15 @@ public interface JavaHeap {
 	 * @see JavaObject
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getObjects();
+	public Iterator<?> getObjects();
 
 	/**
 	 * @param obj
 	 * @return True if the given object refers to the same Java Heap in the image
 	 */
+	@Override
 	public boolean equals(Object obj);
+
+	@Override
 	public int hashCode();
 }

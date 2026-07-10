@@ -20,7 +20,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.java.diagnostics.utils.commands;
 
 import java.io.PrintStream;
@@ -39,7 +38,7 @@ import com.ibm.java.diagnostics.utils.plugins.PluginConstants;
  * @author adam
  *
  */
-public class PluginCommand extends BaseCommand
+public final class PluginCommand extends BaseCommand
 {
 	private static final String COMMAND_NAME = "plugins";
 	private static final String SUBCOMMAND_LIST = "list";
@@ -47,14 +46,14 @@ public class PluginCommand extends BaseCommand
 	private static final String SUBCOMMAND_SHOWPATH = "showpath";
 	private static final String SUBCOMMAND_SETPATH = "setpath";
 
-	private final Map<String, Method> commands = new HashMap<String, Method>();
+	private final Map<String, Method> commands = new HashMap<>();
 
 	{
 		try {
-			commands.put(SUBCOMMAND_LIST, getClass().getDeclaredMethod("commandListPlugins", new Class[] {String[].class, IContext.class, PrintStream.class}));
-			commands.put(SUBCOMMAND_RELOAD, getClass().getDeclaredMethod("commandReload", new Class[] {String[].class, IContext.class, PrintStream.class}));
-			commands.put(SUBCOMMAND_SHOWPATH, getClass().getDeclaredMethod("commandShowPath", new Class[] {String[].class, IContext.class, PrintStream.class}));
-			commands.put(SUBCOMMAND_SETPATH, getClass().getDeclaredMethod("commandSetPath", new Class[] {String[].class, IContext.class, PrintStream.class}));
+			commands.put(SUBCOMMAND_LIST, getClass().getDeclaredMethod("commandListPlugins", String[].class, IContext.class, PrintStream.class));
+			commands.put(SUBCOMMAND_RELOAD, getClass().getDeclaredMethod("commandReload", String[].class, IContext.class, PrintStream.class));
+			commands.put(SUBCOMMAND_SHOWPATH, getClass().getDeclaredMethod("commandShowPath", String[].class, IContext.class, PrintStream.class));
+			commands.put(SUBCOMMAND_SETPATH, getClass().getDeclaredMethod("commandSetPath", String[].class, IContext.class, PrintStream.class));
 		} catch (Exception e) {
 			System.err.println("Error creating command list : " + e.getMessage());
 		}
@@ -69,6 +68,7 @@ public class PluginCommand extends BaseCommand
 		addSubCommand(COMMAND_NAME, SUBCOMMAND_SETPATH, "", "Set the DTFJ View plugin search path for the current context");
 	}
 
+	@Override
 	public void run(String command, String[] args, IContext context,	PrintStream out) throws CommandException
 	{
 		if(args.length == 0) {

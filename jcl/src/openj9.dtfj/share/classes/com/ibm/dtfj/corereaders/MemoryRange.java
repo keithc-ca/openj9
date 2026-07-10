@@ -26,8 +26,8 @@ package com.ibm.dtfj.corereaders;
  * Dumps contain lots of memory - segmented across a range of virtual
  * addresses.......
  */
-public class MemoryRange implements Comparable {
-	private static final String printableEBCDIC[] = {
+public class MemoryRange implements Comparable<MemoryRange> {
+	private static final String[] printableEBCDIC = {
 		"40"," ",
 		"F0","0",	"F1","1",	"F2","2",	"F3","3",	"F4","4",	"F5","5",
 		"F6","6",	"F7","7",	"F8","8",	"F9","9",
@@ -267,21 +267,15 @@ public class MemoryRange implements Comparable {
 	/**
 	 * @return Virtual address comparator.
 	 */
-	public int compareTo(Object o)
+	@Override
+	public int compareTo(MemoryRange rhs)
 	{
-		MemoryRange rhs = (MemoryRange) o;
-		// Take account of address spaces
-		if (_asid < rhs._asid) return -1;
-		if (_asid > rhs._asid) return 1;
-
-		// Then compare addresses as unsigned quantities
-		if (_virtualAddress == rhs._virtualAddress) {
-			return 0;
-		} else if ((_virtualAddress >= 0 && rhs._virtualAddress >= 0)
-				|| (_virtualAddress < 0 && rhs._virtualAddress < 0)) {
-			return _virtualAddress < rhs._virtualAddress ? -1 : 1;
+		if (_asid != rhs._asid) {
+			// Order by address space first.
+			return Integer.compare(_asid, rhs._asid);
 		} else {
-			return _virtualAddress < rhs._virtualAddress ? 1 : -1;
+			// In the same address space, compare addresses as unsigned quantities.
+			return Long.compareUnsigned(_virtualAddress, rhs._virtualAddress);
 		}
 	}
 }

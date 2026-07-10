@@ -24,18 +24,22 @@ package com.ibm.j9ddr.vm29.j9.gc;
 import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ModronAllocateHintPointer;
 
-public abstract class GCModronAllocateHintIterator extends GCIterator {
-	abstract public boolean hasNext();
-	
-	abstract public J9ModronAllocateHintPointer next();
-	
+public abstract class GCModronAllocateHintIterator extends GCIterator<J9ModronAllocateHintPointer> {
+	@Override
+	public abstract boolean hasNext();
+
+	@Override
+	public abstract J9ModronAllocateHintPointer next();
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		throw new UnsupportedOperationException("Not implemented");
 	}
-	
+
 	/* Used in gccheck:scan to print current free list number for hint */
 	public abstract int getFreeListNumber();
-	
-	abstract public String toString();
+
+	@Override
+	public abstract String toString();
 }

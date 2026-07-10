@@ -35,7 +35,7 @@ import static com.ibm.j9ddr.vm29.events.EventManager.raiseCorruptDataEvent;
 /**
  * Iterator over the classes in the class segments of a class loader,
  */
-public class GCClassLoaderSegmentClassesIterator extends GCIterator
+public class GCClassLoaderSegmentClassesIterator extends GCIterator<J9ClassPointer>
 {
 	private GCClassHeapIterator _classHeapIterator;
 	private GCClassLoaderSegmentIterator _segmentIterator;
@@ -57,16 +57,19 @@ public class GCClassLoaderSegmentClassesIterator extends GCIterator
 		}
 	}
 
+	@Override
 	public VoidPointer nextAddress()
 	{
 		throw new UnsupportedOperationException("This iterator cannot return addresses.");
 	}
 
+	@Override
 	public boolean hasNext()
 	{
 		return _nextClass != null;
 	}
 
+	@Override
 	public J9ClassPointer next()
 	{
 		if (!hasNext()) {

@@ -22,15 +22,16 @@
  */
 package com.ibm.dtfj.corereaders.zos.util;
 
-import java.util.Random;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * This is a simple class to map one integer to another but without the overhead of using
  * a Hashtable. There is one limitation at present which is that the value of -1 can't be
  * used since this is currently used to indicate value not found.
  */
-
+@SuppressWarnings("serial")
 public final class IntegerMap extends AbstractHashMap {
 
 	/** The array of values */
@@ -94,7 +95,7 @@ public final class IntegerMap extends AbstractHashMap {
 	 */
 	private void test() {
 		Random rand = new Random(23);
-		HashMap check = new HashMap();
+		Map<Long, Long> check = new HashMap<>();
 		for (int i = 0; i < 500000; i++) {
 			long key = rand.nextLong();
 			long value = rand.nextLong();
@@ -115,10 +116,10 @@ public final class IntegerMap extends AbstractHashMap {
 			}
 		}
 		if (doCheck) {
-			Long[] keys = (Long[])check.keySet().toArray(new Long[0]);
-			for (int i = 0; i < keys.length; i++) {
-				long key = keys[i].longValue();
-				long value = ((Long)check.get(keys[i])).longValue();
+			Long[] keySet = check.keySet().toArray(new Long[check.size()]);
+			for (int i = 0; i < keySet.length; i++) {
+				long key = keySet[i].longValue();
+				long value = check.get(keySet[i]).longValue();
 				if (get(key) != value) {
 					throw new Error("at " + i + " found " + get(key) + " expected " + value + " key " + key);
 				}

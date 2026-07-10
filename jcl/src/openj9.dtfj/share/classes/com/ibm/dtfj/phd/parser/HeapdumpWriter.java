@@ -27,13 +27,11 @@ import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Vector;
 
 public class HeapdumpWriter extends Base {
 
 	String filename;
 	DataOutputStream dos;
-	Vector strings = new Vector();
 	int lastAddress;
 	int[] classAddressCache = new int[4];
 	int classAddressCacheIndex;
@@ -316,6 +314,7 @@ public class HeapdumpWriter extends Base {
 		}
 	}
 
+	@Override
 	String className() {
 		return "HeapdumpWriter";
 	}

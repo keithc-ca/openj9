@@ -26,6 +26,7 @@ package com.ibm.dtfj.image;
  * Used to indicate that corruption has been detected in the image.
  * @see CorruptData
  */
+@SuppressWarnings("serial")
 public class CorruptDataException extends DTFJException {
 
 	private static final long serialVersionUID = 1824138624307972457L;

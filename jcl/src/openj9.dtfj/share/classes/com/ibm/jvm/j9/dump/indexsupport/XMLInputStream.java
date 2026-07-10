@@ -69,7 +69,7 @@ public class XMLInputStream extends InputStream implements ResourceReleaser {
 	private static final int STATE_INSERT_MISSING_CLOSING_TAG = 6;				//inserting a missing tag
 	private static final int STATE_INSERT_MISSING_CLOSING_TAG_ROOT = 7;			//inserting a missing tag
 	private int state = STATE_CONTENTS;											//current state of the stream
-	private Stack tags = new Stack();											//stack of encountered tags
+	private Stack<String> tags = new Stack<>();									//stack of encountered tags
 	private StringBuffer name = null;											//name of the tag currently being processed
 	private String peekName = null;												//name of the tag peeked from the stream
 	private StringBuffer missingDataBuffer = null;								//buffer holding the missing tag data
@@ -110,6 +110,7 @@ public class XMLInputStream extends InputStream implements ResourceReleaser {
 	/* (non-Javadoc)
 	 * @see java.io.InputStream#read()
 	 */
+	@Override
 	public int read() throws IOException {
 		if(reader == null) {		//no reader to convert the underlying bytes into chars so just delegate call
 			return in.read();
@@ -302,7 +303,7 @@ public class XMLInputStream extends InputStream implements ResourceReleaser {
 					missingDataIndex = 0;			//reset data index
 					missingDataBuffer = new StringBuffer();
 					do {
-						tag = (String) tags.pop();
+						tag = tags.pop();
 						missingDataBuffer.append(tag);
 						missingDataBuffer.append("></");
 					} while(!tags.peek().equals(peekName));
@@ -345,14 +346,14 @@ public class XMLInputStream extends InputStream implements ResourceReleaser {
 	private String peekTagFromStream(char delimeter) throws IOException {
 		try {
 		int peek = index;													//peek index is initialized to the current index
-		String tag = (String)tags.peek();
+		String tag = tags.peek();
 		int unreadDataLength = availableBufferDataLength();					//see how much data is left in the buffer
 		if(tag.length() > unreadDataLength) {								//not enough data in the buffer
 			System.arraycopy(buffer, index, buffer, 0, unreadDataLength);	//move the outstanding data to the front
 			putDataIntoBuffer(unreadDataLength);							//refill the buffer starting from the end of the preserved content
 			peek = 0;														//reset the peek to start at the beginning of the buffer
 		}
-		while((peek < indexMax) && ((char)buffer[peek] != delimeter)) {		//scan for the specified delimeter
+		while ((peek < indexMax) && (buffer[peek] != delimeter)) { // scan for the specified delimeter
 			peek++;
 		}
 		return new String(buffer, index, peek - index);
@@ -367,7 +368,7 @@ public class XMLInputStream extends InputStream implements ResourceReleaser {
 	 * corresponds to the tag which is currently being processed
 	 * @param popped
 	 */
-	private void doStackIntegrityCheck(Object popped) {
+	private void doStackIntegrityCheck(String popped) {
 		String currentTag = name.toString();
 		if(!currentTag.equals(popped)) {
 			log.severe("Tag mismatch : processing " + currentTag + " but stack top is " + popped);
@@ -418,6 +419,7 @@ public class XMLInputStream extends InputStream implements ResourceReleaser {
 	/* (non-Javadoc)
 	 * @see java.io.InputStream#close()
 	 */
+	@Override
 	public void close() throws IOException {
 		in.close();
 		if(log.isLoggable(Level.FINEST) && !outputWritten) {
@@ -430,10 +432,12 @@ public class XMLInputStream extends InputStream implements ResourceReleaser {
 	/* (non-Javadoc)
 	 * @see java.io.InputStream#markSupported()
 	 */
+	@Override
 	public boolean markSupported() {
 		return false;									//marking is not supported by this input stream
 	}
 
+	@Override
 	public void releaseResources() {
 		try {
 			close();

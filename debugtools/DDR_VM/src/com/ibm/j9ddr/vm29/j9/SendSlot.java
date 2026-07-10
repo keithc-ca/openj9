@@ -35,6 +35,7 @@ import com.ibm.j9ddr.vm29.types.UDATA;
  */
 public class SendSlot
 {
+	@SuppressWarnings("fallthrough")
 	public static UDATA getSendSlotsFromSignature(J9UTF8Pointer signature) throws CorruptDataException
 	{
 		UDATA sendArgs = new UDATA(0);

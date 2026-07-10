@@ -27,7 +27,7 @@ package com.ibm.dtfj.corereaders.zos.util;
  * See the description in the superclass {@link com.ibm.dtfj.corereaders.zos.util.AbstractLruCache} for more
  * details.
  */
-
+@SuppressWarnings("serial")
 public final class ObjectLruCache extends AbstractLruCache {
 
 	/** The array of values */
@@ -44,6 +44,7 @@ public final class ObjectLruCache extends AbstractLruCache {
 	/**
 	 * Overridden method to return values array.
 	 */
+	@Override
 	Object getValuesArray() {
 		return values;
 	}
@@ -51,6 +52,7 @@ public final class ObjectLruCache extends AbstractLruCache {
 	/**
 	 * Overridden method to allocate new values array.
 	 */
+	@Override
 	void allocNewValuesArray(int newSize) {
 		super.allocNewValuesArray(newSize);
 		values = new Object[newSize];
@@ -59,6 +61,7 @@ public final class ObjectLruCache extends AbstractLruCache {
 	/**
 	 * Overridden method to repopulate with key plus value at given offset.
 	 */
+	@Override
 	void put(long key, Object oldvalues, int offset) {
 		Object[] v = (Object[])oldvalues;
 		put(key, v[offset]);

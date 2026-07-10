@@ -24,7 +24,7 @@ package com.ibm.j9ddr.vm29.j9.gc;
 import com.ibm.j9ddr.CorruptDataException;
 import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 
-public abstract class GCMemoryPoolIterator extends GCIterator {
+public abstract class GCMemoryPoolIterator extends GCIterator<GCMemoryPool> {
 	public static GCMemoryPoolIterator from() throws CorruptDataException
 	{
 		if (GCBase.getExtensions()._isStandardGC()) {
@@ -33,15 +33,19 @@ public abstract class GCMemoryPoolIterator extends GCIterator {
 			return new GCTarokMemoryPoolIterator();
 		}
 	}
-	
-	abstract public GCMemoryPool next();
-	
-	abstract public boolean hasNext();
-	
+
+	@Override
+	public abstract GCMemoryPool next();
+
+	@Override
+	public abstract boolean hasNext();
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		throw new UnsupportedOperationException("Not implemented");
 	}
-	
-	abstract public String toString();
+
+	@Override
+	public abstract String toString();
 }

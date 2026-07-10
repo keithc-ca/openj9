@@ -38,7 +38,7 @@ import com.ibm.dtfj.java.j9.JavaRuntime;
 public class NodeHeap extends NodeAbstract
 {
 	private JavaRuntime _javaVM;
-	private Vector _completeRegions = new Vector();
+	private Vector<JavaHeapRegion> _completeRegions = new Vector<>();
 	private JavaHeap _heap;
 	private JavaHeapRegion _legacyRegion;
 	private long _arrayletLeafSize;
@@ -109,6 +109,7 @@ public class NodeHeap extends NodeAbstract
 	/* (non-Javadoc)
 	 * @see com.ibm.jvm.j9.dump.indexsupport.IParserNode#nodeToPushAfterStarting(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
 	 */
+	@Override
 	public IParserNode nodeToPushAfterStarting(String uri, String localName, String qName, Attributes attributes)
 	{
 		IParserNode child = null;
@@ -134,6 +135,7 @@ public class NodeHeap extends NodeAbstract
 	/* (non-Javadoc)
 	 * @see com.ibm.jvm.j9.dump.indexsupport.NodeAbstract#didFinishParsing()
 	 */
+	@Override
 	public void didFinishParsing()
 	{
 		//we collect the regions under the heap in this object so we need to hook in here to write back before we are done

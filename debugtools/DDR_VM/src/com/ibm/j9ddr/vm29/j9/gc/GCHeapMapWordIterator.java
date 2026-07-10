@@ -33,7 +33,7 @@ import com.ibm.j9ddr.vm29.types.UDATA;
 import com.ibm.j9ddr.vm29.j9.gc.GCHeapMap;
 
 
-public class GCHeapMapWordIterator extends GCIterator {
+public class GCHeapMapWordIterator extends GCIterator<J9ObjectPointer> {
 	
 	public static UDATA J9MODRON_HEAP_BYTES_PER_UDATA_OF_HEAP_MAP = new UDATA(MM_HeapMap.J9MODRON_HEAP_SLOTS_PER_HEAPMAP_BIT * UDATA.SIZEOF * UDATA.SIZEOF * GCHeapMap.BITS_IN_BYTES);
 	
@@ -79,17 +79,20 @@ public class GCHeapMapWordIterator extends GCIterator {
 		
 		return nextObject;
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		return (null != _next);
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		throw new UnsupportedOperationException("This iterator cannot return addresses");
 	}
-	
+
+	@Override
 	public J9ObjectPointer next()
 	{
 		if (hasNext()) {

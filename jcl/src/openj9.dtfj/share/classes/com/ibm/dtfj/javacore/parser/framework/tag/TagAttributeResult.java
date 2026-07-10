@@ -22,27 +22,29 @@
  */
 package com.ibm.dtfj.javacore.parser.framework.tag;
 
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import com.ibm.dtfj.javacore.parser.framework.scanner.IParserToken;
 
-public class TagAttributeResult implements ITagAttributeResult{
+public class TagAttributeResult implements ITagAttributeResult {
 
-	private HashMap fAttributeValues;
+	private final Map<?, IParserToken> fAttributeValues;
 
-	public TagAttributeResult(HashMap values) {
+	public TagAttributeResult(Map<?, IParserToken> values) {
 		if (values == null) {
 			throw new NullPointerException("Must not pass null results");
 		}
 		fAttributeValues = values;
 	}
 
+	@Override
 	public IParserToken getAttributeValue(String attribute) {
-		return (IParserToken) fAttributeValues.get(attribute);
+		return fAttributeValues.get(attribute);
 	}
 
-	public Iterator getAllAttributeValues() {
+	@Override
+	public Iterator<IParserToken> getAllAttributeValues() {
 		return fAttributeValues.values().iterator();
 	}
 

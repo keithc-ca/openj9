@@ -24,6 +24,7 @@ package com.ibm.java.diagnostics.utils.plugins;
 
 import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -112,7 +113,7 @@ public class Entry {
 			} else if (parent != null && parent.getName().endsWith(FILE_EXT_JAR)) {
 				String jarPath = parent.getFile().getAbsolutePath();
 				try {
-					url = new URL("jar:file:" + jarPath + "!/" + name); //$NON-NLS-1$ //$NON-NLS-2$
+					url = URI.create("jar:file:" + jarPath + "!/" + name).toURL(); //$NON-NLS-1$ //$NON-NLS-2$
 				} catch (MalformedURLException e) {
 					logger.log(Level.FINE, "Exception thrown when constructing URL from jar file name " //$NON-NLS-1$
 							+ jarPath + " and class file name " + name); //$NON-NLS-1$

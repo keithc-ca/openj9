@@ -31,7 +31,7 @@ import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.GC_FinalizeListManagerPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 
-public class GCFinalizableObjectIterator extends GCIterator
+public class GCFinalizableObjectIterator extends GCIterator<J9ObjectPointer>
 {
 	public final static int state_start = 0;
 	public static final int state_system = 1;
@@ -60,7 +60,9 @@ public class GCFinalizableObjectIterator extends GCIterator
 	{
 		return new GCFinalizableObjectIterator(getExtensions().finalizeListManager());
 	}
-	
+
+	@Override
+	@SuppressWarnings("fallthrough")
 	public boolean hasNext()
 	{
 		if(_state == state_end) {
@@ -96,6 +98,7 @@ public class GCFinalizableObjectIterator extends GCIterator
 	
 	}
 
+	@Override
 	public J9ObjectPointer next()
 	{
 		try {
@@ -132,6 +135,7 @@ public class GCFinalizableObjectIterator extends GCIterator
 		}
 	}
 
+	@Override
 	public VoidPointer nextAddress() 
 	{
 		// Does not make sense in this case

@@ -33,13 +33,16 @@ import com.ibm.java.diagnostics.utils.IDTFJContext;
  * @author adam
  *
  */
-public class QuitCommand extends BaseCommand {
+public final class QuitCommand extends BaseCommand {
 
+	public QuitCommand()
 	{
 		addCommand("quit", "", "Exit the application");
 		addCommand("exit", "", "Exit the application");
 	}
 
+	@Override
+	@SuppressWarnings("fallthrough")
 	public void run(String command, String[] args, IContext context, PrintStream out) throws CommandException {
 		switch (args.length) {
 			case 0 :		//no arguments so quit out
@@ -58,7 +61,6 @@ public class QuitCommand extends BaseCommand {
 				out.println("The supplied parameters were not recognised");
 				break;
 		}
-
 	}
 
 }

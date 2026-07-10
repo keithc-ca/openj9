@@ -24,6 +24,7 @@ package com.ibm.dtfj.javacore.parser.framework.scanner;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 import com.ibm.dtfj.javacore.parser.framework.input.IInputBuffer;
 import com.ibm.dtfj.javacore.parser.j9.J9TagManager;
@@ -41,7 +42,7 @@ public class JavaCoreScanner implements IScanner {
 	/*
 	 * Manipulate as a FIFO queue.
 	 */
-	private ArrayList fTokenCache;
+	private List<IParserToken> fTokenCache;
 
 	/*
 	 * Whitespace options are designated by setting individual bits.
@@ -62,7 +63,7 @@ public class JavaCoreScanner implements IScanner {
 		fInputBuffer = inputBuffer;
 		fLocalCache = new StringBuffer();
 		fLineNumber = 0;
-		fTokenCache = new ArrayList();
+		fTokenCache = new ArrayList<>();
 		fMaxLineLength = 32768;
 	}
 
@@ -70,13 +71,14 @@ public class JavaCoreScanner implements IScanner {
 	 * @throws ScannerException
 	 *
 	 */
+	@Override
 	public IParserToken next() throws  IOException, ScannerException {
 		IParserToken token = null;
 		if (fTokenCache.isEmpty()) {
 			fillTokenCache();
 		}
 		if (fTokenCache.size() > 0) {
-			token = (IParserToken) fTokenCache.remove(0);
+			token = fTokenCache.remove(0);
 		}
 		return token;
 	}
@@ -133,7 +135,8 @@ public class JavaCoreScanner implements IScanner {
 	private boolean readNextLine() throws IOException {
 		boolean result = false;
 		if (fInputBuffer.length() == 0) {
-			if (result = fInputBuffer.nextLine()) {
+			result = fInputBuffer.nextLine();
+			if (result) {
 				fLineNumber++;
 			}
 		}
@@ -269,13 +272,14 @@ public class JavaCoreScanner implements IScanner {
 	 *
 	 * @param buffer
 	 */
-	private void clear(StringBuffer buffer) {
+	private static void clear(StringBuffer buffer) {
 		buffer.delete(0, buffer.length());
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public boolean allTokensGenerated() {
 		return fInputBuffer.endReached() && fTokenCache.isEmpty();
 	}

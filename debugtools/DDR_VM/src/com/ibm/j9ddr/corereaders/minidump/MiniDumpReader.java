@@ -396,6 +396,7 @@ public class MiniDumpReader extends AbstractCoreReader implements ICoreFileReade
 					case 3:
 						return "Windows Server 2008";
 					}
+					break;
 				case 1:
 					switch (productType) {
 					case 1:

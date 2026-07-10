@@ -27,7 +27,7 @@ import com.ibm.j9ddr.vm29.j9.StringTable;
 import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 
-public class GCStringTableIterator extends GCIterator
+public class GCStringTableIterator extends GCIterator<J9ObjectPointer>
 {
 	protected SlotIterator<J9ObjectPointer> iterator;
 
@@ -40,17 +40,20 @@ public class GCStringTableIterator extends GCIterator
 	{
 		return new GCStringTableIterator();
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		return iterator.hasNext();
 	}
 
+	@Override
 	public J9ObjectPointer next()
 	{
 		return iterator.next();
 	}
 
+	@Override
 	public VoidPointer nextAddress()
 	{
 		return iterator.nextAddress();

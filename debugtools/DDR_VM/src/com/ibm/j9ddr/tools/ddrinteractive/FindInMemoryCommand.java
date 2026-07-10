@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.j9ddr.tools.ddrinteractive;
 
 import java.io.PrintStream;
@@ -31,7 +30,7 @@ import com.ibm.j9ddr.corereaders.memory.IProcess;
 /**
  * searches memory for a given ASCII string, U8, U16, U64, UDATA or pointer occurrence.
  */
-public class FindInMemoryCommand extends Command 
+public final class FindInMemoryCommand extends Command
 {
 	private byte[] currentPattern;
 	private int currentAlignment;
@@ -43,7 +42,6 @@ public class FindInMemoryCommand extends Command
 	private static final int TYPE_U32 = 3;
 	private static final int TYPE_U64 = 4;
 	private static final int TYPE_ASCII = 5;
-
 
 	public FindInMemoryCommand()
 	{
@@ -61,6 +59,7 @@ public class FindInMemoryCommand extends Command
 		out.append("  !findnext\n");
 	}
 
+	@Override
 	public void run(String command, String[] args, Context context, PrintStream out) throws DDRInteractiveCommandException 
 	{
 		IProcess process = context.process;

@@ -131,7 +131,7 @@ public interface IImageProcessBuilder {
 	 * Set registers if available in javacore.
 	 * @param regs Map of registers
 	 */
-	public void setRegisters(Map regs);
+	public void setRegisters(Map<String, Number> regs);
 
 	/**
 	 * Add environment variables

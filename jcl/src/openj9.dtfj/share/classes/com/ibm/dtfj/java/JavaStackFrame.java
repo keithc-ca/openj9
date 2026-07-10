@@ -54,12 +54,15 @@ public interface JavaStackFrame {
 	 *
 	 * @return an iterator of JavaReferences
 	 */
-	public Iterator getHeapRoots();
+	public Iterator<?> getHeapRoots();
 
 	/**
 	 * @param obj
 	 * @return True if the given object refers to the same Java Stack Frame in the image
 	 */
+	@Override
 	public boolean equals(Object obj);
+
+	@Override
 	public int hashCode();
 }

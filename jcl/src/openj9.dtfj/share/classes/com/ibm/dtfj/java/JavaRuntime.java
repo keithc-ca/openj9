@@ -72,7 +72,7 @@ public interface JavaRuntime extends ManagedRuntime {
 	 * @see JavaClassLoader
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getJavaClassLoaders();
+	public Iterator<?> getJavaClassLoaders();
 
 	/**
 	 * Get the set of Java threads known by the VM
@@ -81,7 +81,7 @@ public interface JavaRuntime extends ManagedRuntime {
 	 * @see JavaThread
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getThreads();
+	public Iterator<?> getThreads();
 
 	/**
 	 * This is short cut method. The same result can be found by iterating over all
@@ -93,7 +93,7 @@ public interface JavaRuntime extends ManagedRuntime {
 	 * @see JavaMethod
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getCompiledMethods();
+	public Iterator<?> getCompiledMethods();
 
 	/**
 	 * Provides access to the collection of monitors used in the JavaVM. This
@@ -106,7 +106,7 @@ public interface JavaRuntime extends ManagedRuntime {
 	 * @see JavaMonitor
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getMonitors();
+	public Iterator<?> getMonitors();
 
 	/**
 	 * Get the set of heaps known by the VM
@@ -117,7 +117,7 @@ public interface JavaRuntime extends ManagedRuntime {
 	 * @see JavaHeap
 	 * @see com.ibm.dtfj.image.CorruptData
 	 */
-	public Iterator getHeaps();
+	public Iterator<?> getHeaps();
 
 	/**
 	 * Get the set of object and class roots known to the VM.
@@ -128,9 +128,8 @@ public interface JavaRuntime extends ManagedRuntime {
 	 * @see JavaReference
 	 * @see JavaStackFrame
 	 * @see com.ibm.dtfj.image.CorruptData
-	 *
 	 */
-	public Iterator getHeapRoots();
+	public Iterator<?> getHeapRoots();
 
 	/**
 	 * Fetches implementation specific trace buffers, like the verbose GC buffer
@@ -164,7 +163,7 @@ public interface JavaRuntime extends ManagedRuntime {
 	  * @see JavaRuntimeMemoryCategory CorruptData
 	  * @since 1.5
 	  */
-	 public Iterator getMemoryCategories() throws DataUnavailable;
+	 public Iterator<?> getMemoryCategories() throws DataUnavailable;
 
 	 /**
 	  * Returns an iterator of JavaRuntimeMemorySection objects corresponding to the blocks of memory allocated by the JavaRuntime.
@@ -174,7 +173,7 @@ public interface JavaRuntime extends ManagedRuntime {
 	  * @see JavaRuntimeMemorySection CorruptData
 	  * @since 1.5
 	  */
-	 public Iterator getMemorySections(boolean includeFreed) throws DataUnavailable;
+	 public Iterator<?> getMemorySections(boolean includeFreed) throws DataUnavailable;
 
 	/**
 	 * @param obj

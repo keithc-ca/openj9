@@ -41,7 +41,7 @@ public class JavaStackFrame implements com.ibm.dtfj.java.JavaStackFrame
 	private ImagePointer _methodID;
 	private ImagePointer _pc;
 	private int _lineNumber;
-	private Vector _stackRoots = new Vector();
+	private Vector<JavaReference> _stackRoots = new Vector<>();
 
 	private JavaStackFrame(JavaRuntime javaVM, ImagePointer basePointer, ImagePointer pc, int lineNumber)
 	{
@@ -75,6 +75,7 @@ public class JavaStackFrame implements com.ibm.dtfj.java.JavaStackFrame
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaStackFrame#getBasePointer()
 	 */
+	@Override
 	public ImagePointer getBasePointer() throws CorruptDataException
 	{
 		// Must never be null
@@ -84,6 +85,7 @@ public class JavaStackFrame implements com.ibm.dtfj.java.JavaStackFrame
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaStackFrame#getLocation()
 	 */
+	@Override
 	public JavaLocation getLocation() throws CorruptDataException
 	{
 		//create the location with the method id and pc
@@ -107,6 +109,7 @@ public class JavaStackFrame implements com.ibm.dtfj.java.JavaStackFrame
 		return o1 == o2 || o1 != null && o1.equals(o2);
 	}
 
+	@Override
 	public boolean equals(Object obj)
 	{
 		boolean isEqual = false;
@@ -123,6 +126,7 @@ public class JavaStackFrame implements com.ibm.dtfj.java.JavaStackFrame
 		return o1 == null ? 0 : o1.hashCode();
 	}
 
+	@Override
 	public int hashCode()
 	{
 		return hashCode(_method) ^ _pc.hashCode() ^ hashCode(_methodID);
@@ -131,7 +135,8 @@ public class JavaStackFrame implements com.ibm.dtfj.java.JavaStackFrame
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaStackFrame#getHeapRoots()
 	 */
-	public Iterator getHeapRoots()
+	@Override
+	public Iterator<?> getHeapRoots()
 	{
 		return _stackRoots.iterator();
 	}

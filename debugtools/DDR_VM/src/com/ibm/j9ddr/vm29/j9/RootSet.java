@@ -175,11 +175,11 @@ public final class RootSet {
 		return Collections.unmodifiableList(rootSet._allRoots);
 	}
 
-	public GCIterator gcIterator(RootSetType rootSetType) throws CorruptDataException {
+	public GCIterator<J9ObjectPointer> gcIterator(RootSetType rootSetType) throws CorruptDataException {
 		final Iterator<J9ObjectPointer> rootSetIterator = _allRoots.iterator();
 		final Iterator<VoidPointer> rootSetAddressIterator = _allAddresses.iterator();
 
-		return new GCIterator() {
+		return new GCIterator<J9ObjectPointer>() {
 			@Override
 			public boolean hasNext() {
 				return rootSetIterator.hasNext();
@@ -192,14 +192,14 @@ public final class RootSet {
 			}
 
 			@Override
-			public Object next() {
+			public J9ObjectPointer next() {
 				rootSetAddressIterator.next();
 				return rootSetIterator.next();
 			}
 		};
 	}
 
-	public static GCIterator rootIterator(RootSetType rootSetType) throws CorruptDataException {
+	public static GCIterator<J9ObjectPointer> rootIterator(RootSetType rootSetType) throws CorruptDataException {
 		final RootSet rootSet = RootSet.from(rootSetType, true);
 		return rootSet.gcIterator(rootSetType);
 	}

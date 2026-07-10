@@ -85,7 +85,7 @@ public class J9ObjectFieldOffsetIterator_V1 extends J9ObjectFieldOffsetIterator 
 	private J9JavaVMPointer vm;
 	private J9ROMClassPointer romClass;
 	private J9ClassPointer superClazz;
-	private Iterator romFieldsShapeIterator;
+	private Iterator<?> romFieldsShapeIterator;
 	private J9ClassPointer instanceClass;
 
 	private UDATA firstDoubleOffset = new UDATA(0);

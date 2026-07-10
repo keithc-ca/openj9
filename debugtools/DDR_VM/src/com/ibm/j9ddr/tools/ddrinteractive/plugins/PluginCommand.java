@@ -48,12 +48,12 @@ public class PluginCommand extends Command
 	
 	{
 		try {
-			commands.put(COMMAND_LIST, getClass().getDeclaredMethod("commandListPlugins", new Class[] {String[].class, Context.class, PrintStream.class}));
-			commands.put(COMMAND_RELOAD, getClass().getDeclaredMethod("commandReload", new Class[] {String[].class, Context.class, PrintStream.class}));
-			commands.put(COMMAND_SHOWPATH, getClass().getDeclaredMethod("commandShowPath", new Class[] {String[].class, Context.class, PrintStream.class}));
-			commands.put(COMMAND_SETPATH, getClass().getDeclaredMethod("commandSetPath", new Class[] {String[].class, Context.class, PrintStream.class}));
-			commands.put(COMMAND_HELP, getClass().getDeclaredMethod("commandHelp", new Class[] {String[].class, Context.class, PrintStream.class}));
-			commands.put(COMMAND_HELP_QMARK, getClass().getDeclaredMethod("commandHelp", new Class[] {String[].class, Context.class, PrintStream.class}));
+			commands.put(COMMAND_LIST, getClass().getDeclaredMethod("commandListPlugins", String[].class, Context.class, PrintStream.class));
+			commands.put(COMMAND_RELOAD, getClass().getDeclaredMethod("commandReload", String[].class, Context.class, PrintStream.class));
+			commands.put(COMMAND_SHOWPATH, getClass().getDeclaredMethod("commandShowPath", String[].class, Context.class, PrintStream.class));
+			commands.put(COMMAND_SETPATH, getClass().getDeclaredMethod("commandSetPath", String[].class, Context.class, PrintStream.class));
+			commands.put(COMMAND_HELP, getClass().getDeclaredMethod("commandHelp", String[].class, Context.class, PrintStream.class));
+			commands.put(COMMAND_HELP_QMARK, getClass().getDeclaredMethod("commandHelp", String[].class, Context.class, PrintStream.class));
 		} catch (Exception e) {
 			System.err.println("Error creating command list : " + e.getMessage());
 		}
@@ -67,7 +67,8 @@ public class PluginCommand extends Command
 		cd.addSubCommand("showpath", "", "Displays the current plugin search path");
 		cd.addSubCommand("setpath", "<search path>", "Sets the current plugin search path");
 	}
-	
+
+	@Override
 	public void run(String command, String[] args, Context context,	PrintStream out) throws DDRInteractiveCommandException 
 	{
 		if(args.length == 0) {

@@ -343,6 +343,7 @@ public class LocalMap
 		 * @param knownObject Bitfield of locals that are definitively objects.
 		 * @param unknownsUpdated Pointer to a boolean value updated iff. any per-PC metadata was updated.
 		 */
+		@SuppressWarnings("fallthrough")
 		private int
 		mapLocalSet(J9ROMMethodPointer romMethod, int[] unknownsByPC, UDATA startPC, int localIndexBase) throws CorruptDataException 
 		{

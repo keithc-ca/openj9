@@ -24,6 +24,7 @@ package com.ibm.dtfj.javacore.builder.javacore;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Contains a collection of factories. Each factory is identified by a unique
@@ -34,11 +35,11 @@ import java.util.Iterator;
  */
 public class BuilderContainer {
 
-	private HashMap fList;
+	private Map<String, AbstractBuilderComponent> fList;
 	private AbstractBuilderComponent fCurrentComponent;
 
 	public BuilderContainer() {
-		fList = new HashMap();
+		fList = new HashMap<>();
 		fCurrentComponent = null;
 	}
 
@@ -46,7 +47,7 @@ public class BuilderContainer {
 	 *
 	 * @return iterator to the entire list of factories. Is never null.
 	 */
-	public Iterator getList()	{
+	public Iterator<?> getList() {
 		return fList.values().iterator();
 	}
 
@@ -58,7 +59,7 @@ public class BuilderContainer {
 	public AbstractBuilderComponent findComponent(String id) {
 		AbstractBuilderComponent component = null;
 		if (id != null) {
-			component = (AbstractBuilderComponent) fList.get(id);
+			component = fList.get(id);
 		}
 		return component;
 	}
@@ -70,7 +71,8 @@ public class BuilderContainer {
 	 */
 	public boolean add(AbstractBuilderComponent component) {
 		boolean added = false;
-		if (added = (component != null)) {
+		if (component != null) {
+			added = true;
 			fList.put(component.getID(), component);
 			fCurrentComponent = component;
 		}

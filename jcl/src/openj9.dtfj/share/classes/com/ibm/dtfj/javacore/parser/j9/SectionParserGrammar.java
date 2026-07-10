@@ -50,11 +50,11 @@ public abstract class SectionParserGrammar implements ISectionParser{
 	protected static final int DEFAULT_DEPTH = 3;
 	protected boolean anyMatched = false;
 
-	private final Vector fErrors;
+	private final Vector<String> fErrors;
 
 	public SectionParserGrammar(String sectionName) {
 		fSectionName = sectionName;
-		fErrors = new Vector();
+		fErrors = new Vector<>();
 	}
 
 	/**
@@ -344,7 +344,8 @@ public abstract class SectionParserGrammar implements ISectionParser{
 	/**
 	 * @return non null Iterator to a list of errors encountered during parsing.
 	 */
-	public Iterator getErrors() {
+	@Override
+	public Iterator<String> getErrors() {
 		return fErrors.iterator();
 	}
 
@@ -421,6 +422,7 @@ public abstract class SectionParserGrammar implements ISectionParser{
 		}
 	}
 
+	@Override
 	public boolean anyMatched() {
 		return anyMatched;
 	}

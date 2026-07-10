@@ -46,7 +46,7 @@ public abstract class JavaAbstractClass implements JavaClass
 	protected ImagePointer _classPointer;
 	protected JavaRuntime _javaVM;
 	private int _modifiers;
-	private Vector _interfaceNames = new Vector();
+	private Vector<String> _interfaceNames = new Vector<>();
 	private long _classLoaderID;
 	private ImagePointer _objectID;
 	private int _flagOffset;
@@ -74,6 +74,7 @@ public abstract class JavaAbstractClass implements JavaClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getClassLoader()
 	 */
+	@Override
 	public JavaClassLoader getClassLoader() throws CorruptDataException
 	{
 		return _javaVM.getClassLoaderForID(_classLoaderID);
@@ -82,6 +83,7 @@ public abstract class JavaAbstractClass implements JavaClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getObject()
 	 */
+	@Override
 	public JavaObject getObject() throws CorruptDataException
 	{
 		/*
@@ -110,6 +112,7 @@ public abstract class JavaAbstractClass implements JavaClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getModifiers()
 	 */
+	@Override
 	public int getModifiers() throws CorruptDataException
 	{
 		int rawModifiers = _modifiers;
@@ -128,6 +131,7 @@ public abstract class JavaAbstractClass implements JavaClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getID()
 	 */
+	@Override
 	public ImagePointer getID()
 	{
 		return _classPointer;
@@ -136,7 +140,8 @@ public abstract class JavaAbstractClass implements JavaClass
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaClass#getInterfaces()
 	 */
-	public Iterator getInterfaces()
+	@Override
+	public Iterator<?> getInterfaces()
 	{
 		return _interfaceNames.iterator();
 	}
@@ -152,6 +157,7 @@ public abstract class JavaAbstractClass implements JavaClass
 	 */
 	public abstract int getInstanceSize(com.ibm.dtfj.java.JavaObject instance);
 
+	@Override
 	public boolean equals(Object obj)
 	{
 		boolean isEqual = false;
@@ -175,6 +181,7 @@ public abstract class JavaAbstractClass implements JavaClass
 		return _hashcodeSlot;
 	}
 
+	@Override
 	public int hashCode()
 	{
 		return _javaVM.hashCode() ^ _classPointer.hashCode();
@@ -200,7 +207,7 @@ public abstract class JavaAbstractClass implements JavaClass
 		return instance.getID().getIntAt(_flagOffset);
 	}
 
-	protected void addClassLoaderReference (Collection coll) {
+	protected void addClassLoaderReference(Collection<Object> coll) {
 		JavaReference jRef = null;
 
 		try {
@@ -217,7 +224,7 @@ public abstract class JavaAbstractClass implements JavaClass
 		}
 	}
 
-	protected void addSuperclassReference (Collection coll) {
+	protected void addSuperclassReference(Collection<Object> coll) {
 		JavaReference jRef = null;
 
 		try {
@@ -231,7 +238,7 @@ public abstract class JavaAbstractClass implements JavaClass
 		}
 	}
 
-	protected void addClassObjectReference (Collection coll) {
+	protected void addClassObjectReference(Collection<Object> coll) {
 		JavaReference jRef = null;
 
 		try {

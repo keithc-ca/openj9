@@ -27,6 +27,7 @@ package com.ibm.dtfj.corereaders;
  *
  * @author fbogsanyi
  */
+@SuppressWarnings("serial")
 public class DumpException extends Exception {
 	private static final long serialVersionUID = -7947427629541393731L;
 

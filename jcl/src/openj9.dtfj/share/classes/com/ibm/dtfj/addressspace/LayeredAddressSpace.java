@@ -38,7 +38,7 @@ import com.ibm.dtfj.corereaders.MemoryRange;
  */
 public class LayeredAddressSpace extends CommonAddressSpace
 {
-	private TreeMap _moduleRanges = new TreeMap();
+	private TreeMap<MemoryRange, ClosingFileReader> _moduleRanges = new TreeMap<>();
 	private IAbstractAddressSpace _base;
 	private MemoryRange[] _moduleRangesArray = null;
 	private Integer _lastModuleRange = Integer.valueOf(0);
@@ -49,19 +49,20 @@ public class LayeredAddressSpace extends CommonAddressSpace
 		_base = base;
 	}
 
-	private static MemoryRange[] _extractRanges(Iterator memoryRanges)
+	private static MemoryRange[] _extractRanges(Iterator<MemoryRange> memoryRanges)
 	{
-		Vector ranges = new Vector();
+		Vector<MemoryRange> ranges = new Vector<>();
 		while (memoryRanges.hasNext()) {
 			ranges.add(memoryRanges.next());
 		}
-		return (MemoryRange[])ranges.toArray(new MemoryRange[ranges.size()]);
+		return ranges.toArray(new MemoryRange[ranges.size()]);
 	}
 
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.addressspace.IAbstractAddressSpace#getMemoryRanges()
 	 */
-	public Iterator getMemoryRanges()
+	@Override
+	public Iterator<MemoryRange> getMemoryRanges()
 	{
 		//TODO:  hook in here to stick on the extra ranges which have been added at the beginning of the iterator
 		return super.getMemoryRanges();
@@ -70,6 +71,7 @@ public class LayeredAddressSpace extends CommonAddressSpace
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.addressspace.IAbstractAddressSpace#isExecutable(int, long)
 	 */
+	@Override
 	public boolean isExecutable(int asid, long address)
 			throws MemoryAccessException
 	{
@@ -80,6 +82,7 @@ public class LayeredAddressSpace extends CommonAddressSpace
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.addressspace.IAbstractAddressSpace#isReadOnly(int, long)
 	 */
+	@Override
 	public boolean isReadOnly(int asid, long address)
 			throws MemoryAccessException
 	{
@@ -90,6 +93,7 @@ public class LayeredAddressSpace extends CommonAddressSpace
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.addressspace.IAbstractAddressSpace#isShared(int, long)
 	 */
+	@Override
 	public boolean isShared(int asid, long address)
 			throws MemoryAccessException
 	{
@@ -100,19 +104,20 @@ public class LayeredAddressSpace extends CommonAddressSpace
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.addressspace.IAbstractAddressSpace#getBytesAt(int, long, byte[])
 	 */
+	@Override
 	public int getBytesAt(int asid, long address, byte[] buffer)
 			throws MemoryAccessException
 	{
-		if ( null == _moduleRangesArray) {
-			_moduleRangesArray = (MemoryRange[]) _moduleRanges.keySet().toArray(new MemoryRange[0]);
+		if (null == _moduleRangesArray) {
+			_moduleRangesArray = _moduleRanges.keySet().toArray(new MemoryRange[0]);
 		}
 
 		int retI = findWhichMemoryRange(asid, address, _moduleRangesArray, _lastModuleRange, false);
 
 		if (retI > -1) {
-			MemoryRange range = (MemoryRange) _moduleRangesArray[retI];
+			MemoryRange range = _moduleRangesArray[retI];
 			if (range.contains(address)) {
-				ClosingFileReader readable = (ClosingFileReader) _moduleRanges.get(range);
+				ClosingFileReader readable = _moduleRanges.get(range);
 				try {
 					long fileOffset = range.getFileOffset() + (address - range.getVirtualAddress());
 					readable.seek(fileOffset);

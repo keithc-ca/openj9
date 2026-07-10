@@ -22,6 +22,7 @@
  */
 package com.ibm.dtfj.java.javacore;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.Vector;
 
@@ -49,8 +50,7 @@ public class JCJavaThread implements JavaThread {
 	private final CorruptData fCorruptData;
 	private final JCJavaRuntime fRuntime;
 
-	private Vector fStackFrames;
-	private Vector fStackSections;
+	private Vector<JavaStackFrame> fStackFrames;
 
 	private ImagePointer fJNIEnv;
 	private JCImageThread fImageThread;
@@ -99,8 +99,7 @@ public class JCJavaThread implements JavaThread {
 	 * @param state
 	 */
 	private void init(String name, int priority, int state, JavaObject javaObject) {
-		fStackFrames = new Vector();
-		fStackSections = new Vector();
+		fStackFrames = new Vector<>();
 		fName = name;
 		fPriority = priority;
 		fState = state;
@@ -110,6 +109,7 @@ public class JCJavaThread implements JavaThread {
 	/**
 	 *
 	 */
+	@Override
 	public ImageThread getImageThread() throws CorruptDataException, DataUnavailable {
 		if (fImageThread == null) {
 			throw new DataUnavailable("No image thread found for this java thread");
@@ -120,6 +120,7 @@ public class JCJavaThread implements JavaThread {
 	/**
 	 *
 	 */
+	@Override
 	public ImagePointer getJNIEnv() throws CorruptDataException {
 		if (fJNIEnv == null) {
 			throw new CorruptDataException(fCorruptData);
@@ -132,6 +133,7 @@ public class JCJavaThread implements JavaThread {
 	 *
 	 *
 	 */
+	@Override
 	public String getName() throws CorruptDataException {
 		if (fName == null) {
 			fName = "vmthread @" + fThreadID.getAddress();
@@ -142,6 +144,7 @@ public class JCJavaThread implements JavaThread {
 	/**
 	 *
 	 */
+	@Override
 	public JavaObject getObject() throws CorruptDataException {
 		if (fJavaObject == null) {
 			throw new CorruptDataException(fCorruptData);
@@ -152,6 +155,7 @@ public class JCJavaThread implements JavaThread {
 	/**
 	 *
 	 */
+	@Override
 	public int getPriority() throws CorruptDataException {
 		if (fPriority == IBuilderData.NOT_AVAILABLE) {
 			throw new CorruptDataException(fCorruptData);
@@ -162,7 +166,8 @@ public class JCJavaThread implements JavaThread {
 	/**
 	 *
 	 */
-	public Iterator getStackFrames() {
+	@Override
+	public Iterator<?> getStackFrames() {
 		return fStackFrames.iterator();
 	}
 
@@ -179,13 +184,15 @@ public class JCJavaThread implements JavaThread {
 	/**
 	 *
 	 */
-	public Iterator getStackSections() {
-		return fStackSections.iterator();
+	@Override
+	public Iterator<?> getStackSections() {
+		return Collections.emptyIterator();
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public int getState() throws CorruptDataException {
 		if (fState == IBuilderData.NOT_AVAILABLE) {
 			throw new CorruptDataException(fCorruptData);
@@ -270,6 +277,7 @@ public class JCJavaThread implements JavaThread {
 		this.blockingJavaObject = blockingObject;
 	}
 
+	@Override
 	public JavaObject getBlockingObject() throws CorruptDataException,
 			DataUnavailable {
 		return blockingJavaObject;

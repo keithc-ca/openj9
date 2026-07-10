@@ -25,6 +25,7 @@ import static com.ibm.j9ddr.view.dtfj.J9DDRDTFJUtils.corruptIterator;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,17 +38,17 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9VMInitArgsPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.JavaVMOptionPointer;
 import com.ibm.j9ddr.vm29.view.dtfj.DTFJContext;
 
-@SuppressWarnings("rawtypes")
 public class DTFJJavaVMInitArgs implements JavaVMInitArgs {
 	private boolean isCachePopulated = false;
-	private LinkedList<Object> options = new LinkedList<Object>();
-	private Iterator corruptCache = null;
+	private List<Object> options = new LinkedList<>();
+	private Iterator<?> corruptCache = null;
 	private int version = 0;
 	private boolean isCorrupt = false;
 	private CorruptData cdata = null;
 	private Logger log = DTFJContext.getLogger();
 	private boolean ignoreFlag = false;
 
+	@Override
 	public boolean getIgnoreUnrecognized() throws DataUnavailable, CorruptDataException {
 		loadData();
 		if(isCorrupt) {
@@ -56,7 +57,8 @@ public class DTFJJavaVMInitArgs implements JavaVMInitArgs {
 		return ignoreFlag;
 	}
 
-	public Iterator getOptions() throws DataUnavailable {
+	@Override
+	public Iterator<?> getOptions() throws DataUnavailable {
 		loadData();
 		if(isCorrupt) {
 			throw new DataUnavailable("The VM options are not available : " + cdata.toString());
@@ -68,6 +70,7 @@ public class DTFJJavaVMInitArgs implements JavaVMInitArgs {
 		}
 	}
 
+	@Override
 	public int getVersion() throws DataUnavailable, CorruptDataException {
 		loadData();
 		if(isCorrupt) {

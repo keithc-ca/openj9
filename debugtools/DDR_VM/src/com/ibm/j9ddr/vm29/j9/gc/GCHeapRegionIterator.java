@@ -36,7 +36,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.MM_MemorySpacePointer;
 import com.ibm.j9ddr.vm29.pointer.generated.MM_MemorySubSpacePointer;
 import com.ibm.j9ddr.vm29.pointer.helper.J9RASHelper;
 
-public class GCHeapRegionIterator extends GCIterator
+public class GCHeapRegionIterator extends GCIterator<GCHeapRegionDescriptor>
 {
 	private MM_MemorySpacePointer _space; /**< The MemorySpace to which all regions returned by the iterator must belong (can be NULL if this check is not needed) */
 	private MM_HeapRegionDescriptorPointer _auxRegion; /**< The auxiliary region we will process next */
@@ -171,7 +171,8 @@ public class GCHeapRegionIterator extends GCIterator
 		}
 		return usedRegion;
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		try {
@@ -204,6 +205,7 @@ public class GCHeapRegionIterator extends GCIterator
 		}
 	}
 
+	@Override
 	public GCHeapRegionDescriptor next()
 	{
 		if(hasNext()) {
@@ -215,6 +217,7 @@ public class GCHeapRegionIterator extends GCIterator
 		}
 	}
 
+	@Override
 	public VoidPointer nextAddress() 
 	{
 		// Does not make sense in this case

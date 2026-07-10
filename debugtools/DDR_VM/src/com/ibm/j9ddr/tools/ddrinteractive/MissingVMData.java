@@ -37,20 +37,20 @@ import com.ibm.j9ddr.tools.ddrinteractive.plugins.PluginConfig;
 
 public class MissingVMData implements IVMData {
 	private final Logger logger = Logger.getLogger(LoggerNames.LOGGER_INTERACTIVE_CONTEXT);
-	
-	public void bootstrap(String classname, Object... userData)	throws ClassNotFoundException {
+
+	@Override
+	public void bootstrap(String classname, Object... userData) throws ClassNotFoundException {
 		//do nothing
 	}
 
-	
 	/* (non-Javadoc)
 	 * @see com.ibm.j9ddr.IVMData#bootstrapRelative(java.lang.String, java.lang.Object[])
 	 * 
 	 * This is used to load the correct classes relative to the vm version e.g. from the vm26 package for the
 	 * 26 VM. In this case the VM is missing, so only this needs to behave accordingly and represent the
 	 * native side of things only.
-	 * 
 	 */
+	@Override
 	public void bootstrapRelative(String relativeClassname, Object... userData)	throws ClassNotFoundException {
 		if(relativeClassname.equals(Context.TASK_FINDVM)) {
 			//find the VM and the userdata is an array of longs
@@ -61,9 +61,9 @@ public class MissingVMData implements IVMData {
 		if(relativeClassname.equals(Context.TASK_GETCOMMANDS)) {
 			//get a list of commands, as there is no VM this will only be a list of plugins which apply to any VM
 			Object[] passbackArray = (Object[]) userData[0];
-			Object loader = (Object) passbackArray[1];
+			Object loader = passbackArray[1];
 
-			List<ICommand> toPassBack = new LinkedList<ICommand>();
+			List<ICommand> toPassBack = new LinkedList<>();
 			loadPlugins(toPassBack, loader);
 
 			passbackArray[0] = toPassBack;
@@ -89,16 +89,18 @@ public class MissingVMData implements IVMData {
 			}
 		}
 	}
-	
-	@SuppressWarnings("unchecked")
+
+	@Override
 	public Collection<StructureDescriptor> getStructures() {
-		return Collections.EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
+	@Override
 	public J9DDRClassLoader getClassLoader() {
 		return null;
 	}
 
+	@Override
 	public String getVersion() {
 		return "Missing VM";
 	}

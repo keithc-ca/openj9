@@ -26,6 +26,6 @@ package com.ibm.dtfj.corereaders.zos.le;
  * This exception is thrown when an attempt is made to create a Caa for a Tcb that doesn't
  * have one.
  */
-
+@SuppressWarnings("serial")
 public class CaaNotFound extends Exception {
 }

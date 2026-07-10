@@ -70,8 +70,8 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		super(reader);
 	}
 
-	private List _memoryRanges = new ArrayList();
-	private Set _additionalFileNames = new TreeSet();
+	private List<MemoryRange> _memoryRanges = new ArrayList<>();
+	private Set<String> _additionalFileNames = new TreeSet<>();
 	private int _implementation;
 	private int _threadCount;
 	private long _threadOffset;
@@ -196,9 +196,7 @@ public abstract class NewAixDump extends CoreReaderSupport {
 	private MemoryRange getHighestRange() {
 		long highestOffset = -1;
 		MemoryRange highestRange = null;
-		Iterator i = _memoryRanges.iterator();
-		while (i.hasNext()) {
-			MemoryRange range = (MemoryRange)(i.next());
+		for (MemoryRange range : _memoryRanges) {
 			if (range.getFileOffset() > highestOffset) {
 				highestOffset = range.getFileOffset();
 				highestRange = range;
@@ -260,9 +258,9 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		} while (0 != next && current + next < _loaderOffset + _loaderSize);
 	}
 
-	private List readLoaderInfoAsModules(Builder builder, Object addressSpace) throws IOException
+	private List<?> readLoaderInfoAsModules(Builder builder, Object addressSpace) throws IOException
 	{
-		List modules = new ArrayList();
+		List<Object> modules = new ArrayList<>();
 		int next = 0;
 		long current = _loaderOffset;
 		do {
@@ -283,18 +281,18 @@ public abstract class NewAixDump extends CoreReaderSupport {
 			}
 			Object text = builder.buildModuleSection(addressSpace, ".text", textVirtualAddress, textVirtualAddress + textSize);
 			Object data = builder.buildModuleSection(addressSpace, ".data", dataVirtualAddress, dataVirtualAddress + dataSize);
-			List sections = new ArrayList();
+			List<Object> sections = new ArrayList<>();
 			sections.add(text);
 			sections.add(data);
 			XCOFFReader libraryReader = _openLibrary(builder, fileName, objectName);
 			_additionalFileNames.add(fileName);
 			if (null != libraryReader) {
 				Properties properties = libraryReader.moduleProperties();
-				List symbols = libraryReader.buildSymbols(builder, addressSpace, textVirtualAddress);
+				List<?> symbols = libraryReader.buildSymbols(builder, addressSpace, textVirtualAddress);
 				modules.add(builder.buildModule(moduleName, properties, sections.iterator(), symbols.iterator(),textVirtualAddress));
 				internalAddressSpace().mapRegion(textVirtualAddress, libraryReader.underlyingFile(), libraryReader.baseFileOffset(), textSize);
 			} else {
-				List symbols = Collections.singletonList(builder.buildCorruptData(addressSpace, "unable to find module " + moduleName, textVirtualAddress));
+				List<?> symbols = Collections.singletonList(builder.buildCorruptData(addressSpace, "unable to find module " + moduleName, textVirtualAddress));
 				//here we will pass out a null for properties which can be thrown, from the other side, as DataUnavailable
 				modules.add(builder.buildModule(moduleName, null, sections.iterator(), symbols.iterator(),textVirtualAddress));
 			}
@@ -312,7 +310,7 @@ public abstract class NewAixDump extends CoreReaderSupport {
 	 * @param objectName
 	 * @return
 	 */
-	private XCOFFReader _openLibrary(Builder builder, String fileName, String objectName)
+	private static XCOFFReader _openLibrary(Builder builder, String fileName, String objectName)
 	{
 		//Note:  objectName is required to look up the actual module inside a library
 		XCOFFReader libraryReader = null;
@@ -411,14 +409,14 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		// 1) Read module information.
 		// 2) Read thread information.
 		// 3) Build process.
-		List modules = readLoaderInfoAsModules(builder, addressSpace);
+		List<?> modules = readLoaderInfoAsModules(builder, addressSpace);
 		Object executable = null;
-		Iterator libraries = modules.iterator();
+		Iterator<?> libraries = modules.iterator();
 		if (libraries.hasNext()) {
 			executable = libraries.next();
 		}
 
-		List threads = readThreads(builder, addressSpace);
+		List<?> threads = readThreads(builder, addressSpace);
 		//the current thread is parsed before the rest so it is put first
 		Object currentThread = threads.get(0);
 
@@ -445,7 +443,7 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		}
 
 		// Get the environment variable addresses
-		List addresses = new ArrayList();
+		List<Long> addresses = new ArrayList<>();
 		try
 		{
 			coreSeekVirtual(environmentAddress);
@@ -463,8 +461,7 @@ public abstract class NewAixDump extends CoreReaderSupport {
 
 		// Get the environment variables
 		Properties environment = new Properties();
-		for (Iterator iter = addresses.iterator(); iter.hasNext();) {
-			Long varAddress = (Long)iter.next();
+		for (Long varAddress : addresses) {
 			String pair = null;
 			try {
 				coreSeekVirtual(varAddress.longValue());
@@ -489,8 +486,8 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		return environment;
 	}
 
-	private List readThreads(Builder builder, Object addressSpace) throws IOException {
-		List threads = new ArrayList();
+	private List<?> readThreads(Builder builder, Object addressSpace) throws IOException {
+		List<Object> threads = new ArrayList<>();
 		//use the faulting thread to set the correct structure sizes in the reader
 		long sizeofThread = threadSize(FAULTING_THREAD_OFFSET);
 		threads.add(readThread(builder, addressSpace, FAULTING_THREAD_OFFSET));
@@ -524,7 +521,7 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		coreReadAddress();	//  struct sigcontext *ti_scp;      /* sigctx location in user space */
 		int signalNumber = 0xFF & coreReadByte();	//  char            ti_cursig;      /* current/last signal taken */
 
-		Map registers = readRegisters(offset);
+		Map<String, Number> registers = readRegisters(offset);
 		Properties properties = new Properties();
 		properties.put("scheduling policy", Integer.toHexString(ti_policy));
 		properties.put("current effective priority", Integer.toHexString(ti_pri));
@@ -538,8 +535,8 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		//the signal number should probably be exposed through a real API for, for now, it is interesting info so just return it
 		properties.put("current/last signal taken", Integer.toHexString(signalNumber));
 
-		List sections = new ArrayList();
-		List frames = new ArrayList();
+		List<Object> sections = new ArrayList<>();
+		List<Object> frames = new ArrayList<>();
 		long stackPointer = getStackPointerFrom(registers);
 		long instructionPointer = getInstructionPointerFrom(registers);
 		if (0 == instructionPointer || false == isValidAddress(instructionPointer)) {
@@ -596,11 +593,11 @@ public abstract class NewAixDump extends CoreReaderSupport {
 	protected MemoryRange memoryRangeFor(long address)
 	{
 		//TODO:  change the callers of this method to use some mechanism which will work better within the realm of the new address spaces
-		Iterator ranges = _memoryRanges.iterator();
+		Iterator<MemoryRange> ranges = _memoryRanges.iterator();
 		MemoryRange match = null;
 
 		while ((null == match) && ranges.hasNext()) {
-			MemoryRange range = (MemoryRange) ranges.next();
+			MemoryRange range = ranges.next();
 
 			if (range.contains(address)) {
 				match = range;
@@ -619,33 +616,33 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		return buffer.toString();
 	}
 
-	private List registersAsList(Builder builder, Map registers) {
-		List list = new ArrayList();
-		for (Iterator iter = registers.entrySet().iterator(); iter.hasNext();) {
-			Map.Entry entry = (Map.Entry) iter.next();
-			list.add(builder.buildRegister((String) entry.getKey(), (Number) entry.getValue()));
+	private static List<?> registersAsList(Builder builder, Map<String, Number> registers) {
+		List<Object> list = new ArrayList<>();
+		for (Map.Entry<String, Number> entry : registers.entrySet()) {
+			list.add(builder.buildRegister(entry.getKey(), entry.getValue()));
 		}
 		return list;
 	}
 
-	protected abstract Map readRegisters(long threadOffset) throws IOException;
+	protected abstract Map<String, Number> readRegisters(long threadOffset) throws IOException;
 	protected abstract int readLoaderInfoFlags() throws IOException;
 	protected abstract long userInfoOffset();
 	protected abstract long threadSize(long threadOffset);
 	protected abstract int pointerSize();
-	protected abstract long getStackPointerFrom(Map registers);
-	protected abstract long getInstructionPointerFrom(Map registers);
-	protected abstract long getLinkRegisterFrom(Map registers);
+	protected abstract long getStackPointerFrom(Map<String, Number> registers);
+	protected abstract long getInstructionPointerFrom(Map<String, Number> registers);
+	protected abstract long getLinkRegisterFrom(Map<String, Number> registers);
 	protected abstract int sizeofTopOfStack();
 
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.corereaders.Dump#getMemoryRanges()
 	 */
-	public Iterator getMemoryRanges()
+	public Iterator<MemoryRange> getMemoryRanges()
 	{
 		return _memoryRanges.iterator();
 	}
 
+	@Override
 	public void extract(Builder builder) {
 		try {
 			Object addressSpace = builder.buildAddressSpace("AIX Address Space", 0);
@@ -683,12 +680,14 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		return _lastModified;
 	}
 
-	public Iterator getAdditionalFileNames() {
+	@Override
+	public Iterator<String> getAdditionalFileNames() {
 		return _additionalFileNames.iterator();
 	}
 
+	@Override
 	protected MemoryRange[] getMemoryRangesAsArray() {
-		return (MemoryRange[])_memoryRanges.toArray(new MemoryRange[_memoryRanges.size()]);
+		return _memoryRanges.toArray(new MemoryRange[_memoryRanges.size()]);
 	}
 
 	private LayeredAddressSpace internalAddressSpace()
@@ -700,6 +699,7 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		return _addressSpace;
 	}
 
+	@Override
 	public IAbstractAddressSpace getAddressSpace()
 	{
 		return internalAddressSpace();
@@ -708,6 +708,7 @@ public abstract class NewAixDump extends CoreReaderSupport {
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.corereaders.CoreReaderSupport#is64Bit()
 	 */
+	@Override
 	protected boolean is64Bit()
 	{
 		return (64 == pointerSize());
@@ -716,6 +717,7 @@ public abstract class NewAixDump extends CoreReaderSupport {
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.corereaders.CoreReaderSupport#isLittleEndian()
 	 */
+	@Override
 	protected boolean isLittleEndian()
 	{
 		//currently, all the AIX platforms that we work with are big endian
@@ -742,6 +744,7 @@ public abstract class NewAixDump extends CoreReaderSupport {
 		}
 	}
 
+	@Override
 	public boolean isTruncated() {
 		return _isTruncated;
 	}

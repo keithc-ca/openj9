@@ -267,7 +267,7 @@ public class Dll {
 						long funcAda = ciet2_exp_ada_is_addr == 0 ? ciet2_exp_func_ada_offset + getWsa() : ciet2_exp_func_ada_offset;
 						functions[i] = new DllFunction(funcName, funcAddr, null, funcAda);
 					} catch (IOException e) {
-						functions[i] = new DllFunction(e.toString(), 0, null, space.WILD_POINTER);
+						functions[i] = new DllFunction(e.toString(), 0, null, AddressSpace.WILD_POINTER);
 					}
 				}
 			} else if (ciet2_version == 1) {
@@ -291,7 +291,7 @@ public class Dll {
 					long funcAddr = ciet_is_addr == 0 ? ciet_exp_offset + getWsa() : ciet_exp_offset;
 					log.finer("funcAddr = " + hex(funcAddr));
 					log.finer("ciet_is_addr = " + hex(ciet_is_addr));
-					functions[i] = new DllFunction(funcName, funcAddr, null, space.WILD_POINTER);
+					functions[i] = new DllFunction(funcName, funcAddr, null, AddressSpace.WILD_POINTER);
 				}
 			} else
 				throw new Error("expected ciet2_version 1 or 2 but instead found " + ciet2_version);

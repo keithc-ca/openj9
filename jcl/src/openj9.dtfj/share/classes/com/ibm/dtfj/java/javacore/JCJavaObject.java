@@ -40,20 +40,18 @@ public class JCJavaObject implements JavaObject {
 	private final ImagePointer fAddress;
 	private final JavaClass fJavaClass;
 
-	private Vector fSections;
-
 	public JCJavaObject(ImagePointer address, JavaClass javaClass) throws JCInvalidArgumentsException {
 		if (address == null) {
 			throw new JCInvalidArgumentsException("Must have a valid object ID");
 		}
 		fAddress = address;
 		fJavaClass = javaClass;
-		fSections = new Vector();
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public void arraycopy(int arg0, Object arg1, int arg2, int arg3) throws CorruptDataException, MemoryAccessException {
 		throw new CorruptDataException(new JCCorruptData("No array support implemented", null));
 	}
@@ -61,6 +59,7 @@ public class JCJavaObject implements JavaObject {
 	/**
 	 *
 	 */
+	@Override
 	public int getArraySize() throws CorruptDataException {
 		throw new CorruptDataException(new JCCorruptData("No array support implemented", null));
 	}
@@ -68,6 +67,7 @@ public class JCJavaObject implements JavaObject {
 	/**
 	 *
 	 */
+	@Override
 	public long getHashcode() throws DataUnavailable, CorruptDataException {
 		throw new DataUnavailable("No hashCode for object");
 	}
@@ -75,6 +75,7 @@ public class JCJavaObject implements JavaObject {
 	/**
 	 *
 	 */
+	@Override
 	public ImagePointer getID() {
 		return fAddress;
 	}
@@ -82,6 +83,7 @@ public class JCJavaObject implements JavaObject {
 	/**
 	 *
 	 */
+	@Override
 	public JavaClass getJavaClass() throws CorruptDataException {
 		if (fJavaClass == null) {
 			throw new CorruptDataException(new JCCorruptData("Java Class information not available", null));
@@ -92,6 +94,7 @@ public class JCJavaObject implements JavaObject {
 	/**
 	 *
 	 */
+	@Override
 	public long getPersistentHashcode() throws DataUnavailable, CorruptDataException {
 		throw new DataUnavailable("No hashCode for object");
 	}
@@ -99,13 +102,15 @@ public class JCJavaObject implements JavaObject {
 	/**
 	 *
 	 */
-	public Iterator getSections() {
-		return fSections.iterator();
+	@Override
+	public Iterator<?> getSections() {
+		return Collections.emptyIterator();
 	}
 
 	/**
 	 *
 	 */
+	@Override
 	public long getSize() throws CorruptDataException {
 		throw new CorruptDataException(new JCCorruptData("Size computation not supported", null));
 	}
@@ -113,15 +118,18 @@ public class JCJavaObject implements JavaObject {
 	/**
 	 *
 	 */
+	@Override
 	public boolean isArray() throws CorruptDataException {
 		JavaClass type = getJavaClass();
 		return type.isArray();
 	}
 
-	public Iterator getReferences() {
-		return Collections.EMPTY_LIST.iterator();
+	@Override
+	public Iterator<?> getReferences() {
+		return Collections.emptyIterator();
 	}
 
+	@Override
 	public JavaHeap getHeap() throws DataUnavailable {
 		throw new DataUnavailable("Heap support not implemented.");
 	}

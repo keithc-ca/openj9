@@ -41,6 +41,7 @@ import com.ibm.dtfj.image.ImageFactory;
 import com.ibm.dtfj.javacore.builder.IImageBuilderFactory;
 import com.ibm.dtfj.javacore.parser.framework.parser.IErrorListener;
 import com.ibm.dtfj.javacore.parser.framework.parser.IParserController;
+import com.ibm.dtfj.javacore.parser.framework.parser.ISectionParser;
 import com.ibm.dtfj.javacore.parser.framework.parser.ParserException;
 import com.ibm.dtfj.javacore.parser.j9.registered.RegisteredComponents;
 
@@ -72,11 +73,12 @@ public class JavaCoreReader {
 			// Use default charset if none found
 			// Charset.defaultCharset is 5.0, so not usable for 1.4
 			Reader reader = cs != null ? new InputStreamReader(stream, cs) : new InputStreamReader(stream);
-			List frameworkSections = new DTFJComponentLoader().loadSections();
+			List<ISectionParser> frameworkSections = DTFJComponentLoader.loadSections();
 			IParserController parserController = new ParserController(frameworkSections, fImageBuilderFactory);
 			parserController.addErrorListener(new IErrorListener() {
 				private Logger logger = Logger.getLogger(ImageFactory.DTFJ_LOGGER_NAME);
 
+				@Override
 				public void handleEvent(String msg) {
 					//map errors onto Level.FINE so that DTFJ is silent unless explicitly changed
 					logger.fine(msg);
@@ -125,16 +127,17 @@ public class JavaCoreReader {
 		return cs;
 	}
 
-	private class JavacoreFileEncodingException extends Exception {
+	private static class JavacoreFileEncodingException extends Exception {
 		public JavacoreFileEncodingException(String string) {
 			super(string);
 		}
-		public JavacoreFileEncodingException(String string,Exception exception) {
-			super(string,exception);
+
+		public JavacoreFileEncodingException(String string, Exception exception) {
+			super(string, exception);
 		}
 	}
 
-	private Charset attemptCharset(ByteBuffer headByteBuffer, Charset trialCharset) throws JavacoreFileEncodingException {
+	private static Charset attemptCharset(ByteBuffer headByteBuffer, Charset trialCharset) throws JavacoreFileEncodingException {
 		final String sectionEyeCatcher = "0SECTION";
 		final String charsetEyeCatcher = "1TICHARSET";
 		headByteBuffer.rewind();

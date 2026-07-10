@@ -28,7 +28,7 @@ import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.MM_HeapRegionDescriptorPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.MM_HeapRegionManagerPointer;
 
-public class GCHeapSpanRegionIterator extends GCIterator
+public class GCHeapSpanRegionIterator extends GCIterator<MM_HeapRegionDescriptorPointer>
 {
 	private MM_HeapRegionDescriptorPointer _currentRegion;
 	private long _tableDescriptorSize; 
@@ -59,12 +59,14 @@ public class GCHeapSpanRegionIterator extends GCIterator
 	{
 		return new GCHeapSpanRegionIterator(manager, region);
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		return _regionsLeft > 0;
 	}
 
+	@Override
 	public MM_HeapRegionDescriptorPointer next()
 	{
 		if (_regionsLeft > 0) {
@@ -76,7 +78,8 @@ public class GCHeapSpanRegionIterator extends GCIterator
 			throw new NoSuchElementException("There are no more items available through this iterator");
 		}
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress() 
 	{
 		// Does not make sense in this case

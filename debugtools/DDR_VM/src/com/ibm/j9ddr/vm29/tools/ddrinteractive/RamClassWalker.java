@@ -205,7 +205,7 @@ public class RamClassWalker extends ClassWalker {
 
 	private void allSlotsIniTableDo() throws CorruptDataException {
 		J9ITablePointer iTable = J9ITablePointer.cast(ramClass.iTable());
-		int interfaceSize = 0;
+		long interfaceSize = 0;
 		final J9ITablePointer superclassITable;
 		final J9ClassPointer superclass = J9ClassHelper.superclass(ramClass);
 		if (superclass.isNull()) {

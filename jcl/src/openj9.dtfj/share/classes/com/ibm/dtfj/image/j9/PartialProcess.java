@@ -52,7 +52,7 @@ public class PartialProcess extends ImageProcess
 	 */
 	public PartialProcess(String pid, String commandLine,
 			Properties environment, ImageThread currentThread,
-			Iterator threads, ImageModule executable, Iterator libraries,
+			Iterator<?> threads, ImageModule executable, Iterator<?> libraries,
 			int pointerSize, DataUnavailable executableException, DataUnavailable libraryException)
 	{
 		super(pid, commandLine, environment, currentThread, threads,
@@ -61,6 +61,7 @@ public class PartialProcess extends ImageProcess
 		_libraryException = libraryException;
 	}
 
+	@Override
 	public ImageModule getExecutable() throws DataUnavailable, CorruptDataException
 	{
 		if (null == _executableException) {
@@ -70,7 +71,8 @@ public class PartialProcess extends ImageProcess
 		}
 	}
 
-	public Iterator getLibraries() throws DataUnavailable, CorruptDataException
+	@Override
+	public Iterator<?> getLibraries() throws DataUnavailable, CorruptDataException
 	{
 		if (null == _libraryException) {
 			return super.getLibraries();

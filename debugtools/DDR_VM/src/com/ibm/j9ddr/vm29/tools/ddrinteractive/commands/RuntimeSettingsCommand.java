@@ -33,7 +33,6 @@ import com.ibm.j9ddr.tools.ddrinteractive.DDRInteractiveCommandException;
 import com.ibm.j9ddr.view.dtfj.image.J9DDRImageProcess;
 import com.ibm.j9ddr.vm29.j9.DataType;
 import com.ibm.j9ddr.vm29.j9.gc.GCExtensions;
-import com.ibm.j9ddr.vm29.pointer.generated.J9JavaVMPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9RASPointer;
 import com.ibm.j9ddr.vm29.pointer.helper.J9RASHelper;
 
@@ -80,8 +79,7 @@ public class RuntimeSettingsCommand extends Command
 			String qualifiedCurrentSoftmx = "";
 			String initialSoftmx = "not set";
 			J9RASPointer ras = DataType.getJ9RASPointer();
-			J9JavaVMPointer vm = J9RASHelper.getVM(ras);
-			IProcess process = vm.getProcess();
+			IProcess process = DataType.getProcess();
 			J9DDRImageProcess ddrProcess = new J9DDRImageProcess(process);
 			String cmdline;
 
@@ -140,10 +138,7 @@ public class RuntimeSettingsCommand extends Command
 		} catch (com.ibm.dtfj.image.CorruptDataException e) {
 			throw new DDRInteractiveCommandException(
 					"CorruptDataException occured while getting the commandline from process");
-		} catch (CorruptDataException e) {
-			throw new DDRInteractiveCommandException(e);
 		}
-
 	}
 
 	/* TODO: Various suggestions to improve table printing:

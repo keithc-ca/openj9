@@ -55,11 +55,12 @@ public class DTFJJavaMethod implements JavaMethod {
 		this.j9romMethod = J9MethodHelper.romMethod(j9Method);
 	}
 
-	private List<Object> byteCodeSections; 
-	@SuppressWarnings("rawtypes")
-	public Iterator getBytecodeSections() {
+	private List<Object> byteCodeSections;
+
+	@Override
+	public Iterator<?> getBytecodeSections() {
 		if (byteCodeSections == null) {
-			byteCodeSections = new ArrayList<Object>();
+			byteCodeSections = new ArrayList<>();
 			try {
 				J9ROMMethodPointer originalRomMethod = ROMHelp.getOriginalROMMethod(j9ramMethod);
 				if (!originalRomMethod.modifiers().anyBitsIn(J9JavaAccessFlags.J9AccNative)) {
@@ -85,10 +86,11 @@ public class DTFJJavaMethod implements JavaMethod {
 	}
 
 	List<Object> compiledSections;
-	@SuppressWarnings("rawtypes")
-	public Iterator getCompiledSections() {
+
+	@Override
+	public Iterator<?> getCompiledSections() {
 		if (compiledSections == null) {
-			compiledSections = new ArrayList<Object>();
+			compiledSections = new ArrayList<>();
 			List<J9JITExceptionTablePointer> metaDatas = DTFJContext.getJITMetaData(j9ramMethod);
 			if (metaDatas != null) {
 				for (J9JITExceptionTablePointer metaData : metaDatas) {
@@ -126,11 +128,13 @@ public class DTFJJavaMethod implements JavaMethod {
 		return compiledSections.iterator();
 	}
 
+	@Override
 	public JavaClass getDeclaringClass() throws CorruptDataException,
 			DataUnavailable {
 		return clazz;
 	}
 
+	@Override
 	public int getModifiers() throws CorruptDataException {
 		try {
 			return J9ROMMethodHelper.getReflectModifiers(j9romMethod);
@@ -139,6 +143,7 @@ public class DTFJJavaMethod implements JavaMethod {
 		}
 	}
 
+	@Override
 	public String getName() throws CorruptDataException {
 		try {
 			return J9ROMMethodHelper.getName(j9romMethod);
@@ -147,6 +152,7 @@ public class DTFJJavaMethod implements JavaMethod {
 		}
 	}
 
+	@Override
 	public String getSignature() throws CorruptDataException {
 		try {
 			return J9ROMMethodHelper.getSignature(j9romMethod);
@@ -159,7 +165,8 @@ public class DTFJJavaMethod implements JavaMethod {
 	{
 		return clazz.getFilename();
 	}
-	
+
+	@Override
 	public String toString() {
 		try {
 			return clazz.toString() + "." + getName() + getSignature();
@@ -169,6 +176,7 @@ public class DTFJJavaMethod implements JavaMethod {
 		}
 	}
 
+	@Override
 	public boolean equals(Object obj) {
 		try {
 			if (obj == null || !(obj instanceof DTFJJavaMethod)) {
@@ -182,6 +190,7 @@ public class DTFJJavaMethod implements JavaMethod {
 		}
 	}
 
+	@Override
 	public int hashCode() {
 		return j9ramMethod.hashCode();
 	}

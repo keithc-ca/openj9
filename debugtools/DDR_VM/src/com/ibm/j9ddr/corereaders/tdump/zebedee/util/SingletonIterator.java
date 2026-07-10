@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.j9ddr.corereaders.tdump.zebedee.util;
 
 import java.util.Iterator;
@@ -27,8 +26,7 @@ import java.util.Iterator;
 /**
  * This class provides an iterator with a single element.
  */
-
-public class SingletonIterator implements Iterator {
+public class SingletonIterator implements Iterator<Object> {
 
     /** The single element itself */
     private Object element;
@@ -40,16 +38,19 @@ public class SingletonIterator implements Iterator {
         this.element = element;
     }
 
+    @Override
     public boolean hasNext() {
         return element != null;
     }
 
+    @Override
     public Object next() {
         Object obj = element;
         element = null;
         return obj;
     }
 
+    @Override
     public void remove() {
         throw new UnsupportedOperationException();
     }

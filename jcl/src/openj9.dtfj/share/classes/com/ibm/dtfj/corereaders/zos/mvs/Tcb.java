@@ -23,7 +23,8 @@
 package com.ibm.dtfj.corereaders.zos.mvs;
 
 import java.io.IOException;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,7 +51,7 @@ public class Tcb {
 	/** The Linkage Stack */
 	private Lse[] linkageStack;
 	/** Map AddressSpace to its array of Tcbs */
-	private static Hashtable tcbMap = new Hashtable();
+	private static Map<AddressSpace, Tcb[]> tcbMap = new HashMap<>();
 	/** PRB */
 	private static final int RBFTPRB = 0;
 	private static final int FastPathPCLow = 0x1307;
@@ -72,12 +73,12 @@ public class Tcb {
 			return null;
 		}
 		AddressSpaceImageInputStream rootInputStream = space.getRootAddressSpace().getImageInputStream();
-		Tcb[] tcbs = (Tcb[])tcbMap.get(space);
+		Tcb[] tcbs = tcbMap.get(space);
 		if (tcbs != null) {
 			return tcbs;
 		}
 		log.fine("creating Tcb array for asid " + space);
-		Vector v = new Vector();
+		Vector<Tcb> v = new Vector<>();
 		try {
 			/*
 			 * We go from the PSA to the ASCB and then the ASXB which contains pointers
@@ -108,7 +109,7 @@ public class Tcb {
 			return null;
 		}
 		/* Add the array of TCBs to the map */
-		tcbs = (Tcb[])v.toArray(new Tcb[0]);
+		tcbs = v.toArray(new Tcb[0]);
 		tcbMap.put(space, tcbs);
 
 		return tcbs;

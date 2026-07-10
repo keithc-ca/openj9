@@ -142,7 +142,7 @@ public class SlidingImageInputStream extends ImageInputStreamImpl {
 			bytesAvailable = 0;
 			stream.seek(markFilePos - resetCount);		//reset underlying stream position
 		} else {
-			bufferPos -= resetCount;					//reset within the buffer
+			bufferPos -= (int) resetCount; // reset within the buffer
 		}
 	}
 
@@ -166,7 +166,5 @@ public class SlidingImageInputStream extends ImageInputStreamImpl {
 	public long getStreamPosition() throws IOException {
 		return bytesRead;
 	}
-	
-	
-	
+
 }

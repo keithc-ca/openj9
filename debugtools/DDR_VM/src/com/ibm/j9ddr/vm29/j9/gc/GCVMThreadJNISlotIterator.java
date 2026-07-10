@@ -35,7 +35,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9PoolPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9VMThreadPointer;
 
-public class GCVMThreadJNISlotIterator extends GCIterator
+public class GCVMThreadJNISlotIterator extends GCIterator<J9ObjectPointer>
 {
 	protected J9JNIReferenceFramePointer jniFrame;
 	protected Iterator<PointerPointer> poolIterator;
@@ -50,7 +50,8 @@ public class GCVMThreadJNISlotIterator extends GCIterator
 	{
 		return new GCVMThreadJNISlotIterator(vmThread);
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		if(jniFrame.isNull()) {
@@ -90,6 +91,7 @@ public class GCVMThreadJNISlotIterator extends GCIterator
 		}
 	}
 
+	@Override
 	public J9ObjectPointer next()
 	{
 		if(hasNext()) {
@@ -104,7 +106,8 @@ public class GCVMThreadJNISlotIterator extends GCIterator
 			throw new NoSuchElementException("There are no more items available through this iterator");
 		}
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		if(hasNext()) {

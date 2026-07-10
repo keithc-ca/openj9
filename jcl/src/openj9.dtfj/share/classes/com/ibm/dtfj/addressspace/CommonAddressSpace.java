@@ -98,7 +98,8 @@ public abstract class CommonAddressSpace implements IAbstractAddressSpace {
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.addressspace.IAbstractAddressSpace#getMemoryRanges()
 	 */
-	public Iterator getMemoryRanges()
+	@Override
+	public Iterator<MemoryRange> getMemoryRanges()
 	{
 		return Arrays.asList(_translations).iterator();
 	}
@@ -320,10 +321,10 @@ public abstract class CommonAddressSpace implements IAbstractAddressSpace {
 			bufferMax -= bufferMax % align;
 
 		long location = -1;
-		Iterator ranges = getMemoryRanges();
+		Iterator<MemoryRange> ranges = getMemoryRanges();
 
 		while ((-1 == location) && ranges.hasNext()) {
-			MemoryRange range = (MemoryRange) ranges.next();
+			MemoryRange range = ranges.next();
 			// Skip over previous asids
 			if (range.getAsid() < lastAsid) continue;
 			// Reset start location for new asid

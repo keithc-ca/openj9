@@ -35,8 +35,8 @@ import com.ibm.dtfj.javacore.builder.IBuilderData;
 
 public class JCJavaMonitor implements JavaMonitor{
 
-	private Vector fEnterWaiters;
-	private Vector fNotifyWaiters;
+	private Vector<ImagePointer> fEnterWaiters;
+	private Vector<ImagePointer> fNotifyWaiters;
 	private String fName;
 	private JavaObject fEncompassingObject;
 	private final ImagePointer fMonitorPointer;
@@ -56,8 +56,8 @@ public class JCJavaMonitor implements JavaMonitor{
 		fEncompassingObject = null;
 		fOwner = IBuilderData.NOT_AVAILABLE;
 
-		fEnterWaiters = new Vector();
-		fNotifyWaiters = new Vector();
+		fEnterWaiters = new Vector<>();
+		fNotifyWaiters = new Vector<>();
 
 		// Be sure to register this monitor with the runtime
 		fRuntime.addMonitor(this);
@@ -66,6 +66,7 @@ public class JCJavaMonitor implements JavaMonitor{
 	/**
 	 *
 	 */
+	@Override
 	public ImagePointer getID() {
 		return fMonitorPointer;
 	}
@@ -73,6 +74,7 @@ public class JCJavaMonitor implements JavaMonitor{
 	/**
 	 *
 	 */
+	@Override
 	public String getName() throws CorruptDataException {
 		if (fName == null) {
 			String address = Long.toHexString(fMonitorPointer.getAddress());
@@ -86,14 +88,16 @@ public class JCJavaMonitor implements JavaMonitor{
 	/**
 	 *
 	 */
-	public Iterator getEnterWaiters() {
+	@Override
+	public Iterator<?> getEnterWaiters() {
 		return getThreads(fEnterWaiters);
 	}
 
 	/**
 	 *
 	 */
-	public Iterator getNotifyWaiters() {
+	@Override
+	public Iterator<?> getNotifyWaiters() {
 		return getThreads(fNotifyWaiters);
 	}
 
@@ -102,11 +106,9 @@ public class JCJavaMonitor implements JavaMonitor{
 	 * @param threadIDs
 	 *
 	 */
-	private Iterator getThreads(Vector threadIDs) {
-		Vector threads = new Vector();
-		Iterator it = threadIDs.iterator();
-		while(it.hasNext()) {
-			ImagePointer pointer = (ImagePointer) it.next();
+	private Iterator<?> getThreads(Vector<ImagePointer> threadIDs) {
+		Vector<Object> threads = new Vector<>();
+		for (ImagePointer pointer : threadIDs) {
 			JCJavaThread waitingThread = fRuntime.findJavaThread(pointer.getAddress());
 			if (waitingThread != null) {
 				threads.add(waitingThread);
@@ -120,6 +122,7 @@ public class JCJavaMonitor implements JavaMonitor{
 	/**
 	 *
 	 */
+	@Override
 	public JavaObject getObject() {
 		return fEncompassingObject;
 	}
@@ -127,6 +130,7 @@ public class JCJavaMonitor implements JavaMonitor{
 	/**
 	 *
 	 */
+	@Override
 	public JavaThread getOwner() throws CorruptDataException {
 		if (fOwner != IBuilderData.NOT_AVAILABLE) {
 			if (fOwner < 0x10000 && fEncompassingObject != null) {

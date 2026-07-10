@@ -41,7 +41,7 @@ import com.ibm.dtfj.image.MemoryAccessException;
  */
 public class ImageAddressSpace implements com.ibm.dtfj.image.ImageAddressSpace
 {
-	private Vector _processes = new Vector();
+	private Vector<ImageProcess> _processes = new Vector<>();
 	private IAbstractAddressSpace _shadow;
 	private int _asid = 0;	// This is used for z/OS multi-spatial support
 
@@ -60,13 +60,14 @@ public class ImageAddressSpace implements com.ibm.dtfj.image.ImageAddressSpace
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageAddressSpace#getCurrentProcess()
 	 */
+	@Override
 	public ImageProcess getCurrentProcess()
 	{
 		ImageProcess currentProc = null;
 
 		if (_processes.size() > 0) {
 			//TODO: sniff this from the core
-			currentProc = (ImageProcess) _processes.elementAt(0);
+			currentProc = _processes.elementAt(0);
 		}
 		return currentProc;
 	}
@@ -74,7 +75,8 @@ public class ImageAddressSpace implements com.ibm.dtfj.image.ImageAddressSpace
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageAddressSpace#getProcesses()
 	 */
-	public Iterator getProcesses()
+	@Override
+	public Iterator<?> getProcesses()
 	{
 		return _processes.iterator();
 	}
@@ -82,6 +84,7 @@ public class ImageAddressSpace implements com.ibm.dtfj.image.ImageAddressSpace
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageAddressSpace#getPointer(long)
 	 */
+	@Override
 	public ImagePointer getPointer(long address)
 	{
 		return new com.ibm.dtfj.image.j9.ImagePointer(this, address);
@@ -138,13 +141,14 @@ public class ImageAddressSpace implements com.ibm.dtfj.image.ImageAddressSpace
 		}
 	}
 
-	public Iterator getImageSections()
+	@Override
+	public Iterator<ImageSection> getImageSections()
 	{
-		Iterator rangeWalker = _shadow.getMemoryRanges();
-		Vector sections = new Vector();
+		Iterator<MemoryRange> rangeWalker = _shadow.getMemoryRanges();
+		Vector<ImageSection> sections = new Vector<>();
 
 		while (rangeWalker.hasNext()) {
-			MemoryRange range = (MemoryRange) rangeWalker.next();
+			MemoryRange range = rangeWalker.next();
 			if (range.getAsid() == _asid) {
 				long virtualAddress = range.getVirtualAddress();
 				RawImageSection section = new RawImageSection(getPointer(virtualAddress), range.getSize());
@@ -196,15 +200,18 @@ public class ImageAddressSpace implements com.ibm.dtfj.image.ImageAddressSpace
 	 * If available, show the ASID as toString.
 	 * Change this once getID() is available.
 	 */
+	@Override
 	public String toString() {
 		return _asid != 0 ? "0x"+Integer.toHexString(_asid) : super.toString();
 	}
 
+	@Override
 	public String getID() throws DataUnavailable, CorruptDataException {
 		return "0x" + Long.toHexString(_asid);
 	}
 
 	//currently returns no OS specific properties
+	@Override
 	public Properties getProperties() {
 		return new Properties();
 	}

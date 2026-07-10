@@ -43,8 +43,8 @@ public class JavaMethod implements com.ibm.dtfj.java.JavaMethod
 	private String _signature;
 	private int _modifiers;
 	private JavaClass _declaringClass;
-	private Vector _compiledSections = new Vector();
-	private Vector _bytecodeSections = new Vector();
+	private Vector<JitImageSection> _compiledSections = new Vector<>();
+	private Vector<BytecodeImageSection> _bytecodeSections = new Vector<>();
 
 	public JavaMethod(ImagePointer methodID, String name, String signature, int modifiers, JavaClass declaringClass)
 	{
@@ -64,7 +64,8 @@ public class JavaMethod implements com.ibm.dtfj.java.JavaMethod
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMethod#getBytecodeSections()
 	 */
-	public Iterator getBytecodeSections()
+	@Override
+	public Iterator<?> getBytecodeSections()
 	{
 		return _bytecodeSections.iterator();
 	}
@@ -72,7 +73,8 @@ public class JavaMethod implements com.ibm.dtfj.java.JavaMethod
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMethod#getCompiledSections()
 	 */
-	public Iterator getCompiledSections()
+	@Override
+	public Iterator<?> getCompiledSections()
 	{
 		return _compiledSections.iterator();
 	}
@@ -80,6 +82,7 @@ public class JavaMethod implements com.ibm.dtfj.java.JavaMethod
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMember#getModifiers()
 	 */
+	@Override
 	public int getModifiers() throws CorruptDataException
 	{
 		return _modifiers;
@@ -88,6 +91,7 @@ public class JavaMethod implements com.ibm.dtfj.java.JavaMethod
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMember#getDeclaringClass()
 	 */
+	@Override
 	public JavaClass getDeclaringClass() throws CorruptDataException,
 			DataUnavailable
 	{
@@ -97,6 +101,7 @@ public class JavaMethod implements com.ibm.dtfj.java.JavaMethod
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMember#getName()
 	 */
+	@Override
 	public String getName() throws CorruptDataException
 	{
 		return _methodName;
@@ -105,11 +110,13 @@ public class JavaMethod implements com.ibm.dtfj.java.JavaMethod
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaMember#getSignature()
 	 */
+	@Override
 	public String getSignature() throws CorruptDataException
 	{
 		return _signature;
 	}
 
+	@Override
 	public boolean equals(Object obj)
 	{
 		boolean isEqual = false;
@@ -121,6 +128,7 @@ public class JavaMethod implements com.ibm.dtfj.java.JavaMethod
 		return isEqual;
 	}
 
+	@Override
 	public int hashCode()
 	{
 		return _declaringClass.hashCode() ^ _methodID.hashCode();
@@ -137,6 +145,8 @@ public class JavaMethod implements com.ibm.dtfj.java.JavaMethod
 		JitImageSection jitSection = new JitImageSection(_methodID.getAddressSpace().getPointer(id), _methodID.getAddressSpace().getPointer(start), size);
 		_compiledSections.add(jitSection);
 	}
+
+	@Override
 	public String toString() {
 		try {
 			return getDeclaringClass().getName() + "." + getName() + getSignature();

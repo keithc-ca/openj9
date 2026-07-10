@@ -22,15 +22,8 @@
  */
 package com.ibm.dtfj.phd.parser;
 
-import java.io.IOException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.text.DateFormat;
 import java.util.Calendar;
-import java.util.HashMap;
 
 public abstract class Base {
 
@@ -38,7 +31,6 @@ public abstract class Base {
 	static boolean xml = false;
 	static boolean verbose = false;
 	static boolean debug = false;
-	static HashMap frozenObjects = new HashMap();
 
 	/**
 	 * Output a log message with time stamp. If xml flag is set, use xml formatting.
@@ -84,10 +76,6 @@ public abstract class Base {
 	public static void Assert(boolean condition) {
 		if (!condition)
 			throw new Error("assert failed!");
-	}
-
-	public static String hex(int i) {
-		return Integer.toHexString(i);
 	}
 
 	public static String hex(long i) {

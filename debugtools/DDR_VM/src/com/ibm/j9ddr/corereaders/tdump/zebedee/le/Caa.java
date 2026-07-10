@@ -113,7 +113,7 @@ public class Caa {
             return new Caa[0];
         }
         log.fine("found " + tcbs.length + " tcbs for address space " + space);
-        Vector v = new Vector();
+        Vector<Caa> v = new Vector<>();
         for (int i = 0; i < tcbs.length; i++) {
             ProgressMeter.set("getting caas", (i*100)/tcbs.length);
             try {
@@ -124,7 +124,7 @@ public class Caa {
             } catch (CaaNotFound e) {
             }
         }
-        return (Caa[])v.toArray(new Caa[0]);
+        return v.toArray(new Caa[0]);
     }
 
     /**

@@ -47,9 +47,7 @@ import com.ibm.j9ddr.corereaders.memory.Symbol;
 
 /**
  * File in ELF format.
- */
-
-/**
+ *
  * @author matthew
  */
 public abstract class ELFFileReader {

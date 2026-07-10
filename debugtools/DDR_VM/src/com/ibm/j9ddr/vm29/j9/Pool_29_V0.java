@@ -92,7 +92,7 @@ public class Pool_29_V0 <StructType extends DataType> extends Pool<StructType> i
 					PointerPointer ptr = PointerPointer.cast(nextItem);
 					nextItem = ptr.at(0);
 				}
-				nextStruct = (StructType)DataType.getStructure(structType, nextItem.getAddress());
+				nextStruct = DataType.getStructure(structType, nextItem.getAddress());
 			} catch (CorruptDataException e) {
 				raiseCorruptDataEvent("Error getting next pool item", e, false);		//may be able to recover from this
 			}

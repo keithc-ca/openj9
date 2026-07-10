@@ -54,9 +54,9 @@ public class DTFJJavaSystemMonitor implements JavaMonitor {
 		monitor = ptr;
 		log.fine(String.format("Created object monitor 0x%016x", ptr.getAddress()));
 	}
-	
-	@SuppressWarnings("rawtypes")
-	public Iterator getEnterWaiters() {
+
+	@Override
+	public Iterator<?> getEnterWaiters() {
 		try {
 			return scanThreads(J9VMTHREAD_STATE_BLOCKED);
 		} catch (Throwable t) {
@@ -65,10 +65,12 @@ public class DTFJJavaSystemMonitor implements JavaMonitor {
 		}
 	}
 
+	@Override
 	public ImagePointer getID() {
 		return DTFJContext.getImagePointer(monitor.getAddress());
 	}
 
+	@Override
 	public String getName() throws CorruptDataException {
 		if(name == null) {
 			try {
@@ -82,8 +84,8 @@ public class DTFJJavaSystemMonitor implements JavaMonitor {
 		return name;
 	}
 
-	@SuppressWarnings("rawtypes")
-	public Iterator getNotifyWaiters() {
+	@Override
+	public Iterator<?> getNotifyWaiters() {
 		try {
 			return scanThreads(J9VMTHREAD_STATE_WAITING);
 		} catch (Throwable t) {
@@ -92,6 +94,7 @@ public class DTFJJavaSystemMonitor implements JavaMonitor {
 		}
 	}
 
+	@Override
 	public JavaObject getObject() {
 		try {
 			J9ObjectPointer object = J9ObjectPointer.cast(monitor.userData());
@@ -108,6 +111,7 @@ public class DTFJJavaSystemMonitor implements JavaMonitor {
 		return null;
 	}
 
+	@Override
 	public JavaThread getOwner() throws CorruptDataException {
 		JavaThread javaThread = null;
 		try {
@@ -127,7 +131,7 @@ public class DTFJJavaSystemMonitor implements JavaMonitor {
 
 	private Iterator<DTFJJavaThread> scanThreads(long threadState) throws com.ibm.j9ddr.CorruptDataException {
 		List<ThreadInfo> threadInfoCache = DTFJContext.getThreadInfoCache();
-		ArrayList<DTFJJavaThread> threads = new ArrayList<DTFJJavaThread>();
+		List<DTFJJavaThread> threads = new ArrayList<>();
 		for(int i = 0; i < threadInfoCache.size(); i++) {
 			try {
 				ThreadInfo info = threadInfoCache.get(i);
@@ -144,7 +148,7 @@ public class DTFJJavaSystemMonitor implements JavaMonitor {
 		}
 		return threads.iterator();
 	}
-	
+
 	@Override
 	public boolean equals(Object obj) {
 		if((obj == null) || !(obj instanceof DTFJJavaSystemMonitor)) {
@@ -158,7 +162,5 @@ public class DTFJJavaSystemMonitor implements JavaMonitor {
 	public int hashCode() {
 		return monitor.hashCode();
 	}
-	
-	
-	
+
 }

@@ -31,8 +31,7 @@ import static com.ibm.j9ddr.vm29.events.EventManager.raiseCorruptDataEvent;
 import com.ibm.j9ddr.vm29.pointer.generated.J9MemorySegmentListPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9MemorySegmentPointer;
 
-@SuppressWarnings("unchecked")
-public class MemorySegmentIterator implements Iterator {
+public class MemorySegmentIterator implements Iterator<J9MemorySegmentPointer> {
 	public static final int MEMORY_TYPE_RAM_CLASS = 0x10000;
 	public static final int MEMORY_ALL_TYPES = 0xFFFFFFFF;
 	protected J9MemorySegmentPointer segment;		//the segment which will be returned when next() is called
@@ -61,7 +60,8 @@ public class MemorySegmentIterator implements Iterator {
 			raiseCorruptDataEvent("Could not locate the first segment", e, true);
 		}
 	}
-	
+
+	@Override
 	public boolean hasNext() {
 		if(hasNextSegment) return true;		//the next segment has been located and ready for retrieval
 		if(EOS) {
@@ -97,7 +97,8 @@ public class MemorySegmentIterator implements Iterator {
 		}
 	}
 
-	public Object next() {
+	@Override
+	public J9MemorySegmentPointer next() {
 		if(hasNext()) {
 			hasNextSegment = false;		//indicate that we've given out the segment
 			return segment;
@@ -106,6 +107,7 @@ public class MemorySegmentIterator implements Iterator {
 		}
 	}
 
+	@Override
 	public void remove() {
 		throw new UnsupportedOperationException("This iterator is read only");
 	}

@@ -26,10 +26,7 @@ import com.ibm.dtfj.runtime.ManagedRuntime;
 
 public class NativeRuntime implements ManagedRuntime {
 
-	public String getFullVersion() throws CorruptDataException {
-		return getVersion();
-	}
-
+	@Override
 	public String getVersion() throws CorruptDataException {
 		return "Native runtime";
 	}

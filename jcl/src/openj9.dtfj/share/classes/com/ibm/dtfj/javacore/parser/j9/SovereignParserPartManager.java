@@ -22,17 +22,17 @@
  */
 package com.ibm.dtfj.javacore.parser.j9;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 public class SovereignParserPartManager {
 
 	private static SovereignParserPartManager fManager;
-	private HashMap fSovParts;
+	private Map<String, SovereignSectionParserPart> fSovParts;
 
 	public SovereignParserPartManager() {
-		fSovParts = new HashMap();
+		fSovParts = new HashMap<>();
 	}
 
 	/**
@@ -50,13 +50,12 @@ public class SovereignParserPartManager {
 	 *
 	 * @param partsList
 	 */
-	public void loadSovParts(ArrayList partsList) {
+	public void loadSovParts(List<SovereignSectionParserPart> partsList) {
 		if (partsList == null) {
 			return;
 		}
 		fSovParts.clear();
-		for (Iterator it = partsList.iterator(); it.hasNext();) {
-			SovereignSectionParserPart part = (SovereignSectionParserPart) it.next();
+		for (SovereignSectionParserPart part : partsList) {
 			if (part != null) {
 				fSovParts.put(part.getSectionName(), part);
 			}
@@ -69,7 +68,7 @@ public class SovereignParserPartManager {
 	 *
 	 */
 	public SovereignSectionParserPart getSovPart(String sectionName) {
-		return (SovereignSectionParserPart)fSovParts.get(sectionName);
+		return fSovParts.get(sectionName);
 	}
 
 }

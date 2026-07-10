@@ -77,7 +77,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	protected static final String ARRAY_PREFIX_SIGNATURE = "[";
 	protected static final String OBJECT_PREFIX_SIGNATURE = "L";
 
-	private Vector _references = null;
+	private Vector<Object> _references;
 
 	JavaObject(JavaRuntime vm, ImagePointer address, JavaHeap containingHeap, long arrayletSpineSize, long arrayletLeafSize, boolean isArraylet, int objectAlignment) throws CorruptDataException
 	{
@@ -124,6 +124,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaObject#getJavaClass()
 	 */
+	@Override
 	public JavaClass getJavaClass() throws CorruptDataException
 	{
 		if (0 != _basePointer.getAddress()) {
@@ -156,6 +157,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaObject#isArray()
 	 */
+	@Override
 	public boolean isArray() throws CorruptDataException
 	{
 		return getJavaClass().isArray();
@@ -164,6 +166,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaObject#getArraySize()
 	 */
+	@Override
 	public int getArraySize() throws CorruptDataException
 	{
 		JavaClass isa = getJavaClass();
@@ -202,6 +205,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaObject#arraycopy(int, java.lang.Object, int, int)
 	 */
+	@Override
 	public void arraycopy(int srcStart, Object dst, int dstStart, int length)
 			throws CorruptDataException, MemoryAccessException
 	{
@@ -233,7 +237,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 			}
 
 			if (srcStart + length > elementCount) {
-				throw new ArrayIndexOutOfBoundsException("source array index out of range: " + (int)(srcStart + length));
+				throw new ArrayIndexOutOfBoundsException("source array index out of range: " + (srcStart + length));
 			}
 
 			// Note that type name is dependent on implementation in JavaArrayClass.getName()
@@ -243,7 +247,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 					byte target[] = (byte[])dst;
 
 					if (dstStart + length > target.length) {
-						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (int)(dstStart + length));
+						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (dstStart + length));
 					}
 
 					for (int x = 0; x < length; x++) {
@@ -260,7 +264,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 					boolean target[] = (boolean[])dst;
 
 					if (dstStart + length > target.length) {
-						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (int)(dstStart + length));
+						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (dstStart + length));
 					}
 
 					for (int x = 0; x < length; x++) {
@@ -277,7 +281,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 					char target[] = (char[])dst;
 
 					if (dstStart + length > target.length) {
-						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (int)(dstStart + length));
+						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (dstStart + length));
 					}
 
 					for (int x = 0; x < length; x++) {
@@ -294,7 +298,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 					short target[] = (short[])dst;
 
 					if (dstStart + length > target.length) {
-						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (int)(dstStart + length));
+						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (dstStart + length));
 					}
 
 					for (int x = 0; x < length; x++) {
@@ -311,7 +315,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 					int target[] = (int[])dst;
 
 					if (dstStart + length > target.length) {
-						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (int)(dstStart + length));
+						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (dstStart + length));
 					}
 
 					for (int x = 0; x < length; x++) {
@@ -328,7 +332,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 					long target[] = (long[])dst;
 
 					if (dstStart + length > target.length) {
-						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (int)(dstStart + length));
+						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (dstStart + length));
 					}
 
 					for (int x = 0; x < length; x++) {
@@ -345,7 +349,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 					float target[] = (float[])dst;
 
 					if (dstStart + length > target.length) {
-						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (int)(dstStart + length));
+						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (dstStart + length));
 					}
 
 					for (int x = 0; x < length; x++) {
@@ -362,7 +366,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 					double target[] = (double[])dst;
 
 					if (dstStart + length > target.length) {
-						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (int)(dstStart + length));
+						throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (dstStart + length));
 					}
 
 					for (int x = 0; x < length; x++) {
@@ -382,7 +386,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 				Object target[] = (Object[])dst;
 
 				if (dstStart + length > target.length) {
-					throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (int)(dstStart + length));
+					throw new ArrayIndexOutOfBoundsException("destination array index out of range: " + (dstStart + length));
 				}
 
 				// gather all the JavaObject refs into an intermediate array, throwing exceptions if we encounter an error
@@ -457,10 +461,11 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaObject#getSize()
 	 */
+	@Override
 	public long getSize() throws CorruptDataException
 	{
 		//this is the total number of bytes consumed by the object so we will total up the section sizes
-		Iterator sections = getSections();
+		Iterator<?> sections = getSections();
 		long size = 0;
 
 		// Produce a fix for a class cast in getSize.
@@ -485,6 +490,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaObject#getHashcode()
 	 */
+	@Override
 	public long getHashcode() throws DataUnavailable, CorruptDataException
 	{
 		//currently, we know no difference between these two kinds of hashcodes (may be revisited in the future)
@@ -494,6 +500,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaObject#getPersistentHashcode()
 	 */
+	@Override
 	public long getPersistentHashcode() throws DataUnavailable,
 			CorruptDataException
 	{
@@ -518,6 +525,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaObject#getID()
 	 */
+	@Override
 	public ImagePointer getID()
 	{
 		return _basePointer;
@@ -526,10 +534,11 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaObject#getSections()
 	 */
-	public Iterator getSections()
+	@Override
+	public Iterator<?> getSections()
 	{
 		//(not initialized so that code paths will be compiler-validated)
-		List sections;
+		List<Object> sections;
 
 		//arraylets have a more complicated scheme so handle them differently
 		if (isArraylet()) {
@@ -545,7 +554,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 				{
 					int instanceSize = arrayForm.getInstanceSize(this);
 					//the instance size will include the header and the actual data inside the array so separate them
-					long contentDataSize = (long)(instanceSize - objectHeaderSize);
+					long contentDataSize = instanceSize - objectHeaderSize;
 					//get the number of leaves, excluding the tail leaf (the tail leaf is the final leaf which points back into the spine).  There won't be one if there is isn't a remainder in this calculation since it would be empty
 					int fullSizeLeaves = (int)(contentDataSize / _arrayletLeafSize);
 					//find out how big the tail leaf would be
@@ -580,7 +589,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 							}
 						}
 					}
-					Vector externalSections = null;
+					Vector<JavaObjectImageSection> externalSections = null;
 					for (int i = 0; i < totalLeafCount; i++) {
 						ImagePointer leafPointer = _basePointer.getPointerAt(objectHeaderSize + (i * bytesPerPointer));
 						if (leafPointer.getAddress() == nextExpectedInteriorLeafAddress) {
@@ -595,7 +604,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 						} else {
 							//this pointer is exterior so make it its own section
 							if (null == externalSections) {
-								externalSections = new Vector();
+								externalSections = new Vector<>();
 							}
 							externalSections.add(new JavaObjectImageSection(leafPointer, _arrayletLeafSize));
 						}
@@ -612,7 +621,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 						//create the section list, with the spine first (other parts of our implementation use the knowledge that the spine is first to reduce logic duplication)
 						sections = Collections.singletonList(spineSection);
 					} else {
-						sections = new Vector();
+						sections = new Vector<>();
 						sections.add(spineSection);
 						sections.addAll(externalSections);
 					}
@@ -645,6 +654,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 		return sections.iterator();
 	}
 
+	@Override
 	public boolean equals(Object obj)
 	{
 		boolean isEqual = false;
@@ -656,18 +666,20 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 		return isEqual;
 	}
 
+	@Override
 	public int hashCode()
 	{
 		return _javaVM.hashCode() ^ _basePointer.hashCode();
 	}
 
-	class JavaObjectImageSection extends com.ibm.dtfj.image.j9.ImageSection
+	static class JavaObjectImageSection extends com.ibm.dtfj.image.j9.ImageSection
 	{
 		public JavaObjectImageSection(ImagePointer base, long size)
 		{
 			super(base, size);
 		}
 
+		@Override
 		public String getName()
 		{
 			return "In-memory Object section at 0x" + Long.toHexString(getBaseAddress().getAddress()) + " (0x" + Long.toHexString(getSize()) + " bytes)";
@@ -698,11 +710,11 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaObject#getReferences()
 	 */
-	public Iterator getReferences()
+	@Override
+	public Iterator<?> getReferences()
 	{
 		if (null == _references) {
-
-			_references = new Vector();
+			_references = new Vector<>();
 			try {
 				// find this object's class
 				JavaClass jClass = getJavaClass();
@@ -714,7 +726,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 
 				// walk through the super classes to this object.
 				while (null != jClass) {
-					List refs = null;
+					List<?> refs = null;
 					if (jClass instanceof JavaArrayClass) {
 						JavaArrayClass arrayClass = (JavaArrayClass)jClass;
 						refs = getArrayReferences(arrayClass);
@@ -735,7 +747,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 			// Now add association-specific references
 			if (isClassLoader()) {
 				JavaClassLoader associatedClassLoader = getAssociatedClassLoader();
-				for (Iterator classes = associatedClassLoader.getDefinedClasses(); classes.hasNext();) {
+				for (Iterator<?> classes = associatedClassLoader.getDefinedClasses(); classes.hasNext();) {
 					Object potentialClass = classes.next();
 					if (potentialClass instanceof JavaClass) {
 						JavaClass currentClass = (JavaClass)potentialClass;
@@ -791,12 +803,12 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 		return (_associatedObjectFlags & CLASSLOADER_FLAG) > 0;
 	}
 
-	private List getFieldReferences(com.ibm.dtfj.java.j9.JavaClass jClass)
+	private List<JavaReference> getFieldReferences(com.ibm.dtfj.java.j9.JavaClass jClass)
 	{
-		List fieldRefs = new ArrayList();
+		List<JavaReference> fieldRefs = new ArrayList<>();
 
 		// handle an Object
-		Iterator fieldIt = jClass.getDeclaredFields();
+		Iterator<?> fieldIt = jClass.getDeclaredFields();
 
 		while (fieldIt.hasNext()) {
 			// iterate through all the instance fields.
@@ -856,9 +868,8 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 		return jRef;
 	}
 
-	private List getArrayReferences(JavaArrayClass arrayClass) {
-
-		List references = new ArrayList();
+	private List<?> getArrayReferences(JavaArrayClass arrayClass) {
+		List<Object> references = new ArrayList<>();
 		try {
 			String type = arrayClass.getComponentType().getName();
 
@@ -917,6 +928,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 		return references;
 	}
 
+	@Override
 	public com.ibm.dtfj.java.JavaHeap getHeap() throws DataUnavailable {
 		if (null == _containingHeap) {
 			throw new DataUnavailable("Containing heap not available for this object.");
@@ -985,6 +997,7 @@ public class JavaObject implements com.ibm.dtfj.java.JavaObject
 		_associatedClassLoader = associatedClassLoader;
 	}
 
+	@Override
 	public String toString() {
 		try {
 			String className = getJavaClass().getName();

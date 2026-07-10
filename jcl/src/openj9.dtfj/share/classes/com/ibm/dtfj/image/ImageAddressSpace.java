@@ -50,7 +50,7 @@ public interface ImageAddressSpace {
 	 * @see ImageProcess
 	 * @see CorruptData
 	 */
-	public Iterator getProcesses();
+	public Iterator<?> getProcesses();
 
 	/**
 	 * Return the byte order of this address space.
@@ -72,7 +72,7 @@ public interface ImageAddressSpace {
 	 * @return An iterator of all the ImageSections in the address.  Their union will be the total process address space.
 	 * @see ImageSection
 	 */
-	public Iterator getImageSections();
+	public Iterator<?> getImageSections();
 
 	/**
 	 * Gets the system wide identifier for the address space

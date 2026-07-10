@@ -151,23 +151,26 @@ public class StackRoots
 		return stackRoots._allStackRoots;
 	}
 	
-	public static GCIterator stackRootIterator() throws CorruptDataException
+	public static GCIterator<J9ObjectPointer> stackRootIterator() throws CorruptDataException
 	{
 		final StackRoots stackRootSet = StackRoots.from();
 		final Iterator<J9ObjectPointer> rootSetIterator = stackRootSet._allStackRoots.iterator();
 		final Iterator<VoidPointer> rootSetAddressIterator = stackRootSet._allAddresses.iterator();
 		
-		return new GCIterator() {
+		return new GCIterator<J9ObjectPointer>() {
+			@Override
 			public boolean hasNext() {
 				return rootSetIterator.hasNext();
 			}
 
+			@Override
 			public VoidPointer nextAddress() {
 				rootSetIterator.next();
 				return rootSetAddressIterator.next();
 			}
 
-			public Object next() {
+			@Override
+			public J9ObjectPointer next() {
 				rootSetAddressIterator.next();
 				return rootSetIterator.next(); 
 			}

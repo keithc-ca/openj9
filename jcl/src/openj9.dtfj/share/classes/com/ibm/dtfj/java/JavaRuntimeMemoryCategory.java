@@ -86,7 +86,7 @@ public interface JavaRuntimeMemoryCategory
 	 *
 	 * @return Iterator of JavaRuntimeMemoryCategory objects that are immediate children of this category.
 	 */
-	public Iterator getChildren() throws CorruptDataException;
+	public Iterator<?> getChildren() throws CorruptDataException;
 
 	/**
 	 * Gets iterator of memory sections allocated against this category.
@@ -95,5 +95,5 @@ public interface JavaRuntimeMemoryCategory
 	 * @see JavaRuntimeMemorySection CorruptData
 	 * @return Iterator of memory sections
 	 */
-	public Iterator getMemorySections(boolean includeFreed) throws CorruptDataException, DataUnavailable;
+	public Iterator<?> getMemorySections(boolean includeFreed) throws CorruptDataException, DataUnavailable;
 }

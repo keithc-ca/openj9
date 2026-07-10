@@ -63,7 +63,7 @@ class PHDJavaHeap implements JavaHeap {
 	private final int STEP = (int)Math.min(10000000, Runtime.getRuntime().maxMemory()/32);
 
 	/** A cache of all the chunks */
-	private final LinkedHashMap<Integer,CacheHeapSegment>cache = new LinkedHashMap<Integer,CacheHeapSegment>();
+	private final Map<Integer, CacheHeapSegment> cache = new LinkedHashMap<>();
 	/** Cache the PHD readers to allow resumption of reads */
 	private final CachedReader readerCache;
 	/** Flag used to show that all the CacheHeapSegments are set up */
@@ -94,6 +94,7 @@ class PHDJavaHeap implements JavaHeap {
 		this.stream = null;
 	}
 
+	@Override
 	public String getName() {
 		return "Java heap";
 	}
@@ -110,6 +111,8 @@ class PHDJavaHeap implements JavaHeap {
 				int prev;
 				// Initial chunk
 				Iterator<JavaObject> it = getObjectsViaCache(STEP, count, false).values().iterator();
+
+				@Override
 				public boolean hasNext() {
 					if (it == null) {
 						return false;
@@ -134,18 +137,20 @@ class PHDJavaHeap implements JavaHeap {
 					}
 				}
 
+				@Override
 				public JavaObject next() {
 					if (!hasNext()) throw new NoSuchElementException();
 					return it.next();
 				}
 
+				@Override
 				public void remove() {
 					throw new UnsupportedOperationException();
 				}
 
 			};
 		} catch (IOException e) {
-			return new ArrayList<JavaObject>().iterator();
+			return Collections.emptyIterator();
 		}
 	}
 
@@ -184,14 +189,17 @@ class PHDJavaHeap implements JavaHeap {
 			val = v;
 		}
 
+		@Override
 		long value(PHDJavaHeap jh) {
 			return jh.runtime.expandAddress(val);
 		}
 
+		@Override
 		public int hashCode() {
 			return val;
 		}
 
+		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			return o instanceof IntAddressKey && val == ((IntAddressKey)o).val ;
@@ -205,14 +213,17 @@ class PHDJavaHeap implements JavaHeap {
 			val = v;
 		}
 
+		@Override
 		long value(PHDJavaHeap jh) {
 			return val;
 		}
 
+		@Override
 		public int hashCode() {
 			return (int)val^(int)(val>>>32);
 		}
 
+		@Override
 		public boolean equals(Object o) {
 			if (this == o) return true;
 			return o instanceof LongAddressKey && val == ((LongAddressKey)o).val;
@@ -234,7 +245,7 @@ class PHDJavaHeap implements JavaHeap {
 		/** The number in the heap of the next object after the objects in the chunk. Used to find the next chunk */
 		final int nextIndex;
 		/** The actual JavaObjects, held via a SoftReference to avoid OutOfMemoryErrors */
-		SoftReference<Map<AddressKey,JavaObject>> objects;
+		SoftReference<Map<AddressKey, JavaObject>> objects;
 		/** Whether the JavaObjects have references available */
 		boolean withRefs;
 		/** Smallest address - used to find if a JavaObject at a particular address might be in this chunk. */
@@ -250,7 +261,7 @@ class PHDJavaHeap implements JavaHeap {
 		 * @param withRefs
 		 */
 		CacheHeapSegment(int index, int size, int nextIndex, Map<AddressKey,JavaObject> objs, boolean withRefs) {
-			objects = new SoftReference<Map<AddressKey,JavaObject>>(objs);
+			objects = new SoftReference<>(objs);
 			// Find the maximum and minimum addresses
 			long max = Long.MIN_VALUE;
 			long min = Long.MAX_VALUE;
@@ -289,7 +300,7 @@ class PHDJavaHeap implements JavaHeap {
 				where = 0;
 			}
 		}
-		List<ReaderPos> readers = new ArrayList<ReaderPos>();
+		List<ReaderPos> readers = new ArrayList<>();
 		CachedReader(File f, PHDImage parentImage) {
 			file = f;
 			this.parentImage = parentImage;
@@ -336,7 +347,7 @@ class PHDJavaHeap implements JavaHeap {
 	 * @return
 	 * @throws IOException
 	 */
-	Map<AddressKey,JavaObject> getObjectsViaCache(final int size, final int next[], boolean withRefs) throws IOException {
+	Map<AddressKey, JavaObject> getObjectsViaCache(final int size, final int next[], boolean withRefs) throws IOException {
 		int index = next[0];
 		CacheHeapSegment seg = cache.get(next[0]);
 		SoftReference<Map<AddressKey,JavaObject>> sr;
@@ -351,7 +362,7 @@ class PHDJavaHeap implements JavaHeap {
 				cache.put(index, seg);
 			} else {
 				// Just replace the soft reference
-				sr = new SoftReference<Map<AddressKey,JavaObject>>(objects);
+				sr = new SoftReference<>(objects);
 				seg.objects = sr;
 			}
 		} else {
@@ -388,7 +399,7 @@ class PHDJavaHeap implements JavaHeap {
 	 */
 	Map<AddressKey,JavaObject> getObjects(final int maxsize, final int next[], final boolean withRefs) throws IOException {
 		if (LOG) System.err.println("GetObjects "+next[0]+" "+withRefs);
-		final Map<AddressKey,JavaObject> objects = new LinkedHashMap<AddressKey,JavaObject>();
+		final Map<AddressKey, JavaObject> objects = new LinkedHashMap<>();
 		final PHDJavaHeap heap = this;
 		// Size of a reference
 		final int REFSCALE = 1;
@@ -403,10 +414,12 @@ class PHDJavaHeap implements JavaHeap {
 			more = rdr.reader.parse(new PortableHeapDumpListener() {
 				int total;
 
+				@Override
 				public void classDump(long address, long superAddress, String name, int size,
 						int flags, int hashCode, LongEnumeration refs) throws Exception {
 				}
 
+				@Override
 				public void objectArrayDump(long address, long classAddress, int flags,
 						int hashCode, LongEnumeration refs, int length, long instanceSize) throws Exception {
 					current[0] = address;
@@ -429,6 +442,7 @@ class PHDJavaHeap implements JavaHeap {
 					current[0] = 0;
 				}
 
+				@Override
 				public void objectDump(long address, long classAddress, int flags, int hashCode,
 						LongEnumeration refs, long instanceSize) throws Exception {
 					current[0] = address;
@@ -450,6 +464,7 @@ class PHDJavaHeap implements JavaHeap {
 					current[0] = 0;
 				}
 
+				@Override
 				public void primitiveArrayDump(long address, int type, int length, int flags,
 						int hashCode, long instanceSize) throws Exception {
 					current[0] = address;
@@ -486,8 +501,9 @@ class PHDJavaHeap implements JavaHeap {
 		return objects;
 	}
 
-	public Iterator<ImageSection> getSections() {
-		List<ImageSection> c = new ArrayList<ImageSection>();
+	@Override
+	public Iterator<?> getSections() {
+		List<ImageSection> c = new ArrayList<>();
 		// This is the start of the last object
 		long last = runtime.maxAddress;
 		if (runtime.minAddress <= runtime.maxAddress) {
@@ -567,7 +583,7 @@ class PHDJavaHeap implements JavaHeap {
 					int next[] = new int[]{seg.index};
 					map = getObjects(seg.maxSize, next, withRefs);
 					seg.withRefs = withRefs;
-					seg.objects = sr = new SoftReference<Map<AddressKey,JavaObject>>(map);
+					seg.objects = sr = new SoftReference<>(map);
 				}
 			}
 			if (map != null) {
@@ -648,7 +664,8 @@ class PHDJavaHeap implements JavaHeap {
 	 * Return all the objects in the heap
 	 * This uses a modified version of the HeapdumpReader which allows abort and resume.
 	 */
-	public Iterator<JavaObject> getObjects() {
+	@Override
+	public Iterator<?> getObjects() {
 		final PHDJavaHeap heap = this;
 		try {
 			return new Iterator<JavaObject>() {
@@ -669,10 +686,12 @@ class PHDJavaHeap implements JavaHeap {
 				int count = 0;
 				PortableHeapDumpListener listen = new PortableHeapDumpListener() {
 
+					@Override
 					public void classDump(long address, long superAddress, String name, int size,
 							int flags, int hashCode, LongEnumeration refs) throws Exception {
 					}
 
+					@Override
 					public void objectArrayDump(long address, long classAddress, int flags,
 							int hashCode, LongEnumeration refs, int length, long instanceSize) throws Exception {
 						current[0] = address;
@@ -688,6 +707,7 @@ class PHDJavaHeap implements JavaHeap {
 						reader.exitParse();
 					}
 
+					@Override
 					public void objectDump(long address, long classAddress, int flags, int hashCode,
 							LongEnumeration refs, long instanceSize) throws Exception {
 						current[0] = address;
@@ -700,6 +720,7 @@ class PHDJavaHeap implements JavaHeap {
 						reader.exitParse();
 					}
 
+					@Override
 					public void primitiveArrayDump(long address, int type, int length, int flags,
 							int hashCode, long instanceSize) throws Exception {
 						current[0] = address;
@@ -711,11 +732,13 @@ class PHDJavaHeap implements JavaHeap {
 
 				};
 
+				@Override
 				public boolean hasNext() {
 					if (jo == null) getNext();
 					return jo != null;
 				}
 
+				@Override
 				public JavaObject next() {
 					if (!hasNext()) throw new NoSuchElementException();
 					JavaObject ret = jo;
@@ -754,10 +777,13 @@ class PHDJavaHeap implements JavaHeap {
 					}
 				}
 
+				@Override
 				public void remove() {
 					throw new UnsupportedOperationException();
 				}
 
+				@Override
+				@SuppressWarnings("removal")
 				protected void finalize() throws Throwable {
 					// shouldn't normally be necessary as the reader is closed in getNext() in most cases,
 					// but the client doesn't have to run the iterator to the end, so we're accounting for that here

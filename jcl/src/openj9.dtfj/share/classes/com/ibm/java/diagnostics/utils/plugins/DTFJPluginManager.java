@@ -52,7 +52,7 @@ public class DTFJPluginManager {
 					throw new IllegalArgumentException("The class " + className + " specified by the system property "
 							+ PluginConstants.PLUGIN_LISTENER_FACTORY + " does not implement " + PluginListenerFactory.class.getName());
 				}
-				PluginListenerFactory factory = (PluginListenerFactory) clazz.newInstance();
+				PluginListenerFactory factory = (PluginListenerFactory) clazz.getConstructor().newInstance();
 				Set<ClassListener> listeners = factory.getListeners();
 				if (listeners != null) {
 					for (ClassListener listener : listeners) {

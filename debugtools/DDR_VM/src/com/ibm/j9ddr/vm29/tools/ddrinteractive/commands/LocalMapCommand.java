@@ -54,6 +54,7 @@ public class LocalMapCommand extends Command
 		addCommand("localmap", "<pc>", "calculate the local slot map for the specified PC");
 	}
 
+	@Override
 	public void run(String command, String[] args, Context context, PrintStream out) throws DDRInteractiveCommandException 
 	{
 		try{
@@ -113,7 +114,7 @@ public class LocalMapCommand extends Command
 							currentDescription--;
 							bitsRemaining = 32;
 						}
-						CommandUtils.dbgPrint(out, "%d", (descriptionLong & (1 << 32)) != 0 ? 1 : 0 );
+						CommandUtils.dbgPrint(out, "%d", (descriptionLong >> 32) & 1);
 						descriptionLong = descriptionLong << 1;
 						--bitsRemaining;
 						--localCount;

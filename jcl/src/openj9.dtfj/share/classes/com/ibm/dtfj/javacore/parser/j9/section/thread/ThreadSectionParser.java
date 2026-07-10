@@ -61,6 +61,7 @@ public class ThreadSectionParser extends SectionParser implements IThreadTypes{
 	 *
 	 * @throws ParserException
 	 */
+	@Override
 	protected void topLevelRule() throws ParserException {
 		fImageAddressSpaceBuilder = fImageBuilder.getCurrentAddressSpaceBuilder();
 		fImageProcessBuilder = fImageAddressSpaceBuilder.getCurrentImageProcessBuilder();
@@ -156,7 +157,7 @@ public class ThreadSectionParser extends SectionParser implements IThreadTypes{
 		IAttributeValueMap nativeResults = processTagLineOptional(T_3XMTHREADINFO1);
 
 		IAttributeValueMap nativeStack;
-		ArrayList nativeStacks = new ArrayList();
+		List<IAttributeValueMap> nativeStacks = new ArrayList<>();
 		while ((nativeStack = processTagLineOptional(T_3XMTHREADINFO2)) != null) {
 			nativeStacks.add(nativeStack);
 		}
@@ -192,7 +193,7 @@ public class ThreadSectionParser extends SectionParser implements IThreadTypes{
 	 * @return java thread
 	 * @throws ParserException if error handler decides to throw it due java thread or image thread error creation
 	 */
-	private JavaThread addThread(IAttributeValueMap javaThreadResults, IAttributeValueMap nativeResults, List nativeStacks, IAttributeValueMap blockerInfo, IAttributeValueMap cpuTimes, int currentFileLineNumber) throws ParserException {
+	private JavaThread addThread(IAttributeValueMap javaThreadResults, IAttributeValueMap nativeResults, List<IAttributeValueMap> nativeStacks, IAttributeValueMap blockerInfo, IAttributeValueMap cpuTimes, int currentFileLineNumber) throws ParserException {
 		long imageThreadID = (nativeResults != null) ? nativeResults.getLongValue(NATIVE_THREAD_ID) : javaThreadResults.getLongValue(NATIVE_THREAD_ID);
 		long tid = javaThreadResults.getLongValue(VM_THREAD_ID);
 		if (imageThreadID == IBuilderData.NOT_AVAILABLE) {
@@ -257,8 +258,7 @@ public class ThreadSectionParser extends SectionParser implements IThreadTypes{
 			handleErrorAtLineNumber(currentFileLineNumber, "Failed to add thread: " + threadName + " " + imageThreadID, e);
 		}
 
-		for (Iterator it = nativeStacks.iterator(); it.hasNext(); ) {
-			IAttributeValueMap stackInfo = (IAttributeValueMap)it.next();
+		for (IAttributeValueMap stackInfo : nativeStacks) {
 			long from = stackInfo.getLongValue(NATIVE_STACK_FROM);
 			long to = stackInfo.getLongValue(NATIVE_STACK_TO);
 			long size = stackInfo.getLongValue(NATIVE_STACK_SIZE);
@@ -425,6 +425,7 @@ public class ThreadSectionParser extends SectionParser implements IThreadTypes{
 	 * @param startingTag
 	 * @throws ParserException
 	 */
+	@Override
 	protected void sovOnlyRules(String startingTag) throws ParserException {
 //		SovereignSectionParserPart sovPart = SovereignParserPartManager.getCurrent().getSovPart(getSectionName());
 //		if (sovPart != null) {

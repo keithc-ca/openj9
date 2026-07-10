@@ -65,7 +65,7 @@ public class DumpModuleDirectedExportsCommand extends Command
 		try {
 			J9JavaVMPointer vm = J9RASHelper.getVM(DataType.getJ9RASPointer());
 			int hitCount = 0;
-			if (JavaVersionHelper.ensureJava9AndUp(vm, out)) {
+			if (JavaVersionHelper.ensureMinimumJavaVersion(9, vm, out)) {
 				String targetPackageAddress = args[0];
 				J9PackagePointer packagePtr = J9PackagePointer.cast(Long.decode(targetPackageAddress));
 				J9HashTablePointer exportTable = packagePtr.exportsHashTable();

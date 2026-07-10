@@ -33,6 +33,6 @@ import com.ibm.dtfj.javacore.parser.framework.scanner.IParserToken;
 public interface ITagAttributeResult {
 
 	public IParserToken getAttributeValue(String attribute);
-	public Iterator getAllAttributeValues();
+	public Iterator<IParserToken> getAllAttributeValues();
 
 }

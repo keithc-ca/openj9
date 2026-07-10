@@ -28,13 +28,14 @@ import java.util.Collection;
 import com.ibm.j9ddr.corereaders.memory.IMemoryRange;
 import com.ibm.j9ddr.corereaders.memory.IProcess;
 
-public class MemoryRangesCommand extends Command 
+public final class MemoryRangesCommand extends Command
 {
 	public MemoryRangesCommand()
 	{
 		addCommand("ranges", "", "Prints list of available memory ranges");
 	}
 
+	@Override
 	public void run(String command, String[] args, Context context, PrintStream out)	throws DDRInteractiveCommandException 
 	{
 		IProcess process = context.process;

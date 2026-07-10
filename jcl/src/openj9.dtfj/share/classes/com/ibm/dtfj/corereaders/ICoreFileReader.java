@@ -45,7 +45,7 @@ public interface ICoreFileReader extends ResourceReleaser
 	 *
 	 * @see java.lang.String
 	 */
-	public Iterator getAdditionalFileNames();
+	public Iterator<String> getAdditionalFileNames();
 
 	/**
 	 * Creates a representation of the address space capable of reading data from memory as a flat address

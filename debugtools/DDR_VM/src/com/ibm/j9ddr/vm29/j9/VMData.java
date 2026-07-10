@@ -37,13 +37,15 @@ public class VMData implements IVMData {
 		super();
 	}
 
+	@Override
 	public void bootstrapRelative(String relativeClassname, Object... userData) throws ClassNotFoundException
 	{
 		Class<?> clazz = getClassLoader().loadClassRelativeToStream(relativeClassname, true);
 		
 		bootstrapClass(clazz, userData);
 	}
-	
+
+	@Override
 	public void bootstrap(String binaryName, Object... userData) throws ClassNotFoundException 
 	{
 		// load classname in the correct class loader
@@ -52,6 +54,7 @@ public class VMData implements IVMData {
 		bootstrapClass(clazz, userData);
 	}
 	
+	@Override
 	public J9DDRClassLoader getClassLoader()
 	{
 		return (J9DDRClassLoader) VMData.class.getClassLoader();
@@ -60,7 +63,7 @@ public class VMData implements IVMData {
 	private void bootstrapClass(Class<?> clazz, Object[] userData)
 	{
 		try {
-			IBootstrapRunnable runnable = (IBootstrapRunnable) clazz.newInstance();
+			IBootstrapRunnable runnable = (IBootstrapRunnable) clazz.getConstructor().newInstance();
 			Method runMenthod = clazz.getMethod("run", IVMData.class, Object[].class);
 			runMenthod.invoke(runnable, this, userData);
 			return; 
@@ -76,6 +79,7 @@ public class VMData implements IVMData {
 		}
 	}
 
+	@Override
 	public Collection<StructureDescriptor> getStructures()
 	{
 		ClassLoader loader = VMData.class.getClassLoader();
@@ -87,9 +91,9 @@ public class VMData implements IVMData {
 		}
 	}
 
+	@Override
 	public String getVersion() {
 		return version;
 	}
-	
-	
+
 }

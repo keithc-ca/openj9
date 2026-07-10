@@ -45,7 +45,7 @@ public interface Image {
 	 * @see ImageAddressSpace
 	 * @see CorruptData
 	 */
-	public Iterator getAddressSpaces();
+	public Iterator<?> getAddressSpaces();
 
 	/**
 	 * Get the family name for the processor on which the image was
@@ -145,7 +145,7 @@ public interface Image {
 	 * @see java.net.InetAddress
 	 * @see CorruptData
 	 */
-	public Iterator getIPAddresses() throws DataUnavailable;
+	public Iterator<?> getIPAddresses() throws DataUnavailable;
 
 	/**
 	 * <p>Close this image and any associated resources.</p>

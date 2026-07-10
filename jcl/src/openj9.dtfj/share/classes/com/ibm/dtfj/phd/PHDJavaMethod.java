@@ -30,7 +30,6 @@ import com.ibm.dtfj.image.CorruptDataException;
 import com.ibm.dtfj.image.DataUnavailable;
 import com.ibm.dtfj.image.ImageAddressSpace;
 import com.ibm.dtfj.image.ImagePointer;
-import com.ibm.dtfj.image.ImageSection;
 import com.ibm.dtfj.java.JavaClass;
 import com.ibm.dtfj.java.JavaMethod;
 
@@ -91,14 +90,17 @@ public class PHDJavaMethod implements JavaMethod {
 		}
 	}
 
-	public Iterator<ImageSection> getBytecodeSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+	@Override
+	public Iterator<?> getBytecodeSections() {
+		return Collections.emptyIterator();
 	}
 
-	public Iterator getCompiledSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+	@Override
+	public Iterator<?> getCompiledSections() {
+		return Collections.emptyIterator();
 	}
 
+	@Override
 	public JavaClass getDeclaringClass() throws CorruptDataException,
 			DataUnavailable {
 		checkCD(cls_cd);
@@ -106,21 +108,25 @@ public class PHDJavaMethod implements JavaMethod {
 		return cls;
 	}
 
+	@Override
 	public int getModifiers() throws CorruptDataException {
 		checkCD(mods_cd);
 		return mods;
 	}
 
+	@Override
 	public String getName() throws CorruptDataException {
 		checkCD(name_cd);
 		return name;
 	}
 
+	@Override
 	public String getSignature() throws CorruptDataException {
 		checkCD(sig_cd);
 		return sig;
 	}
 
+	@Override
 	public boolean equals(Object o) {
 		if (o == null) return false;
 		if (o.getClass() != getClass()) return false;
@@ -128,19 +134,20 @@ public class PHDJavaMethod implements JavaMethod {
 		return equals(cls, m.cls) && equals(name, m.name) && equals(sig, m.sig);
 	}
 
+	@Override
 	public int hashCode() {
 		return hashCode(cls) ^ hashCode(name) ^ hashCode(sig);
 	}
 
-	private boolean equals(Object o1, Object o2) {
+	private static boolean equals(Object o1, Object o2) {
 		return (o1 == null ? o2 == null : o1.equals(o2));
 	}
 
-	private int hashCode(Object o) {
+	private static int hashCode(Object o) {
 		return o == null ? 0 : o.hashCode();
 	}
 
-	private void checkCD(CorruptData cd) throws CorruptDataException {
+	private static void checkCD(CorruptData cd) throws CorruptDataException {
 		if (cd != null) throw new CorruptDataException(cd);
 	}
 }

@@ -39,7 +39,7 @@ public interface ISectionParser {
 	 * @throws ParserException
 	 */
 	public void readIntoDTFJ(ILookAheadBuffer lookAhead, IImageBuilder imageBuilder) throws ParserException;
-	public Iterator getErrors();
+	public Iterator<String> getErrors();
 	public String getSectionName();
 	public boolean anyMatched();
 }

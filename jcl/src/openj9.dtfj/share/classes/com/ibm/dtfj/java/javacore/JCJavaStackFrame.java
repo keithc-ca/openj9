@@ -60,6 +60,7 @@ public class JCJavaStackFrame implements JavaStackFrame {
 	/**
 	 *
 	 */
+	@Override
 	public ImagePointer getBasePointer() throws CorruptDataException {
 		if (fPointer == null) {
 			throw new CorruptDataException(new JCCorruptData(null));
@@ -70,12 +71,14 @@ public class JCJavaStackFrame implements JavaStackFrame {
 	/**
 	 *
 	 */
+	@Override
 	public JavaLocation getLocation() throws CorruptDataException {
 		return fLocation;
 	}
 
-	public Iterator getHeapRoots() {
-		return Collections.EMPTY_LIST.iterator();
+	@Override
+	public Iterator<?> getHeapRoots() {
+		return Collections.emptyIterator();
 	}
 
 }

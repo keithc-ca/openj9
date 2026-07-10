@@ -25,6 +25,7 @@ package com.ibm.dtfj.image;
 /**
  * Indicates that an attempt was made to access memory which is not included within the image.
  */
+@SuppressWarnings("serial")
 public class MemoryAccessException extends DTFJException {
 
 	private static final long serialVersionUID = 8883829684484518525L;

@@ -52,9 +52,8 @@ public interface ImageThread {
 	 * @throws DataUnavailable If native stack frames are not available on this platform
 	 * @see ImageStackFrame
 	 * @see CorruptData
-	 *
 	 */
-	public Iterator getStackFrames() throws DataUnavailable;
+	public Iterator<?> getStackFrames() throws DataUnavailable;
 
 	/**
 	 * Get the set of image sections which make up the stack.
@@ -65,7 +64,7 @@ public interface ImageThread {
 	 * @see ImageSection
 	 * @see CorruptData
 	 */
-	public Iterator getStackSections();
+	public Iterator<?> getStackSections();
 
 	/**
 	 * Get the register contents.
@@ -78,7 +77,7 @@ public interface ImageThread {
 	 *
 	 * @see ImageRegister
 	 */
-	public Iterator getRegisters();
+	public Iterator<?> getRegisters();
 
 	/**
 	 * Get the OS-specific properties for this thread.

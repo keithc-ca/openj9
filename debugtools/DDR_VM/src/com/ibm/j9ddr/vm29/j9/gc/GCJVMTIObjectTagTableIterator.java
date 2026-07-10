@@ -33,7 +33,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9JVMTIEnvPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9JVMTIObjectTagPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 
-public class GCJVMTIObjectTagTableIterator extends GCIterator
+public class GCJVMTIObjectTagTableIterator extends GCIterator<J9ObjectPointer>
 {
 	protected Iterator<J9JVMTIObjectTagPointer> hashTableIterator;
 
@@ -47,11 +47,13 @@ public class GCJVMTIObjectTagTableIterator extends GCIterator
 		return new GCJVMTIObjectTagTableIterator(jvmtiEnv);
 	}
 
+	@Override
 	public boolean hasNext()
 	{
 		return hashTableIterator.hasNext();
 	}
 
+	@Override
 	public J9ObjectPointer next()
 	{
 		if(hasNext()) {
@@ -66,7 +68,8 @@ public class GCJVMTIObjectTagTableIterator extends GCIterator
 			throw new NoSuchElementException("There are no more items available through this iterator");
 		}
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		if(hasNext()) {

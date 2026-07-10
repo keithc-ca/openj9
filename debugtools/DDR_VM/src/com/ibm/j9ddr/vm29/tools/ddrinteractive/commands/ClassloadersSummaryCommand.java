@@ -55,6 +55,7 @@ public class ClassloadersSummaryCommand extends Command
 		addCommand("classloaderssummary", "[segs]", "Display classloaders summary, optionally including the RAM and ROM segment breakdown");
 	}
 
+	@Override
 	public void run(String command, String[] args, Context context, PrintStream out) throws DDRInteractiveCommandException 
 	{
 		try {
@@ -104,8 +105,8 @@ public class ClassloadersSummaryCommand extends Command
 			totalROMSegmentAllocatedSize += csc.totalROMSegmentAllocatedMemory;
 			totalRAMSegmentAllocatedSize += csc.totalRAMSegmentAllocatedMemory;
 			Long cpval = countmap.get(csc.numLoadedClasses);
-			if (cpval != null){
-				Long clcount = new Long (cpval + csc.numClassloaders);
+			if (cpval != null) {
+				Long clcount = Long.valueOf(cpval + csc.numClassloaders);
 				countmap.put(csc.numLoadedClasses, clcount);
 				String list = cllist.get(csc.numLoadedClasses);
 				cllist.put(csc.numLoadedClasses, list + ", " + csc.name);
@@ -150,7 +151,7 @@ public class ClassloadersSummaryCommand extends Command
 	
 	public Collection<ClassloadersSummaryNode> getStat() throws CorruptDataException 
 	{
-		Map<J9ClassLoaderPointer, Counter> classloadersCount = new HashMap<J9ClassLoaderPointer, Counter>();
+		Map<J9ClassLoaderPointer, Counter> classloadersCount = new HashMap<>();
 		J9JavaVMPointer vm = J9RASHelper.getVM(DataType.getJ9RASPointer());
 		GCClassLoaderIterator iterator = GCClassLoaderIterator.from();
 		// The longestName variable is used to format the output
@@ -163,7 +164,7 @@ public class ClassloadersSummaryCommand extends Command
 		/* Iterate through all classes and count how many were loaded by each classLoader */
 		ClassSegmentIterator classSegmentIterator = new ClassSegmentIterator(vm.classMemorySegments());
 		while (classSegmentIterator.hasNext()) {
-			J9ClassPointer classPointer = (J9ClassPointer) classSegmentIterator.next();
+			J9ClassPointer classPointer = classSegmentIterator.next();
 			Counter counter = classloadersCount.get(classPointer.classLoader());
 			if (counter != null) {
 				counter.addOne();

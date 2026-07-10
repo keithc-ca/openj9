@@ -36,12 +36,12 @@ import com.ibm.dtfj.image.DataUnavailable;
 public class ImageModule implements com.ibm.dtfj.image.ImageModule
 {
 	private String _name;
-	private Vector _sections = new Vector();
-	private Vector _symbols = new Vector();
+	private Vector<Object> _sections = new Vector<>();
+	private Vector<Object> _symbols = new Vector<>();
 	private Properties _properties;
 	private long _loadAddress;
 
-	public ImageModule(String moduleName, Properties properties, Iterator sections, Iterator symbols, long loadAddress) {
+	public ImageModule(String moduleName, Properties properties, Iterator<?> sections, Iterator<?> symbols, long loadAddress) {
 		_name = moduleName;
 		while (sections.hasNext()) {
 			_sections.add(sections.next());
@@ -50,14 +50,13 @@ public class ImageModule implements com.ibm.dtfj.image.ImageModule
 			_symbols.add(symbols.next());
 		}
 		_properties = properties;
-
-		_loadAddress=loadAddress;
-
+		_loadAddress = loadAddress;
 	}
 
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageModule#getName()
 	 */
+	@Override
 	public String getName() throws CorruptDataException
 	{
 		return _name;
@@ -66,7 +65,8 @@ public class ImageModule implements com.ibm.dtfj.image.ImageModule
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageModule#getSections()
 	 */
-	public Iterator getSections()
+	@Override
+	public Iterator<?> getSections()
 	{
 		return _sections.iterator();
 	}
@@ -74,7 +74,8 @@ public class ImageModule implements com.ibm.dtfj.image.ImageModule
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageModule#getSymbols()
 	 */
-	public Iterator getSymbols()
+	@Override
+	public Iterator<?> getSymbols()
 	{
 		return _symbols.iterator();
 	}
@@ -82,6 +83,7 @@ public class ImageModule implements com.ibm.dtfj.image.ImageModule
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.image.ImageModule#getProperties()
 	 */
+	@Override
 	public Properties getProperties() throws CorruptDataException
 	{
 		if (null == _properties) {
@@ -91,6 +93,7 @@ public class ImageModule implements com.ibm.dtfj.image.ImageModule
 		return _properties;
 	}
 
+	@Override
 	public long getLoadAddress() throws DataUnavailable {
 		if (_loadAddress!=0) {
 			return _loadAddress;

@@ -43,16 +43,19 @@ public class ImageStackFrame implements com.ibm.dtfj.image.ImageStackFrame
 		_basePointer = basePointer;
 	}
 
+	@Override
 	public ImagePointer getProcedureAddress() throws CorruptDataException
 	{
 		return _procedureAddress;
 	}
 
+	@Override
 	public ImagePointer getBasePointer() throws CorruptDataException
 	{
 		return _basePointer;
 	}
 
+	@Override
 	public String getProcedureName() throws CorruptDataException
 	{
 		if (null == _procedureName) {
@@ -60,7 +63,7 @@ public class ImageStackFrame implements com.ibm.dtfj.image.ImageStackFrame
 			ImageSymbol bestClosest = null;
 			long bestDelta = Long.MAX_VALUE;
 
-			for (Iterator i = this._space.getProcesses(); i.hasNext(); ) {
+			for (Iterator<?> i = this._space.getProcesses(); i.hasNext();) {
 				Object nexti = i.next();
 				if (nexti instanceof CorruptData) continue;
 				ImageProcess process = (ImageProcess)nexti;
@@ -78,7 +81,7 @@ public class ImageStackFrame implements com.ibm.dtfj.image.ImageStackFrame
 					} catch (CorruptDataException e) {
 					}
 					try {
-						for (Iterator j = process.getLibraries(); j.hasNext(); ) {
+						for (Iterator<?> j = process.getLibraries(); j.hasNext();) {
 							Object next = j.next();
 							if (next instanceof CorruptData) continue;
 							ImageModule module = (ImageModule)next;
@@ -155,7 +158,7 @@ public class ImageStackFrame implements com.ibm.dtfj.image.ImageStackFrame
 		long pc = _procedureAddress.getAddress();
 		long maxDifference = Long.MAX_VALUE;
 		ImageSymbol closestSymbol = null;
-		for (Iterator iter = module.getSymbols(); iter.hasNext();) {
+		for (Iterator<?> iter = module.getSymbols(); iter.hasNext();) {
 			Object next = iter.next();
 			if (next instanceof CorruptData)
 				continue;

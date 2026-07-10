@@ -199,7 +199,7 @@ public class NumberStream {
 	}
 
 	public static void main(String args[]) {
-		int total = 0;
+		long total = 0;
 		long totalSize = 0L;
 		long totalUsedSize = 0L;
 		boolean sort = false;

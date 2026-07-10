@@ -53,6 +53,7 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 		super(clazz, ptr);
 	}
 
+	@Override
 	public Object get(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if(null == object) {
 			throw new NullPointerException("JavaObject is null");
@@ -102,11 +103,11 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 	{
 		DTFJJavaRuntime rt = DTFJContext.getRuntime();
 
-		Iterator allLoaders = rt.getJavaClassLoaders();
+		Iterator<?> allLoaders = rt.getJavaClassLoaders();
 		JavaClass subclass = null;
 		while (allLoaders.hasNext() && (null == subclass)) {
 			JavaClassLoader loader = (JavaClassLoader) allLoaders.next();
-			Iterator classes = loader.getDefinedClasses();
+			Iterator<?> classes = loader.getDefinedClasses();
 			while (classes.hasNext()  && (null == subclass)) {
 				JavaClass oneClass = (JavaClass) classes.next();
 				if (oneClass.getName().equals(candidateClass)) {
@@ -118,6 +119,7 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 		return subclass;
 	}
 
+	@Override
 	public boolean getBoolean(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if(null == object) {
 			throw new NullPointerException("JavaObject is null");
@@ -132,6 +134,7 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public byte getByte(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if(null == object) {
 			throw new NullPointerException("JavaObject is null");
@@ -146,6 +149,7 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public char getChar(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if(null == object) {
 			throw new NullPointerException("JavaObject is null");
@@ -160,6 +164,7 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public double getDouble(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if(null == object) {
 			throw new NullPointerException("JavaObject is null");
@@ -173,6 +178,7 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public float getFloat(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if(null == object) {
 			throw new NullPointerException("JavaObject is null");
@@ -186,6 +192,7 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public int getInt(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if(null == object) {
 			throw new NullPointerException("JavaObject is null");
@@ -198,7 +205,8 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 			throw J9DDRDTFJUtils.handleAllButMemAccExAsCorruptDataException(DTFJContext.getProcess(), t, allowlist);
 		}
 	}
-	
+
+	@Override
 	public long getLong(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if(null == object) {
 			throw new NullPointerException("JavaObject is null");
@@ -212,6 +220,7 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public short getShort(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if(null == object) {
 			throw new NullPointerException("JavaObject is null");
@@ -225,6 +234,7 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 		}
 	}
 
+	@Override
 	public String getString(JavaObject object) throws CorruptDataException, MemoryAccessException {
 		if(null == object) {
 			throw new NullPointerException("JavaObject is null");
@@ -241,19 +251,5 @@ public class DTFJJavaFieldInstance extends DTFJJavaField {
 			throw J9DDRDTFJUtils.handleAllButMemAccExAsCorruptDataException(DTFJContext.getProcess(), t, allowlist);
 		}
 	}
-	
-	public boolean isNestedPacked() {
-		// vm29 does not support packed
-		return false;
-	}
 
-	public boolean isNestedPackedArray() {
-		// vm29 does not support packed
-		return false;
-	}
-
-	public int getPackedLengthAnnotationValue() {
-		// vm29 does not support packed
-		return 0;
-	}
 }

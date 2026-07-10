@@ -19,7 +19,6 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.j9ddr.corereaders.tdump.zebedee.mvs;
 
 import com.ibm.j9ddr.corereaders.tdump.zebedee.dumpreader.*;
@@ -36,7 +35,6 @@ import java.io.*;
  * @depend - - - com.ibm.zebedee.dumpreader.AddressSpace
  * @has - - - com.ibm.zebedee.mvs.RegisterSet
  */
-
 public class Tcb {
 
     /** The AddressSpace we belong to */
@@ -71,7 +69,7 @@ public class Tcb {
             return tcbs;
         }
         log.fine("creating Tcb array for asid " + space);
-        Vector v = new Vector();
+        Vector<Tcb> v = new Vector<>();
         try {
             /*
              * We go from the PSA to the ASCB and then the ASXB which contains pointers
@@ -102,7 +100,7 @@ public class Tcb {
             return null;
         }
         /* Add the array of TCBs to the map */
-        tcbs = (Tcb[])v.toArray(new Tcb[0]);
+        tcbs = v.toArray(new Tcb[0]);
         space.getUserMap().put("tcbmap", tcbs);
         ProgressMeter.set("finished getting tcbs", 50);
 

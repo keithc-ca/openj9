@@ -23,6 +23,7 @@ package com.ibm.j9ddr.vm29.j9.gc;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import com.ibm.j9ddr.CorruptDataException;
 import com.ibm.j9ddr.vm29.j9.J9ROMFieldShapeIterator;
@@ -34,7 +35,7 @@ import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 import com.ibm.j9ddr.vm29.structure.J9JavaClassFlags;
 import com.ibm.j9ddr.vm29.types.UDATA;
 
-public class GCClassStaticsIterator extends GCIterator
+public class GCClassStaticsIterator extends GCIterator<J9ObjectPointer>
 {
 	Iterator<J9ObjectPointer> slotsIterator;
 	Iterator<VoidPointer> addressIterator;
@@ -43,8 +44,8 @@ public class GCClassStaticsIterator extends GCIterator
 	{
 		J9ROMFieldShapeIterator romFieldIterator = null;
 		
-		ArrayList<J9ObjectPointer> statics = new ArrayList<J9ObjectPointer>();
-		ArrayList<VoidPointer> addresses = new ArrayList<VoidPointer>();
+		List<J9ObjectPointer> statics = new ArrayList<>();
+		List<VoidPointer> addresses = new ArrayList<>();
 		
 		long objectStaticCount = clazz.romClass().objectStaticCount().longValue();
 		UDATAPointer staticPtr = clazz.ramStatics();
@@ -87,18 +88,21 @@ public class GCClassStaticsIterator extends GCIterator
 	{
 		return new GCClassStaticsIterator(clazz);
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		return slotsIterator.hasNext();
 	}
 
+	@Override
 	public J9ObjectPointer next()
 	{
 		addressIterator.next();			// Keep iterators in sync
 		return slotsIterator.next();
 	}
-	
+
+	@Override
 	public VoidPointer nextAddress()
 	{
 		slotsIterator.next();			// Keep iterators in sync

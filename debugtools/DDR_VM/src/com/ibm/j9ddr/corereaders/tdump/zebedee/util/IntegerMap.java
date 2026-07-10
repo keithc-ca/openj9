@@ -19,18 +19,17 @@
  *
  * SPDX-License-Identifier: EPL-2.0 OR Apache-2.0 OR GPL-2.0-only WITH Classpath-exception-2.0 OR GPL-2.0-only WITH OpenJDK-assembly-exception-1.0
  */
-
 package com.ibm.j9ddr.corereaders.tdump.zebedee.util;
 
-import java.util.Random;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * This is a simple class to map one integer to another but without the overhead of using
  * a Hashtable. There is one limitation at present which is that the value of -1 can't be
  * used since this is currently used to indicate value not found.
  */
-
 public final class IntegerMap extends AbstractHashMap {
 
     /** The array of values */
@@ -94,7 +93,7 @@ public final class IntegerMap extends AbstractHashMap {
      */
     private void test() {
         Random rand = new Random(23);
-        HashMap check = new HashMap();
+        Map<Long, Long> check = new HashMap<>();
         for (int i = 0; i < 500000; i++) {
             long key = rand.nextLong();
             long value = rand.nextLong();
@@ -115,10 +114,10 @@ public final class IntegerMap extends AbstractHashMap {
             }
         }
         if (doCheck) {
-            Long[] keys = (Long[])check.keySet().toArray(new Long[0]);
+            Long[] keys = check.keySet().toArray(new Long[0]);
             for (int i = 0; i < keys.length; i++) {
                 long key = keys[i].longValue();
-                long value = ((Long)check.get(keys[i])).longValue();
+                long value = check.get(keys[i]).longValue();
                 if (get(key) != value) {
                     throw new Error("at " + i + " found " + get(key) + " expected " + value + " key " + key);
                 }

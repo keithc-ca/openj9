@@ -82,17 +82,21 @@ public class PrintHeapdump extends Base {
 		HeapdumpReader reader = new HeapdumpReader(filename);
 		out.println("// Version: " + reader.full_version());
 		reader.parse(new PortableHeapDumpListener() {
+			@Override
 			public void objectDump(long address, long classAddress, int flags, int hashCode, LongEnumeration refs, long instanceSize) {
 				DumpClass.foundClass(classAddress);
 			}
+			@Override
 			public void objectArrayDump(long address, long classAddress, int flags, int hashCode, LongEnumeration refs, int length, long instanceSize) {
 				DumpClass.foundClass(classAddress);
 			}
+			@Override
 			public void classDump(long address, long superAddress, String name, int instanceSize, int flags, int hashCode, LongEnumeration refs) {
 				DumpClass.put(address, name, instanceSize);
 				if (instanceSize >= 0 && instanceSize < minimumInstanceSize)
 					minimumInstanceSize = instanceSize;
 			}
+			@Override
 			public void primitiveArrayDump(long address, int type, int length, int flags, int hashCode, long instanceSize) {
 			}
 		});
@@ -103,6 +107,7 @@ public class PrintHeapdump extends Base {
 		 * Note the sizes printed are just approximate.
 		 */
 		reader.parse(new PortableHeapDumpListener() {
+			@Override
 			public void objectDump(long address, long classAddress, int flags, int hashCode, LongEnumeration refs, long instanceSize) {
 				DumpClass cl = DumpClass.get(classAddress);
 				long size = cl.instanceSize;
@@ -111,6 +116,7 @@ public class PrintHeapdump extends Base {
 				objectCount++;
 				totalObjectCount++;
 			}
+			@Override
 			public void objectArrayDump(long address, long classAddress, int flags, int hashCode, LongEnumeration refs, int length, long instanceSize) {
 				DumpClass cl = DumpClass.get(classAddress);
 				if (instanceSize == PHDJavaObject.UNSPECIFIED_INSTANCE_SIZE) {
@@ -123,12 +129,14 @@ public class PrintHeapdump extends Base {
 				objectArrayCount++;
 				totalObjectCount++;
 			}
+			@Override
 			public void classDump(long address, long superAddress, String name, int instanceSize, int flags, int hashCode, LongEnumeration refs) {
 				out.println("0x" + hexpad(address).toUpperCase() + " [" + (is64Bit ? "552" : "304") + "] class " + name + (hash ? " [hashcode = " + hex(hashCode) + "]" : ""));
 				printRefs(refs);
 				classCount++;
 				totalObjectCount++;
 			}
+			@Override
 			public void primitiveArrayDump(long address, int type, int length, int flags, int hashCode, long instanceSize) {
 				if (instanceSize == PHDJavaObject.UNSPECIFIED_INSTANCE_SIZE) {
 					// calculate as best we can
@@ -160,6 +168,7 @@ public class PrintHeapdump extends Base {
 		};
 	}
 
+	@Override
 	public boolean parseOption(String arg, String opt) {
 		if ("-hash".equals(arg)) {
 			hash = true;
@@ -191,7 +200,7 @@ class DumpClass {
 	long address;
 	String name;
 	int instanceSize;
-	static HashMap classes = new HashMap();
+	static Map<Long, DumpClass> classes = new HashMap<>();
 
 	DumpClass(long address, String name, int instanceSize) {
 		this.address = address;
@@ -204,7 +213,7 @@ class DumpClass {
 	}
 
 	static void foundClass(long address) {
-		DumpClass cl = (DumpClass)classes.get(Long.valueOf(address));
+		DumpClass cl = classes.get(Long.valueOf(address));
 		if (cl == null) {
 			cl = new DumpClass(address, "unknown class 0x" + Long.toHexString(address), 0);
 			classes.put(Long.valueOf(address), cl);
@@ -212,6 +221,6 @@ class DumpClass {
 	}
 
 	static DumpClass get(long address) {
-		return (DumpClass)classes.get(Long.valueOf(address));
+		return classes.get(Long.valueOf(address));
 	}
 }

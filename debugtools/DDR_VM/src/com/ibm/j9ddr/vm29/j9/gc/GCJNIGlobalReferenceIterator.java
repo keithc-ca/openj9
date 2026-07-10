@@ -32,7 +32,7 @@ import com.ibm.j9ddr.vm29.pointer.VoidPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9ObjectPointer;
 import com.ibm.j9ddr.vm29.pointer.generated.J9PoolPointer;
 
-public class GCJNIGlobalReferenceIterator extends GCIterator
+public class GCJNIGlobalReferenceIterator extends GCIterator<J9ObjectPointer>
 {
 	protected Iterator<PointerPointer> iterator;
 	
@@ -45,12 +45,14 @@ public class GCJNIGlobalReferenceIterator extends GCIterator
 	{
 		return new GCJNIGlobalReferenceIterator(getJavaVM().jniGlobalReferences());
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		return iterator.hasNext();
 	}
 
+	@Override
 	public J9ObjectPointer next()
 	{
 		try {
@@ -62,6 +64,7 @@ public class GCJNIGlobalReferenceIterator extends GCIterator
 		}
 	}
 
+	@Override
 	public VoidPointer nextAddress()
 	{
 		return VoidPointer.cast(iterator.next());

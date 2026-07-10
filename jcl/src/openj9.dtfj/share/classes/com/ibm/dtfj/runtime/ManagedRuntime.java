@@ -43,7 +43,9 @@ public interface ManagedRuntime {
 	 * @deprecated Use "getVersion()" instead
 	 */
 	@Deprecated
-	public String getFullVersion() throws CorruptDataException;
+	public default String getFullVersion() throws CorruptDataException {
+		return getVersion();
+	}
 
 	/**
 	 * Get the version data available for this runtime instance.

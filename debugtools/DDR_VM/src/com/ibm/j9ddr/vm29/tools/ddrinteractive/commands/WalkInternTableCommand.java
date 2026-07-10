@@ -297,7 +297,7 @@ public class WalkInternTableCommand extends Command
 	 * @return void
 	 */
 	private void walkSharedTable(PrintStream out) throws CorruptDataException {
-		int totalWeight = 0;
+		long totalWeight = 0;
 		J9JavaVMPointer vm = J9RASHelper.getVM(DataType.getJ9RASPointer());
 		J9SharedInvariantInternTablePointer sharedInternTable = vm.sharedInvariantInternTable();
 		/* Check if there is sharedInternTable before to go further */
@@ -345,7 +345,7 @@ public class WalkInternTableCommand extends Command
 	 * 
 	 */
 	private void walkLocalTable(PrintStream out) throws CorruptDataException {
-		int totalWeight = 0;
+		long totalWeight = 0;
 		J9DbgStringInternTablePointer stringInternTablePtr = getRomClassBuilderPtr(out);
 		
 		if (stringInternTablePtr.isNull()) {

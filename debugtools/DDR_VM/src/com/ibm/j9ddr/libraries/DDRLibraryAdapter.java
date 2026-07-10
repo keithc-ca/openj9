@@ -104,15 +104,27 @@ public class DDRLibraryAdapter implements LibraryAdapter {
 			errorMessages.add(e.getMessage());
 			return;		
 		}
-		for(Iterator spaces = image.getAddressSpaces(); spaces.hasNext(); ) {
-			ImageAddressSpace space = (ImageAddressSpace) spaces.next(); 
-			for(Iterator procs = space.getProcesses(); procs.hasNext(); ) {
-				ImageProcess proc = (ImageProcess) procs.next();
+		for (Iterator<?> spaces = image.getAddressSpaces(); spaces.hasNext();) {
+			Object nextSpace = spaces.next();
+			if (!(nextSpace instanceof ImageAddressSpace)) {
+				continue;
+			}
+			ImageAddressSpace space = (ImageAddressSpace) nextSpace;
+			for (Iterator<?> procs = space.getProcesses(); procs.hasNext();) {
+				Object nextProc = procs.next();
+				if (!(nextProc instanceof ImageProcess)) {
+					continue;
+				}
+				ImageProcess proc = (ImageProcess) nextProc;
 				try {
 					ImageModule exe = proc.getExecutable();				//add the executable to the list of libraries to be collected
 					moduleNames.add(exe.getName());
-					for(Iterator libraries = proc.getLibraries(); libraries.hasNext(); ) {
-						ImageModule module = (ImageModule) libraries.next();
+					for (Iterator<?> libraries = proc.getLibraries(); libraries.hasNext();) {
+						Object nextModule = libraries.next();
+						if (!(nextModule instanceof ImageModule)) {
+							continue;
+						}
+						ImageModule module = (ImageModule) nextModule;
 						String key = null;
 						try {	//handle CDE thrown by getName(), as this is required further on this call needs to succeed
 							if(isAIX) {

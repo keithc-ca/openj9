@@ -61,6 +61,7 @@ public class NodeJavaVM extends NodeAbstract
 	/* (non-Javadoc)
 	 * @see com.ibm.jvm.j9.dump.indexsupport.IParserNode#nodeToPushAfterStarting(java.lang.String, java.lang.String, java.lang.String, org.xml.sax.Attributes)
 	 */
+	@Override
 	public IParserNode nodeToPushAfterStarting(String uri, String localName, String qName, Attributes attributes)
 	{
 		IParserNode child = null;
@@ -93,9 +94,10 @@ public class NodeJavaVM extends NodeAbstract
 		return child;
 	}
 
+	@Override
 	public void didFinishParsing()
 	{
-		Iterator classLoaders = _runtime.getJavaClassLoaders();
+		Iterator<?> classLoaders = _runtime.getJavaClassLoaders();
 		while (classLoaders.hasNext()) {
 			Object potentialClassLoader = classLoaders.next();
 			if (potentialClassLoader instanceof JavaClassLoader) {
@@ -108,7 +110,7 @@ public class NodeJavaVM extends NodeAbstract
 						JavaObject loaderObject = (com.ibm.dtfj.java.j9.JavaObject)potentialLoaderObject;
 						loaderObject.setAssociatedClassLoader(loader);
 						_runtime.addSpecialObject(loaderObject);
-						Iterator classes = loader.getDefinedClasses();
+						Iterator<?> classes = loader.getDefinedClasses();
 						while (classes.hasNext()) {
 							Object potentialClass = classes.next();
 							if (potentialClass instanceof JavaClass) {
@@ -135,7 +137,7 @@ public class NodeJavaVM extends NodeAbstract
 			}
 		}
 
-		Iterator monitors = _runtime.getMonitors();
+		Iterator<?> monitors = _runtime.getMonitors();
 		while (monitors.hasNext()) {
 			Object potentialMonitor = monitors.next();
 			if (potentialMonitor instanceof JavaMonitor) {
@@ -151,7 +153,7 @@ public class NodeJavaVM extends NodeAbstract
 			}
 		}
 
-		Iterator threads = _runtime.getThreads();
+		Iterator<?> threads = _runtime.getThreads();
 		while (threads.hasNext()) {
 			Object potentialThread = threads.next();
 			if (potentialThread instanceof JavaThread) {

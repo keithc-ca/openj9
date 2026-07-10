@@ -47,12 +47,12 @@ import com.ibm.java.diagnostics.utils.plugins.PluginManager;
  *
  */
 public abstract class Context implements IContext {
-	protected final ArrayList<ICommand> globalCommands = new ArrayList<ICommand>();
-	protected final ArrayList<ICommand> commands = new ArrayList<ICommand>();
+	protected final List<ICommand> globalCommands = new ArrayList<>();
+	protected final List<ICommand> commands = new ArrayList<>();
 	protected ICommand lastExecutedCommand = null;
 	protected Exception lastException = null;
 
-	{
+	public Context() {
 		//global commands exist irrespective of the context type
 		globalCommands.add(new QuitCommand());
 		globalCommands.add(new PluginCommand());
@@ -72,6 +72,7 @@ public abstract class Context implements IContext {
 		return loader;
 	}
 
+	@Override
 	public boolean isCommandRecognised(String command) {
 		for (ICommand thisCommand : commands) {
 			if (thisCommand.recognises(command, this)) {
@@ -84,6 +85,7 @@ public abstract class Context implements IContext {
 	/* (non-Javadoc)
 	 * @see com.ibm.java.diagnostics.IContext#execute(java.lang.String, java.lang.String[], java.io.PrintStream)
 	 */
+	@Override
 	public void execute(String command, String[] arguments, PrintStream out)
 	{
 		try {
@@ -93,6 +95,7 @@ public abstract class Context implements IContext {
 		}
 	}
 
+	@Override
 	public void execute(CommandParser commandParser, PrintStream out) {
 		for (ICommand thisCommand : commands) {
 			if (tryCommand(commandParser, thisCommand, out)) {
@@ -105,6 +108,7 @@ public abstract class Context implements IContext {
 	/* (non-Javadoc)
 	 * @see com.ibm.java.diagnostics.IContext#execute(java.lang.String, java.io.PrintStream)
 	 */
+	@Override
 	public void execute(String line, PrintStream out) {
 		line = line.trim();
 
@@ -168,7 +172,7 @@ public abstract class Context implements IContext {
 	 */
 	public Vector<String> getCommandNames()
 	{
-		Vector<String> commandNames = new Vector<String>();
+		Vector<String> commandNames = new Vector<>();
 
 		for (ICommand thisCommand : commands) {
 			if (thisCommand.getCommandNames() != null) {
@@ -182,6 +186,7 @@ public abstract class Context implements IContext {
 	/* (non-Javadoc)
 	 * @see com.ibm.java.diagnostics.IContext#getCommands()
 	 */
+	@Override
 	public List<ICommand> getCommands() {
 		return Collections.unmodifiableList(commands);
 	}
@@ -196,10 +201,12 @@ public abstract class Context implements IContext {
 		}
 	}
 
+	@Override
 	public ICommand getLastExecutedCommand() {
 		return lastExecutedCommand;
 	}
 
+	@Override
 	public Exception getLastCommandException() {
 		return lastException;
 	}

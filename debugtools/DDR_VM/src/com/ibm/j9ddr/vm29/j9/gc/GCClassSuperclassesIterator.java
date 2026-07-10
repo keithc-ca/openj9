@@ -32,7 +32,7 @@ import com.ibm.j9ddr.vm29.pointer.helper.J9ClassHelper;
 
 import static com.ibm.j9ddr.vm29.events.EventManager.raiseCorruptDataEvent;
 
-public class GCClassSuperclassesIterator extends GCIterator
+public class GCClassSuperclassesIterator extends GCIterator<J9ClassPointer>
 {
 	protected PointerPointer superclasses;
 	protected UDATA classDepth;
@@ -49,7 +49,8 @@ public class GCClassSuperclassesIterator extends GCIterator
 	{
 		return new GCClassSuperclassesIterator(clazz); 
 	}
-	
+
+	@Override
 	public boolean hasNext()
 	{
 		if(classDepth.eq(0)) {
@@ -58,6 +59,7 @@ public class GCClassSuperclassesIterator extends GCIterator
 		return index.lt(classDepth);
 	}
 
+	@Override
 	public J9ClassPointer next()
 	{
 		if(hasNext()) {
@@ -74,6 +76,7 @@ public class GCClassSuperclassesIterator extends GCIterator
 		}
 	}
 
+	@Override
 	public VoidPointer nextAddress()
 	{
 		if(hasNext()) {

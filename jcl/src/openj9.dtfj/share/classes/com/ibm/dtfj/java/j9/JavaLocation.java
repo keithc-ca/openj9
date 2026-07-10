@@ -68,6 +68,7 @@ public class JavaLocation implements com.ibm.dtfj.java.JavaLocation
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaLocation#getAddress()
 	 */
+	@Override
 	public ImagePointer getAddress() throws CorruptDataException
 	{
 		return _pc;
@@ -76,6 +77,7 @@ public class JavaLocation implements com.ibm.dtfj.java.JavaLocation
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaLocation#getLineNumber()
 	 */
+	@Override
 	public int getLineNumber() throws DataUnavailable, CorruptDataException
 	{
 		if (_lineNumber > 0) {
@@ -87,6 +89,7 @@ public class JavaLocation implements com.ibm.dtfj.java.JavaLocation
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaLocation#getFilename()
 	 */
+	@Override
 	public String getFilename() throws DataUnavailable, CorruptDataException
 	{
 		JavaClass j9Class = (JavaClass)getMethod().getDeclaringClass();
@@ -96,6 +99,7 @@ public class JavaLocation implements com.ibm.dtfj.java.JavaLocation
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaLocation#getCompilationLevel()
 	 */
+	@Override
 	public int getCompilationLevel() throws CorruptDataException
 	{
 		/* we can't get accurate information from the JIT, so we will
@@ -104,9 +108,13 @@ public class JavaLocation implements com.ibm.dtfj.java.JavaLocation
 		 */
 		long pointer = getAddress().getAddress();
 
-		Iterator iter = getMethod().getBytecodeSections();
+		Iterator<?> iter = getMethod().getBytecodeSections();
 		while (iter.hasNext()) {
-			ImageSection section = (ImageSection)iter.next();
+			Object next = iter.next();
+			if (!(next instanceof ImageSection)) {
+				continue;
+			}
+			ImageSection section = (ImageSection)next;
 			if ( pointer >= section.getBaseAddress().getAddress() &&
 				 pointer < section.getBaseAddress().getAddress() + section.getSize())
 			{
@@ -117,7 +125,11 @@ public class JavaLocation implements com.ibm.dtfj.java.JavaLocation
 
 		iter = getMethod().getCompiledSections();
 		while (iter.hasNext()) {
-			ImageSection section = (ImageSection)iter.next();
+			Object next = iter.next();
+			if (!(next instanceof ImageSection)) {
+				continue;
+			}
+			ImageSection section = (ImageSection)next;
 			if ( pointer >= section.getBaseAddress().getAddress() &&
 				 pointer < section.getBaseAddress().getAddress() + section.getSize())
 			{
@@ -135,6 +147,7 @@ public class JavaLocation implements com.ibm.dtfj.java.JavaLocation
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaLocation#getMethod()
 	 */
+	@Override
 	public JavaMethod getMethod() throws CorruptDataException
 	{
 		if (_method == null) throw new CorruptDataException(new CorruptData("Bad method", _methodID));
@@ -144,6 +157,7 @@ public class JavaLocation implements com.ibm.dtfj.java.JavaLocation
 	/* (non-Javadoc)
 	 * @see com.ibm.dtfj.java.JavaLocation#toString()
 	 */
+	@Override
 	public String toString()
 	{
 		String output = null;
@@ -170,6 +184,7 @@ public class JavaLocation implements com.ibm.dtfj.java.JavaLocation
 		return output;
 	}
 
+	@Override
 	public boolean equals(Object obj)
 	{
 		boolean isEqual = false;
@@ -186,6 +201,7 @@ public class JavaLocation implements com.ibm.dtfj.java.JavaLocation
 		return o1 == o2 || o1 != null && o1.equals(o2);
 	}
 
+	@Override
 	public int hashCode()
 	{
 		return hashCode(_method) ^ _pc.hashCode() ^ hashCode(_methodID);

@@ -32,8 +32,7 @@ import java.util.*;
  * If this optional method is supported then the provider will return <tt>true</tt> for the
  * {@link #hasNumberOfElements} method.
  */
-
-public interface LongEnumeration extends Enumeration {
+public interface LongEnumeration extends Enumeration<Long> {
 	/**
 	 * Returns the next long value.
 	 */
