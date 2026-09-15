@@ -92,11 +92,11 @@ public class PHDJavaMethod implements JavaMethod {
 	}
 
 	public Iterator<ImageSection> getBytecodeSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+		return Collections.<ImageSection>emptyIterator();
 	}
 
 	public Iterator getCompiledSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+		return Collections.<ImageSection>emptyIterator();
 	}
 
 	public JavaClass getDeclaringClass() throws CorruptDataException,

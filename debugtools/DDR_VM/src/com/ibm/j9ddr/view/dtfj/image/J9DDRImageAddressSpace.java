@@ -24,6 +24,7 @@ package com.ibm.j9ddr.view.dtfj.image;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -86,8 +87,8 @@ public class J9DDRImageAddressSpace implements ImageAddressSpace {
 		IProcess proc = getPointerProcess();
 		
 		//it may be the case that we can't determine the pointer size if there are no processes found in the address space
-		if(null == proc) {
-			return J9DDRDTFJUtils.emptyIterator();
+		if (null == proc) {
+			return Collections.emptyIterator();
 		}
 		
 		for (IMemoryRange thisRange : ranges) {

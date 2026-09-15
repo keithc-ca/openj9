@@ -174,7 +174,7 @@ class PHDJavaRuntime implements JavaRuntime {
 	}
 
 	public Iterator<JavaMethod> getCompiledMethods() {
-		return Collections.<JavaMethod>emptyList().iterator();
+		return Collections.<JavaMethod>emptyIterator();
 	}
 
 	public Iterator<? extends JavaHeap> getHeaps() {
@@ -225,7 +225,7 @@ class PHDJavaRuntime implements JavaRuntime {
 	}
 
 	public Iterator<JavaReference> getHeapRoots() {
-		return Collections.<JavaReference>emptyList().iterator();
+		return Collections.<JavaReference>emptyIterator();
 	}
 
 	public JavaObject getObjectAtAddress(ImagePointer address)
@@ -875,7 +875,11 @@ class PHDJavaRuntime implements JavaRuntime {
 	 */
 	Iterator<JavaClass> getLoaderClasses(JavaObject jo) {
 		PHDJavaClassLoader load = loaders.get(jo);
-		if (load != null) return load.getDefinedClasses(); else return Collections.<JavaClass>emptyList().iterator();
+		if (load != null) {
+			return load.getDefinedClasses();
+		} else {
+			return Collections.<JavaClass>emptyIterator();
+		}
 	}
 
 	/**

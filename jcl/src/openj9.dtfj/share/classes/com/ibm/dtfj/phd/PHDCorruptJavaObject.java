@@ -77,11 +77,11 @@ class PHDCorruptJavaObject extends PHDCorruptData implements JavaObject {
 	}
 
 	public Iterator<JavaReference> getReferences() {
-		return Collections.<JavaReference>emptyList().iterator();
+		return Collections.<JavaReference>emptyIterator();
 	}
 
 	public Iterator<ImageSection> getSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+		return Collections.<ImageSection>emptyIterator();
 	}
 
 	public long getSize() throws CorruptDataException {

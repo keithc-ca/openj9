@@ -27,6 +27,7 @@ import static com.ibm.j9ddr.vm29.events.EventManager.unregister;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.logging.Level;
@@ -203,9 +204,9 @@ public class DTFJJavaClassloader implements JavaClassLoader {
 		
 		@SuppressWarnings("rawtypes")
 		Iterator getDefinedClasses() {
-			if(corruptCache == null) {
-				if(definedClassCount == 0) {
-					return J9DDRDTFJUtils.emptyIterator();
+			if (corruptCache == null) {
+				if (definedClassCount == 0) {
+					return Collections.emptyIterator();
 				}
 				return new SlidingIterator(cache, cache.size() - definedClassCount, cache.size());
 			} else {

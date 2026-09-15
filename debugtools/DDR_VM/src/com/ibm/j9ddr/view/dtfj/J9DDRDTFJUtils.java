@@ -43,13 +43,6 @@ public class J9DDRDTFJUtils
 	private static final String DTFJ_LOGGER_NAME = "com.ibm.dtfj.log";
 	private static final Logger logger = Logger.getLogger(DTFJ_LOGGER_NAME);
 
-
-	@SuppressWarnings("unchecked")
-	public static Iterator emptyIterator()
-	{
-		return new LinkedList().iterator();
-	}
-
 	/**
 	 * Return an iterator which contains a single corrupt data item
 	 * @param data

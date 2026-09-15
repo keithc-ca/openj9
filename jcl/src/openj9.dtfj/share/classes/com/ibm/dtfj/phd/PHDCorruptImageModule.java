@@ -56,11 +56,11 @@ public class PHDCorruptImageModule extends PHDCorruptData implements ImageModule
 	}
 
 	public Iterator<ImageSection> getSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+		return Collections.<ImageSection>emptyIterator();
 	}
 
 	public Iterator<ImageSymbol> getSymbols() {
-		return Collections.<ImageSymbol>emptyList().iterator();
+		return Collections.<ImageSymbol>emptyIterator();
 	}
 
 	public long getLoadAddress() throws DataUnavailable {

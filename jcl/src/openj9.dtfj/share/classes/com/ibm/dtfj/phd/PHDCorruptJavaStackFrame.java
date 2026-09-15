@@ -47,7 +47,7 @@ public class PHDCorruptJavaStackFrame extends PHDCorruptData implements JavaStac
 	}
 
 	public Iterator<JavaReference> getHeapRoots() {
-		return Collections.<JavaReference>emptyList().iterator();
+		return Collections.<JavaReference>emptyIterator();
 	}
 
 	public JavaLocation getLocation() throws CorruptDataException {

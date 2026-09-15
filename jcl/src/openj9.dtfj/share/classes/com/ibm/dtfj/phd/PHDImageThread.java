@@ -95,7 +95,7 @@ public class PHDImageThread implements ImageThread {
 	}
 
 	public Iterator<ImageSection> getStackSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+		return Collections.<ImageSection>emptyIterator();
 	}
 
 }

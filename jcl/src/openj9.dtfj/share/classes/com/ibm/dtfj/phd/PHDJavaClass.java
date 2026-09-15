@@ -255,12 +255,11 @@ class PHDJavaClass implements JavaClass {
 	}
 
 	public Iterator<JavaObject> getConstantPoolReferences() {
-		return Collections.<JavaObject>emptyList().iterator();
-
+		return Collections.<JavaObject>emptyIterator();
 	}
 
 	public Iterator<JavaField> getDeclaredFields() {
-		return Collections.<JavaField>emptyList().iterator();
+		return Collections.<JavaField>emptyIterator();
 	}
 
 	public Iterator<JavaMethod> getDeclaredMethods() {
@@ -272,7 +271,7 @@ class PHDJavaClass implements JavaClass {
 	}
 
 	public Iterator<String> getInterfaces() {
-		return Collections.<String>emptyList().iterator();
+		return Collections.<String>emptyIterator();
 	}
 
 	public int getModifiers() throws CorruptDataException {

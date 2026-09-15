@@ -54,7 +54,7 @@ public class PHDCorruptImageThread extends PHDCorruptData implements
 	}
 
 	public Iterator<ImageRegister> getRegisters() {
-		return Collections.<ImageRegister>emptyList().iterator();
+		return Collections.<ImageRegister>emptyIterator();
 	}
 
 	public Iterator<ImageStackFrame> getStackFrames() throws DataUnavailable {
@@ -62,7 +62,7 @@ public class PHDCorruptImageThread extends PHDCorruptData implements
 	}
 
 	public Iterator<ImageSection> getStackSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+		return Collections.<ImageSection>emptyIterator();
 	}
 
 }

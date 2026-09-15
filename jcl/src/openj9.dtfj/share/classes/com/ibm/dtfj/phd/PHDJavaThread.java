@@ -151,7 +151,7 @@ public class PHDJavaThread implements JavaThread {
 	}
 
 	public Iterator<ImageSection> getStackSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+		return Collections.<ImageSection>emptyIterator();
 	}
 
 	public int getState() throws CorruptDataException {

@@ -67,11 +67,11 @@ public class PHDCorruptJavaThread extends PHDCorruptData implements JavaThread {
 	}
 
 	public Iterator<JavaStackFrame> getStackFrames() {
-		return Collections.<JavaStackFrame>emptyList().iterator();
+		return Collections.<JavaStackFrame>emptyIterator();
 	}
 
 	public Iterator<ImageSection> getStackSections() {
-		return Collections.<ImageSection>emptyList().iterator();
+		return Collections.<ImageSection>emptyIterator();
 	}
 
 	public int getState() throws CorruptDataException {

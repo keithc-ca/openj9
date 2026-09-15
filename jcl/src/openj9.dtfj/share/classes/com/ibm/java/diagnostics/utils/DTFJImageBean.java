@@ -118,7 +118,7 @@ public class DTFJImageBean implements Image {
 	 * from their context and into other address spaces / processes.
 	 */
 	public Iterator<?> getAddressSpaces() {
-		return Collections.emptyList().iterator();
+		return Collections.emptyIterator();
 	}
 
 	public long getCreationTimeNanos() throws DataUnavailable, CorruptDataException {

@@ -43,7 +43,7 @@ public class PHDCorruptJavaMonitor extends PHDCorruptData implements JavaMonitor
 	}
 
 	public Iterator<JavaThread> getEnterWaiters() {
-		return Collections.<JavaThread>emptyList().iterator();
+		return Collections.<JavaThread>emptyIterator();
 	}
 
 	public ImagePointer getID() {
@@ -55,7 +55,7 @@ public class PHDCorruptJavaMonitor extends PHDCorruptData implements JavaMonitor
 	}
 
 	public Iterator<JavaThread> getNotifyWaiters() {
-		return Collections.<JavaThread>emptyList().iterator();
+		return Collections.<JavaThread>emptyIterator();
 	}
 
 	public JavaObject getObject() {

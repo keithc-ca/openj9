@@ -28,6 +28,7 @@ import static com.ibm.j9ddr.vm29.j9.OptInfo.getSourceFileNameForROMClass;
 
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -130,8 +131,8 @@ public class DTFJJavaClass implements JavaClass {
 	@SuppressWarnings("rawtypes")
 	public Iterator getConstantPoolReferences() {
 		try {
-			if(isArray()) {		//array classes don't have constant pools
-				return J9DDRDTFJUtils.emptyIterator();
+			if (isArray()) { // array classes don't have constant pools
+				return Collections.emptyIterator();
 			} else {
 				return new DTFJConstantPoolIterator(j9class);
 			}

@@ -54,15 +54,15 @@ class PHDCorruptJavaClass extends PHDCorruptData implements JavaClass {
 	}
 
 	public Iterator<JavaObject> getConstantPoolReferences() {
-		return Collections.<JavaObject>emptyList().iterator();
+		return Collections.<JavaObject>emptyIterator();
 	}
 
 	public Iterator<JavaField> getDeclaredFields() {
-		return Collections.<JavaField>emptyList().iterator();
+		return Collections.<JavaField>emptyIterator();
 	}
 
 	public Iterator<JavaMethod> getDeclaredMethods() {
-		return Collections.<JavaMethod>emptyList().iterator();
+		return Collections.<JavaMethod>emptyIterator();
 	}
 
 	public ImagePointer getID() {
@@ -70,7 +70,7 @@ class PHDCorruptJavaClass extends PHDCorruptData implements JavaClass {
 	}
 
 	public Iterator<String> getInterfaces() {
-		return Collections.<String>emptyList().iterator();
+		return Collections.<String>emptyIterator();
 	}
 
 	public int getModifiers() throws CorruptDataException {
@@ -86,7 +86,7 @@ class PHDCorruptJavaClass extends PHDCorruptData implements JavaClass {
 	}
 
 	public Iterator<JavaReference> getReferences() {
-		return Collections.<JavaReference>emptyList().iterator();
+		return Collections.<JavaReference>emptyIterator();
 	}
 
 	public JavaClass getSuperclass() throws CorruptDataException {
