@@ -401,7 +401,7 @@ allocateMemFromGlobalBuffer(J9VMThread *currentThread, UDATA size, bool *hasExcl
 			if (!*hasExclusive) {
 				internalAcquireVMAccess(currentThread);
 			}
-			bool result = writeOutGlobalBuffer(currentThread, !isJFRV2SupportEnabled(vm), false);
+			bool result = writeOutGlobalBuffer(currentThread, false, false);
 			if (!*hasExclusive) {
 				internalReleaseVMAccess(currentThread);
 			}
@@ -2114,7 +2114,7 @@ jfrDump(J9VMThread *currentThread, BOOLEAN newChunk)
 {
 	/* Flush all the thread buffers and write out the global buffer. */
 	flushAllThreadBuffers(currentThread, false, false);
-	writeOutGlobalBuffer(currentThread, newChunk, false);
+	writeOutGlobalBuffer(currentThread, newChunk ? true : false, false);
 }
 
 void

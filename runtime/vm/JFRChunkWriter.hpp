@@ -509,7 +509,7 @@ public:
 		, _lastDataStart(_vm->jfrState.lastCheckpointEvent)
 		, _checkpointHeaderStart(NULL)
 		, _chunkDuration(0)
-		, _isJFRv2(isJFRV2SupportEnabled(_vm))
+		, _isJFRv2(isJFRV2SupportEnabled(_vm) ? true : false)
 #if JAVA_SPEC_VERSION >= 17
 		, events(_isJFRv2 ? &v2Events : &v1Events)
 #else /* JAVA_SPEC_VERSION >= 17 */
